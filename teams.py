@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from main import AdoClient
 
+
 class Team:
     def __init__(self, team_id: str, name: str, description: str) -> None:
         self.team_id = team_id
@@ -14,10 +15,10 @@ class Team:
         self.description = description
 
     def __str__(self) -> str:
-        return f'{self.name} ({self.team_id})'
+        return f"{self.name} ({self.team_id})"
 
     def __repr__(self) -> str:
-        return f'Team({self.team_id!r}, {self.name!r}, {self.description!r})'
+        return f"Team({self.team_id!r}, {self.name!r}, {self.description!r})"
 
     @classmethod
     def from_json(cls, team_response: dict[str, str]) -> "Team":
@@ -51,7 +52,9 @@ class Team:
     #     request = requests.delete(f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/teams/{team_id}?api-version=7.1-preview.2", auth=ado_client.auth)
     #     assert request.status_code < 300
 
+
 if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project
     from main import AdoClient
+
     ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)

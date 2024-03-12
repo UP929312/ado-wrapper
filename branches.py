@@ -2,6 +2,7 @@ import requests
 
 from main import AdoClient
 
+
 class Branch:
     def __init__(self, branch_id: str, name: str, is_main: bool, is_protected: bool, is_deleted: bool) -> None:
         self.branch_id = branch_id
@@ -18,11 +19,15 @@ class Branch:
 
     @classmethod
     def from_json(cls, branch_response: dict[str, str]) -> "Branch":
-        return cls(branch_response["id"], branch_response["name"], bool(branch_response["isMain"]), bool(branch_response["isProtected"]), bool(branch_response["isDeleted"]))
+        return cls(branch_response["id"], branch_response["name"], bool(branch_response["isMain"]),
+                   bool(branch_response["isProtected"]), bool(branch_response["isDeleted"]))  # fmt: skip
 
     @classmethod
     def get_all(cls, ado_client: AdoClient, repo_id: str) -> list["Branch"]:
-        request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs?filter=heads&api-version=7.1", auth=ado_client.auth).json()
+        request = requests.get(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs?filter=heads&api-version=7.1",
+            auth=ado_client.auth,
+        ).json()
         return [cls.from_json(branch) for branch in request["value"]]
 
     @classmethod
@@ -67,12 +72,18 @@ class Branch:
             "name": branch_name,
             "ref": f"refs/heads/{source_branch}",
         }
-        request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs?api-version=7.1", json=data, auth=ado_client.auth).json()
+        request = requests.post(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs?api-version=7.1",
+            json=data,
+            auth=ado_client.auth,
+        ).json()
         return cls.from_json(request)
+
 
 if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project, ALTERNATIVE_EXISTING_REPO_NAME
     from repository import Repo
+
     ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
     repo = Repo.get_by_name(ado_client, ALTERNATIVE_EXISTING_REPO_NAME)
     branches = Branch.get_all(ado_client, repo.repo_id)

@@ -11,6 +11,7 @@ ReleaseStatus = Literal["active", "abandoned", "draft", "undefined"]
 
 # ========================================================================================================
 
+
 def get_release_definition(name: str, variable_group_ids: list[int] | None, agent_pool_id: int) -> dict[str, Any]:
     return {
         "id": 0,
@@ -62,7 +63,9 @@ def get_release_definition(name: str, variable_group_ids: list[int] | None, agen
         ],
     }
 
+
 # ========================================================================================================
+
 
 class Release:
     def __init__(self, release_id: str, name: str, status: ReleaseStatus, created_on: datetime, created_by: Member, description: str,
@@ -78,11 +81,13 @@ class Release:
         self.keep_forever = keep_forever
 
     def __str__(self) -> str:
-        return f'{self.name} ({self.release_id}), {self.status}'
+        return f"{self.name} ({self.release_id}), {self.status}"
 
     def __repr__(self) -> str:
-        return (f'Release(id={self.release_id}, name={self.name}, status={self.status}, created_on={self.created_on}, '
-                f'created_by={self.created_by!r}, description={self.description})')
+        return (
+            f"Release(id={self.release_id}, name={self.name}, status={self.status}, created_on={self.created_on}, "
+            f"created_by={self.created_by!r}, description={self.description})"
+        )
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "Release":
@@ -93,7 +98,8 @@ class Release:
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, release_id: int) -> "Release":
         response = requests.get(
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1", auth=ado_client.auth
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1",
+            auth=ado_client.auth,
         ).json()
         return cls.from_json(response)
 
@@ -118,7 +124,9 @@ class Release:
         ).json()
         return [cls.from_json(release) for release in response["value"]]
 
+
 # ========================================================================================================
+
 
 class ReleaseDefinition:
     def __init__(self, name: str, description: str, created_by: Member, created_on: datetime, release_def_id: int, release_name_format: str,
@@ -133,24 +141,26 @@ class ReleaseDefinition:
         self.variables = variables or []
 
     def __str__(self) -> str:
-        return f'{self.name}, {self.description}, created by {self.created_by}, created on {self.created_on!s}'
+        return f"{self.name}, {self.description}, created by {self.created_by}, created on {self.created_on!s}"
 
     def __repr__(self) -> str:
-        return (f'ReleaseDefinition(name={self.name!r}, description={self.description!r}, created_by={self.created_by!r}, '
-                f'created_on={self.created_on!s}, id={self.release_def_id}, release_name_format={self.release_name_format!r}, '
-                f'variable_groups={self.variable_groups!r}, variables={self.variables!r})')
+        return (
+            f"ReleaseDefinition(name={self.name!r}, description={self.description!r}, created_by={self.created_by!r}, "
+            f"created_on={self.created_on!s}, id={self.release_def_id}, release_name_format={self.release_name_format!r}, "
+            f"variable_groups={self.variable_groups!r}, variables={self.variables!r})"
+        )
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "ReleaseDefinition":
         created_by = Member(data["createdBy"]["displayName"], data["createdBy"]["uniqueName"], data["createdBy"]["id"])
         return cls(data["name"], data["releases"], created_by, from_ado_date_string(data["createdOn"]), data["id"],
-                   data["releaseNameFormat"], data["variableGroups"], data.get("variables", None))
+                   data["releaseNameFormat"], data["variableGroups"], data.get("variables", None))  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, release_id: int) -> "ReleaseDefinition":
         response = requests.get(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_id}?api-version=7.0",
-            auth=ado_client.auth
+            auth=ado_client.auth,
         ).json()
         return cls.from_json(response)
 
@@ -158,7 +168,7 @@ class ReleaseDefinition:
     def get_all_releases_for_definition(cls, ado_client: AdoClient, definition_id: int) -> "list[Release]":
         response = requests.get(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1&definitionId={definition_id}",
-            auth=ado_client.auth
+            auth=ado_client.auth,
         ).json()
         return [Release.from_json(release) for release in response["value"]]
 
@@ -168,21 +178,24 @@ class ReleaseDefinition:
         body = get_release_definition(name, variable_group_ids, agent_pool_id)
         data = requests.post(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions?api-version=7.0",
-            json=body, auth=ado_client.auth,
+            json=body,
+            auth=ado_client.auth,
         ).json()
         return cls.from_json(data)
 
     def delete(self) -> None:  # TODO: Test
         delete_request = requests.delete(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{self.release_def_id}?forceDelete=true&api-version=7.1",
-            auth=ado_client.auth
+            auth=ado_client.auth,
         )
         assert delete_request.status_code == 204
+
 
 # ========================================================================================================
 
 if __name__ == "__main__":
     from secret import email, alterative_ado_access_token, old_org, old_ado_project
+
     ado_client = AdoClient(email, alterative_ado_access_token, old_org, old_ado_project)
     release = Release.get_by_id(ado_client, 311108)
     print(f"{release!r}")

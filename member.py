@@ -10,11 +10,12 @@ VOTE_ID_TO_TYPE = {
     5: "approved with suggestions",
     0: "no vote",
     -5: "waiting for author",
-    -10: "rejected"
+    -10: "rejected",
 }
 VoteOptions = Literal[10, 5, 0, -5, -10]
 
 # ========================================================================================================
+
 
 class Member:
     def __init__(self, name: str, email: str, member_id: str) -> None:
@@ -23,10 +24,10 @@ class Member:
         self.member_id = member_id
 
     def __str__(self) -> str:
-        return f'{self.name} ({self.email})'
+        return f"{self.name} ({self.email})"
 
     def __repr__(self) -> str:
-        return f'Member({self.name}, {self.email})'
+        return f"Member({self.name}, {self.email})"
 
     @classmethod
     def from_json(cls, data: dict[str, str]) -> "Member":
@@ -51,7 +52,9 @@ class Member:
     #         raise ValueError(f"Member {member_name} not found")
     #     return our_user[0]
 
+
 # ========================================================================================================
+
 
 class Reviewer(Member):
     def __init__(self, name: str, email: str, reviewer_id: str, vote: VoteOptions, is_required: bool) -> None:
@@ -63,17 +66,19 @@ class Reviewer(Member):
         return f'{self.name} ({self.email}) voted {VOTE_ID_TO_TYPE[self.vote]}, and was {"required" if self.is_required else "optional"}'
 
     def __repr__(self) -> str:
-        return f'Reviewer(name={self.name}, email={self.email}, id={self.member_id}, vote={self.vote}, is_required={self.is_required})'
+        return f"Reviewer(name={self.name}, email={self.email}, id={self.member_id}, vote={self.vote}, is_required={self.is_required})"
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "Reviewer":
         return cls(data["displayName"], data["uniqueName"], data["id"], data["vote"], data.get("isRequired", False))
+
 
 # ========================================================================================================
 
 if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project
     from main import AdoClient
+
     ado_helper = AdoClient(email, ado_access_token, ado_org, ado_project)
     # print(Member.get_all_members(ado_helper))
     # print(Member.get_by_email(ado_helper, email))

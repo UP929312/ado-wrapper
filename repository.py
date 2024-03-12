@@ -7,8 +7,10 @@ import requests
 from typing import TYPE_CHECKING
 
 from pull_requests import PullRequest, PullRequestStatus
+
 if TYPE_CHECKING:
     from main import AdoClient
+
 
 class Repo:
     def __init__(self, repo_id: str, name: str) -> None:
@@ -29,7 +31,8 @@ class Repo:
     def create_repo(cls, ado_client: AdoClient, name: str) -> "Repo":
         request = requests.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=6.0",
-            json={"name": name}, auth=ado_client.auth
+            json={"name": name},
+            auth=ado_client.auth,
         ).json()
         return cls.from_json(request)
 
@@ -37,7 +40,7 @@ class Repo:
     def get_all_repos(cls, ado_client: AdoClient) -> list["Repo"]:
         request = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
-            auth=ado_client.auth
+            auth=ado_client.auth,
         ).json()
         return [cls.from_json(repo) for repo in request["value"]]
 
@@ -46,7 +49,7 @@ class Repo:
         """Warning, this function must fetch `all` repos to work, be cautious when calling it in a loop."""
         request = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
-            auth=ado_client.auth
+            auth=ado_client.auth,
         ).json()
         for repo in request["value"]:
             if repo["name"] == repo_name:
@@ -72,7 +75,7 @@ class Repo:
         try:
             request = requests.get(
                 f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?recursionLevel=Full&download=true&$format=Zip&api-version=6.0",
-                auth=ado_client.auth
+                auth=ado_client.auth,
             )
         except requests.exceptions.ConnectionError:
             print(f"=== Connection error, failed to download {self.repo_id}")
@@ -94,14 +97,16 @@ class Repo:
         # =========== That's all I have to say ==================
         return files
 
-    def create_pull_request(self, ado_client: AdoClient, branch_name: str, pull_request_title: str, pull_request_description: str) -> "PullRequest":
+    def create_pull_request(
+        self, ado_client: AdoClient, branch_name: str, pull_request_title: str, pull_request_description: str
+    ) -> "PullRequest":
         """Helper function which redirects to the PullRequest class and makes a PR"""
         return PullRequest.create(ado_client, self.repo_id, branch_name, pull_request_title, pull_request_description)
 
     def get_all_pull_requests(self, ado_client: AdoClient, status: PullRequestStatus) -> list["PullRequest"]:
         pull_requests = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
-            auth=ado_client.auth
+            auth=ado_client.auth,
         ).json()
         try:
             return [PullRequest.from_json(pr) for pr in pull_requests["value"]]
@@ -114,9 +119,11 @@ class Repo:
         request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}?api-version=7.1", auth=ado_client.auth)  # fmt: skip
         assert request.status_code == 204
 
+
 if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project
     from main import AdoClient
+
     ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
     # repo = Repo.get_by_name(ado_client, )
     # print(files)

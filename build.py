@@ -4,7 +4,7 @@ from typing import Any, Literal
 import requests
 
 from main import AdoClient
-from member import Member
+from members import Member
 from repository import Repo
 from utils import from_ado_date_string
 
@@ -57,8 +57,9 @@ class Build:
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "Build":
         requested_by = Member(data["requestedBy"]["displayName"], data["requestedBy"]["uniqueName"], data["requestedBy"]["id"])
-        return cls(data["id"], data["buildNumber"], data["status"], requested_by, Repo(data["repository"]["id"], data["repository"]["name"]),
-                   data["templateParameters"], from_ado_date_string(data["startTime"]), from_ado_date_string(data["finishTime"]),
+        repo = Repo(data["repository"]["id"], data["repository"]["name"])
+        return cls(data["id"], data["buildNumber"], data["status"], requested_by, repo, data["templateParameters"],
+                   from_ado_date_string(data["startTime"]), from_ado_date_string(data["finishTime"]),
                    from_ado_date_string(data["queueTime"]), data["reason"], data["priority"])  # fmt: skip
 
     @classmethod

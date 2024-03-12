@@ -5,7 +5,7 @@ from typing import Any, Literal, TYPE_CHECKING
 
 import requests
 
-from member import Member, Reviewer
+from members import Member, Reviewer
 from utils import from_ado_date_string
 
 if TYPE_CHECKING:

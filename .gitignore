@@ -5,3 +5,4 @@ __pycache__/
 secret.py
 *.state
 fixer.py
+main.json

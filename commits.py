@@ -5,7 +5,7 @@ import requests
 
 from main import AdoClient
 from repository import Repo
-from member import Member
+from members import Member
 from utils import from_ado_date_string
 
 ChangeType = Literal["edit", "add", "delete"]

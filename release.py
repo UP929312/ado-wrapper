@@ -4,7 +4,7 @@ from typing import Any, Literal
 import requests
 
 from main import AdoClient
-from member import Member
+from members import Member
 from utils import from_ado_date_string
 
 ReleaseStatus = Literal["active", "abandoned", "draft", "undefined"]

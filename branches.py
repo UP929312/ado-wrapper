@@ -19,8 +19,8 @@ class Branch:
 
     @classmethod
     def from_json(cls, branch_response: dict[str, str]) -> "Branch":
-        return cls(branch_response["id"], branch_response["name"], bool(branch_response["isMain"]),
-                   bool(branch_response["isProtected"]), bool(branch_response["isDeleted"]))  # fmt: skip
+        return cls(branch_response["objectId"], branch_response["name"], bool(branch_response.get("isMain", False)),
+                   bool(branch_response.get("isProtected", False)), bool(branch_response.get("isDeleted")))  # fmt: skip
 
     @classmethod
     def get_all(cls, ado_client: AdoClient, repo_id: str) -> list["Branch"]:
@@ -79,6 +79,12 @@ class Branch:
         ).json()
         return cls.from_json(request)
 
+    def delete(self, ado_client: AdoClient, repo_id: str) -> None:
+        request = requests.delete(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs/{self.branch_id}?api-version=7.1",
+            auth=ado_client.auth,
+        )
+        assert request.status_code < 300
 
 if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project, ALTERNATIVE_EXISTING_REPO_NAME
@@ -86,5 +92,4 @@ if __name__ == "__main__":
 
     ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
     repo = Repo.get_by_name(ado_client, ALTERNATIVE_EXISTING_REPO_NAME)
-    branches = Branch.get_all(ado_client, repo.repo_id)
-    print(branches)
+    # branches = Branch.get_all(ado_client, repo.repo_id)

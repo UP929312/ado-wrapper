@@ -121,9 +121,9 @@ class Repo:
 
 
 if __name__ == "__main__":
-    from secret import email, ado_access_token, ado_org, ado_project
+    from secret import email, ado_access_token, ado_org, ado_project, ALTERNATIVE_EXISTING_REPO_NAME
     from main import AdoClient
 
     ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
-    # repo = Repo.get_by_name(ado_client, )
-    # print(files)
+    repo = Repo.get_by_name(ado_client, ALTERNATIVE_EXISTING_REPO_NAME)
+    print(repo)

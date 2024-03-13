@@ -3,7 +3,7 @@ from datetime import datetime
 from client import AdoClient
 from repository import Repo
 from builds import Build, BuildDefinition
-from members import Member
+from users import Member
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     ado_org, ado_project, email, pat_token, existing_repo_name, existing_repo_id, *_ = test_data.read().splitlines()
@@ -13,8 +13,8 @@ class TestBuild:
     def setup_method(self) -> None:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)
 
-    def test_from_json(self) -> None:
-        repo = Build.from_json(
+    def test_from_request_payload(self) -> None:
+        repo = Build.from_request_payload(
             {
                 "requestedBy": {"displayName": "test", "uniqueName": "test", "id": "123"},
                 "repository": {"id": "123", "name": "test-repo"},
@@ -37,8 +37,8 @@ class TestBuildDefinition:
     def setup_method(self) -> None:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)
 
-    def test_from_json(self) -> None:
-        payload = {
+    def test_from_request_payload(self) -> None:
+        build_definition = BuildDefinition.from_request_payload({
             "id": "123",
             "name": "test-repo",
             "description": "test-repo",
@@ -48,8 +48,7 @@ class TestBuildDefinition:
             "repository": {"id": "123", "name": "test-repo"},
             "variables": {},
             "variableGroups": [],
-        }
-        build_definition = BuildDefinition.from_json(payload)
+        })
         assert build_definition.build_definition_id == "123"
         assert build_definition.name == "test-repo"
         assert isinstance(build_definition.created_by, Member)

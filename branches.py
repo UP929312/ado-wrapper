@@ -19,7 +19,7 @@ class Branch:
         return f"Branch(name={self.name}, id={self.branch_id}, is_main={self.is_main}, is_protected={self.is_protected}, is_deleted={self.is_deleted})"
 
     @classmethod
-    def from_json(cls, data: dict[str, str]) -> "Branch":
+    def from_request_payload(cls, data: dict[str, str]) -> "Branch":
         return cls(data["objectId"], data["name"], data["url"].split("/")[-2],
                    bool(data.get("isMain", False)), bool(data.get("isProtected", False)), bool(data.get("isDeleted")))  # fmt: skip
 
@@ -29,7 +29,7 @@ class Branch:
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs?filter=heads&api-version=7.1",
             auth=ado_client.auth,
         ).json()
-        return [cls.from_json(branch) for branch in request["value"]]
+        return [cls.from_request_payload(branch) for branch in request["value"]]
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, repo_id: str, branch_id: str) -> "Branch":
@@ -78,7 +78,7 @@ class Branch:
             json=data,
             auth=ado_client.auth,
         ).json()
-        return cls.from_json(request)
+        return cls.from_request_payload(request)
 
     def delete(self, ado_client: AdoClient) -> None:
         request = requests.delete(

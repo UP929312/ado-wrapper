@@ -5,7 +5,7 @@ from typing import Any, Literal, TYPE_CHECKING
 
 import requests
 
-from members import Member, Reviewer
+from users import Member, Reviewer
 from utils import from_ado_date_string
 
 if TYPE_CHECKING:
@@ -40,26 +40,26 @@ class PullRequest:
         return f"PullRequest(id={self.pull_request_id!r}, title={self.title!r}, description={self.description!r}, source_branch={self.source_branch!r}, target_branch={self.target_branch!r}, author={self.author!r}, creation_date={self.creation_date!s}, is_draft={self.is_draft}, merge_status={self.merge_status!r}, reviewers={self.reviewers!r})"
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "PullRequest":
+    def from_request_payload(cls, data: dict[str, Any]) -> "PullRequest":
         from repository import Repo  # Circular import
 
         member = Member(data["createdBy"]["displayName"], data["createdBy"]["uniqueName"], data["createdBy"]["id"])
-        reviewers = [Reviewer.from_json(reviewer) for reviewer in data["reviewers"]]
+        reviewers = [Reviewer.from_request_payload(reviewer) for reviewer in data["reviewers"]]
         repository = Repo(data["repository"]["id"], data["repository"]["name"])
         return cls(data["pullRequestId"], data["title"], data.get("description", ""), data["sourceRefName"],
                    data["targetRefName"], member, from_ado_date_string(data["creationDate"]), from_ado_date_string(data.get("closedDate")),
-                   data["isDraft"], repository, data["mergeStatus"], reviewers)  # fmt: skip
+                   data["isDraft"], repository, data.get("mergeStatus", "notSet"), reviewers)  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str) -> "PullRequest":
         request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}?api-version=7.1", auth=ado_client.auth).json()  # fmt: skip
-        return cls.from_json(request)
+        return cls.from_request_payload(request)
 
     @classmethod
     def create(cls, ado_client: AdoClient, repo_id: str, branch_name: str, pull_request_title: str, pull_request_description: str) -> "PullRequest":  # fmt: skip
         payload = {"sourceRefName": branch_name, "targetRefName": "refs/heads/main", "title": pull_request_title, "description": pull_request_description}  # fmt: skip
         request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?api-version=5.1", json=payload, auth=ado_client.auth).json()  # fmt: skip
-        return cls.from_json(request)
+        return cls.from_request_payload(request)
 
     def add_reviewer(self, ado_client: AdoClient, reviewer_id: str) -> None:
         request = requests.put(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}/reviewers/{reviewer_id}?api-version=7.1-preview.1",

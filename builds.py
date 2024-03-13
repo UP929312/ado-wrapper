@@ -4,7 +4,7 @@ from typing import Any, Literal
 import requests
 
 from client import AdoClient
-from members import Member
+from users import Member
 from repository import Repo
 from utils import from_ado_date_string
 
@@ -55,7 +55,7 @@ class Build:
         )
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "Build":
+    def from_request_payload(cls, data: dict[str, Any]) -> "Build":
         requested_by = Member(data["requestedBy"]["displayName"], data["requestedBy"]["uniqueName"], data["requestedBy"]["id"])
         repo = Repo(data["repository"]["id"], data["repository"]["name"])
         return cls(data["id"], data["buildNumber"], data["status"], requested_by, repo, data["templateParameters"],
@@ -68,7 +68,7 @@ class Build:
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}?api-version=7.1",
             auth=ado_client.auth,
         ).json()
-        return cls.from_json(response)
+        return cls.from_request_payload(response)
 
     @classmethod
     def get_all_builds_by_definition(cls, ado_client: AdoClient, definition_id: int) -> "list[Build]":
@@ -76,14 +76,14 @@ class Build:
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?api-version=7.1&definitions={definition_id}",
             auth=ado_client.auth,
         ).json()
-        return [cls.from_json(build) for build in response["value"]]
+        return [cls.from_request_payload(build) for build in response["value"]]
 
 
 #     @classmethod  # TODO: Test
 #     def created(cls, ado_client: AdoHelper, definition_id: int) -> "Build":
 #         body = {"definitionId": definition_id, "description": "An automated build created by ADO-Cleanup"}
 #         request = requests.post(f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?api-version=7.1", json=body, auth=ado_client.auth).json()
-#         return cls.from_json(request)
+#         return cls.from_request_payload(request)
 
 #     def delete(self) -> None:  # TODO: Test
 #         delete_request = requests.delete(
@@ -114,7 +114,7 @@ class BuildDefinition:
         return f"BuildDefinition(name={self.name!r}, description={self.description}, created_by={self.created_by!r}, created_on={self.created_date!s}, id={self.build_definition_id}, repo={self.repo!r})"
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "BuildDefinition":
+    def from_request_payload(cls, data: dict[str, Any]) -> "BuildDefinition":
         created_by = Member(data["authoredBy"]["displayName"], data["authoredBy"]["uniqueName"], data["authoredBy"]["id"])
         repo = Repo(data["repository"]["id"], data["repository"]["name"])
         return cls(data["id"], data["name"], data.get("description", ""), data["process"]["yamlFilename"], created_by,
@@ -126,14 +126,14 @@ class BuildDefinition:
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{build_definition_id}?api-version=7.1",
             auth=ado_client.auth,
         ).json()
-        return cls.from_json(response)
+        return cls.from_request_payload(response)
 
     def get_all_builds_by_definition(self, ado_client: AdoClient) -> "list[Build]":  # TODO: Test
         response = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?api-version=7.1&definitions={self.build_definition_id}",
             auth=ado_client.auth,
         ).json()
-        return [Build.from_json(build) for build in response["value"]]
+        return [Build.from_request_payload(build) for build in response["value"]]
 
     # @classmethod  # TODO: Test
     # def create(cls, ado_client: AdoHelper, name: str, repo_id: str, repo_name: str, path_to_pipeline: str) -> "BuildDefinition":
@@ -143,7 +143,7 @@ class BuildDefinition:
     #         f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.0",
     #         json=body, auth=ado_client.auth,
     #     ).json()
-    #     return cls.from_json(data)
+    #     return cls.from_request_payload(data)
 
     # def delete(self) -> None:  # TODO: Test
     #     delete_request = requests.delete(

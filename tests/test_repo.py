@@ -9,14 +9,14 @@ class TestRepo:
     def setup_method(self) -> None:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)
 
-    def test_from_json(self) -> None:
-        repo = Repo.from_json({"id": "123", "name": "test-repo", "defaultBranch": "refs/heads/master"})
+    def test_from_request_payload(self) -> None:
+        repo = Repo.from_request_payload({"id": "123", "name": "test-repo", "defaultBranch": "refs/heads/master"})
         assert repo.repo_id == "123"
         assert repo.name == "test-repo"
         assert isinstance(repo, Repo)
         assert isinstance(repo.is_disabled, bool)
         assert repo.is_disabled == False
-        assert repo.default_Branch == "refs/heads/master"
+        assert repo.default_branch == "refs/heads/master"
 
     def test_create_delete_repo(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo")

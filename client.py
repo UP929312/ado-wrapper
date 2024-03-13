@@ -5,24 +5,27 @@ from pathlib import Path
 
 from requests.auth import HTTPBasicAuth
 
+from state_managed_abc import StateManagedResource
+from utils import DeletionFailed
+
 
 def get_resource_variables() -> tuple[list[str], list[type["StateManagedResource"]]]:  # We do this to avoid circular imports
     from branches import Branch
     from builds import Build, BuildDefinition
     from commits import Commit
-    from members import Member
+    from users import AdoUser
     from pull_requests import PullRequest
     from release import Release, ReleaseDefinition
     from repository import Repo
     from teams import Team
 
-    ALL_RESOURCE_CLASSES = [Branch, Build, BuildDefinition, Commit, Member, PullRequest, Release, ReleaseDefinition, Repo, Team]
+    ALL_RESOURCE_CLASSES = [Branch, Build, BuildDefinition, Commit, AdoUser, PullRequest, Release, ReleaseDefinition, Repo, Team]
     return [resource.__name__ for resource in ALL_RESOURCE_CLASSES], ALL_RESOURCE_CLASSES
 
 
 ActionType = Literal["created", "updated"]
 ResourceType = Literal[
-    "Branch", "Build", "BuildDefinition", "Commit", "Member", "PullRequest", "Release", "ReleaseDefinition", "Repo", "Team"
+    "Branch", "Build", "BuildDefinition", "Commit", "AdoUser", "PullRequest", "Release", "ReleaseDefinition", "Repo", "Team"
 ]
 StateFileEntryType = dict[str, Any]
 
@@ -33,17 +36,6 @@ class StateFileType(TypedDict):
 
 
 STATE_FILE_VERSION = 1
-
-
-class StateManagedResource:
-    @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "StateManagedResource":
-        raise NotImplementedError
-
-    @staticmethod
-    def delete_by_id(ado_client: "AdoClient", resource_id: str) -> None:
-        raise NotImplementedError
-
 
 class AdoClient:
     def __init__(self, ado_email: str, ado_pat: str, ado_org: str, ado_project: str, state_file_name: str | None = "main.state") -> None:
@@ -83,10 +75,10 @@ class AdoClient:
 
     def remove_resource_from_state(self, resource_type: ResourceType, resource_id: str) -> None:
         if self.state_file_name is None:
+            print("[ADO-API] Not storing state, so not removing resource to state")
             return
         all_states = self.get_all_states()
-        if resource_id in all_states["created"][resource_type]:
-            del all_states["created"][resource_type][resource_id]
+        all_states["created"][resource_type] = {k: v for k, v in all_states["created"][resource_type].items() if k != resource_id}
         return self.write_state_file(all_states)
 
     # =======================================================================================================
@@ -107,8 +99,15 @@ class AdoClient:
             for resource_id in resources:
                 try:
                     self.delete_resource(resource_type, resource_id)  # pyright: ignore[reportArgumentType]
-                except Exception as e:
+                except DeletionFailed as e:
                     print(f"[ADO-API] Error deleting {resource_type} {resource_id}: {e}")
+
+    def import_into_state(self, resource_type: ResourceType, resource_id: str) -> None:
+        _, all_resource_classes = get_resource_variables()
+        class_reference = [x for x in all_resource_classes if x.__name__ == resource_type][0]
+        data = class_reference.get_by_id(self, resource_id).to_json()
+        self.add_resource_to_state(resource_type, resource_id, data)
+
 
     def wipe_state(self) -> None:
         if self.state_file_name is None:

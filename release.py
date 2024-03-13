@@ -4,13 +4,12 @@ from typing import Any, Literal
 import requests
 
 from client import AdoClient
-from members import Member
-from utils import from_ado_date_string
+from users import Member
+from utils import from_ado_date_string, to_iso, from_iso, ResourceNotFound
 
 ReleaseStatus = Literal["active", "abandoned", "draft", "undefined"]
 
 # ========================================================================================================
-
 
 def get_release_definition(name: str, variable_group_ids: list[int] | None, agent_pool_id: int) -> dict[str, Any]:
     return {
@@ -63,7 +62,6 @@ def get_release_definition(name: str, variable_group_ids: list[int] | None, agen
         ],
     }
 
-
 # ========================================================================================================
 
 
@@ -91,17 +89,38 @@ class Release:
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "Release":
+        created_by = Member.from_json(data["created_by"])
+        return cls(data["release_id"], data["name"], data["status"], from_iso(data["created_on"]), created_by, data["description"],
+                   data["variables"], data["variable_groups"], data["keep_forever"])
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "release_id": self.release_id,
+            "name": self.name,
+            "status": self.status,
+            "created_on": to_iso(self.created_on),
+            "created_by": self.created_by.to_json(),
+            "description": self.description,
+            "variables": self.variables,
+            "variable_groups": self.variable_groups,
+            "keep_forever": self.keep_forever,
+        }
+
+    @classmethod
+    def from_request_payload(cls, data: dict[str, Any]) -> "Release":
         created_by = Member(data["createdBy"]["displayName"], data["createdBy"]["uniqueName"], data["createdBy"]["id"])
         return cls(data["id"], data["name"], data["status"], from_ado_date_string(data["createdOn"]), created_by, data["description"],
                    data.get("variables", None), data.get("variableGroups", None), data["keepForever"])  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, release_id: int) -> "Release":
-        response = requests.get(
+        request = requests.get(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1",
             auth=ado_client.auth,
-        ).json()
-        return cls.from_json(response)
+        )
+        if request.status_code == 404:
+            raise ResourceNotFound(f"The release with id {release_id} could not be found!")
+        return cls.from_request_payload(request.json())
 
     @classmethod  # TODO: Test
     def create(cls, ado_client: AdoClient, definition_id: int) -> "Release":
@@ -109,33 +128,41 @@ class Release:
         request = requests.post(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1", json=body, auth=ado_client.auth  # fmt: skip
         ).json()
-        return cls.from_json(request)
+        return cls.from_request_payload(request)
 
-    def delete(self, ado_client: AdoClient) -> None:  # TODO: Test
+    @staticmethod
+    def delete_by_id(ado_client: AdoClient, release_id: str) -> None:  # TODO: Test
         delete_request = requests.delete(
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{self.release_id}?api-version=7.1", auth=ado_client.auth  # fmt: skip
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1", auth=ado_client.auth  # fmt: skip
         )
         assert delete_request.status_code == 204
+
+    # ============ End of requirement set by all state managed resources ================== #
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+    # =============== Start of additional methods included with class ===================== #
+
+    def delete(self, ado_client: AdoClient) -> None:  # TODO: Test
+        self.delete_by_id(ado_client, self.release_id)
 
     @classmethod
     def get_all(cls, ado_client: AdoClient, definition_id: int) -> "list[Release]":
         response = requests.get(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1&definitionId={definition_id}", auth=ado_client.auth  # fmt: skip
         ).json()
-        return [cls.from_json(release) for release in response["value"]]
+        return [cls.from_request_payload(release) for release in response["value"]]
 
 
 # ========================================================================================================
 
 
 class ReleaseDefinition:
-    def __init__(self, name: str, description: str, created_by: Member, created_on: datetime, release_def_id: int, release_name_format: str,
+    def __init__(self, name: str, description: str, created_by: Member, created_on: datetime, release_definition_id: int, release_name_format: str,
                  variable_groups: list[int], variables: list[dict[str, Any]] | None = None):  # fmt: skip
         self.name = name
         self.description = description
         self.created_by = created_by
         self.created_on = created_on
-        self.release_def_id = release_def_id
+        self.release_definition_id = release_definition_id
         self.release_name_format = release_name_format
         self.variable_groups = variable_groups
         self.variables = variables or []
@@ -146,12 +173,30 @@ class ReleaseDefinition:
     def __repr__(self) -> str:
         return (
             f"ReleaseDefinition(name={self.name!r}, description={self.description!r}, created_by={self.created_by!r}, "
-            f"created_on={self.created_on!s}, id={self.release_def_id}, release_name_format={self.release_name_format!r}, "
+            f"created_on={self.created_on!s}, id={self.release_definition_id}, release_name_format={self.release_name_format!r}, "
             f"variable_groups={self.variable_groups!r}, variables={self.variables!r})"
         )
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "ReleaseDefinition":
+        created_by = Member.from_json(data["created_by"])
+        return cls(data["name"], data["description"], created_by, from_iso(data["created_on"]), data["release_definition_id"],
+                   data["release_name_format"], data["variable_groups"], data["variables"])
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "description": self.description,
+            "created_by": self.created_by.to_json(),
+            "created_on": to_iso(self.created_on),
+            "release_definition_id": self.release_definition_id,
+            "release_name_format": self.release_name_format,
+            "variable_groups": self.variable_groups,
+            "variables": self.variables,
+        }
+
+    @classmethod
+    def from_request_payload(cls, data: dict[str, Any]) -> "ReleaseDefinition":
         created_by = Member(data["createdBy"]["displayName"], data["createdBy"]["uniqueName"], data["createdBy"]["id"])
         return cls(data["name"], data["releases"], created_by, from_ado_date_string(data["createdOn"]), data["id"],
                    data["releaseNameFormat"], data["variableGroups"], data.get("variables", None))  # fmt: skip
@@ -162,7 +207,7 @@ class ReleaseDefinition:
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_id}?api-version=7.0",
             auth=ado_client.auth,
         ).json()
-        return cls.from_json(response)
+        return cls.from_request_payload(response)
 
     @classmethod
     def get_all_releases_for_definition(cls, ado_client: AdoClient, definition_id: int) -> "list[Release]":
@@ -170,7 +215,7 @@ class ReleaseDefinition:
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1&definitionId={definition_id}",
             auth=ado_client.auth,
         ).json()
-        return [Release.from_json(release) for release in response["value"]]
+        return [Release.from_request_payload(release) for release in response["value"]]
 
     @classmethod  # TODO: Test
     def create(cls, ado_client: AdoClient, name: str, variable_group_ids: list[int] | None, agent_pool_id: int) -> "ReleaseDefinition":
@@ -181,14 +226,13 @@ class ReleaseDefinition:
             json=body,
             auth=ado_client.auth,
         ).json()
-        return cls.from_json(data)
+        return cls.from_request_payload(data)
 
     def delete(self, ado_client: AdoClient) -> None:  # TODO: Test
         delete_request = requests.delete(
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{self.release_def_id}?forceDelete=true&api-version=7.1",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{self.release_definition_id}?forceDelete=true&api-version=7.1",
             auth=ado_client.auth,
         )
         assert delete_request.status_code == 204
-
 
 # ========================================================================================================

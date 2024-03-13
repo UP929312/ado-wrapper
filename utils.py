@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import overload
 
 
@@ -17,3 +17,16 @@ def from_ado_date_string(date_string: str | None) -> datetime | None:
         return None
     no_milliseconds = date_string.split(".")[0].removesuffix("Z")
     return datetime.strptime(no_milliseconds, "%Y-%m-%dT%H:%M:%S")
+
+def to_iso(dt: datetime) -> str:
+    return datetime.isoformat(dt)
+
+def from_iso(dt_string: str) -> datetime:
+    dt = datetime.fromisoformat(dt_string)
+    return dt.replace(tzinfo=timezone.utc)
+
+class ResourceNotFound(Exception):
+    pass
+
+class DeletionFailed(Exception):
+    pass

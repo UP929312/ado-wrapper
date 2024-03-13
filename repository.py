@@ -2,19 +2,21 @@ from __future__ import annotations
 
 import io
 import zipfile
+from typing import Any
 
 import requests
 
 from pull_requests import PullRequest, PullRequestStatus
-
-from client import AdoClient, StateManagedResource
+from client import AdoClient
+from state_managed_abc import StateManagedResource
+from utils import ResourceNotFound, DeletionFailed
 
 
 class Repo(StateManagedResource):
-    def __init__(self, repo_id: str, name: str, default_Branch: str = "refs/heads/main", is_disabled: bool = False) -> None:
+    def __init__(self, repo_id: str, name: str, default_branch: str = "refs/heads/main", is_disabled: bool = False) -> None:
         self.repo_id = repo_id
         self.name = name
-        self.default_Branch = default_Branch
+        self.default_branch = default_branch
         self.is_disabled = is_disabled
 
     def __repr__(self) -> str:
@@ -23,9 +25,28 @@ class Repo(StateManagedResource):
     def __str__(self) -> str:
         return f"Repo(name={self.name}, id={self.repo_id})"
 
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "repo_id": self.repo_id,
+            "name": self.name,
+            "default_branch": self.default_branch,
+            "is_disabled": self.is_disabled,
+        }
+
     @classmethod
-    def from_json(cls, data: dict[str, str]) -> "Repo":
+    def from_json(cls, data: dict[str, Any]) -> "Repo":
+        return cls(data["repo_id"], data["name"], data["default_branch"], data["is_disabled"])
+
+    @classmethod
+    def from_request_payload(cls, data: dict[str, str]) -> "Repo":
         return cls(data["id"], data["name"], data.get("defaultBranch", "refs/heads/main"), bool(data.get("isDisabled", False)))
+
+    @classmethod
+    def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> "Repo":
+        request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1", auth=ado_client.auth)  # fmt: skip
+        if request.status_code == 404:
+            raise ResourceNotFound(f"The repo with id {repo_id} could not be found!")
+        return cls.from_request_payload(request.json())
 
     @classmethod
     def create(cls, ado_client: AdoClient, name: str) -> "Repo":
@@ -35,7 +56,19 @@ class Repo(StateManagedResource):
             auth=ado_client.auth,
         ).json()
         ado_client.add_resource_to_state(cls.__name__, request["id"], request)  # type: ignore[arg-type]
-        return cls.from_json(request)
+        return cls.from_request_payload(request)
+
+    @staticmethod
+    def delete_by_id(ado_client: AdoClient, repo_id: str) -> None:
+        """Requirement set by all state managed resources"""
+        request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1", auth=ado_client.auth)  # fmt: skip
+        if request.status_code != 204:
+            raise DeletionFailed(f"Error deleting repo {repo_id}: {request.text}")
+        ado_client.remove_resource_from_state(Repo.__name__, repo_id)  # type: ignore[arg-type]
+
+    # ============ End of requirement set by all state managed resources ================== #
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+    # =============== Start of additional methods included with class ===================== #
 
     @classmethod
     def get_all(cls, ado_client: AdoClient) -> list["Repo"]:
@@ -43,7 +76,7 @@ class Repo(StateManagedResource):
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
             auth=ado_client.auth,
         ).json()
-        return [cls.from_json(repo) for repo in request["value"]]
+        return [cls.from_request_payload(repo) for repo in request["value"]]
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, repo_name: str) -> "Repo":
@@ -54,13 +87,8 @@ class Repo(StateManagedResource):
         ).json()
         for repo in request["value"]:
             if repo["name"] == repo_name:
-                return cls.from_json(repo)
+                return cls.from_request_payload(repo)
         raise ValueError(f"Repo {repo_name} not found")
-
-    @classmethod
-    def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> "Repo":
-        request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1", auth=ado_client.auth).json()  # fmt: skip
-        return cls.from_json(request)
 
     def get_file(self, ado_client: AdoClient, file_path: str) -> str:
         request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?path={file_path}&api-version=7.1", auth=ado_client.auth)  # fmt: skip
@@ -98,10 +126,8 @@ class Repo(StateManagedResource):
         # =========== That's all I have to say ==================
         return files
 
-    def create_pull_request(
-        self, ado_client: AdoClient, branch_name: str, pull_request_title: str, pull_request_description: str
-    ) -> "PullRequest":
-        """Helper function which redirects to the PullRequest class and makes a PR"""
+    def create_pull_request(self, ado_client: AdoClient, branch_name: str, pull_request_title: str, pull_request_description: str) -> "PullRequest":  # fmt: skip
+        """Helper function which redirects to the PullRequest class to make a PR"""
         return PullRequest.create(ado_client, self.repo_id, branch_name, pull_request_title, pull_request_description)
 
     def get_all_pull_requests(self, ado_client: AdoClient, status: PullRequestStatus) -> list["PullRequest"]:
@@ -110,18 +136,15 @@ class Repo(StateManagedResource):
             auth=ado_client.auth,
         ).json()
         try:
-            return [PullRequest.from_json(pr) for pr in pull_requests["value"]]
+            return [PullRequest.from_request_payload(pr) for pr in pull_requests["value"]]
         except KeyError:
-            if pull_requests["message"].startswith("TF401019"):
+            if pull_requests.get("message", "").startswith("TF401019"):
                 print(f"Repo {pull_requests['message'].split('identifier')[1].split(' ')[0]} was disabled, or you had no access.")
+            else:
+                print(pull_requests)
             return []
 
     def delete(self, ado_client: AdoClient) -> None:
         self.delete_by_id(ado_client, self.repo_id)
 
-    @staticmethod
-    def delete_by_id(ado_client: AdoClient, repo_id: str) -> None:
-        """Requirement set by all state managed resources"""
-        request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1", auth=ado_client.auth)  # fmt: skip
-        if request.status_code != 204:
-            raise Exception(f"Error deleting repo {repo_id}: {request.text}")
+# ====================================================================

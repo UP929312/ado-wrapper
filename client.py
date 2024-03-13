@@ -34,6 +34,7 @@ class StateFileType(TypedDict):
 
 STATE_FILE_VERSION = 1
 
+
 class StateManagedResource:
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "StateManagedResource":
@@ -97,7 +98,11 @@ class AdoClient:
         self.remove_resource_from_state(resource_type, resource_id)
 
     def delete_all_resources(self, resource_type_filter: ResourceType | None = None) -> None:
-        all_resources = self.get_all_states()["created"] if resource_type_filter is None else {resource_type_filter: self.get_all_states()["created"][resource_type_filter]}
+        all_resources = (
+            self.get_all_states()["created"]
+            if resource_type_filter is None
+            else {resource_type_filter: self.get_all_states()["created"][resource_type_filter]}
+        )
         for resource_type, resources in all_resources.items():
             for resource_id in resources:
                 try:
@@ -128,6 +133,7 @@ class AdoClient:
 
 if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project
+
     ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)  #  state_file_name="main.json"
 
     ALL_RESOURCE_STRINGS, _ = get_resource_variables()

@@ -55,7 +55,6 @@ class TestBuildDefinition:
         assert isinstance(build_definition.created_by, Member)
         assert isinstance(build_definition.created_date, datetime)
 
-
     # def test_create_delete_build(self) -> None:
     #     build = Build.create(self.ado_client, "ado-api-test-repo")
     #     assert repo.name == "ado-api-test-repo"

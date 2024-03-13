@@ -11,7 +11,7 @@ from client import AdoClient, StateManagedResource
 
 
 class Repo(StateManagedResource):
-    def __init__(self, repo_id: str, name: str, default_Branch: str="refs/heads/main", is_disabled: bool=False) -> None:
+    def __init__(self, repo_id: str, name: str, default_Branch: str = "refs/heads/main", is_disabled: bool = False) -> None:
         self.repo_id = repo_id
         self.name = name
         self.default_Branch = default_Branch
@@ -125,6 +125,7 @@ class Repo(StateManagedResource):
         request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1", auth=ado_client.auth)  # fmt: skip
         if request.status_code != 204:
             raise Exception(f"Error deleting repo {repo_id}: {request.text}")
+
 
 if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project, ALTERNATIVE_EXISTING_REPO_NAME

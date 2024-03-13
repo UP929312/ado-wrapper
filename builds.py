@@ -15,23 +15,23 @@ QueuePriority = Literal["low", "belowNormal", "normal", "aboveNormal", "high"]
 # ========================================================================================================
 
 
-def get_build_definition(name: str, repo_id: str, repo_name: str, path_to_pipeline: str, description: str, project: str, agent_pool_id: str) -> dict[str, Any]:
+def get_build_definition(
+    name: str, repo_id: str, repo_name: str, path_to_pipeline: str, description: str, project: str, agent_pool_id: str
+) -> dict[str, Any]:
     return {
         "name": f"{name}",
         "description": description,
-        "repository": {
-            "id": repo_id,
-            "name": repo_name,
-            "type": "TfsGit"
-        },
+        "repository": {"id": repo_id, "name": repo_name, "type": "TfsGit"},
         "project": project,
         "process": {
             "yamlFilename": path_to_pipeline,
             "type": 2,
         },
         "type": "build",
-        "queue": {"id": agent_pool_id}
+        "queue": {"id": agent_pool_id},
     }
+
+
 # "folder": None,
 
 # ========================================================================================================
@@ -145,7 +145,7 @@ class BuildDefinition(StateManagedResource):
     def from_request_payload(cls, data: dict[str, Any]) -> "BuildDefinition":
         created_by = Member(data["authoredBy"]["displayName"], data["authoredBy"]["uniqueName"], data["authoredBy"]["id"])
         repo = Repo(data["repository"]["id"], data["repository"]["name"])
-        return cls(data["id"], data["name"], data.get("description", ""), data["process"]["yamlFilename"], created_by,
+        return cls(str(data["id"]), data["name"], data.get("description", ""), data["process"]["yamlFilename"], created_by,
                    from_ado_date_string(data["createdDate"]), repo, data.get("variables", None), data.get("variableGroups", None))  # fmt: skip
 
     @classmethod
@@ -167,20 +167,18 @@ class BuildDefinition(StateManagedResource):
             json=body,
             auth=ado_client.auth,
         ).json()
-        print("#"*50, "\n", request, "\n", "#"*50, "\n")
         ado_client.add_resource_to_state(cls.__name__, request["id"], request)  # type: ignore[arg-type]
         return cls.from_request_payload(request)
 
     @staticmethod
     def delete_by_id(ado_client: AdoClient, resource_id: str) -> None:
-        delete_request = requests.delete(
+        request = requests.delete(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{resource_id}?forceDelete=true&api-version=7.1",
             auth=ado_client.auth,
         )
-        if delete_request.status_code != 204:
+        if request.status_code != 204:
             raise DeletionFailed(f"Failed to delete build definition with id {resource_id}")
-        else:
-            ado_client.remove_resource_from_state(Repo.__name__, resource_id)  # type: ignore[arg-type]
+        ado_client.remove_resource_from_state(BuildDefinition.__name__, resource_id)  # type: ignore[arg-type]
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

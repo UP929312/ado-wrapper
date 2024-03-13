@@ -9,8 +9,8 @@ from commits import Commit
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     (
         ado_org, ado_project, email, pat_token, existing_repo_name, existing_repo_id, _, _, _, _, _, existing_agent_pool_id,
-        *_
-    ) = test_data.read().splitlines()
+        *_  # fmt: skip
+    ) = test_data.read().splitlines()  # type: ignore[assignment]
 
 BUILD_YAML_FILE = """---
 trigger:
@@ -73,9 +73,10 @@ class TestBuildDefinition:
 
     def test_create_delete_build(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-builds")
-        _ = Commit.create(self.ado_client, repo.repo_id, "main", {"build.yaml": BUILD_YAML_FILE}, "add"),
+        _ = (Commit.create(self.ado_client, repo.repo_id, "main", {"build.yaml": BUILD_YAML_FILE}, "add"),)
         build_definition = BuildDefinition.create(
-            self.ado_client, "ado-api-test-build", repo.repo_id, "ado-api-test-repo", "build.yaml", "my-test-description", existing_agent_pool_id
+            self.ado_client, "ado-api-test-build", repo.repo_id, "ado-api-test-repo", "build.yaml",
+            "my-test-description", existing_agent_pool_id,  # fmt: skip
         )
         assert build_definition.description == "my-test-description"
         build_definition.delete(self.ado_client)

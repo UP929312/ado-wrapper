@@ -4,7 +4,6 @@ from datetime import datetime
 import requests
 
 from client import AdoClient
-from repository import Repo
 from users import Member
 from utils import from_ado_date_string
 

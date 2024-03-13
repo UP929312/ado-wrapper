@@ -64,8 +64,7 @@ class Repo(StateManagedResource):
         request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1", auth=ado_client.auth)  # fmt: skip
         if request.status_code != 204:
             raise DeletionFailed(f"Error deleting repo {repo_id}: {request.text}")
-        else:
-            ado_client.remove_resource_from_state(Repo.__name__, repo_id)  # type: ignore[arg-type]
+        ado_client.remove_resource_from_state(Repo.__name__, repo_id)  # type: ignore[arg-type]
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

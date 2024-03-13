@@ -2,20 +2,20 @@ from __future__ import annotations
 
 import io
 import zipfile
-import requests
 
-from typing import TYPE_CHECKING
+import requests
 
 from pull_requests import PullRequest, PullRequestStatus
 
-if TYPE_CHECKING:
-    from client import AdoClient
+from client import AdoClient, StateManagedResource
 
 
-class Repo:
-    def __init__(self, repo_id: str, name: str) -> None:
+class Repo(StateManagedResource):
+    def __init__(self, repo_id: str, name: str, default_Branch: str="refs/heads/main", is_disabled: bool=False) -> None:
         self.repo_id = repo_id
         self.name = name
+        self.default_Branch = default_Branch
+        self.is_disabled = is_disabled
 
     def __repr__(self) -> str:
         return f"Repo(name={self.name}, id={self.repo_id})"
@@ -24,8 +24,8 @@ class Repo:
         return f"Repo(name={self.name}, id={self.repo_id})"
 
     @classmethod
-    def from_json(cls, repo_response: dict[str, str]) -> "Repo":
-        return cls(repo_response["id"], repo_response["name"])
+    def from_json(cls, data: dict[str, str]) -> "Repo":
+        return cls(data["id"], data["name"], data.get("defaultBranch", "refs/heads/main"), bool(data.get("isDisabled", False)))
 
     @classmethod
     def create(cls, ado_client: AdoClient, name: str) -> "Repo":
@@ -34,6 +34,7 @@ class Repo:
             json={"name": name},
             auth=ado_client.auth,
         ).json()
+        ado_client.add_resource_to_state(cls.__name__, request["id"], request)  # type: ignore[arg-type]
         return cls.from_json(request)
 
     @classmethod
@@ -116,14 +117,20 @@ class Repo:
             return []
 
     def delete(self, ado_client: AdoClient) -> None:
-        request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}?api-version=7.1", auth=ado_client.auth)  # fmt: skip
-        assert request.status_code == 204
+        self.delete_by_id(ado_client, self.repo_id)
 
+    @staticmethod
+    def delete_by_id(ado_client: AdoClient, repo_id: str) -> None:
+        """Requirement set by all state managed resources"""
+        request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1", auth=ado_client.auth)  # fmt: skip
+        if request.status_code != 204:
+            raise Exception(f"Error deleting repo {repo_id}: {request.text}")
 
 if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project, ALTERNATIVE_EXISTING_REPO_NAME
     from client import AdoClient
 
     ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
+    # Repo.get_by_name(ado_client, "ado-api-test-repo").delete(ado_client)
     repo = Repo.get_by_name(ado_client, ALTERNATIVE_EXISTING_REPO_NAME)
     print(repo)

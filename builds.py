@@ -95,9 +95,9 @@ class Build:
 
 
 class BuildDefinition:
-    def __init__(self, build_def_id: str, name: str, description: str, path: str, created_by: Member, created_date: datetime, repo: Repo,
+    def __init__(self, build_definition_id: str, name: str, description: str, path: str, created_by: Member, created_date: datetime, repo: Repo,
                  variables: dict[str, str] | None, variable_groups: list[int] | None) -> None:  # fmt: skip
-        self.build_def_id = build_def_id
+        self.build_definition_id = build_definition_id
         self.name = name
         self.description = description
         self.path = path
@@ -108,10 +108,10 @@ class BuildDefinition:
         self.variable_groups = variable_groups or []  # Kept in for reporting
 
     def __str__(self) -> str:
-        return f"{self.name}, {self.build_def_id}, created by {self.created_by}, created on {self.created_date!s}"
+        return f"{self.name}, {self.build_definition_id}, created by {self.created_by}, created on {self.created_date!s}"
 
     def __repr__(self) -> str:
-        return f"BuildDefinition(name={self.name!r}, description={self.description}, created_by={self.created_by!r}, created_on={self.created_date!s}, id={self.build_def_id}, repo={self.repo!r})"
+        return f"BuildDefinition(name={self.name!r}, description={self.description}, created_by={self.created_by!r}, created_on={self.created_date!s}, id={self.build_definition_id}, repo={self.repo!r})"
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "BuildDefinition":
@@ -121,16 +121,16 @@ class BuildDefinition:
                    from_ado_date_string(data["createdDate"]), repo, data.get("variables", None), data.get("variableGroups", None))  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, build_def_id: int) -> "BuildDefinition":
+    def get_by_id(cls, ado_client: AdoClient, build_definition_id: int) -> "BuildDefinition":
         response = requests.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{build_def_id}?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{build_definition_id}?api-version=7.1",
             auth=ado_client.auth,
         ).json()
         return cls.from_json(response)
 
     def get_all_builds_by_definition(self, ado_client: AdoClient) -> "list[Build]":  # TODO: Test
         response = requests.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?api-version=7.1&definitions={self.build_def_id}",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?api-version=7.1&definitions={self.build_definition_id}",
             auth=ado_client.auth,
         ).json()
         return [Build.from_json(build) for build in response["value"]]

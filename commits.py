@@ -84,18 +84,3 @@ class Commit:
             auth=ado_client.auth,
         ).json()
         return [cls.from_json(commit) for commit in commits["value"]]
-
-
-if __name__ == "__main__":
-    from secret import email, ado_access_token, ado_org, ado_project
-    from client import AdoClient
-
-    ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
-    # repo = Repo.get_by_id(ado_client, "")
-    # updates = {
-    #     "file1.txt": "new file2 content221",
-    # }
-    # commit = Commit.create_commit(ado_client, repo, "my_branch", updates, "edit")
-    # print(commit)
-    # commits = Commit.get_all(ado_client, repo.repo_id)
-    # print(commits)

@@ -86,13 +86,3 @@ class Branch:
             auth=ado_client.auth,
         )
         assert request.status_code < 300
-
-
-if __name__ == "__main__":
-    from secret import email, ado_access_token, ado_org, ado_project, ALTERNATIVE_EXISTING_REPO_NAME
-    from repository import Repo
-
-    ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
-    repo = Repo.get_by_name(ado_client, ALTERNATIVE_EXISTING_REPO_NAME)
-    branches = Branch.get_all_by_repo(ado_client, repo.repo_id)
-    print(branches)

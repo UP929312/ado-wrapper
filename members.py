@@ -72,14 +72,4 @@ class Reviewer(Member):
     def from_json(cls, data: dict[str, Any]) -> "Reviewer":
         return cls(data["displayName"], data["uniqueName"], data["id"], data["vote"], data.get("isRequired", False))
 
-
 # ========================================================================================================
-
-if __name__ == "__main__":
-    from secret import email, ado_access_token, ado_org, ado_project
-    from client import AdoClient
-
-    ado_helper = AdoClient(email, ado_access_token, ado_org, ado_project)
-    # print(Member.get_all_members(ado_helper))
-    # print(Member.get_by_email(ado_helper, email))
-    # print(Member.get_by_id(ado_helper, ))

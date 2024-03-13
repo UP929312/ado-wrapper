@@ -125,13 +125,3 @@ class Repo(StateManagedResource):
         request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1", auth=ado_client.auth)  # fmt: skip
         if request.status_code != 204:
             raise Exception(f"Error deleting repo {repo_id}: {request.text}")
-
-
-if __name__ == "__main__":
-    from secret import email, ado_access_token, ado_org, ado_project, ALTERNATIVE_EXISTING_REPO_NAME
-    from client import AdoClient
-
-    ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
-    # Repo.get_by_name(ado_client, "ado-api-test-repo").delete(ado_client)
-    repo = Repo.get_by_name(ado_client, ALTERNATIVE_EXISTING_REPO_NAME)
-    print(repo)

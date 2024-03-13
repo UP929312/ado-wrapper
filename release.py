@@ -111,7 +111,7 @@ class Release:
         ).json()
         return cls.from_json(request)
 
-    def delete(self) -> None:  # TODO: Test
+    def delete(self, ado_client: AdoClient) -> None:  # TODO: Test
         delete_request = requests.delete(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{self.release_id}?api-version=7.1", auth=ado_client.auth  # fmt: skip
         )
@@ -183,7 +183,7 @@ class ReleaseDefinition:
         ).json()
         return cls.from_json(data)
 
-    def delete(self) -> None:  # TODO: Test
+    def delete(self, ado_client: AdoClient) -> None:  # TODO: Test
         delete_request = requests.delete(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{self.release_def_id}?forceDelete=true&api-version=7.1",
             auth=ado_client.auth,
@@ -192,10 +192,3 @@ class ReleaseDefinition:
 
 
 # ========================================================================================================
-
-if __name__ == "__main__":
-    from secret import email, alterative_ado_access_token, old_org, old_ado_project
-
-    ado_client = AdoClient(email, alterative_ado_access_token, old_org, old_ado_project)
-    release = Release.get_by_id(ado_client, 311108)
-    print(f"{release!r}")

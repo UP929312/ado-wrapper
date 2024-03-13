@@ -51,60 +51,49 @@ class PullRequest:
                    data["isDraft"], repository, data["mergeStatus"], reviewers)  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, repo_id: str, pull_request_id: str) -> "PullRequest":
-        request = requests.get(f"https://dev.azure.com/{ado_helper.ado_org}/{ado_helper.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}?api-version=7.1", auth=ado_helper.auth).json()  # fmt: skip
+    def get_by_id(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str) -> "PullRequest":
+        request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}?api-version=7.1", auth=ado_client.auth).json()  # fmt: skip
         return cls.from_json(request)
 
     @classmethod
-    def create(cls, ado_helper: AdoClient, repo_id: str, branch_name: str, pull_request_title: str, pull_request_description: str) -> "PullRequest":  # fmt: skip
+    def create(cls, ado_client: AdoClient, repo_id: str, branch_name: str, pull_request_title: str, pull_request_description: str) -> "PullRequest":  # fmt: skip
         payload = {"sourceRefName": branch_name, "targetRefName": "refs/heads/main", "title": pull_request_title, "description": pull_request_description}  # fmt: skip
-        request = requests.post(f"https://dev.azure.com/{ado_helper.ado_org}/{ado_helper.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?api-version=5.1", json=payload, auth=ado_helper.auth).json()  # fmt: skip
+        request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?api-version=5.1", json=payload, auth=ado_client.auth).json()  # fmt: skip
         return cls.from_json(request)
 
-    def add_reviewer(self, ado_helper: AdoClient, reviewer_id: str) -> None:
-        request = requests.put(f"https://dev.azure.com/{ado_helper.ado_org}/{ado_helper.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}/reviewers/{reviewer_id}?api-version=7.1-preview.1",
-                                json={"vote": "0", "isRequired": "true"}, auth=ado_helper.auth)  # fmt: skip
+    def add_reviewer(self, ado_client: AdoClient, reviewer_id: str) -> None:
+        request = requests.put(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}/reviewers/{reviewer_id}?api-version=7.1-preview.1",
+                                json={"vote": "0", "isRequired": "true"}, auth=ado_client.auth)  # fmt: skip
         assert request.status_code < 300
 
     @staticmethod
-    def add_reviewer_static(ado_helper: AdoClient, repo_id: str, pull_request_id: int, reviewer_id: str) -> None:
+    def add_reviewer_static(ado_client: AdoClient, repo_id: str, pull_request_id: int, reviewer_id: str) -> None:
         """Copy of the add_reviewer method, but static, i.e. if you have the repo id and pr id, you don't need to fetch them again"""
         reviewers_payload = {"vote": "0", "isRequired": "true"}
-        request = requests.put(f"https://dev.azure.com/{ado_helper.ado_org}/{ado_helper.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/reviewers/{reviewer_id}?api-version=7.1-preview.1",
-                                json=reviewers_payload, auth=ado_helper.auth)  # fmt: skip
+        request = requests.put(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/reviewers/{reviewer_id}?api-version=7.1-preview.1",
+                                json=reviewers_payload, auth=ado_client.auth)  # fmt: skip
         assert request.status_code < 300
 
-    def change_status(self, ado_helper: AdoClient, status: PullRequestStatus) -> None:
+    def change_status(self, ado_client: AdoClient, status: PullRequestStatus) -> None:
         json_payload = {"status": status}
         request = requests.post(
-            f"https://dev.azure.com/{ado_helper.ado_org}/{ado_helper.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",
-            json=json_payload, auth=ado_helper.auth,  # fmt: skip
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",
+            json=json_payload, auth=ado_client.auth,  # fmt: skip
         )
         assert request.status_code < 300
 
-    def mark_as_draft(self, ado_helper: AdoClient) -> None:
+    def mark_as_draft(self, ado_client: AdoClient) -> None:
         json_payload = {"isDraft": True}
         request = requests.post(
-            f"https://dev.azure.com/{ado_helper.ado_org}/{ado_helper.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}/draft?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}/draft?api-version=7.1",
             json_payload,
-            auth=ado_helper.auth,
+            auth=ado_client.auth,
         )
         assert request.status_code < 300
 
-    def get_reviewers(self, ado_helper: AdoClient) -> list[Member]:
+    def get_reviewers(self, ado_client: AdoClient) -> list[Member]:
         request = requests.get(
-            f"https://dev.azure.com/{ado_helper.ado_org}/{ado_helper.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}/reviewers?api-version=7.1",
-            auth=ado_helper.auth,
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}/reviewers?api-version=7.1",
+            auth=ado_client.auth,
         ).json()
         return [Member(reviewer["displayName"], reviewer["uniqueName"], reviewer["id"]) for reviewer in request["value"]]
-
-
-if __name__ == "__main__":
-    from secret import email, ado_access_token, ado_org, ado_project, EXISTING_REPO_NAME
-    from client import AdoClient
-    from repository import Repo
-
-    ado_helper = AdoClient(email, ado_access_token, ado_org, ado_project)
-    repo = Repo.get_by_id(ado_helper, EXISTING_REPO_NAME)
-    pull_requests = repo.get_all_pull_requests(ado_helper, "all")
-    print("\n".join([str(x) for x in pull_requests]))

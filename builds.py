@@ -153,11 +153,3 @@ class BuildDefinition:
 
 
 # ========================================================================================================
-
-if __name__ == "__main__":
-    from secret import email, ado_access_token, ado_org, ado_project
-
-    ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
-    build = BuildDefinition.get_by_id(ado_client, 4)
-    # build = Build.get_by_id(ado_client, 91853)
-    print(f"{build!r}")

@@ -82,6 +82,9 @@ class PullRequest:
         )
         assert request.status_code < 300
 
+    def close(self, ado_client: AdoClient) -> None:
+        self.change_status(ado_client, "abandoned")
+
     def mark_as_draft(self, ado_client: AdoClient) -> None:
         json_payload = {"isDraft": True}
         request = requests.post(

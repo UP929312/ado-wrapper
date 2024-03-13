@@ -14,12 +14,12 @@ ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
 
 # from repository import Repo
 # from commits import Commit
-# from user import AdoUser
-from teams import Team
+# from users import AdoUser
 
-team = Team.get_by_name(ado_client, "Common Components")
-members = team.get_members(ado_client)
-print(members)
+# print(AdoUser.get_by_email(ado_client, "ben.skerritt@vodafone.com").descriptor_id)
+
+# members = team.get_members(ado_client)
+# print(members)
 
 # repo = Commit.get_all_by_repo(ado_client, EXISTING_REPO_NAME)
 # print(repo)

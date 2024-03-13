@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 
 class Team:
+    """Describe a Azure DevOps team"""
+
     def __init__(self, team_id: str, name: str, description: str) -> None:
         self.team_id = team_id
         self.name = name
@@ -62,7 +64,7 @@ class Team:
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all_teams(cls, ado_client: AdoClient) -> list["Team"]:
+    def get_all(cls, ado_client: AdoClient) -> list["Team"]:
         request = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{ado_client.ado_project}/teams?api-version=7.1-preview.2",
             auth=ado_client.auth,
@@ -71,7 +73,7 @@ class Team:
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, team_name: str) -> "Team":
-        for team in cls.get_all_teams(ado_client):
+        for team in cls.get_all(ado_client):
             if team.name == team_name:
                 return team
         raise ValueError(f"Team {team_name} not found")

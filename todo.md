@@ -16,5 +16,5 @@ Pylint command:
 pylint *.py --disable=C0301,C0103,R0801,E0602,C0114,C0116,C0115,W3101,W0621,R0913,W0511,R0902,R1710,C0415,W0237
 mypy . --strict
 black . --line-length 140
-pytest tests/
+pytest tests/ -vvvv -s
 python3.11 -m client --delete-everything

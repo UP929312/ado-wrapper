@@ -1,5 +1,5 @@
 from secret import email, ado_access_token, ado_org, ado_project
-from main import AdoClient
+from client import AdoClient
 from repository import Repo
 
 client = AdoClient(email, ado_access_token, ado_org, ado_project)

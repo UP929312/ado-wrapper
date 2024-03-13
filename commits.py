@@ -3,7 +3,7 @@ from datetime import datetime
 
 import requests
 
-from main import AdoClient
+from client import AdoClient
 from repository import Repo
 from members import Member
 from utils import from_ado_date_string
@@ -88,7 +88,7 @@ class Commit:
 
 if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project
-    from main import AdoClient
+    from client import AdoClient
 
     ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
     # repo = Repo.get_by_id(ado_client, "")

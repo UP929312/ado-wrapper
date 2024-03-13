@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 # import requests
 
 if TYPE_CHECKING:
-    from main import AdoClient
+    from client import AdoClient
 
 
 class Team:
@@ -55,6 +55,6 @@ class Team:
 
 if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project
-    from main import AdoClient
+    from client import AdoClient
 
     ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)

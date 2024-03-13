@@ -3,7 +3,7 @@ from typing import Literal, Any, TYPE_CHECKING
 # import requests
 
 if TYPE_CHECKING:
-    from main import AdoClient
+    from client import AdoClient
 
 VOTE_ID_TO_TYPE = {
     10: "approved",
@@ -77,7 +77,7 @@ class Reviewer(Member):
 
 if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project
-    from main import AdoClient
+    from client import AdoClient
 
     ado_helper = AdoClient(email, ado_access_token, ado_org, ado_project)
     # print(Member.get_all_members(ado_helper))

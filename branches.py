@@ -1,6 +1,6 @@
 import requests
 
-from main import AdoClient
+from client import AdoClient
 
 
 class Branch:
@@ -85,6 +85,7 @@ class Branch:
             auth=ado_client.auth,
         )
         assert request.status_code < 300
+
 
 if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project, ALTERNATIVE_EXISTING_REPO_NAME

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from pull_requests import PullRequest, PullRequestStatus
 
 if TYPE_CHECKING:
-    from main import AdoClient
+    from client import AdoClient
 
 
 class Repo:
@@ -122,7 +122,7 @@ class Repo:
 
 if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project, ALTERNATIVE_EXISTING_REPO_NAME
-    from main import AdoClient
+    from client import AdoClient
 
     ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
     repo = Repo.get_by_name(ado_client, ALTERNATIVE_EXISTING_REPO_NAME)

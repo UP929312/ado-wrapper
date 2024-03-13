@@ -9,7 +9,7 @@ from members import Member, Reviewer
 from utils import from_ado_date_string
 
 if TYPE_CHECKING:
-    from main import AdoClient
+    from client import AdoClient
     from repository import Repo
 
 PullRequestStatus = Literal["active", "completed", "abandoned", "all", "notSet"]
@@ -101,7 +101,7 @@ class PullRequest:
 
 if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project, EXISTING_REPO_NAME
-    from main import AdoClient
+    from client import AdoClient
     from repository import Repo
 
     ado_helper = AdoClient(email, ado_access_token, ado_org, ado_project)

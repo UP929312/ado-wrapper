@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+
 def get_resource_variables() -> list[str]:
     from branches import Branch
     from build import Build, BuildDefinition
@@ -18,18 +19,24 @@ def get_resource_variables() -> list[str]:
     ALL_RESOURCE_CLASSES = [Branch, Build, BuildDefinition, Commit, Member, PullRequest, Release, ReleaseDefinition, Repo, Team]
     return [resource.__name__ for resource in ALL_RESOURCE_CLASSES]
 
+
 ActionType = Literal["created", "updated"]
-ResourceType = Literal["Branch", "Build", "BuildDefinition", "Commit", "Member", "PullRequest", "Release", "ReleaseDefinition", "Repo", "Team"]
+ResourceType = Literal[
+    "Branch", "Build", "BuildDefinition", "Commit", "Member", "PullRequest", "Release", "ReleaseDefinition", "Repo", "Team"
+]
 StateFileEntryType = dict[str, Any]
+
 
 class StateFileType(TypedDict):
     created: dict[ResourceType, StateFileEntryType]
     updated: dict[ResourceType, dict[str, tuple[Any, Any]]]
 
+
 STATE_FILE_VERSION = 1
 
+
 class AdoClient:
-    def __init__(self, ado_email: str, ado_pat: str, ado_org: str, ado_project: str, state_file_name: str | None="main.state") -> None:
+    def __init__(self, ado_email: str, ado_pat: str, ado_org: str, ado_project: str, state_file_name: str | None = "main.state") -> None:
         self.auth = HTTPBasicAuth(ado_email, ado_pat)
         self.ado_org = ado_org
         self.ado_project = ado_project
@@ -81,17 +88,21 @@ class AdoClient:
             return None
         ALL_RESOURCE_STRINGS = get_resource_variables()
         with open(self.state_file_name, "w", encoding="utf-8") as state_file:  # type: ignore[this-will-never-run-raw]
-            return json.dump({
-                "state_file_version": STATE_FILE_VERSION,
-                "created": {resource: {} for resource in ALL_RESOURCE_STRINGS},
-                "updated": {resource: {} for resource in ALL_RESOURCE_STRINGS},
-                }, state_file)
+            return json.dump(
+                {
+                    "state_file_version": STATE_FILE_VERSION,
+                    "created": {resource: {} for resource in ALL_RESOURCE_STRINGS},
+                    "updated": {resource: {} for resource in ALL_RESOURCE_STRINGS},
+                },
+                state_file,
+            )
 
     # def get_state(self, resource_id: str, resource_type: ResourceType) -> ActionType | None:
     #     all_states = self.get_all_states()
     #     if resource_id in all_states["created"][resource_type]:
     #         return "created"
     #     return None
+
 
 if __name__ == "__main__":
     ALL_RESOURCE_STRINGS = get_resource_variables()

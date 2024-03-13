@@ -3,7 +3,7 @@ from typing import Any, Literal
 
 import requests
 
-from main import AdoClient
+from client import AdoClient
 from members import Member
 from repository import Repo
 from utils import from_ado_date_string

@@ -6,7 +6,8 @@ import requests
 from client import AdoClient
 from users import Member
 from repository import Repo
-from utils import from_ado_date_string
+from utils import from_ado_date_string, DeletionFailed
+from state_managed_abc import StateManagedResource
 
 BuildStatus = Literal["notStarted", "inProgress", "completed", "cancelling", "postponed", "notSet", "none"]
 QueuePriority = Literal["low", "belowNormal", "normal", "aboveNormal", "high"]
@@ -14,17 +15,24 @@ QueuePriority = Literal["low", "belowNormal", "normal", "aboveNormal", "high"]
 # ========================================================================================================
 
 
-def get_build_definition(name: str, repo_id: str, repo_name: str, path_to_pipeline: str) -> dict[str, Any]:
+def get_build_definition(name: str, repo_id: str, repo_name: str, path_to_pipeline: str, description: str, project: str, agent_pool_id: str) -> dict[str, Any]:
     return {
-        "folder": None,
         "name": f"{name}",
-        "configuration": {
-            "type": "yaml",
-            "path": path_to_pipeline,
-            "repository": {"id": repo_id, "name": repo_name, "type": "azureReposGit"},
+        "description": description,
+        "repository": {
+            "id": repo_id,
+            "name": repo_name,
+            "type": "TfsGit"
         },
+        "project": project,
+        "process": {
+            "yamlFilename": path_to_pipeline,
+            "type": 2,
+        },
+        "type": "build",
+        "queue": {"id": agent_pool_id}
     }
-
+# "folder": None,
 
 # ========================================================================================================
 
@@ -94,7 +102,7 @@ class Build:
 # ========================================================================================================
 
 
-class BuildDefinition:
+class BuildDefinition(StateManagedResource):
     def __init__(self, build_definition_id: str, name: str, description: str, path: str, created_by: Member, created_date: datetime, repo: Repo,
                  variables: dict[str, str] | None, variable_groups: list[int] | None) -> None:  # fmt: skip
         self.build_definition_id = build_definition_id
@@ -113,6 +121,26 @@ class BuildDefinition:
     def __repr__(self) -> str:
         return f"BuildDefinition(name={self.name!r}, description={self.description}, created_by={self.created_by!r}, created_on={self.created_date!s}, id={self.build_definition_id}, repo={self.repo!r})"
 
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "build_definition_id": self.build_definition_id,
+            "name": self.name,
+            "description": self.description,
+            "path": self.path,
+            "created_by": self.created_by.to_json(),
+            "created_date": self.created_date.isoformat(),
+            "repo": self.repo.to_json(),
+            "variables": self.variables,
+            "variable_groups": self.variable_groups,
+        }
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> "BuildDefinition":
+        created_by = Member.from_json(data["created_by"])
+        repo = Repo.from_json(data["repo"])
+        return cls(data["build_definition_id"], data["name"], data["description"], data["path"], created_by,
+                    datetime.fromisoformat(data["created_date"]), repo, data.get("variables", None), data.get("variable_groups", None))  # fmt: skip
+
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "BuildDefinition":
         created_by = Member(data["authoredBy"]["displayName"], data["authoredBy"]["uniqueName"], data["authoredBy"]["id"])
@@ -121,12 +149,42 @@ class BuildDefinition:
                    from_ado_date_string(data["createdDate"]), repo, data.get("variables", None), data.get("variableGroups", None))  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, build_definition_id: int) -> "BuildDefinition":
+    def get_by_id(cls, ado_client: AdoClient, build_definition_id: str) -> "BuildDefinition":
         response = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{build_definition_id}?api-version=7.1",
             auth=ado_client.auth,
         ).json()
         return cls.from_request_payload(response)
+
+    @classmethod
+    def create(
+        cls, ado_client: AdoClient, name: str, repo_id: str, repo_name: str, path_to_pipeline: str, description: str, agent_pool_id: str
+    ) -> "BuildDefinition":
+        """Takes a list of variable group ids to include, and an agent_pool_id"""
+        body = get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, agent_pool_id)
+        request = requests.post(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.0",
+            json=body,
+            auth=ado_client.auth,
+        ).json()
+        print("#"*50, "\n", request, "\n", "#"*50, "\n")
+        ado_client.add_resource_to_state(cls.__name__, request["id"], request)  # type: ignore[arg-type]
+        return cls.from_request_payload(request)
+
+    @staticmethod
+    def delete_by_id(ado_client: AdoClient, resource_id: str) -> None:
+        delete_request = requests.delete(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{resource_id}?forceDelete=true&api-version=7.1",
+            auth=ado_client.auth,
+        )
+        if delete_request.status_code != 204:
+            raise DeletionFailed(f"Failed to delete build definition with id {resource_id}")
+        else:
+            ado_client.remove_resource_from_state(Repo.__name__, resource_id)  # type: ignore[arg-type]
+
+    # ============ End of requirement set by all state managed resources ================== #
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+    # =============== Start of additional methods included with class ===================== #
 
     def get_all_builds_by_definition(self, ado_client: AdoClient) -> "list[Build]":  # TODO: Test
         response = requests.get(
@@ -135,21 +193,8 @@ class BuildDefinition:
         ).json()
         return [Build.from_request_payload(build) for build in response["value"]]
 
-    # @classmethod  # TODO: Test
-    # def create(cls, ado_client: AdoHelper, name: str, repo_id: str, repo_name: str, path_to_pipeline: str) -> "BuildDefinition":
-    #     """Takes a list of variable group ids to include, and an agent_pool_id"""
-    #     body = get_build_definition(name, repo_id, repo_name, path_to_pipeline)
-    #     data = requests.post(
-    #         f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.0",
-    #         json=body, auth=ado_client.auth,
-    #     ).json()
-    #     return cls.from_request_payload(data)
-
-    # def delete(self) -> None:  # TODO: Test
-    #     delete_request = requests.delete(
-    #         f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{self.id}?forceDelete=true&api-version=7.1", auth=ado_client.auth
-    #     )
-    #     assert delete_request.status_code == 204
+    def delete(self, ado_client: AdoClient) -> None:
+        return self.delete_by_id(ado_client, self.build_definition_id)
 
 
 # ========================================================================================================

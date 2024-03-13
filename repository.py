@@ -19,10 +19,10 @@ class Repo(StateManagedResource):
         self.default_branch = default_branch
         self.is_disabled = is_disabled
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return f"Repo(name={self.name}, id={self.repo_id})"
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return f"Repo(name={self.name}, id={self.repo_id})"
 
     def to_json(self) -> dict[str, Any]:
@@ -64,7 +64,8 @@ class Repo(StateManagedResource):
         request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1", auth=ado_client.auth)  # fmt: skip
         if request.status_code != 204:
             raise DeletionFailed(f"Error deleting repo {repo_id}: {request.text}")
-        ado_client.remove_resource_from_state(Repo.__name__, repo_id)  # type: ignore[arg-type]
+        else:
+            ado_client.remove_resource_from_state(Repo.__name__, repo_id)  # type: ignore[arg-type]
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

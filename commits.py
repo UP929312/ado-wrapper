@@ -68,12 +68,12 @@ class Commit:
         return cls.from_request_payload(commit)
 
     @classmethod
-    def create(cls, ado_client: AdoClient, repo: Repo, branch_name: str, updates: dict[str, str], change_type: ChangeType) -> "Commit":
+    def create(cls, ado_client: AdoClient, repo_id: str, branch_name: str, updates: dict[str, str], change_type: ChangeType) -> "Commit":
         """Creates a commit in the given repository with the given updates and returns the commit object."""
-        latest_commits = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo.repo_id}/commits?api-version=5.1", auth=ado_client.auth).json()["value"]  # fmt: skip
+        latest_commits = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits?api-version=5.1", auth=ado_client.auth).json()["value"]  # fmt: skip
         latest_commit_id = None if not latest_commits else latest_commits[0]["commitId"]
         data = get_commit_body_template(latest_commit_id, updates, branch_name, change_type)
-        commit_response = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo.repo_id}/pushes?api-version=5.1", json=data, auth=ado_client.auth).json()  # fmt: skip
+        commit_response = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=5.1", json=data, auth=ado_client.auth).json()  # fmt: skip
         return cls.from_request_payload(commit_response["commits"][-1])
 
     @staticmethod

@@ -4,9 +4,24 @@ from client import AdoClient
 from repository import Repo
 from builds import Build, BuildDefinition
 from users import Member
+from commits import Commit
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
-    ado_org, ado_project, email, pat_token, existing_repo_name, existing_repo_id, *_ = test_data.read().splitlines()
+    (
+        ado_org, ado_project, email, pat_token, existing_repo_name, existing_repo_id, _, _, _, _, _, existing_agent_pool_id,
+        *_
+    ) = test_data.read().splitlines()
+
+BUILD_YAML_FILE = """---
+trigger:
+  - main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - script: echo Hello, world!
+    displayName: 'Run a one-line script'"""
 
 
 class TestBuild:
@@ -56,31 +71,12 @@ class TestBuildDefinition:
         assert isinstance(build_definition.created_by, Member)
         assert isinstance(build_definition.created_date, datetime)
 
-    # def test_create_delete_build(self) -> None:
-    #     build = Build.create(self.ado_client, "ado-api-test-repo")
-    #     assert repo.name == "ado-api-test-repo"
-    #     repo.delete(self.ado_client)
-
-    # def test_get_all_repos(self) -> None:
-    #     repos = Repo.get_all(self.ado_client)
-    #     assert len(repos) > 10
-    #     assert all([isinstance(repo, Repo) for repo in repos])
-
-    # def test_get_by_name(self) -> None:
-    #     repo = Repo.get_by_name(self.ado_client, existing_repo_name)
-    #     assert repo.name == existing_repo_name
-
-    # def test_get_by_id(self) -> None:
-    #     repo = Repo.get_by_id(self.ado_client, existing_repo_id)
-    #     assert repo.repo_id == existing_repo_id
-
-    # def test_get_file(self) -> None:
-    #     repo = Repo.get_by_name(self.ado_client, existing_repo_name)
-    #     file = repo.get_file(self.ado_client, "README.md")
-    #     assert len(file) > 10
-
-    # def test_get_repo_contents(self) -> None:
-    #     repo = Repo.get_by_name(self.ado_client, existing_repo_name)
-    #     contents = repo.get_repo_contents(self.ado_client)
-    #     assert len(contents) > 10
-    #     assert isinstance(contents, dict)
+    def test_create_delete_build(self) -> None:
+        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-builds")
+        _ = Commit.create(self.ado_client, repo.repo_id, "main", {"build.yaml": BUILD_YAML_FILE}, "add"),
+        build_definition = BuildDefinition.create(
+            self.ado_client, "ado-api-test-build", repo.repo_id, "ado-api-test-repo", "build.yaml", "my-test-description", existing_agent_pool_id
+        )
+        assert build_definition.description == "my-test-description"
+        build_definition.delete(self.ado_client)
+        repo.delete(self.ado_client)

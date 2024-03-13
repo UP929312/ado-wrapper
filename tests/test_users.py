@@ -4,7 +4,10 @@ from client import AdoClient
 from users import AdoUser
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
-    ado_org, ado_project, email, pat_token, _, _, _, _, existing_user_name, existing_user_email, existing_user_id, *_ = test_data.read().splitlines()  # fmt: skip
+    (
+        ado_org, ado_project, email, pat_token, _, _, _, _, existing_user_name, existing_user_email, existing_user_id,
+        *_  # fmt: skip
+    ) = test_data.read().splitlines()  # type: ignore[assignment]
 
 
 class TestAdoUser:

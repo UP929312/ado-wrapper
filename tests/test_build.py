@@ -38,17 +38,19 @@ class TestBuildDefinition:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)
 
     def test_from_request_payload(self) -> None:
-        build_definition = BuildDefinition.from_request_payload({
-            "id": "123",
-            "name": "test-repo",
-            "description": "test-repo",
-            "process": {"yamlFilename": "test-repo"},
-            "authoredBy": {"displayName": "test", "uniqueName": "test", "id": "123"},
-            "createdDate": "2021-10-01T00:00:00Z",
-            "repository": {"id": "123", "name": "test-repo"},
-            "variables": {},
-            "variableGroups": [],
-        })
+        build_definition = BuildDefinition.from_request_payload(
+            {
+                "id": "123",
+                "name": "test-repo",
+                "description": "test-repo",
+                "process": {"yamlFilename": "test-repo"},
+                "authoredBy": {"displayName": "test", "uniqueName": "test", "id": "123"},
+                "createdDate": "2021-10-01T00:00:00Z",
+                "repository": {"id": "123", "name": "test-repo"},
+                "variables": {},
+                "variableGroups": [],
+            }
+        )
         assert build_definition.build_definition_id == "123"
         assert build_definition.name == "test-repo"
         assert isinstance(build_definition.created_by, Member)

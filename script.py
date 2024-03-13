@@ -7,8 +7,9 @@
 #             print("   PR:", pr)
 #             print("     Reviewers:", pr.get_reviewers(client))
 
-from secret import email, ado_access_token, ado_org, ado_project  #, EXISTING_REPO_NAME
+from secret import email, ado_access_token, ado_org, ado_project  # , EXISTING_REPO_NAME
 from client import AdoClient
+
 ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
 
 # from repository import Repo

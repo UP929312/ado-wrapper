@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING
 
 import requests
 
+from users import TeamMember
+
 if TYPE_CHECKING:
     from client import AdoClient
-
-from users import TeamMember
 
 
 class Team:
@@ -39,7 +39,10 @@ class Team:
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, team_id: str) -> "Team":
-        request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{ado_client.ado_project}/teams/{team_id}?$expandIdentity={True}&api-version=7.1-preview.2", auth=ado_client.auth).json()
+        request = requests.get(
+            f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{ado_client.ado_project}/teams/{team_id}?$expandIdentity={True}&api-version=7.1-preview.2",
+            auth=ado_client.auth,
+        ).json()
         return cls.from_request_payload(request)
 
     @classmethod
@@ -62,7 +65,7 @@ class Team:
     def get_all_teams(cls, ado_client: AdoClient) -> list["Team"]:
         request = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{ado_client.ado_project}/teams?api-version=7.1-preview.2",
-            auth=ado_client.auth
+            auth=ado_client.auth,
         ).json()["value"]
         return [cls.from_request_payload(team) for team in request]
 
@@ -76,7 +79,6 @@ class Team:
     def get_members(self, ado_client: AdoClient) -> list["TeamMember"]:
         request = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{ado_client.ado_project}/teams/{self.team_id}/members?api-version=7.1-preview.2",
-            auth=ado_client.auth
+            auth=ado_client.auth,
         ).json()["value"]
         return [TeamMember.from_request_payload(member) for member in request]
-

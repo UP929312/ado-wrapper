@@ -11,6 +11,7 @@ ReleaseStatus = Literal["active", "abandoned", "draft", "undefined"]
 
 # ========================================================================================================
 
+
 def get_release_definition(name: str, variable_group_ids: list[int] | None, agent_pool_id: int) -> dict[str, Any]:
     return {
         "id": 0,
@@ -62,6 +63,7 @@ def get_release_definition(name: str, variable_group_ids: list[int] | None, agen
         ],
     }
 
+
 # ========================================================================================================
 
 
@@ -91,7 +93,7 @@ class Release:
     def from_json(cls, data: dict[str, Any]) -> "Release":
         created_by = Member.from_json(data["created_by"])
         return cls(data["release_id"], data["name"], data["status"], from_iso(data["created_on"]), created_by, data["description"],
-                   data["variables"], data["variable_groups"], data["keep_forever"])
+                   data["variables"], data["variable_groups"], data["keep_forever"])  # fmt: skip
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -181,7 +183,7 @@ class ReleaseDefinition:
     def from_json(cls, data: dict[str, Any]) -> "ReleaseDefinition":
         created_by = Member.from_json(data["created_by"])
         return cls(data["name"], data["description"], created_by, from_iso(data["created_on"]), data["release_definition_id"],
-                   data["release_name_format"], data["variable_groups"], data["variables"])
+                   data["release_name_format"], data["variable_groups"], data["variables"])  # fmt: skip
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -234,5 +236,6 @@ class ReleaseDefinition:
             auth=ado_client.auth,
         )
         assert delete_request.status_code == 204
+
 
 # ========================================================================================================

@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 if TYPE_CHECKING:
     from client import AdoClient
 
+
 class StateManagedResource(ABC):
     @classmethod
     @abstractmethod

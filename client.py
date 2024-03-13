@@ -37,6 +37,7 @@ class StateFileType(TypedDict):
 
 STATE_FILE_VERSION = 1
 
+
 class AdoClient:
     def __init__(self, ado_email: str, ado_pat: str, ado_org: str, ado_project: str, state_file_name: str | None = "main.state") -> None:
         self.auth = HTTPBasicAuth(ado_email, ado_pat)
@@ -107,7 +108,6 @@ class AdoClient:
         class_reference = [x for x in all_resource_classes if x.__name__ == resource_type][0]
         data = class_reference.get_by_id(self, resource_id).to_json()
         self.add_resource_to_state(resource_type, resource_id, data)
-
 
     def wipe_state(self) -> None:
         if self.state_file_name is None:

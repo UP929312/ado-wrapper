@@ -20,6 +20,7 @@ VoteOptions = Literal[10, 5, 0, -5, -10]
 
 # ======================================================================================================= #
 
+
 class AdoUser(StateManagedResource):
     def __init__(self, descriptor_id: str, name: str, email: str, origin: str, origin_id: str) -> None:
         self.descriptor_id = descriptor_id
@@ -58,7 +59,10 @@ class AdoUser(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, descriptor_id: str) -> "AdoUser":
-        request = requests.get(f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users/{descriptor_id}?api-version=6.0-preview.1", auth=ado_client.auth).json()
+        request = requests.get(
+            f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users/{descriptor_id}?api-version=6.0-preview.1",
+            auth=ado_client.auth,
+        ).json()
         return cls.from_request_payload(request)
 
     @classmethod
@@ -75,7 +79,9 @@ class AdoUser(StateManagedResource):
 
     @classmethod
     def get_all(cls, ado_client: AdoClient) -> list["AdoUser"]:
-        request = requests.get(f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users?api-version=7.1-preview.1", auth=ado_client.auth).json()
+        request = requests.get(
+            f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users?api-version=7.1-preview.1", auth=ado_client.auth
+        ).json()
         return [cls.from_request_payload(member) for member in request["value"]]
 
     @classmethod
@@ -95,6 +101,7 @@ class AdoUser(StateManagedResource):
     def delete(self, ado_client: AdoClient) -> None:
         self.delete_by_id(ado_client, self.descriptor_id)
 
+
 # ======================================================================================================= #
 # ------------------------------------------------------------------------------------------------------- #
 # ======================================================================================================= #
@@ -102,6 +109,7 @@ class AdoUser(StateManagedResource):
 
 class Member:
     """A stripped down member class which is often returned by the API, for example in build requests."""
+
     def __init__(self, name: str, email: str, member_id: str) -> None:
         self.name = name
         self.email = email.removeprefix("vstfs:///Classification/TeamProject/")
@@ -128,12 +136,15 @@ class Member:
     def from_request_payload(cls, data: dict[str, Any]) -> "Member":
         return cls(data["displayName"], data["mailAddress"], data["originId"])
 
+
 # ======================================================================================================= #
 # ------------------------------------------------------------------------------------------------------- #
 # ======================================================================================================= #
 
+
 class TeamMember(Member):
     """Identical to Member, but with an additional attribute `is_team_admin`."""
+
     def __init__(self, name: str, email: str, member_id: str, is_team_admin: bool) -> None:
         super().__init__(name, email, member_id)
         self.is_team_admin = is_team_admin
@@ -160,12 +171,15 @@ class TeamMember(Member):
     def from_request_payload(cls, data: dict[str, Any]) -> "TeamMember":
         return cls(data["identity"]["displayName"], data["identity"]["uniqueName"], data["identity"]["id"], data.get("isTeamAdmin", False))
 
+
 # ======================================================================================================= #
 # ------------------------------------------------------------------------------------------------------- #
 # ======================================================================================================= #
 
+
 class Reviewer(Member):
     """Identical to Member, but with additional attributes `vote` and `is_required` for PR reviews."""
+
     def __init__(self, name: str, email: str, reviewer_id: str, vote: VoteOptions, is_required: bool) -> None:
         super().__init__(name, email, reviewer_id)
         self.vote = vote
@@ -193,5 +207,6 @@ class Reviewer(Member):
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Reviewer":
         return cls(data["displayName"], data["uniqueName"], data["id"], data["vote"], data.get("isRequired", False))
+
 
 # ======================================================================================================= #

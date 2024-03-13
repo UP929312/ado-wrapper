@@ -39,7 +39,7 @@ class Member:
     #     return cls.from_json(request)
 
     # @classmethod  # We don't have vssps (identity) access, so we can't use this
-    # def get_all_members(cls, ado_helper: AdoHelper) -> list["Member"]:
+    # def get_all(cls, ado_helper: AdoHelper) -> list["Member"]:
     #     request = requests.get(f"https://vssps.dev.azure.com/{ado_helper.ado_org}/_apis/graph/users?api-version=7.1-preview.1", auth=ado_helper.auth).json()
     #     print(request.status_code, request.text)
     #     return [cls.from_json(member) for member in request["value"]]

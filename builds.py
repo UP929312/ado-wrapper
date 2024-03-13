@@ -71,7 +71,7 @@ class Build:
         return cls.from_json(response)
 
     @classmethod
-    def get_all_builds_for_definition(cls, ado_client: AdoClient, definition_id: int) -> "list[Build]":
+    def get_all_builds_by_definition(cls, ado_client: AdoClient, definition_id: int) -> "list[Build]":
         response = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?api-version=7.1&definitions={definition_id}",
             auth=ado_client.auth,

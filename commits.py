@@ -77,7 +77,7 @@ class Commit:
         return cls.from_json(commit_response["commits"][-1])
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient, repo_id: str) -> "list[Commit]":
+    def get_all_by_repo(cls, ado_client: AdoClient, repo_id: str) -> "list[Commit]":
         """Returns a list of all commits in the given repository."""
         commits = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits?api-version=5.1",

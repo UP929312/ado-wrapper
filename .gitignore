@@ -6,3 +6,6 @@ secret.py
 *.state
 fixer.py
 main.json
+
+tests/test_data.txt
+.pytest_cache

@@ -28,7 +28,7 @@ class Repo:
         return cls(repo_response["id"], repo_response["name"])
 
     @classmethod
-    def create_repo(cls, ado_client: AdoClient, name: str) -> "Repo":
+    def create(cls, ado_client: AdoClient, name: str) -> "Repo":
         request = requests.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=6.0",
             json={"name": name},
@@ -37,7 +37,7 @@ class Repo:
         return cls.from_json(request)
 
     @classmethod
-    def get_all_repos(cls, ado_client: AdoClient) -> list["Repo"]:
+    def get_all(cls, ado_client: AdoClient) -> list["Repo"]:
         request = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
             auth=ado_client.auth,
@@ -115,7 +115,7 @@ class Repo:
                 print(f"Repo {pull_requests['message'].split('identifier')[1].split(' ')[0]} was disabled, or you had no access.")
             return []
 
-    def delete_repo(self, ado_client: AdoClient) -> None:
+    def delete(self, ado_client: AdoClient) -> None:
         request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}?api-version=7.1", auth=ado_client.auth)  # fmt: skip
         assert request.status_code == 204
 

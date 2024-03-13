@@ -8,7 +8,7 @@ from pathlib import Path
 
 def get_resource_variables() -> list[str]:
     from branches import Branch
-    from build import Build, BuildDefinition
+    from builds import Build, BuildDefinition
     from commits import Commit
     from members import Member
     from pull_requests import PullRequest

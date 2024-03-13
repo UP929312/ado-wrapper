@@ -25,7 +25,7 @@ class Team:
         return cls(team_response["id"], team_response["name"], team_response.get("description", ""))
 
     # @classmethod
-    # def create_team(cls, ado_client: AdoHelper, name: str, description: str) -> "Team":
+    # def create(cls, ado_client: AdoHelper, name: str, description: str) -> "Team":
     #     request = requests.post(f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/teams?api-version=7.1-preview.2", json={"name": name, "description": description}, auth=ado_client.auth).json()
     #     return cls.from_json(request)
 
@@ -48,7 +48,7 @@ class Team:
     #     raise ValueError(f"Team {team_name} not found")
 
     # @classmethod
-    # def delete_team(cls, ado_client: AdoHelper, team_id: str) -> None:
+    # def delete(cls, ado_client: AdoHelper, team_id: str) -> None:
     #     request = requests.delete(f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/teams/{team_id}?api-version=7.1-preview.2", auth=ado_client.auth)
     #     assert request.status_code < 300
 

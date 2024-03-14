@@ -31,6 +31,7 @@ def get_build_definition(
         "queue": {"id": agent_pool_id},
     }
 
+
 # ========================================================================================================
 
 
@@ -101,7 +102,7 @@ class Build(StateManagedResource):
     def create(cls, ado_client: AdoClient, definition_id: str) -> "Build":
         request = requests.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?definitionId={definition_id}&api-version=7.1",
-            json={"reason": "An automated build created by the ADO-API"}, auth=ado_client.auth
+            json={"reason": "An automated build created by the ADO-API"}, auth=ado_client.auth,  # fmt: skip
         ).json()
         return cls.from_request_payload(request)
 
@@ -127,6 +128,7 @@ class Build(StateManagedResource):
 
     def delete(self, ado_client: AdoClient) -> None:
         return self.delete_by_id(ado_client, self.build_id)
+
 
 # ========================================================================================================
 

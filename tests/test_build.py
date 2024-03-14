@@ -30,7 +30,7 @@ class TestBuild:
 
     def test_from_request_payload(self) -> None:
         build = Build.from_request_payload(
-             {
+            {
                 "id": "123",
                 "buildNumber": 456,
                 "status": "completed",
@@ -42,7 +42,7 @@ class TestBuild:
                 "queueTime": "2021-10-01T00:00:00Z",
                 "reason": "test",
                 "priority": "test",
-             }
+            }
         )
         assert build.build_id == "123"
         assert build.build_number == "456"

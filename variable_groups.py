@@ -17,14 +17,14 @@ class VariableGroup(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/distributedtask/variablegroups?view=azure-devops-rest-7.1"""
     def __init__(self, variable_group_id: str, name: str, description: str, variables: dict[str, str], created_on: datetime,
                  created_by: Member, modified_by: Member, modified_on: datetime | None) -> None:  # fmt: skip
-        self.variable_group_id = variable_group_id
+        self.variable_group_id = variable_group_id  # Static
         self.name = name
         self.description = description
         self.variables = variables
-        self.created_on = created_on
-        self.created_by = created_by
-        self.modified_by = modified_by
-        self.modified_on = modified_on
+        self.created_on = created_on  # Static
+        self.created_by = created_by  # Static
+        self.modified_by = modified_by  # Static
+        self.modified_on = modified_on  # Static
 
     def __str__(self) -> str:
         return f"VariableGroup(id={self.variable_group_id}, name={self.name}, created_by={self.created_by}, created_on={self.created_on}, modified_by={self.modified_by}, modified_on={self.modified_on}, variables={self.variables})"

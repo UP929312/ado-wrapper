@@ -23,12 +23,12 @@ VoteOptions = Literal[10, 5, 0, -5, -10]
 
 class AdoUser(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/graph/users?view=azure-devops-rest-7.1"""
-    def __init__(self, descriptor_id: str, name: str, email: str, origin: str, origin_id: str) -> None:
-        self.descriptor_id = descriptor_id
-        self.display_name = name
-        self.email = email.removeprefix("vstfs:///Classification/TeamProject/")
-        self.origin = origin
-        self.origin_id = origin_id  # This member id isn't very useful, use the descriptor_id instead
+    def __init__(self, descriptor_id: str, name: str, email: str, origin: str) -> None:
+        self.descriptor_id = descriptor_id  # Static
+        self.display_name = name  # Static
+        self.email = email.removeprefix("vstfs:///Classification/TeamProject/")  # Static
+        self.origin = origin  # Static
+        # "originId": "<>",
         # "subjectKind": "user",
         # "metaType": "member",
         # "directoryAlias": "MiryabblliS",
@@ -39,7 +39,7 @@ class AdoUser(StateManagedResource):
         return f"{self.display_name} ({self.email})"
 
     def __repr__(self) -> str:
-        return f"Member(display_name={self.display_name}, email={self.email}, id={self.descriptor_id}, origin={self.origin}, origin_id={self.origin_id})"
+        return f"Member(display_name={self.display_name}, email={self.email}, id={self.descriptor_id}, origin={self.origin})"
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -47,16 +47,15 @@ class AdoUser(StateManagedResource):
             "display_name": self.display_name,
             "email": self.email,
             "origin": self.origin,
-            "origin_id": self.origin_id,
         }
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "AdoUser":
-        return cls(data["member_id"], data["display_name"], data["email"], data["origin"], data["descriptor"])
+        return cls(data["member_id"], data["display_name"], data["email"], data["origin"])
 
     @classmethod
     def from_request_payload(cls, data: dict[str, str]) -> "AdoUser":
-        return cls(data["descriptor"], data["displayName"], data["mailAddress"], data["origin"], data["originId"])
+        return cls(data["descriptor"], data["displayName"], data["mailAddress"], data["origin"])
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, descriptor_id: str) -> "AdoUser":
@@ -112,9 +111,9 @@ class Member:
     """A stripped down member class which is often returned by the API, for example in build requests."""
 
     def __init__(self, name: str, email: str, member_id: str) -> None:
-        self.name = name
-        self.email = email.removeprefix("vstfs:///Classification/TeamProject/")
-        self.member_id = member_id
+        self.name = name  # Static
+        self.email = email.removeprefix("vstfs:///Classification/TeamProject/")  # Static
+        self.member_id = member_id  # Static
 
     def __str__(self) -> str:
         return f"{self.name} ({self.email})"
@@ -148,7 +147,7 @@ class TeamMember(Member):
 
     def __init__(self, name: str, email: str, member_id: str, is_team_admin: bool) -> None:
         super().__init__(name, email, member_id)
-        self.is_team_admin = is_team_admin
+        self.is_team_admin = is_team_admin  # Static
 
     def __str__(self) -> str:
         return f"{super().__str__()}" + (" (Team Admin)" if self.is_team_admin else "")
@@ -183,8 +182,8 @@ class Reviewer(Member):
 
     def __init__(self, name: str, email: str, reviewer_id: str, vote: VoteOptions, is_required: bool) -> None:
         super().__init__(name, email, reviewer_id)
-        self.vote = vote
-        self.is_required = is_required
+        self.vote = vote  # Static
+        self.is_required = is_required  # Static
 
     def __str__(self) -> str:
         return f'{self.name} ({self.email}) voted {VOTE_ID_TO_TYPE[self.vote]}, and was {"required" if self.is_required else "optional"}'

@@ -14,9 +14,9 @@ class Team:
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/core/teams?view=azure-devops-rest-7.1"""
 
     def __init__(self, team_id: str, name: str, description: str) -> None:
-        self.team_id = team_id
-        self.name = name
-        self.description = description
+        self.team_id = team_id  # Static
+        self.name = name  # Static
+        self.description = description  # Static
 
     def __str__(self) -> str:
         return f"{self.name} ({self.team_id})"

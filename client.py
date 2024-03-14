@@ -9,7 +9,7 @@ from state_managed_abc import StateManagedResource
 from utils import DeletionFailed
 
 
-def get_resource_variables() -> tuple[list[str], list[type["StateManagedResource"]]]:  # We do this to avoid circular imports
+def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports
     from branches import Branch
     from builds import Build, BuildDefinition
     from commits import Commit
@@ -21,7 +21,7 @@ def get_resource_variables() -> tuple[list[str], list[type["StateManagedResource
     from variable_groups import VariableGroup
 
     ALL_RESOURCE_CLASSES = [Branch, Build, BuildDefinition, Commit, AdoUser, PullRequest, Release, ReleaseDefinition, Repo, Team, VariableGroup]  # fmt: skip
-    return [resource.__name__ for resource in ALL_RESOURCE_CLASSES], ALL_RESOURCE_CLASSES
+    return {resource.__name__: resource for resource in ALL_RESOURCE_CLASSES}
 
 
 ActionType = Literal["created", "updated"]
@@ -83,8 +83,8 @@ class AdoClient:
     # =======================================================================================================
 
     def delete_resource(self, resource_type: ResourceType, resource_id: str) -> None:
-        _, all_resource_classes = get_resource_variables()
-        class_reference = [x for x in all_resource_classes if x.__name__ == resource_type][0]
+        all_resource_classes = get_resource_variables()
+        class_reference = [value for key, value in all_resource_classes.items() if key == resource_type][0]
         class_reference.delete_by_id(self, resource_id)
         self.remove_resource_from_state(resource_type, resource_id)
 
@@ -102,8 +102,8 @@ class AdoClient:
                     print(f"[ADO-API] Error deleting {resource_type} {resource_id}: {e}")
 
     def import_into_state(self, resource_type: ResourceType, resource_id: str) -> None:
-        _, all_resource_classes = get_resource_variables()
-        class_reference = [x for x in all_resource_classes if x.__name__ == resource_type][0]
+        all_resource_classes = get_resource_variables()
+        class_reference = [value for key, value in all_resource_classes.items() if key == resource_type][0]
         data = class_reference.get_by_id(self, resource_id).to_json()
         self.add_resource_to_state(resource_type, resource_id, data)
 
@@ -129,13 +129,14 @@ class AdoClient:
 
 
 if __name__ == "__main__":
-    ALL_RESOURCE_STRINGS, _ = get_resource_variables()
+    ALL_RESOURCES = get_resource_variables()
 
     parser = argparse.ArgumentParser(prog="ADO-API", description="A tool to manage Azure DevOps resources and interface with the ADO API")
     parser.add_argument("--delete-everything", help="Delete every resource in state & ADO", action="store_true", dest="delete_everything")
     parser.add_argument(
-        "--delete-resource-type", help="Delete every resource of a specific type in state & ADO", type=str, dest="delete_resource_type", choices=ALL_RESOURCE_STRINGS,  # fmt: skip
+        "--delete-resource-type", help="Delete every resource of a specific type in state & ADO", type=str, dest="delete_resource_type", choices=ALL_RESOURCES.keys(),  # fmt: skip
     )
+    parser.add_argument("--refresh-state-on-startup", help="Decided whether to refresh state when ran", action="store_true", dest="refresh_state_on_startup", default=True)
     args = parser.parse_args()
     from secret import email, ado_access_token, ado_org, ado_project
 
@@ -150,6 +151,15 @@ if __name__ == "__main__":
         resource_type: ResourceType = args.delete_resource_type  # type: ignore[no-redef]
         for resource_id in ado_client.get_all_states()["created"][resource_type]:
             ado_client.delete_resource(resource_type, resource_id)
+    if args.refresh_state_on_startup:
+        all_states = ado_client.get_all_states()
+        for resource_type in all_states["created"]:
+            for resource_id in all_states["created"][resource_type]:
+                instance = ALL_RESOURCES[resource_type].get_by_id(ado_client, resource_id)
+                if instance.to_json() != all_states["created"][resource_type][resource_id]:
+                    print("[ADO-API] Resource has been updated in ADO, updating state file")
+                    all_states["created"][resource_type][resource_id] = instance.to_json()
+        ado_client.write_state_file(all_states)
 
     # ado_client.wipe_state()
     # ado_client.add_resource_to_state("Repo", "12345", {"name": "test-repo"})

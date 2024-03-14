@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import zipfile
 from typing import Any
+from dataclasses import dataclass
 
 import requests
 
@@ -12,13 +13,13 @@ from state_managed_abc import StateManagedResource
 from utils import ResourceNotFound, DeletionFailed, UnknownError
 
 
+@dataclass(slots=True)
 class Repo(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/repositories?view=azure-devops-rest-7.1"""
-    def __init__(self, repo_id: str, name: str, default_branch: str = "refs/heads/main", is_disabled: bool = False) -> None:
-        self.repo_id = repo_id  # Static
-        self.name = name
-        self.default_branch = default_branch
-        self.is_disabled = is_disabled  # Static
+    repo_id: str  # Static
+    name: str
+    default_branch: str = "refs/heads/main"
+    is_disabled: bool = False  # Static
 
     def __str__(self) -> str:
         return f"Repo(name={self.name}, id={self.repo_id})"

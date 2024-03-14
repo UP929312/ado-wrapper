@@ -14,4 +14,4 @@ ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
 # print(repo)
 
 # from teams import Team
-# print(Team.get_by_name(ado_client, "Platform Team"))
+# print(Team.get_by_name(ado_client, ""))

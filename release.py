@@ -71,18 +71,18 @@ def get_release_definition(name: str, variable_group_ids: list[int] | None, agen
 
 
 class Release:
-    """https://learn.microsoft.com/en-us/rest/api/azure/devops/release/?view=azure-devops-rest-7.1"""
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/release/releases?view=azure-devops-rest-7.1"""
     def __init__(self, release_id: str, name: str, status: ReleaseStatus, created_on: datetime, created_by: Member, description: str,
                  variables: list[dict[str, Any]] | None, variable_groups: list[int] | None, keep_forever: bool) -> None:  # fmt: skip
-        self.release_id = release_id
-        self.name = name
-        self.status = status
-        self.created_on = created_on
-        self.created_by = created_by
-        self.description = description
-        self.variables = variables or []
-        self.variable_groups = variable_groups or []
-        self.keep_forever = keep_forever
+        self.release_id = release_id  # Static
+        self.name = name  # Static
+        self.status = status  # Static
+        self.created_on = created_on  # Static
+        self.created_by = created_by  # Static
+        self.description = description  # Static
+        self.variables = variables or []  # Static
+        self.variable_groups = variable_groups or []  # Static
+        self.keep_forever = keep_forever  # Static
 
     def __str__(self) -> str:
         return f"{self.name} ({self.release_id}), {self.status}"
@@ -125,7 +125,7 @@ class Release:
             auth=ado_client.auth,
         )
         if request.status_code == 404:
-            raise ResourceNotFound(f"The release with id {release_id} could not be found!")
+            raise ResourceNotFound(f"The {cls.__name__} with id {release_id} could not be found!")
         return cls.from_request_payload(request.json())
 
     @classmethod  # TODO: Test
@@ -167,9 +167,9 @@ class ReleaseDefinition:
                  variable_groups: list[int], variables: list[dict[str, Any]] | None = None):  # fmt: skip
         self.name = name
         self.description = description
-        self.created_by = created_by
-        self.created_on = created_on
-        self.release_definition_id = release_definition_id
+        self.created_by = created_by  # Static
+        self.created_on = created_on  # Static
+        self.release_definition_id = release_definition_id  # Static
         self.release_name_format = release_name_format
         self.variable_groups = variable_groups
         self.variables = variables or []

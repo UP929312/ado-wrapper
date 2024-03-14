@@ -24,15 +24,15 @@ class PullRequest:
         self.pull_request_id = pull_request_id
         self.title = title
         self.description = description
-        self.source_branch = source_branch
-        self.target_branch = target_branch
-        self.author = author
-        self.creation_date = creation_date
-        self.close_date = close_date
+        self.source_branch = source_branch  # Static
+        self.target_branch = target_branch  # Static
+        self.author = author  # Static
+        self.creation_date = creation_date  # Static
+        self.close_date = close_date  # Static
         self.is_draft = is_draft
-        self.repository = repository
-        self.merge_status = merge_status
-        self.reviewers = reviewers
+        self.repository = repository  # Static
+        self.merge_status = merge_status  # Static(ish)
+        self.reviewers = reviewers  # Static(ish)
 
     def __str__(self) -> str:
         return f"PullRequest(id={self.pull_request_id}, title={self.title}, author={self.author!s}, creation_date={self.creation_date}, merge_status={self.merge_status})"

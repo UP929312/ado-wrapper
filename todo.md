@@ -6,7 +6,7 @@ When you delete from ado, it should also delete from state
 Maybe show a type when adding to state too, like "Add": abc
 This lets us store and perhaps revert updates?
 
-Also, Builds and Releases need vigerous testing
+Also, Releases need vigerous testing
 
 Perhaps when creating stuff, use a "while True" loop with user input, if they input "y", go to the next step?
 
@@ -14,7 +14,8 @@ Rollback a commit?
 
 Test -> BuildDefinition.get_all_by_repo_id
 
-Update the state file on startup, and have an option to disable it
+Update the state file on startup, and have an option to disable it - DONE
+Maybe add the alternative way? I.e. if it's changed in real resources, have "update" as part of the StateManged Standard?
 
 Script plan mode?
 

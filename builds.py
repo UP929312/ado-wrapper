@@ -36,6 +36,7 @@ def get_build_definition(
 
 
 class Build(StateManagedResource):
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/build/builds?view=azure-devops-rest-7.1"""
     def __init__(self, build_id: str, build_number: str, status: BuildStatus, requested_by: Member, repository: Repo,
                  parameters: dict[str, str], start_time: datetime | None, finish_time: datetime | None, queue_time: datetime | None, reason: str,
                  priority: QueuePriority) -> None:  # fmt: skip
@@ -134,6 +135,7 @@ class Build(StateManagedResource):
 
 
 class BuildDefinition(StateManagedResource):
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/build/definitions?view=azure-devops-rest-7.1"""
     def __init__(self, build_definition_id: str, name: str, description: str, path: str, created_by: Member, created_date: datetime, repo: Repo,
                  variables: dict[str, str] | None, variable_groups: list[int] | None) -> None:  # fmt: skip
         self.build_definition_id = build_definition_id

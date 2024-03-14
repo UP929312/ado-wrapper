@@ -17,6 +17,7 @@ MergeStatus = Literal["succeeded", "conflicts", "rejectedByPolicy", "rejectedByU
 
 
 class PullRequest:
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests?view=azure-devops-rest-7.1"""
     def __init__(self, pull_request_id: int, title: str, description: str, source_branch: str, target_branch: str, author: Member,
                  creation_date: datetime, close_date: datetime | None, is_draft: bool, repository: "Repo", merge_status: MergeStatus,
                  reviewers: list[Reviewer]) -> None:  # fmt: skip

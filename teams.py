@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class Team:
-    """Describe a Azure DevOps team"""
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/core/teams?view=azure-devops-rest-7.1"""
 
     def __init__(self, team_id: str, name: str, description: str) -> None:
         self.team_id = team_id

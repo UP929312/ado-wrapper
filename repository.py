@@ -13,6 +13,7 @@ from utils import ResourceNotFound, DeletionFailed, UnknownError
 
 
 class Repo(StateManagedResource):
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/repositories?view=azure-devops-rest-7.1"""
     def __init__(self, repo_id: str, name: str, default_branch: str = "refs/heads/main", is_disabled: bool = False) -> None:
         self.repo_id = repo_id
         self.name = name

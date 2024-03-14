@@ -10,6 +10,9 @@ from utils import from_ado_date_string, to_iso, from_iso, ResourceNotFound
 ReleaseStatus = Literal["active", "abandoned", "draft", "undefined"]
 
 # ========================================================================================================
+# WARNING: THIS FILE IS MAINLY UNTESTED, AND MAY NOT WORK AS EXPECTED
+# FEEL FREE TO MAKE A PR TO FIX/IMPROVE THIS FILE
+# ========================================================================================================
 
 
 def get_release_definition(name: str, variable_group_ids: list[int] | None, agent_pool_id: int) -> dict[str, Any]:
@@ -68,6 +71,7 @@ def get_release_definition(name: str, variable_group_ids: list[int] | None, agen
 
 
 class Release:
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/release/?view=azure-devops-rest-7.1"""
     def __init__(self, release_id: str, name: str, status: ReleaseStatus, created_on: datetime, created_by: Member, description: str,
                  variables: list[dict[str, Any]] | None, variable_groups: list[int] | None, keep_forever: bool) -> None:  # fmt: skip
         self.release_id = release_id
@@ -114,7 +118,7 @@ class Release:
         return cls(data["id"], data["name"], data["status"], from_ado_date_string(data["createdOn"]), created_by, data["description"],
                    data.get("variables", None), data.get("variableGroups", None), data["keepForever"])  # fmt: skip
 
-    @classmethod
+    @classmethod  # TODO: Test
     def get_by_id(cls, ado_client: AdoClient, release_id: int) -> "Release":
         request = requests.get(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1",
@@ -126,13 +130,13 @@ class Release:
 
     @classmethod  # TODO: Test
     def create(cls, ado_client: AdoClient, definition_id: int) -> "Release":
-        body = {"definitionId": definition_id, "description": "An automated release created by ADO-Cleanup"}
+        body = {"definitionId": definition_id, "description": "An automated release created by ADO-API"}
         request = requests.post(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1", json=body, auth=ado_client.auth  # fmt: skip
         ).json()
         return cls.from_request_payload(request)
 
-    @staticmethod
+    @staticmethod  # TODO: Test
     def delete_by_id(ado_client: AdoClient, release_id: str) -> None:  # TODO: Test
         delete_request = requests.delete(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1", auth=ado_client.auth  # fmt: skip
@@ -146,7 +150,7 @@ class Release:
     def delete(self, ado_client: AdoClient) -> None:  # TODO: Test
         self.delete_by_id(ado_client, self.release_id)
 
-    @classmethod
+    @classmethod  # TODO: Test
     def get_all(cls, ado_client: AdoClient, definition_id: int) -> "list[Release]":
         response = requests.get(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1&definitionId={definition_id}", auth=ado_client.auth  # fmt: skip
@@ -158,6 +162,7 @@ class Release:
 
 
 class ReleaseDefinition:
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/release/definitions?view=azure-devops-rest-7.1"""
     def __init__(self, name: str, description: str, created_by: Member, created_on: datetime, release_definition_id: int, release_name_format: str,
                  variable_groups: list[int], variables: list[dict[str, Any]] | None = None):  # fmt: skip
         self.name = name

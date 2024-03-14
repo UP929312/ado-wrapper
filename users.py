@@ -22,6 +22,7 @@ VoteOptions = Literal[10, 5, 0, -5, -10]
 
 
 class AdoUser(StateManagedResource):
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/graph/users?view=azure-devops-rest-7.1"""
     def __init__(self, descriptor_id: str, name: str, email: str, origin: str, origin_id: str) -> None:
         self.descriptor_id = descriptor_id
         self.display_name = name

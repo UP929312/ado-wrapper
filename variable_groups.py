@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 
 class VariableGroup(StateManagedResource):
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/distributedtask/variablegroups?view=azure-devops-rest-7.1"""
     def __init__(self, variable_group_id: str, name: str, description: str, variables: dict[str, str], created_on: datetime,
                  created_by: Member, modified_by: Member, modified_on: datetime | None) -> None:  # fmt: skip
         self.variable_group_id = variable_group_id

@@ -4,6 +4,7 @@ from client import AdoClient
 
 
 class Branch:
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/refs?view=azure-devops-rest-7.1"""
     def __init__(self, branch_id: str, name: str, repo_id: str, is_main: bool, is_protected: bool, is_deleted: bool) -> None:
         self.branch_id = branch_id
         self.name = name

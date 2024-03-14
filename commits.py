@@ -41,6 +41,7 @@ def get_commit_body_template(old_object_id: str | None, updates: dict[str, str],
 
 
 class Commit:
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/commits?view=azure-devops-rest-7.1"""
     def __init__(self, commit_id: str, author: Member, date: datetime, message: str) -> None:
         self.commit_id = commit_id
         self.author = author
@@ -80,8 +81,8 @@ class Commit:
         raise NotImplementedError
 
     # ============ End of requirement set by all state managed resources ================== #
-    #                                                                                       #
-    # ============ Start of requirement set by all state managed resources ================ #
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+    # =============== Start of additional methods included with class ===================== #
 
     @classmethod
     def get_all_by_repo(cls, ado_client: AdoClient, repo_id: str) -> "list[Commit]":

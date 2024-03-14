@@ -143,7 +143,7 @@ class BuildDefinition(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "BuildDefinition":
-        """ Creates a build definition object from the response payload of a request to the ADO API. Repo is not always present"""
+        """Creates a build definition object from the response payload of a request to the ADO API. Repo is not always present"""
         created_by = Member(data["authoredBy"]["displayName"], data["authoredBy"]["uniqueName"], data["authoredBy"]["id"])
         repo = Repo(data.get("repository", {"id": "UNKNOWN"})["id"], data.get("repository", {"name": "UNKNOWN"})["name"])
         return cls(str(data["id"]), data["name"], data.get("description", ""), data.get("process", {"yamlFilename": "UNKNOWN"})["yamlFilename"], created_by,
@@ -202,5 +202,6 @@ class BuildDefinition(StateManagedResource):
 
     def delete(self, ado_client: AdoClient) -> None:
         return self.delete_by_id(ado_client, self.build_definition_id)
+
 
 # ========================================================================================================

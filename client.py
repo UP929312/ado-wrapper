@@ -20,13 +20,13 @@ def get_resource_variables() -> tuple[list[str], list[type["StateManagedResource
     from teams import Team
     from variable_groups import VariableGroup
 
-    ALL_RESOURCE_CLASSES = [Branch, Build, BuildDefinition, Commit, AdoUser, PullRequest, Release, ReleaseDefinition, Repo, Team, VariableGroup]
+    ALL_RESOURCE_CLASSES = [Branch, Build, BuildDefinition, Commit, AdoUser, PullRequest, Release, ReleaseDefinition, Repo, Team, VariableGroup]  # fmt: skip
     return [resource.__name__ for resource in ALL_RESOURCE_CLASSES], ALL_RESOURCE_CLASSES
 
 
 ActionType = Literal["created", "updated"]
 ResourceType = Literal[
-    "Branch", "Build", "BuildDefinition", "Commit", "AdoUser", "PullRequest", "Release", "ReleaseDefinition", "Repo", "Team", "VariableGroup"
+    "Branch", "Build", "BuildDefinition", "Commit", "AdoUser", "PullRequest", "Release", "ReleaseDefinition", "Repo", "Team", "VariableGroup"  # fmt: skip
 ]
 StateFileEntryType = dict[str, Any]
 

@@ -92,5 +92,3 @@ class TestBuildDefinition:
         build_definitions = BuildDefinition.get_all_by_repo_id(self.ado_client, existing_repo_id)
         assert len(build_definitions) == 0
         assert all(isinstance(x, BuildDefinition) for x in build_definitions)
-
-   

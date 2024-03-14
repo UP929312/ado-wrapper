@@ -35,5 +35,6 @@ class ResourceNotFound(Exception):
 class DeletionFailed(Exception):
     pass
 
+
 class UnknownError(Exception):
     pass

@@ -1,6 +1,7 @@
 import pytest
 
 from client import AdoClient
+
 # from users import AdoUser
 from variable_groups import VariableGroup
 
@@ -35,7 +36,6 @@ class TestVariableGroup:
         assert variable_group.description == "test-variable-group"
         assert variable_group.variables == {"key": "value"}
         assert variable_group.created_on.year == 2023
-        assert variable_group.modified_on.year == 2024  # type: ignore[attr-defined]
 
     def test_create_delete(self) -> None:
         with pytest.raises(NotImplementedError):

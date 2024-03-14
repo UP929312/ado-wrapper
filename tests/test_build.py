@@ -29,29 +29,35 @@ class TestBuild:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)
 
     def test_from_request_payload(self) -> None:
-        repo = Build.from_request_payload(
-            {
+        build = Build.from_request_payload(
+             {
+                "id": "123",
+                "buildNumber": 456,
+                "status": "completed",
                 "requestedBy": {"displayName": "test", "uniqueName": "test", "id": "123"},
                 "repository": {"id": "123", "name": "test-repo"},
-                "id": "123",
-                "buildNumber": "123",
-                "status": "completed",
-                "templateParameters": {},
+                "templateParameters": "test",
                 "startTime": "2021-10-01T00:00:00Z",
                 "finishTime": "2021-10-01T00:00:00Z",
                 "queueTime": "2021-10-01T00:00:00Z",
-                "reason": "manual",
-                "priority": "normal",
-            }
+                "reason": "test",
+                "priority": "test",
+             }
         )
-        assert repo.build_id == "123"
-        assert repo.build_number == "123"
+        assert build.build_id == "123"
+        assert build.build_number == "456"
+        assert build.status == "completed"
 
-    def get_all_builds_by_definition(self) -> None:
-        pass
-        # builds = BuildDefinition.get_all_builds_by_definition(self.ado_client, "123")
-        # assert len(builds) == 0
-        # assert all(isinstance(x, Build) for x in builds)
+    def test_create_delete_build(self) -> None:
+        build_definition = BuildDefinition.create(
+            self.ado_client, "ado-api-test-build", existing_repo_id, existing_repo_name, "build.yaml",
+            f"Please contact {email} if you see this build definition!", existing_agent_pool_id,  # fmt: skip
+        )
+        build = Build.create(self.ado_client, build_definition.build_definition_id)
+        assert build.build_id == Build.get_by_id(self.ado_client, build.build_id).build_id
+        assert len(Build.get_all_by_definition(self.ado_client, build_definition.build_definition_id)) == 1
+        build_definition.delete(self.ado_client)
+        build.delete(self.ado_client)
 
 
 class TestBuildDefinition:

@@ -16,11 +16,11 @@ Test -> BuildDefinition.get_all_by_repo_id
 
 Update the state file on startup, and have an option to disable it
 
-More work on variable groups
-
 Script plan mode?
 
 Teams.get_members(recursive=True)
+
+WHEN TESTING, make our own repos and stuff, we shouldn't use the existing ones, just make a repo, then delete after
 
 Build.wait_until_completed(build_id)
 

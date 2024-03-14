@@ -143,9 +143,10 @@ class BuildDefinition(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "BuildDefinition":
+        """ Creates a build definition object from the response payload of a request to the ADO API. Repo is not always present"""
         created_by = Member(data["authoredBy"]["displayName"], data["authoredBy"]["uniqueName"], data["authoredBy"]["id"])
-        repo = Repo(data["repository"]["id"], data["repository"]["name"])
-        return cls(str(data["id"]), data["name"], data.get("description", ""), data["process"]["yamlFilename"], created_by,
+        repo = Repo(data.get("repository", {"id": "UNKNOWN"})["id"], data.get("repository", {"name": "UNKNOWN"})["name"])
+        return cls(str(data["id"]), data["name"], data.get("description", ""), data.get("process", {"yamlFilename": "UNKNOWN"})["yamlFilename"], created_by,
                    from_ado_date_string(data["createdDate"]), repo, data.get("variables", None), data.get("variableGroups", None))  # fmt: skip
 
     @classmethod
@@ -191,8 +192,15 @@ class BuildDefinition(StateManagedResource):
         ).json()
         return [Build.from_request_payload(build) for build in response["value"]]
 
+    @classmethod
+    def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str) -> "list[BuildDefinition]":
+        response = requests.get(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?repositoryId={repo_id}&repositoryType={'TfsGit'}&api-version=7.1",
+            auth=ado_client.auth,
+        ).json()["value"]
+        return [cls.from_request_payload(build) for build in response]
+
     def delete(self, ado_client: AdoClient) -> None:
         return self.delete_by_id(ado_client, self.build_definition_id)
-
 
 # ========================================================================================================

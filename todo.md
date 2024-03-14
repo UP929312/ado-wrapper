@@ -12,6 +12,18 @@ Perhaps when creating stuff, use a "while True" loop with user input, if they in
 
 Argparse instead of my custom solution
 
+Rollback a commit?
+
+Test -> BuildDefinition.get_all_by_repo_id
+
+Update the state file on startup, and have an option to disable it
+
+More work on variable groups
+
+Teams.get_members(recursive=True)
+
+Build.wait_until_completed(build_id)
+
 Pylint command:
 pylint *.py --disable=C0301,C0103,R0801,E0602,C0114,C0116,C0115,W3101,W0621,R0913,W0511,R0902,R1710,C0415,W0237,R0401
 mypy . --strict

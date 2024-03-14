@@ -47,6 +47,12 @@ class TestBuild:
         assert repo.build_id == "123"
         assert repo.build_number == "123"
 
+    def get_all_builds_by_definition(self) -> None:
+        pass
+        # builds = BuildDefinition.get_all_builds_by_definition(self.ado_client, "123")
+        # assert len(builds) == 0
+        # assert all(isinstance(x, Build) for x in builds)
+
 
 class TestBuildDefinition:
     def setup_method(self) -> None:
@@ -76,8 +82,15 @@ class TestBuildDefinition:
         _ = (Commit.create(self.ado_client, repo.repo_id, "main", {"build.yaml": BUILD_YAML_FILE}, "add"),)
         build_definition = BuildDefinition.create(
             self.ado_client, "ado-api-test-build", repo.repo_id, "ado-api-test-repo", "build.yaml",
-            "my-test-description", existing_agent_pool_id,  # fmt: skip
+            f"Please contact {email} if you see this build definition!", existing_agent_pool_id,  # fmt: skip
         )
-        assert build_definition.description == "my-test-description"
+        assert build_definition.description == f"Please contact {email} if you see this build definition!"
         build_definition.delete(self.ado_client)
         repo.delete(self.ado_client)
+
+    def test_get_all_by_repo_id(self) -> None:
+        build_definitions = BuildDefinition.get_all_by_repo_id(self.ado_client, existing_repo_id)
+        assert len(build_definitions) == 0
+        assert all(isinstance(x, BuildDefinition) for x in build_definitions)
+
+   

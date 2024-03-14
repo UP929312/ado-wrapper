@@ -18,14 +18,15 @@ def get_resource_variables() -> tuple[list[str], list[type["StateManagedResource
     from release import Release, ReleaseDefinition
     from repository import Repo
     from teams import Team
+    from variable_groups import VariableGroup
 
-    ALL_RESOURCE_CLASSES = [Branch, Build, BuildDefinition, Commit, AdoUser, PullRequest, Release, ReleaseDefinition, Repo, Team]
+    ALL_RESOURCE_CLASSES = [Branch, Build, BuildDefinition, Commit, AdoUser, PullRequest, Release, ReleaseDefinition, Repo, Team, VariableGroup]
     return [resource.__name__ for resource in ALL_RESOURCE_CLASSES], ALL_RESOURCE_CLASSES
 
 
 ActionType = Literal["created", "updated"]
 ResourceType = Literal[
-    "Branch", "Build", "BuildDefinition", "Commit", "AdoUser", "PullRequest", "Release", "ReleaseDefinition", "Repo", "Team"
+    "Branch", "Build", "BuildDefinition", "Commit", "AdoUser", "PullRequest", "Release", "ReleaseDefinition", "Repo", "Team", "VariableGroup"
 ]
 StateFileEntryType = dict[str, Any]
 
@@ -43,14 +44,11 @@ class AdoClient:
         self.auth = HTTPBasicAuth(ado_email, ado_pat)
         self.ado_org = ado_org
         self.ado_project = ado_project
-
         self.state_file_name = state_file_name
 
         # If they have a state file, and it doesn't exist:
         if self.state_file_name is not None and not Path(self.state_file_name).exists():
-            with open(self.state_file_name, "w", encoding="utf-8") as state_file:
-                state_file.write("")
-            self.wipe_state()
+            self.wipe_state()  # Will automatically create the file
 
     def get_all_states(self) -> StateFileType:
         assert self.state_file_name is not None

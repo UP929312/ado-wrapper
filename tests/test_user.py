@@ -21,6 +21,8 @@ class TestAdoUser:
         assert user.descriptor_id == "123"
         assert user.display_name == "test-AdoUser"
         assert user.email == "test@test.com"
+        assert user.origin == "aad"
+        assert user.origin_id == "123"
 
     def test_create_delete(self) -> None:
         with pytest.raises(NotImplementedError):

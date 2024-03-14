@@ -9,7 +9,7 @@ import requests
 from pull_requests import PullRequest, PullRequestStatus
 from client import AdoClient
 from state_managed_abc import StateManagedResource
-from utils import ResourceNotFound, DeletionFailed
+from utils import ResourceNotFound, DeletionFailed, UnknownError
 
 
 class Repo(StateManagedResource):
@@ -93,9 +93,9 @@ class Repo(StateManagedResource):
     def get_file(self, ado_client: AdoClient, file_path: str) -> str:
         request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?path={file_path}&api-version=7.1", auth=ado_client.auth)  # fmt: skip
         if request.status_code == 404:
-            raise FileNotFoundError(f"File {file_path} not found in repo {self.repo_id}")
+            raise ResourceNotFound(f"File {file_path} not found in repo {self.repo_id}")
         if request.status_code != 200:
-            raise Exception(f"Error getting file {file_path} from repo {self.repo_id}: {request.text}")
+            raise UnknownError(f"Error getting file {file_path} from repo {self.repo_id}: {request.text}")
         return request.text  # This is the file content
 
     def get_repo_contents(self, ado_client: AdoClient, file_types: list[str] | None = None) -> dict[str, str]:

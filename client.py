@@ -5,23 +5,7 @@ from typing import Literal, Any, TypedDict
 
 from requests.auth import HTTPBasicAuth
 
-from state_managed_abc import StateManagedResource
-from utils import DeletionFailed
-
-
-def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports
-    from branches import Branch
-    from builds import Build, BuildDefinition
-    from commits import Commit
-    from users import AdoUser
-    from pull_requests import PullRequest
-    from release import Release, ReleaseDefinition
-    from repository import Repo
-    from teams import Team
-    from variable_groups import VariableGroup
-
-    ALL_RESOURCE_CLASSES = [Branch, Build, BuildDefinition, Commit, AdoUser, PullRequest, Release, ReleaseDefinition, Repo, Team, VariableGroup]  # fmt: skip
-    return {resource.__name__: resource for resource in ALL_RESOURCE_CLASSES}
+from utils import DeletionFailed, get_resource_variables
 
 
 ActionType = Literal["created", "updated"]

@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import overload, TYPE_CHECKING, Any
+from typing import overload, TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from state_managed_abc import StateManagedResource
@@ -70,12 +70,17 @@ def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We d
     from branches import Branch
     from builds import Build, BuildDefinition
     from commits import Commit
-    from users import AdoUser
+    from users import AdoUser, Member, Reviewer
     from pull_requests import PullRequest
     from release import Release, ReleaseDefinition
     from repository import Repo
     from teams import Team
     from variable_groups import VariableGroup
 
-    ALL_RESOURCE_CLASSES = [Branch, Build, BuildDefinition, Commit, AdoUser, PullRequest, Release, ReleaseDefinition, Repo, Team, VariableGroup]  # fmt: skip
+    ALL_RESOURCE_CLASSES = [Branch, Build, BuildDefinition, Commit, AdoUser, Member, Reviewer, PullRequest, Release, ReleaseDefinition, Repo, Team, VariableGroup]  # fmt: skip
     return {resource.__name__: resource for resource in ALL_RESOURCE_CLASSES}
+
+ResourceType = Literal[
+    "Branch", "Build", "BuildDefinition", "Commit", "AdoUser", "Member", "Reviewer",
+    "PullRequest", "Release", "ReleaseDefinition", "Repo", "Team", "VariableGroup"  # fmt: skip
+]

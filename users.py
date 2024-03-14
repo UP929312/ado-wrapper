@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal, Any, TYPE_CHECKING
+from dataclasses import dataclass, field
 
 import requests
 
@@ -119,7 +120,7 @@ class Member:
         return f"{self.name} ({self.email})"
 
     def __repr__(self) -> str:
-        return f"Commiter({self.name}, {self.email})"
+        return f"Member({self.name}, {self.email})"
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "Member":

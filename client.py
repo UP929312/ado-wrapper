@@ -5,13 +5,10 @@ from typing import Literal, Any, TypedDict
 
 from requests.auth import HTTPBasicAuth
 
-from utils import DeletionFailed, get_resource_variables
+from utils import DeletionFailed, get_resource_variables, ResourceType
 
 
 ActionType = Literal["created", "updated"]
-ResourceType = Literal[
-    "Branch", "Build", "BuildDefinition", "Commit", "AdoUser", "PullRequest", "Release", "ReleaseDefinition", "Repo", "Team", "VariableGroup"  # fmt: skip
-]
 StateFileEntryType = dict[str, Any]
 
 

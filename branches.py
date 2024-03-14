@@ -69,14 +69,10 @@ class Branch:
 
     @classmethod
     def create(cls, ado_client: AdoClient, repo_id: str, branch_name: str, source_branch: str) -> "Branch":
-        data = {
-            "name": branch_name,
-            "ref": f"refs/heads/{source_branch}",
-        }
+        data = {"name": branch_name, "ref": f"refs/heads/{source_branch}"}
         request = requests.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs?api-version=7.1",
-            json=data,
-            auth=ado_client.auth,
+            json=data, auth=ado_client.auth,  # fmt: skip
         ).json()
         return cls.from_request_payload(request)
 

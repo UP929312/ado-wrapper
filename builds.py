@@ -83,8 +83,8 @@ class Build:
         response = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?api-version=7.1&definitions={definition_id}",
             auth=ado_client.auth,
-        ).json()
-        return [cls.from_request_payload(build) for build in response["value"]]
+        ).json()["value"]
+        return [cls.from_request_payload(build) for build in response]
 
 
 #     @classmethod  # TODO: Test

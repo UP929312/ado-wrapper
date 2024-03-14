@@ -1,7 +1,7 @@
-from typing import Literal, Any, TypedDict
+import argparse
 import json
-import sys
 from pathlib import Path
+from typing import Literal, Any, TypedDict
 
 from requests.auth import HTTPBasicAuth
 
@@ -129,22 +129,25 @@ class AdoClient:
 
 
 if __name__ == "__main__":
+    ALL_RESOURCE_STRINGS, _ = get_resource_variables()
+
+    parser = argparse.ArgumentParser(prog="ADO-API", description="A tool to manage Azure DevOps resources and interface with the ADO API")
+    parser.add_argument("--delete-everything", help="Delete every resource in state & ADO", action="store_true", dest="delete_everything")
+    parser.add_argument(
+        "--delete-resource-type", help="Delete every resource of a specific type in state & ADO", type=str, dest="delete_resource_type", choices=ALL_RESOURCE_STRINGS,  # fmt: skip
+    )
+    args = parser.parse_args()
     from secret import email, ado_access_token, ado_org, ado_project
 
     ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)  #  state_file_name="main.json"
 
-    ALL_RESOURCE_STRINGS, _ = get_resource_variables()
-
-    if len(sys.argv) == 2 and sys.argv[1] == "--delete-everything":
+    if args.delete_everything:
         for resource_type in ado_client.get_all_states()["created"]:
             for resource_id in ado_client.get_all_states()["created"][resource_type]:
                 ado_client.delete_resource(resource_type, resource_id)
         print("[ADO-API] Successfully deleted every resource in state")
-    if len(sys.argv) == 3 and sys.argv[1] == "--delete-resource-type":
-        resource_type: ResourceType = sys.argv[2]  # type: ignore[no-redef]
-        if resource_type not in ALL_RESOURCE_STRINGS:
-            print(f"[ADO-API] {resource_type} is not a valid resource type")
-            sys.exit(1)
+    if args.delete_resource_type is not None:
+        resource_type: ResourceType = args.delete_resource_type  # type: ignore[no-redef]
         for resource_id in ado_client.get_all_states()["created"][resource_type]:
             ado_client.delete_resource(resource_type, resource_id)
 

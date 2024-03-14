@@ -10,8 +10,6 @@ Also, Builds and Releases need vigerous testing
 
 Perhaps when creating stuff, use a "while True" loop with user input, if they input "y", go to the next step?
 
-Argparse instead of my custom solution
-
 Rollback a commit?
 
 Test -> BuildDefinition.get_all_by_repo_id
@@ -19,6 +17,8 @@ Test -> BuildDefinition.get_all_by_repo_id
 Update the state file on startup, and have an option to disable it
 
 More work on variable groups
+
+Script plan mode?
 
 Teams.get_members(recursive=True)
 

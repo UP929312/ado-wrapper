@@ -56,8 +56,9 @@ class Repo(StateManagedResource):
             json={"name": name},
             auth=ado_client.auth,
         ).json()
-        ado_client.add_resource_to_state(cls.__name__, request["id"], request)  # type: ignore[arg-type]
-        return cls.from_request_payload(request)
+        resource = cls.from_request_payload(request)
+        ado_client.add_resource_to_state(cls.__name__, request["id"], resource.to_json())  # type: ignore[arg-type]
+        return resource
 
     @staticmethod
     def delete_by_id(ado_client: AdoClient, repo_id: str) -> None:

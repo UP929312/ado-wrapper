@@ -186,5 +186,4 @@ class BuildDefinition(StateManagedResource):
     def delete(self, ado_client: AdoClient) -> None:
         return self.delete_by_id(ado_client, self.build_definition_id)
 
-
 # ========================================================================================================

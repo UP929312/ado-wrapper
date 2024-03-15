@@ -5,17 +5,16 @@ authors = ["Ben Skerritt"]
 version = "0.1.0"
 license = "Proprietary"
 readme = "README.md"
-packages = [{include = "dx_team_services_ado_cleanup"}]
+packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 requests = "2.31.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^22.1.0"
+black = "^23.1.0"
 pylint = "^2.17.5"
 pytest = "^7.4.0"
-
 
 [[tool.poetry.source]]
 name = "PyPI"
@@ -27,7 +26,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]
-exclude = ['.venv']
+exclude = ['.venv', '.vscode', '.pytest_cache', '.mypy_cache', '.git', '__pycache__']
 strict = false
 
 [tool.pylint.main]
@@ -43,23 +42,17 @@ disable = [
     "missing-timeout",
 
     "too-few-public-methods",
-    "too-many-arguments",
-    "too-many-locals",
     "too-many-instance-attributes",
 
     "arguments-renamed",
     "invalid-name",
     "line-too-long",
     "fixme",
-    "use-implicit-booleaness-not-comparison",
     "broad-exception-caught",
     "import-outside-toplevel",
     "attribute-defined-outside-init",
     "cyclic-import",
-    "duplicate-code",
     "redefined-outer-name",
-    "wrong-import-position",
-    "arguments-differ",
 ]
 
 [tool.pytest.ini_options]

@@ -203,5 +203,4 @@ class ReleaseDefinition(StateManagedResource):
         )
         assert delete_request.status_code == 204
 
-
 # ========================================================================================================

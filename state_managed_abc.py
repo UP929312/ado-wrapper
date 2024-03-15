@@ -68,6 +68,3 @@ class StateManagedResource(ABC):
     @abstractmethod
     def delete_by_id(cls, ado_client: "AdoClient", resource_id: str) -> None:
         raise NotImplementedError
-
-
-# T = TypeVar('T', bound='StateManagedResource')

@@ -136,5 +136,4 @@ class Repo(StateManagedResource):
     def delete(self, ado_client: AdoClient) -> None:
         self.delete_by_id(ado_client, self.repo_id)
 
-
 # ====================================================================

@@ -71,9 +71,11 @@ def get_release_definition(name: str, variable_group_ids: list[int] | None, agen
 
 # ========================================================================================================
 
+
 @dataclass(slots=True)
 class Release(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/release/releases?view=azure-devops-rest-7.1"""
+
     release_id: str
     name: str
     status: ReleaseStatus
@@ -141,7 +143,8 @@ class Release(StateManagedResource):
 @dataclass(slots=True)
 class ReleaseDefinition(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/release/definitions?view=azure-devops-rest-7.1"""
-    release_definition_id: int 
+
+    release_definition_id: int
     name: str = field(metadata={"editable": True})
     description: str = field(metadata={"editable": True})
     created_by: Member

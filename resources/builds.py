@@ -22,7 +22,11 @@ def get_build_definition(
     return {
         "name": f"{name}",
         "description": description,
-        "repository": {"id": repo_id, "name": repo_name, "type": "TfsGit", },
+        "repository": {
+            "id": repo_id,
+            "name": repo_name,
+            "type": "TfsGit",
+        },
         "project": project,
         "process": {
             "yamlFilename": path_to_pipeline,
@@ -39,6 +43,7 @@ def get_build_definition(
 @dataclass(slots=True)
 class Build(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/build/builds?view=azure-devops-rest-7.1"""
+
     build_id: str
     build_number: str
     status: BuildStatus
@@ -71,7 +76,7 @@ class Build(StateManagedResource):
         return cls.from_request_payload(response)
 
     @classmethod
-    def create(cls, ado_client: AdoClient, definition_id: str, source_branch: str="refs/heads/main") -> "Build":
+    def create(cls, ado_client: AdoClient, definition_id: str, source_branch: str = "refs/heads/main") -> "Build":
         request = requests.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?definitionId={definition_id}&sourceBranch={source_branch}&api-version=7.1",
             json={"reason": "An automated build created by the ADO-API"}, auth=ado_client.auth,  # fmt: skip
@@ -108,7 +113,8 @@ class Build(StateManagedResource):
 @dataclass(slots=True)
 class BuildDefinition(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/build/definitions?view=azure-devops-rest-7.1"""
-    build_definition_id: str = field(repr=True, metadata={"is_id_field": True}) # Static
+
+    build_definition_id: str = field(repr=True, metadata={"is_id_field": True})  # Static
     name: str = field(repr=True, metadata={"editable": True})
     description: str = field(repr=True, metadata={"editable": True})
     path: str
@@ -139,7 +145,7 @@ class BuildDefinition(StateManagedResource):
 
     @classmethod
     def create(
-        cls, ado_client: AdoClient, name: str, repo_id: str, repo_name: str, path_to_pipeline: str, description: str, agent_pool_id: str, branch_name: str="main"
+        cls, ado_client: AdoClient, name: str, repo_id: str, repo_name: str, path_to_pipeline: str, description: str, agent_pool_id: str, branch_name: str = "main",  # fmt: skip
     ) -> "BuildDefinition":
         """Takes a list of variable group ids to include, and an agent_pool_id"""
         body = get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, agent_pool_id)

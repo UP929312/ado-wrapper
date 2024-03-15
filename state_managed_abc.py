@@ -8,19 +8,20 @@ from utils import get_resource_variables
 if TYPE_CHECKING:
     from client import AdoClient
 
+
 def recursively_convert_to_json(attribute_name: str, attribute_value: Any) -> tuple[str, Any]:
     if type(attribute_value) in get_resource_variables().values():
         class_name = str(type(attribute_value)).rsplit(".", maxsplit=1)[-1].removesuffix("'>")
-        return attribute_name+"::"+class_name, attribute_value.to_json()
+        return attribute_name + "::" + class_name, attribute_value.to_json()
     if isinstance(attribute_value, dict):
         # TODO: Fix this
         return attribute_name, {}
         # rint(attribute_name, attribute_value)
-        #return attribute_name, recursively_convert_to_json(attribute_name, attribute_value)
+        # return attribute_name, recursively_convert_to_json(attribute_name, attribute_value)
     if isinstance(attribute_value, list):
         return attribute_name, [recursively_convert_to_json(attribute_name, value) for value in attribute_value]
     if isinstance(attribute_value, datetime):
-        return attribute_name+"::datetime", attribute_value.isoformat()
+        return attribute_name + "::datetime", attribute_value.isoformat()
     return attribute_name, str(attribute_value)
 
 
@@ -37,8 +38,8 @@ def recursively_convert_from_json(dictionary: dict[str, Any]) -> Any:
             data_copy[key.split("::")[0]] = datetime.fromisoformat(value)
     return data_copy
 
-# ==========================================================================================
 
+# ==========================================================================================
 
 
 @dataclass
@@ -56,10 +57,7 @@ class StateManagedResource(ABC):
         attribute_names = [field_obj.name for field_obj in fields(self)]
         attribute_values = [getattr(self, field_obj.name) for field_obj in fields(self)]
         combined = zip(attribute_names, attribute_values)
-        return dict(
-            recursively_convert_to_json(attribute_name, attribute_value)
-            for attribute_name, attribute_value in combined
-        )
+        return dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in combined)
 
     @staticmethod
     @abstractmethod
@@ -70,5 +68,6 @@ class StateManagedResource(ABC):
     @abstractmethod
     def delete_by_id(cls, ado_client: "AdoClient", resource_id: str) -> None:
         raise NotImplementedError
+
 
 # T = TypeVar('T', bound='StateManagedResource')

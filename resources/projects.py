@@ -7,6 +7,7 @@ import requests
 from client import AdoClient
 from state_managed_abc import StateManagedResource
 
+
 @dataclass(slots=True)
 class Project(StateManagedResource):
     "https://learn.microsoft.com/en-us/rest/api/azure/devops/core/projects?view=azure-devops-rest-7.1"

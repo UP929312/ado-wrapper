@@ -10,6 +10,7 @@ from resources.commits import Commit
 @dataclass(slots=True)
 class Branch(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/refs?view=azure-devops-rest-7.1"""
+
     branch_id: str
     name: str = field(metadata={"editable": True})  # Maybe more?
     repo_id: str

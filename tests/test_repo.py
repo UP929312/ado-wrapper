@@ -6,6 +6,7 @@ from resources.commits import Commit
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     ado_org, ado_project, email, pat_token, *_ = test_data.read().splitlines()  # fmt: skip
 
+
 class TestRepo:
     def setup_method(self) -> None:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)

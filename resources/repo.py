@@ -15,6 +15,7 @@ from resources.pull_requests import PullRequest, PullRequestStatus
 @dataclass
 class Repo(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/repositories?view=azure-devops-rest-7.1"""
+
     repo_id: str = field(metadata={"is_id_field": True})
     name: str
     default_branch: str = field(default="refs/heads/main", repr=False, metadata={"editable": True})

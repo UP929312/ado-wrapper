@@ -45,6 +45,7 @@ def get_commit_body_template(old_object_id: str | None, updates: dict[str, str],
 @dataclass(slots=True)
 class Commit(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/commits?view=azure-devops-rest-7.1"""
+
     commit_id: str  # None are editable
     author: Member
     date: datetime
@@ -67,18 +68,22 @@ class Commit(StateManagedResource):
         return cls.from_request_payload(commit)
 
     @classmethod
-    def create(cls, ado_client: AdoClient, repo_id: str, from_branch_name: str, to_branch_name: str, updates: dict[str, str], change_type: ChangeType, commit_message: str) -> "Commit":
+    def create(
+        cls, ado_client: AdoClient, repo_id: str, from_branch_name: str, to_branch_name: str, updates: dict[str, str], change_type: ChangeType, commit_message: str,  # fmt: skip
+    ) -> "Commit":
         """Creates a commit in the given repository with the given updates and returns the commit object.
         Takes a branch to get the latest commit from (and to update), and a to_branch to fork to."""
-        assert not (from_branch_name.startswith("refs/heads/") or to_branch_name.startswith("refs/heads/")), "Branch names should not start with 'refs/heads/'"
+        assert not (
+            from_branch_name.startswith("refs/heads/") or to_branch_name.startswith("refs/heads/")
+        ), "Branch names should not start with 'refs/heads/'"
         if not updates:
             raise ValueError("No updates provided! It's not possible to create a commit without updates.")
         latest_commit = cls.get_latest_by_repo(ado_client, repo_id, from_branch_name)
         latest_commit_id = None if latest_commit is None else latest_commit.commit_id
         data = get_commit_body_template(latest_commit_id, updates, to_branch_name, change_type, commit_message)
-        request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=5.1", json=data, auth=ado_client.auth) # fmt: skip
+        request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=5.1", json=data, auth=ado_client.auth)  # fmt: skip
         if request.status_code == 403:
-            raise InvalidPermissionsError("You do not have permission to create a commit in this repo (possibly due to main branch protections)")
+            raise InvalidPermissionsError("You do not have permission to create a commit in this repo (possibly due to main branch protections)")  # fmt: skip
         if not request.json().get("commits"):
             raise ValueError("The commit was not created successfully.\nError:", request.json())
         return cls.from_request_payload(request.json()["commits"][-1])

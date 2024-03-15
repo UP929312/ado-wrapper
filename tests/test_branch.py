@@ -2,12 +2,13 @@ from datetime import datetime
 
 from client import AdoClient
 from resources.branches import Branch
+
 # from resources.repo import Repo
 # from resources.users import Member
 # from resources.commits import Commit
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
-    ado_org, ado_project, email, pat_token, *_  = test_data.read().splitlines()
+    ado_org, ado_project, email, pat_token, *_ = test_data.read().splitlines()
 
 
 class TestBranch:
@@ -27,6 +28,7 @@ class TestBranch:
             }
         )
         assert branch.to_json() == Branch.from_json(branch.to_json()).to_json()
+
 
 #     def test_create_delete_branch(self) -> None:
 #         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-branches")

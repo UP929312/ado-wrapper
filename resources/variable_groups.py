@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 @dataclass(slots=True)
 class VariableGroup(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/distributedtask/variablegroups?view=azure-devops-rest-7.1"""
+
     variable_group_id: str = field(metadata={"is_id_field": True})
     name: str = field(repr=True, metadata={"editable": True})
     description: str = field(repr=True, metadata={"editable": True})
@@ -48,18 +49,21 @@ class VariableGroup(StateManagedResource):
     @classmethod
     def create(cls, ado_client: AdoClient, variable_group_name: str, variable_group_description: str, variables: dict[str, str]) -> "VariableGroup":  # fmt: skip
         payload = {
-            "variableGroupProjectReferences": [{
-                "description": variable_group_description,
-                "name": variable_group_name,
-                "projectReference": {
-                    "id": ado_client.ado_project_id,
-                    "name": ado_client.ado_project
+            "name": variable_group_name,
+            "description": variable_group_description,
+            "variables": variables,
+            "type": "Vsts",
+            "variableGroupProjectReferences": [
+                {
+                    "description": variable_group_description,
+                    "name": variable_group_name,
+                    "projectReference": {"id": ado_client.ado_project_id, "name": ado_client.ado_project},
                 }
-            }]}
+            ],
+        }
         request = requests.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/distributedtask/variablegroups?api-version=7.1-preview.2",
-            json=payload | {"name": variable_group_name, "description": variable_group_description, "variables": variables, "type": "Vsts"}, # Need name duplicated
-            auth=ado_client.auth,
+            json=payload, auth=ado_client.auth,  # fmt: skip
         ).json()
         resource = cls.from_request_payload(request)
         ado_client.add_resource_to_state(cls.__name__, resource.variable_group_id, resource.to_json())  # type: ignore[arg-type]

@@ -21,6 +21,7 @@ MergeStatus = Literal["succeeded", "conflicts", "rejectedByPolicy", "rejectedByU
 @dataclass(slots=True)
 class PullRequest(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests?view=azure-devops-rest-7.1"""
+
     pull_request_id: str
     title: str = field(metadata={"editable": True})
     description: str = field(metadata={"editable": True})
@@ -30,9 +31,9 @@ class PullRequest(StateManagedResource):
     creation_date: datetime = field(repr=False)
     repository: Repo
     close_date: datetime | None = field(default=None, repr=False)
-    is_draft: bool = field(default=False, repr=False,metadata={"editable": True})
+    is_draft: bool = field(default=False, repr=False, metadata={"editable": True})
     merge_status: MergeStatus = field(default="notSet")  # Static(ish)
-    reviewers: list[Reviewer] = field(default_factory=list, repr=False) # Static(ish)
+    reviewers: list[Reviewer] = field(default_factory=list, repr=False)  # Static(ish)
 
     def __str__(self) -> str:
         return f"PullRequest(id={self.pull_request_id}, title={self.title}, author={self.author!s}, merge_status={self.merge_status})"
@@ -59,7 +60,7 @@ class PullRequest(StateManagedResource):
         print(payload)
         request = requests.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?api-version=7.1-preview.1",
-            json=payload, auth=ado_client.auth, # fmt: skip
+            json=payload, auth=ado_client.auth,  # fmt: skip
         ).json()
         if request.get("message", "").startswith("TF401398"):
             # {'$id': '1', 'innerException': None, 'message': 'TF401398: The pull request cannot be activated because the source and/or the target branch no longer exists, or the requested refs are not branches',
@@ -69,7 +70,10 @@ class PullRequest(StateManagedResource):
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, repo_id: str, pull_request_id: int) -> None:  # type: ignore[override]
-        request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}?api-version=7.1", auth=ado_client.auth)
+        request = requests.delete(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}?api-version=7.1",
+            auth=ado_client.auth,
+        )
         if request.status_code != 204:
             raise DeletionFailed(f"Error deleting {cls.__name__} {pull_request_id}: {request.text}")
         assert request.status_code == 204

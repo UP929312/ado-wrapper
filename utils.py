@@ -70,8 +70,10 @@ class ResourceAlreadyExists(Exception):
 class UnknownError(Exception):
     pass
 
+
 class InvalidPermissionsError(Exception):
     pass
+
 
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports
     from resources.branches import Branch
@@ -87,6 +89,7 @@ def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We d
 
     ALL_RESOURCE_CLASSES = [Branch, Build, BuildDefinition, Commit, Project, PullRequest, Release, ReleaseDefinition, Repo, Team, AdoUser, Member, Reviewer, VariableGroup]  # fmt: skip
     return {resource.__name__: resource for resource in ALL_RESOURCE_CLASSES}
+
 
 ResourceType = Literal[
     "Branch", "Build", "BuildDefinition", "Commit", "Project", "PullRequest", "Release", "ReleaseDefinition", "Repo",

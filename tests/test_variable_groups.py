@@ -7,7 +7,7 @@ from resources.variable_groups import VariableGroup
 import pytest
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
-    ado_org, ado_project, email, pat_token, *_  = test_data.read().splitlines()
+    ado_org, ado_project, email, pat_token, *_ = test_data.read().splitlines()
 
 
 class TestVariableGroup:

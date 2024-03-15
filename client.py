@@ -27,7 +27,8 @@ class AdoClient:
         self.ado_project = ado_project
         self.state_file_name = state_file_name
 
-        from resources.projects import Project
+        from resources.projects import Project  # Stop circular import
+
         self.ado_project_id: str = Project.get_by_name(self, self.ado_project).project_id  # type: ignore[union-attr]
 
         # If they have a state file, and it doesn't exist:
@@ -120,7 +121,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--delete-resource-type", help="Delete every resource of a specific type in state & ADO", type=str, dest="delete_resource_type", choices=ALL_RESOURCES.keys(),  # fmt: skip
     )
-    parser.add_argument("--refresh-state-on-startup", help="Decided whether to refresh state when ran", action="store_true", dest="refresh_state_on_startup", default=True)
+    parser.add_argument(
+        "--refresh-state-on-startup", help="Decided whether to refresh state when ran", action="store_true", dest="refresh_state_on_startup", default=True,  # fmt: skip
+    )
     args = parser.parse_args()
     from secret import email, ado_access_token, ado_org, ado_project
 

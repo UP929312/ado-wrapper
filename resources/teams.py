@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 @dataclass(slots=True)
 class Team(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/core/teams?view=azure-devops-rest-7.1"""
+
     team_id: str  # None are editable
     name: str
     description: str

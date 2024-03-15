@@ -41,8 +41,12 @@ class TestCommit:
 
     def test_get_all(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-all-commits")
-        commit_1 = Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add",  "Test commit 1")
-        commit_2 = Commit.create(self.ado_client, repo.repo_id, "new-branch", "new-branch2", {"test2.txt": "This is something else"}, "add", "Test commit 2")
+        commit_1 = Commit.create(
+            self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1"
+        )
+        commit_2 = Commit.create(
+            self.ado_client, repo.repo_id, "new-branch", "new-branch2", {"test2.txt": "This is something else"}, "add", "Test commit 2"
+        )
         all_commits = Commit.get_all_by_repo(self.ado_client, repo.repo_id)
         assert len(all_commits) == 2
         assert all(isinstance(commit, Commit) for commit in all_commits)

@@ -25,6 +25,7 @@ VoteOptions = Literal[10, 5, 0, -5, -10]
 @dataclass(slots=True)
 class AdoUser(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/graph/users?view=azure-devops-rest-7.1"""
+
     descriptor_id: str
     display_name: str
     email: str
@@ -39,10 +40,9 @@ class AdoUser(StateManagedResource):
     def __str__(self) -> str:
         return f"{self.display_name} ({self.email})"
 
-
     @classmethod
     def from_request_payload(cls, data: dict[str, str]) -> "AdoUser":
-        return cls(data["descriptor"], data["displayName"], data["mailAddress"].removeprefix("vstfs:///Classification/TeamProject/"), data["origin"])
+        return cls(data["descriptor"], data["displayName"], data["mailAddress"].removeprefix("vstfs:///Classification/TeamProject/"), data["origin"])  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, descriptor_id: str) -> "AdoUser":

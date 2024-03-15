@@ -1,9 +1,9 @@
 from client import AdoClient
-from teams import Team
-from users import TeamMember
+from resources.teams import Team
+from resources.users import TeamMember
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
-    ado_org, ado_project, email, pat_token, existing_repo_name, existing_repo_id, existing_team_name, existing_team_id, *_ = test_data.read().splitlines()  # fmt: skip
+    ado_org, ado_project, email, pat_token, existing_team_name, existing_team_id, *_ = test_data.read().splitlines()  # fmt: skip
 
 
 class TestTeam:
@@ -16,6 +16,7 @@ class TestTeam:
         assert team.team_id == "123"
         assert team.name == "test-Team"
         assert team.description == "test-Team"
+        assert team.to_json() == Team.from_json(team.to_json()).to_json()
 
     def test_get_by_id(self) -> None:
         team = Team.get_by_id(self.ado_client, existing_team_id)
@@ -24,7 +25,7 @@ class TestTeam:
     def test_get_all(self) -> None:
         teams = Team.get_all(self.ado_client)
         assert len(teams) > 1
-        assert all([isinstance(team, Team) for team in teams])
+        assert all(isinstance(team, Team) for team in teams)
 
     def test_get_by_name(self) -> None:
         team = Team.get_by_name(self.ado_client, existing_team_name)
@@ -33,4 +34,4 @@ class TestTeam:
     def test_get_members(self) -> None:
         members = Team.get_by_name(self.ado_client, existing_team_name).get_members(self.ado_client)
         assert len(members) > 1
-        assert all([isinstance(member, TeamMember) for member in members])
+        assert all(isinstance(member, TeamMember) for member in members)

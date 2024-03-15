@@ -1,0 +1,75 @@
+[tool.poetry]
+name = "ado-api"
+description = "A high level wrapper around the ADO API"
+authors = ["Ben Skerritt"]
+version = "0.1.0"
+license = "Proprietary"
+readme = "README.md"
+packages = [{include = "dx_team_services_ado_cleanup"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "2.31.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.1.0"
+pylint = "^2.17.5"
+pytest = "^7.4.0"
+
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+exclude = ['.venv']
+strict = false
+
+[tool.pylint.main]
+ignore = [".venv"]
+recursive = true
+
+[tool.pylint.messages_control]
+max-line-length = 140
+disable = [
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "missing-timeout",
+
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-locals",
+    "too-many-instance-attributes",
+
+    "arguments-renamed",
+    "invalid-name",
+    "line-too-long",
+    "fixme",
+    "use-implicit-booleaness-not-comparison",
+    "broad-exception-caught",
+    "import-outside-toplevel",
+    "attribute-defined-outside-init",
+    "cyclic-import",
+    "duplicate-code",
+    "redefined-outer-name",
+    "wrong-import-position",
+    "arguments-differ",
+]
+
+[tool.pytest.ini_options]
+log_cli = true
+markers = [
+    "wip: mark test as a work in progress",
+]
+
+[tool.black]
+line_length = 140
+
+[tool.isort]
+profile = "black"

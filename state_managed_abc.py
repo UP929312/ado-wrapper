@@ -10,9 +10,13 @@ if TYPE_CHECKING:
 
 def recursively_convert_to_json(attribute_name: str, attribute_value: Any) -> tuple[str, Any]:
     if type(attribute_value) in get_resource_variables().values():
-        return attribute_name+"::"+str(type(attribute_value)).split(".")[-1].removesuffix("'>"), attribute_value.to_json()  # type: ignore
+        class_name = str(type(attribute_value)).rsplit(".", maxsplit=1)[-1].removesuffix("'>")
+        return attribute_name+"::"+class_name, attribute_value.to_json()
     if isinstance(attribute_value, dict):
-        return attribute_name, {key: recursively_convert_to_json(key, value) for key, value in attribute_value.items()}
+        # TODO: Fix this
+        return attribute_name, {}
+        # rint(attribute_name, attribute_value)
+        #return attribute_name, recursively_convert_to_json(attribute_name, attribute_value)
     if isinstance(attribute_value, list):
         return attribute_name, [recursively_convert_to_json(attribute_name, value) for value in attribute_value]
     if isinstance(attribute_value, datetime):
@@ -21,17 +25,21 @@ def recursively_convert_to_json(attribute_name: str, attribute_value: Any) -> tu
 
 
 def recursively_convert_from_json(dictionary: dict[str, Any]) -> Any:
+    data_copy = dict(dictionary.items())
     for key, value in dictionary.items():
         if isinstance(key, str) and "::" in key and key.split("::")[-1] != "datetime":
             instance_name, class_type = key.split("::")
             class_ = [x for x in get_resource_variables().values() if x.__name__ == class_type][0]
-            del dictionary[key]
-            dictionary[instance_name] = class_.from_json(value)
-        elif isinstance(value, str) and "::datetime" in value:
-            dictionary[key] = datetime.fromisoformat(value)
-    return dictionary
+            del data_copy[key]
+            data_copy[instance_name] = class_.from_json(value)
+        elif isinstance(key, str) and key.endswith("::datetime"):
+            del data_copy[key]
+            data_copy[key.split("::")[0]] = datetime.fromisoformat(value)
+    return data_copy
 
 # ==========================================================================================
+
+
 
 @dataclass
 class StateManagedResource(ABC):
@@ -58,7 +66,9 @@ class StateManagedResource(ABC):
     def get_by_id(ado_client: "AdoClient", resource_id: str) -> "StateManagedResource":
         raise NotImplementedError
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def delete_by_id(ado_client: "AdoClient", resource_id: str) -> None:
+    def delete_by_id(cls, ado_client: "AdoClient", resource_id: str) -> None:
         raise NotImplementedError
+
+# T = TypeVar('T', bound='StateManagedResource')

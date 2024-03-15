@@ -27,6 +27,9 @@ class AdoClient:
         self.ado_project = ado_project
         self.state_file_name = state_file_name
 
+        from resources.projects import Project
+        self.ado_project_id: str = Project.get_by_name(self, self.ado_project).project_id  # type: ignore[union-attr]
+
         # If they have a state file, and it doesn't exist:
         if self.state_file_name is not None and not Path(self.state_file_name).exists():
             self.wipe_state()  # Will automatically create the file
@@ -56,7 +59,7 @@ class AdoClient:
     def remove_resource_from_state(self, resource_type: ResourceType, resource_id: str) -> None:
         if self.state_file_name is None:
             print("[ADO-API] Not storing state, so not removing resource to state")
-            return
+            return None
         all_states = self.get_all_states()
         all_states["created"][resource_type] = {k: v for k, v in all_states["created"][resource_type].items() if k != resource_id}
         return self.write_state_file(all_states)
@@ -91,9 +94,9 @@ class AdoClient:
     def wipe_state(self) -> None:
         if self.state_file_name is None:
             return
-        ALL_RESOURCE_STRINGS, _ = get_resource_variables()
+        ALL_RESOURCE_STRINGS = get_resource_variables().keys()
         with open(self.state_file_name, "w", encoding="utf-8") as state_file:
-            return json.dump(
+            json.dump(
                 {
                     "state_file_version": STATE_FILE_VERSION,
                     "created": {resource: {} for resource in ALL_RESOURCE_STRINGS},

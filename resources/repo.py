@@ -2,42 +2,26 @@ from __future__ import annotations
 
 import io
 import zipfile
-from typing import Any
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import requests
 
-from pull_requests import PullRequest, PullRequestStatus
 from client import AdoClient
 from state_managed_abc import StateManagedResource
-from utils import ResourceNotFound, DeletionFailed, UnknownError
+from utils import ResourceNotFound, DeletionFailed, UnknownError, ResourceAlreadyExists
+from resources.pull_requests import PullRequest, PullRequestStatus
 
 
-@dataclass(slots=True)
+@dataclass
 class Repo(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/repositories?view=azure-devops-rest-7.1"""
-    repo_id: str  # Static
+    repo_id: str = field(metadata={"is_id_field": True})
     name: str
-    default_branch: str = "refs/heads/main"
-    is_disabled: bool = False  # Static
+    default_branch: str = field(default="refs/heads/main", repr=False, metadata={"editable": True})
+    is_disabled: bool = field(default=False, repr=False, metadata={"editable": True})
 
     def __str__(self) -> str:
         return f"Repo(name={self.name}, id={self.repo_id})"
-
-    def __repr__(self) -> str:
-        return f"Repo(name={self.name}, id={self.repo_id})"
-
-    def to_json(self) -> dict[str, Any]:
-        return {
-            "repo_id": self.repo_id,
-            "name": self.name,
-            "default_branch": self.default_branch,
-            "is_disabled": self.is_disabled,
-        }
-
-    @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "Repo":
-        return cls(data["repo_id"], data["name"], data["default_branch"], data["is_disabled"])
 
     @classmethod
     def from_request_payload(cls, data: dict[str, str]) -> "Repo":
@@ -56,18 +40,19 @@ class Repo(StateManagedResource):
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=6.0",
             json={"name": name},
             auth=ado_client.auth,
-        ).json()
-        resource = cls.from_request_payload(request)
-        ado_client.add_resource_to_state(cls.__name__, request["id"], resource.to_json())  # type: ignore[arg-type]
+        )
+        if request.status_code == 409:
+            raise ResourceAlreadyExists(f"The {cls.__name__} with name {name} already exists!")
+        resource = cls.from_request_payload(request.json())
+        ado_client.add_resource_to_state(cls.__name__, resource.repo_id, resource.to_json())  # type: ignore[arg-type]
         return resource
 
-    @staticmethod
-    def delete_by_id(ado_client: AdoClient, repo_id: str) -> None:
-        """Requirement set by all state managed resources"""
+    @classmethod
+    def delete_by_id(cls, ado_client: AdoClient, repo_id: str) -> None:
         request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1", auth=ado_client.auth)  # fmt: skip
         if request.status_code != 204:
-            raise DeletionFailed(f"Error deleting repo {repo_id}: {request.text}")
-        ado_client.remove_resource_from_state(Repo.__name__, repo_id)  # type: ignore[arg-type]
+            raise DeletionFailed(f"Error deleting {cls.__name__} {repo_id}: {request.text}")
+        ado_client.remove_resource_from_state(cls.__name__, repo_id)  # type: ignore[arg-type]
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -144,7 +129,7 @@ class Repo(StateManagedResource):
             if pull_requests.get("message", "").startswith("TF401019"):
                 print(f"Repo {pull_requests['message'].split('identifier')[1].split(' ')[0]} was disabled, or you had no access.")
             else:
-                print(pull_requests)
+                raise ResourceNotFound(pull_requests)  # pylint: disable=raise-missing-from
             return []
 
     def delete(self, ado_client: AdoClient) -> None:

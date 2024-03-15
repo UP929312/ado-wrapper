@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal, Any, TYPE_CHECKING
-from dataclasses import dataclass, field
+from dataclasses import dataclass  # , field
 
 import requests
 
@@ -22,41 +22,27 @@ VoteOptions = Literal[10, 5, 0, -5, -10]
 # ======================================================================================================= #
 
 
+@dataclass(slots=True)
 class AdoUser(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/graph/users?view=azure-devops-rest-7.1"""
-    def __init__(self, descriptor_id: str, name: str, email: str, origin: str) -> None:
-        self.descriptor_id = descriptor_id  # Static
-        self.display_name = name  # Static
-        self.email = email.removeprefix("vstfs:///Classification/TeamProject/")  # Static
-        self.origin = origin  # Static
-        # "originId": "<>",
-        # "subjectKind": "user",
-        # "metaType": "member",
-        # "directoryAlias": "MiryabblliS",
-        # "domain": "68283f3b-8487-4c86-adb3-a5228f18b893",
-        # "url": "https://vssps.dev.azure.com/vfuk-digital/_apis/Graph/Users/aad.M2Q5NDlkZTgtZDI2Yi03MGQ3LWEyYjItMDAwYTQzYTdlNzFi",
+    descriptor_id: str
+    display_name: str
+    email: str
+    origin: str
+    # "originId": "<>",
+    # "subjectKind": "user",
+    # "metaType": "member",
+    # "directoryAlias": "MiryabblliS",
+    # "domain": "68283f3b-8487-4c86-adb3-a5228f18b893",
+    # "url": "https://vssps.dev.azure.com/vfuk-digital/_apis/Graph/Users/aad.M2Q5NDlkZTgtZDI2Yi03MGQ3LWEyYjItMDAwYTQzYTdlNzFi",
 
     def __str__(self) -> str:
         return f"{self.display_name} ({self.email})"
 
-    def __repr__(self) -> str:
-        return f"Member(display_name={self.display_name}, email={self.email}, id={self.descriptor_id}, origin={self.origin})"
-
-    def to_json(self) -> dict[str, Any]:
-        return {
-            "descriptor_id": self.descriptor_id,
-            "display_name": self.display_name,
-            "email": self.email,
-            "origin": self.origin,
-        }
-
-    @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "AdoUser":
-        return cls(data["member_id"], data["display_name"], data["email"], data["origin"])
 
     @classmethod
     def from_request_payload(cls, data: dict[str, str]) -> "AdoUser":
-        return cls(data["descriptor"], data["displayName"], data["mailAddress"], data["origin"])
+        return cls(data["descriptor"], data["displayName"], data["mailAddress"].removeprefix("vstfs:///Classification/TeamProject/"), data["origin"])
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, descriptor_id: str) -> "AdoUser":
@@ -70,8 +56,8 @@ class AdoUser(StateManagedResource):
     def create(cls, ado_client: AdoClient, member_name: str, member_email: str) -> "AdoUser":
         raise NotImplementedError("Creating a new user is not supported")
 
-    @staticmethod
-    def delete_by_id(ado_client: AdoClient, member_id: str) -> None:
+    @classmethod
+    def delete_by_id(cls, ado_client: AdoClient, member_id: str) -> None:
         raise NotImplementedError("Deleting a user is not supported")
 
     # ============ End of requirement set by all state managed resources ================== #

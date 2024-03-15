@@ -1,39 +1,26 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from dataclasses import dataclass
 
 import requests
 
-from users import TeamMember
+from state_managed_abc import StateManagedResource
+from resources.users import TeamMember
 
 if TYPE_CHECKING:
     from client import AdoClient
 
 
-class Team:
+@dataclass(slots=True)
+class Team(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/core/teams?view=azure-devops-rest-7.1"""
-
-    def __init__(self, team_id: str, name: str, description: str) -> None:
-        self.team_id = team_id  # Static
-        self.name = name  # Static
-        self.description = description  # Static
+    team_id: str  # None are editable
+    name: str
+    description: str
 
     def __str__(self) -> str:
         return f"{self.name} ({self.team_id})"
-
-    def __repr__(self) -> str:
-        return f"Team({self.team_id!r}, {self.name!r}, {self.description!r})"
-
-    def to_json(self) -> dict[str, str]:
-        return {
-            "team_id": self.team_id,
-            "name": self.name,
-            "description": self.description,
-        }
-
-    @classmethod
-    def from_json(cls, data: dict[str, str]) -> "Team":
-        return cls(data["team_id"], data["name"], data["description"])
 
     @classmethod
     def from_request_payload(cls, team_response: dict[str, str]) -> "Team":
@@ -50,13 +37,13 @@ class Team:
     @classmethod
     def create(cls, ado_client: AdoClient, name: str, description: str) -> "Team":
         raise NotImplementedError
-        # request = requests.post(f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/teams?api-version=7.1-preview.2", json={"name": name, "description": description}, auth=ado_client.auth).json()
+        # request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/_apis/teams?api-version=7.1-preview.2", json={"name": name, "description": description}, auth=ado_client.auth).json()
         # return cls.from_request_payload(request)
 
     @classmethod
-    def delete(cls, ado_client: AdoClient, team_id: str) -> None:
+    def delete_by_id(cls, ado_client: AdoClient, team_id: str) -> None:
         raise NotImplementedError
-        # request = requests.delete(f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/teams/{team_id}?api-version=7.1-preview.2", auth=ado_client.auth)
+        # request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/_apis/teams/{team_id}?api-version=7.1-preview.2", auth=ado_client.auth)
         # assert request.status_code < 300
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -84,3 +71,6 @@ class Team:
             auth=ado_client.auth,
         ).json()["value"]
         return [TeamMember.from_request_payload(member) for member in request]
+
+    def delete(self, ado_client: AdoClient, team_id: str) -> None:
+        self.delete_by_id(ado_client, team_id)

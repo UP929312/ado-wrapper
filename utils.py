@@ -63,24 +63,32 @@ class DeletionFailed(Exception):
     pass
 
 
+class ResourceAlreadyExists(Exception):
+    pass
+
+
 class UnknownError(Exception):
     pass
 
-def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports
-    from branches import Branch
-    from builds import Build, BuildDefinition
-    from commits import Commit
-    from users import AdoUser, Member, Reviewer
-    from pull_requests import PullRequest
-    from release import Release, ReleaseDefinition
-    from repository import Repo
-    from teams import Team
-    from variable_groups import VariableGroup
+class InvalidPermissionsError(Exception):
+    pass
 
-    ALL_RESOURCE_CLASSES = [Branch, Build, BuildDefinition, Commit, AdoUser, Member, Reviewer, PullRequest, Release, ReleaseDefinition, Repo, Team, VariableGroup]  # fmt: skip
+def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports
+    from resources.branches import Branch
+    from resources.builds import Build, BuildDefinition
+    from resources.commits import Commit
+    from resources.projects import Project
+    from resources.pull_requests import PullRequest
+    from resources.release import Release, ReleaseDefinition
+    from resources.repo import Repo
+    from resources.teams import Team
+    from resources.users import AdoUser, Member, Reviewer
+    from resources.variable_groups import VariableGroup
+
+    ALL_RESOURCE_CLASSES = [Branch, Build, BuildDefinition, Commit, Project, PullRequest, Release, ReleaseDefinition, Repo, Team, AdoUser, Member, Reviewer, VariableGroup]  # fmt: skip
     return {resource.__name__: resource for resource in ALL_RESOURCE_CLASSES}
 
 ResourceType = Literal[
-    "Branch", "Build", "BuildDefinition", "Commit", "AdoUser", "Member", "Reviewer",
-    "PullRequest", "Release", "ReleaseDefinition", "Repo", "Team", "VariableGroup"  # fmt: skip
+    "Branch", "Build", "BuildDefinition", "Commit", "Project", "PullRequest", "Release", "ReleaseDefinition", "Repo",
+    "Team", "AdoUser", "Member", "Reviewer", "VariableGroup"  # fmt: skip
 ]

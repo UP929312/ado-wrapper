@@ -94,13 +94,13 @@ class AdoClient:
     def wipe_state(self) -> None:
         if self.state_file_name is None:
             return
-        ALL_RESOURCE_STRINGS = get_resource_variables().keys()
+        all_resource_names = get_resource_variables().keys()
         with open(self.state_file_name, "w", encoding="utf-8") as state_file:
             json.dump(
                 {
                     "state_file_version": STATE_FILE_VERSION,
-                    "created": {resource: {} for resource in ALL_RESOURCE_STRINGS},
-                    "updated": {resource: {} for resource in ALL_RESOURCE_STRINGS},
+                    "created": {resource: {} for resource in all_resource_names},
+                    "updated": {resource: {} for resource in all_resource_names},
                 },
                 state_file,
             )

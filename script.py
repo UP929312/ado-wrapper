@@ -2,11 +2,13 @@ from secret import email, ado_access_token, ado_org, ado_project  # , EXISTING_R
 # from secret import email, alterative_ado_access_token, old_ado_org, old_ado_project
 from client import AdoClient
 
-from resources.projects import Project
+# from resources.projects import Project
+# from resources.repo import Repo
 
 ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
-projects = Project.get_all(ado_client)
-print(projects)
+
+# projects = Project.get_all(ado_client)
+# print(projects)
 
 # ado_client = AdoClient(email, alterative_ado_access_token, old_ado_org, old_ado_project)
 

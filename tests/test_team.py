@@ -1,3 +1,5 @@
+import pytest
+
 from client import AdoClient
 from resources.teams import Team
 from resources.users import TeamMember
@@ -17,6 +19,12 @@ class TestTeam:
         assert team.name == "test-Team"
         assert team.description == "test-Team"
         assert team.to_json() == Team.from_json(team.to_json()).to_json()
+
+    def test_create_delete_team(self) -> None:
+        with pytest.raises(NotImplementedError):
+            Team.create(self.ado_client, "ado-api-test-Team", "description")
+        with pytest.raises(NotImplementedError):
+            Team.delete_by_id(self.ado_client, "abc")
 
     def test_get_by_id(self) -> None:
         team = Team.get_by_id(self.ado_client, existing_team_id)

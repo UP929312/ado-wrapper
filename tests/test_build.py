@@ -8,8 +8,7 @@ from resources.commits import Commit
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     (
-        ado_org, ado_project, email, pat_token, _, _, _, _, _, existing_agent_pool_id,
-        *_  # fmt: skip
+        ado_org, ado_project, email, pat_token, _, _, _, _, _, existing_agent_pool_id, *_  # fmt: skip
     ) = test_data.read().splitlines()  # type: ignore[assignment]
 
 BUILD_YAML_FILE = """---

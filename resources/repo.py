@@ -8,8 +8,13 @@ import requests
 
 from client import AdoClient
 from state_managed_abc import StateManagedResource
-from utils import ResourceNotFound, DeletionFailed, UnknownError, ResourceAlreadyExists
+from utils import ResourceNotFound, UnknownError
 from resources.pull_requests import PullRequest, PullRequestStatus
+from resources.commits import Commit
+
+# ====================================================================
+# {"changeType": 1, "item": {"path": "/README.md"}, "newContentTemplate": {"name": "README.md", "type": "readme"}}
+# {"changeType": 1, "item": {"path": "/.gitignore"}, "newContentTemplate": {"name": "Python.gitignore", "type": "gitignore"}}
 
 
 @dataclass
@@ -18,8 +23,8 @@ class Repo(StateManagedResource):
 
     repo_id: str = field(metadata={"is_id_field": True})
     name: str
-    default_branch: str = field(default="refs/heads/main", repr=False, metadata={"editable": True})
-    is_disabled: bool = field(default=False, repr=False, metadata={"editable": True})
+    default_branch: str = field(default="refs/heads/main", repr=False, metadata={"editable": True, "internal_name": "defaultBranch"})
+    is_disabled: bool = field(default=False, repr=False, metadata={"editable": True, "internal_name": "isDisabled"})
 
     def __str__(self) -> str:
         return f"Repo(name={self.name}, id={self.repo_id})"
@@ -30,30 +35,29 @@ class Repo(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> "Repo":
-        request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1", auth=ado_client.auth)  # fmt: skip
-        if request.status_code == 404:
-            raise ResourceNotFound(f"The {cls.__name__} with id {repo_id} could not be found!")
-        return cls.from_request_payload(request.json())
+        return super().get_by_id(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1",
+        )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, name: str) -> "Repo":
-        request = requests.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=6.0",
-            json={"name": name},
-            auth=ado_client.auth,
+    def create(cls, ado_client: AdoClient, name: str, include_readme: bool=True) -> "Repo":  # type: ignore[override]
+        repo = super().create(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1-preview",
+            {"name": name},
         )
-        if request.status_code == 409:
-            raise ResourceAlreadyExists(f"The {cls.__name__} with name {name} already exists!")
-        resource = cls.from_request_payload(request.json())
-        ado_client.add_resource_to_state(cls.__name__, resource.repo_id, resource.to_json())  # type: ignore[arg-type]
-        return resource
+        if include_readme:
+            Commit.add_initial_readme(ado_client, repo.repo_id)  # type: ignore[attr-defined]
+        return repo  # type: ignore[return-value]
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, repo_id: str) -> None:
-        request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1", auth=ado_client.auth)  # fmt: skip
-        if request.status_code != 204:
-            raise DeletionFailed(f"Error deleting {cls.__name__} {repo_id}: {request.text}")
-        ado_client.remove_resource_from_state(cls.__name__, repo_id)  # type: ignore[arg-type]
+    def delete_by_id(cls, ado_client: AdoClient, repo_id: str) -> None:  # type: ignore[override]
+        return super().delete_by_id(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1",
+            repo_id,
+        )
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -79,8 +83,8 @@ class Repo(StateManagedResource):
                 return cls.from_request_payload(repo)
         raise ValueError(f"Repo {repo_name} not found")
 
-    def get_file(self, ado_client: AdoClient, file_path: str) -> str:
-        request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?path={file_path}&api-version=7.1", auth=ado_client.auth)  # fmt: skip
+    def get_file(self, ado_client: AdoClient, file_path: str, branch_name: str="main") -> str:
+        request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?path={file_path}&api-version=7.1&versionType={'Branch'}&version={branch_name}", auth=ado_client.auth)  # fmt: skip
         if request.status_code == 404:
             raise ResourceNotFound(f"File {file_path} not found in repo {self.repo_id}")
         if request.status_code != 200:

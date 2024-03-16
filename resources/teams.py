@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from client import AdoClient
 
 
-@dataclass(slots=True)
+@dataclass
 class Team(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/core/teams?view=azure-devops-rest-7.1"""
 
@@ -36,13 +36,13 @@ class Team(StateManagedResource):
         return cls.from_request_payload(request)
 
     @classmethod
-    def create(cls, ado_client: AdoClient, name: str, description: str) -> "Team":
+    def create(cls, ado_client: AdoClient, name: str, description: str) -> "Team":  # type: ignore[override]
         raise NotImplementedError
         # request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/_apis/teams?api-version=7.1-preview.2", json={"name": name, "description": description}, auth=ado_client.auth).json()
         # return cls.from_request_payload(request)
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, team_id: str) -> None:
+    def delete_by_id(cls, ado_client: AdoClient, team_id: str) -> None:  # type: ignore[override]
         raise NotImplementedError
         # request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/_apis/teams/{team_id}?api-version=7.1-preview.2", auth=ado_client.auth)
         # assert request.status_code < 300

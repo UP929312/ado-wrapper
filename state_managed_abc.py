@@ -3,7 +3,9 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
 from datetime import datetime
 
-from utils import get_resource_variables
+import requests
+
+from utils import get_resource_variables, extract_id, ResourceAlreadyExists, DeletionFailed, ResourceNotFound
 
 if TYPE_CHECKING:
     from client import AdoClient
@@ -14,10 +16,8 @@ def recursively_convert_to_json(attribute_name: str, attribute_value: Any) -> tu
         class_name = str(type(attribute_value)).rsplit(".", maxsplit=1)[-1].removesuffix("'>")
         return attribute_name + "::" + class_name, attribute_value.to_json()
     if isinstance(attribute_value, dict):
-        # TODO: Fix this
-        return attribute_name, {}
-        # rint(attribute_name, attribute_value)
-        # return attribute_name, recursively_convert_to_json(attribute_name, attribute_value)
+        # print("In To JSON, it's a dict:", attribute_name, attribute_value)
+        return attribute_name, {key: recursively_convert_to_json("", value)[1] for key, value in attribute_value.items()}
     if isinstance(attribute_value, list):
         return attribute_name, [recursively_convert_to_json(attribute_name, value) for value in attribute_value]
     if isinstance(attribute_value, datetime):
@@ -59,12 +59,31 @@ class StateManagedResource(ABC):
         combined = zip(attribute_names, attribute_values)
         return dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in combined)
 
-    @staticmethod
-    @abstractmethod
-    def get_by_id(ado_client: "AdoClient", resource_id: str) -> "StateManagedResource":
-        raise NotImplementedError
 
     @classmethod
-    @abstractmethod
-    def delete_by_id(cls, ado_client: "AdoClient", resource_id: str) -> None:
+    def get_by_id(cls, ado_client: "AdoClient", url: str) -> "StateManagedResource":
+        request = requests.get(url, auth=ado_client.auth)
+        if request.status_code == 404:
+            raise ResourceNotFound(f"No {cls.__name__} found with that identifier!")
+        return cls.from_request_payload(request.json())
+
+    @classmethod
+    def create(cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None=None) -> "StateManagedResource":
+        request = requests.post(url, json=payload if payload is not None else {}, auth=ado_client.auth)  # Create a brand new dict
+        if request.status_code == 401:
+            raise PermissionError(f"You do not have permission to create this {cls.__name__}!")
+        if request.status_code == 409:
+            raise ResourceAlreadyExists(f"The {cls.__name__} with that identifier already exist!")
+        resource = cls.from_request_payload(request.json())
+        ado_client.add_resource_to_state(cls.__name__, extract_id(resource), resource.to_json())  # type: ignore[arg-type]
+        return resource
+
+    @classmethod
+    def delete_by_id(cls, ado_client: "AdoClient", url: str, resource_id: str) -> None:
+        request = requests.delete(url, auth=ado_client.auth)
+        if request.status_code != 204:
+            raise DeletionFailed(f"Error deleting that {cls.__name__} ({resource_id}): {request.text}")
+        ado_client.remove_resource_from_state(cls.__name__, resource_id)  # type: ignore[arg-type]
+
+    def update(self, ado_client: "AdoClient", attribute_name: str, attribute_value: Any) -> None:
         raise NotImplementedError

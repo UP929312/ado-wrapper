@@ -8,7 +8,7 @@ from client import AdoClient
 from state_managed_abc import StateManagedResource
 
 
-@dataclass(slots=True)
+@dataclass
 class Project(StateManagedResource):
     "https://learn.microsoft.com/en-us/rest/api/azure/devops/core/projects?view=azure-devops-rest-7.1"
     project_id: str  # None are editable
@@ -29,11 +29,11 @@ class Project(StateManagedResource):
         return cls.from_request_payload(request)
 
     @classmethod
-    def create(cls, ado_client: AdoClient, project_name: str, project_description: str) -> "Project":
+    def create(cls, ado_client: AdoClient, project_name: str, project_description: str) -> "Project":  # type: ignore[override]
         raise NotImplementedError
 
     @staticmethod
-    def delete_by_id(ado_client: AdoClient, project_id: str) -> None:
+    def delete_by_id(ado_client: AdoClient, project_id: str) -> None:  # type: ignore[override]
         raise NotImplementedError
 
     # ============ End of requirement set by all state managed resources ================== #

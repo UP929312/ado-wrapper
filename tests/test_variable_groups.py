@@ -1,10 +1,5 @@
-import pytest
-
 from client import AdoClient
-
 from resources.variable_groups import VariableGroup
-
-import pytest
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     ado_org, ado_project, email, pat_token, *_ = test_data.read().splitlines()
@@ -35,11 +30,16 @@ class TestVariableGroup:
         assert variable_group.created_on.year == 2023
         assert variable_group.to_json() == VariableGroup.from_json(variable_group.to_json()).to_json()
 
-    @pytest.mark.wip
     def test_create_delete(self) -> None:
         variable_group = VariableGroup.create(self.ado_client, "ado-api-test-for-create-delete", "my_description", {"a": "b"})
         variable_group.delete(self.ado_client)
-        assert variable_group.name == "ado-api-test-for-create-delete"
+        assert variable_group.variables == {"a": "b"}
+
+    def test_update(self) -> None:
+        variable_group = VariableGroup.create(self.ado_client, "ado-api-test-for-update", "my_description", {"a": "b"})
+        variable_group.update(self.ado_client, "variables", {"a": "c"})
+        variable_group.delete(self.ado_client)
+        assert variable_group.variables == {"a": "c"}
 
     def test_get_by_id(self) -> None:
         variable_group_created = VariableGroup.create(self.ado_client, "ado-api-test-for-get-by-id", "my_description", {"a": "b"})

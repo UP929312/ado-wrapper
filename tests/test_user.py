@@ -26,10 +26,9 @@ class TestAdoUser:
 
     def test_create_delete(self) -> None:
         with pytest.raises(NotImplementedError):
-            user = AdoUser.create(self.ado_client, "ado-api-test-user", "ado-api")
+            AdoUser.create(self.ado_client, "ado-api-test-user", "ado-api")
         with pytest.raises(NotImplementedError):
-            user = AdoUser.get_by_id(self.ado_client, existing_user_id)
-            user.delete(self.ado_client)
+            AdoUser.delete_by_id(self.ado_client, "abc")
 
     def test_get_by_id(self) -> None:
         user = AdoUser.get_by_id(self.ado_client, existing_user_id)

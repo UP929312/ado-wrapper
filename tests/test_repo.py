@@ -3,8 +3,10 @@ from resources.repo import Repo
 from resources.pull_requests import PullRequest
 from resources.commits import Commit
 
+import pytest
+
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
-    ado_org, ado_project, email, pat_token, *_ = test_data.read().splitlines()  # fmt: skip
+    ado_org, ado_project, email, pat_token, *_ = test_data.read().splitlines()
 
 
 class TestRepo:
@@ -45,8 +47,8 @@ class TestRepo:
 
     def test_get_file(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-file")
-        Commit.create(self.ado_client, repo.repo_id, "main", "main", {"README.md": "Delete me!"}, "add", "Test commit")
-        file = repo.get_file(self.ado_client, "README.md")
+        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"read-this.txt": "Delete me!"}, "add", "Test commit")
+        file = repo.get_file(self.ado_client, "README.md", "test-branch")
         assert len(file) > 5
         repo.delete(self.ado_client)
 
@@ -58,13 +60,12 @@ class TestRepo:
         assert isinstance(contents, dict)
         repo.delete(self.ado_client)
 
-    # def test_get_pull_requests(self) -> None:
-    #     repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-pull-requests")
-    #     Commit.create(self.ado_client, repo.repo_id, "main", "main", {"test.txt": "Delete me!"}, "add", "Test commit")
-    #     Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "How am I still here?"}, "edit", "Test commit")
-    #     repo.create_pull_request(self.ado_client, "test-branch", "Test PR", "Test PR description")
-    #     pull_requests = repo.get_all_pull_requests(self.ado_client, "all")
-    #     assert len(pull_requests) == 1
-    #     assert all(isinstance(pr, PullRequest) for pr in pull_requests)
-    #     pull_requests[0].close(self.ado_client)
-    #     repo.delete(self.ado_client)
+    def test_get_pull_requests(self) -> None:
+        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-pull-requests")
+        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "This should be on the branch"}, "add", "Test commit")
+        repo.create_pull_request(self.ado_client, "test-branch", "Test PR", "Test PR description")
+        pull_requests = repo.get_all_pull_requests(self.ado_client, "all")
+        assert len(pull_requests) == 1
+        assert all(isinstance(pr, PullRequest) for pr in pull_requests)
+        pull_requests[0].close(self.ado_client)
+        repo.delete(self.ado_client)

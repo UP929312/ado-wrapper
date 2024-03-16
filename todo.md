@@ -7,12 +7,15 @@ Maybe show a type when adding to state too, like "Add": abc
 This lets us store and perhaps revert updates?
 
 Resources that are entirely state managed:
+Build
 BuildDefinition
+ReleaseDefinition
+Release
 Repo
-VariableGroup
+VariableGroup,
 
 Soon:
-Build, ReleaseDefinition, Release, Pull Request, Commit
+Pull Request, Commit
 
 -----
 
@@ -29,11 +32,7 @@ Script plan mode?
 
 Teams.get_members(recursive=True)
 
-Pull requests aren't working, rip
-
 Build.wait_until_completed(build_id)
-
-Variable groups are broken in the dictionary/variables section
 
 Add reviewers straight with {
   "sourceRefName": "refs/heads/npaulk/my_work",
@@ -56,5 +55,7 @@ mypy . --strict
 black . --line-length 140
 pytest tests/ -vvvv -s
 python3.11 -m client --delete-everything
+
+python3.11 -m client --refresh-resources-on-startup
 
 pytest tests/ -vvvv -s -m wip

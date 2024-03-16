@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
-from typing import overload, TYPE_CHECKING, Literal
+from typing import overload, TYPE_CHECKING, Literal, Any
+from dataclasses import fields
 
 if TYPE_CHECKING:
     from state_managed_abc import StateManagedResource
@@ -53,6 +54,31 @@ def from_iso(dt_string: str | None) -> datetime | None:
         return None
     dt = datetime.fromisoformat(dt_string)
     return dt.replace(tzinfo=timezone.utc)
+
+def get_fields_metadata(cls: type["StateManagedResource"]) -> dict[str, dict[str, str]]:
+    return {field_obj.name: dict(field_obj.metadata) for field_obj in fields(cls)}
+
+def get_id_field_name(cls: type["StateManagedResource"]) -> str:
+    for field_name, metadata in get_fields_metadata(cls).items():
+        if metadata.get("is_id_field", False):
+            return field_name
+    raise ValueError(f"No id field found for {cls.__name__}!")
+
+def extract_id(obj: "StateManagedResource") -> Any:
+    id_field_name = get_id_field_name(obj.__class__)
+    return getattr(obj, id_field_name)
+
+def get_editable_fields(cls: type["StateManagedResource"]) -> list[str]:
+    return [field_obj.name for field_obj in cls.__dataclass_fields__.values() if field_obj.metadata.get("editable", False)]
+
+def get_internal_field_names(cls: type["StateManagedResource"], field_names: list[str] | None = None, reverse: bool=True) -> dict[str, str]:
+    """Returns a mapping of field names to their internal names. If no internal name is set, the field name is used."""
+    if field_names is None:
+        field_names = get_editable_fields(cls)
+    value = {field_name: cls.__dataclass_fields__[field_name].metadata.get("internal_name", field_name) for field_name in field_names}
+    if reverse:
+        return {v: k for k, v in value.items()}
+    return value
 
 
 class ResourceNotFound(Exception):

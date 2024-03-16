@@ -1,3 +1,5 @@
+import pytest
+
 from client import AdoClient
 from resources.projects import Project
 
@@ -25,6 +27,12 @@ class TestProject:
         assert project.name == "test-project"
         assert project.description == "test-description"
         assert project.to_json() == Project.from_json(project.to_json()).to_json()
+
+    def test_create_delete_project(self) -> None:
+        with pytest.raises(NotImplementedError):
+            Project.create(self.ado_client, "ado-api-test-project", "description")
+        with pytest.raises(NotImplementedError):
+            Project.delete_by_id(self.ado_client, "abc")
 
     def test_get_by_id(self) -> None:
         project = Project.get_by_id(self.ado_client, existing_project_id)

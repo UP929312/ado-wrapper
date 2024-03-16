@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 import requests
 
 from client import AdoClient
-from utils import from_ado_date_string, DeletionFailed
+from utils import from_ado_date_string
 from state_managed_abc import StateManagedResource
 from resources.users import Member
 from resources.repo import Repo
@@ -40,11 +40,11 @@ def get_build_definition(
 # ========================================================================================================
 
 
-@dataclass(slots=True)
+@dataclass
 class Build(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/build/builds?view=azure-devops-rest-7.1"""
 
-    build_id: str
+    build_id: str = field(metadata={"is_id_field": True})
     build_number: str
     status: BuildStatus
     requested_by: Member
@@ -69,27 +69,26 @@ class Build(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, build_id: str) -> "Build":
-        response = requests.get(
+        return super().get_by_id(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}?api-version=7.1",
-            auth=ado_client.auth,
-        ).json()
-        return cls.from_request_payload(response)
+        )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, definition_id: str, source_branch: str = "refs/heads/main") -> "Build":
-        request = requests.post(
+    def create(cls, ado_client: AdoClient, definition_id: str, source_branch: str = "refs/heads/main") -> "Build":  # type: ignore[override]
+        return super().create(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?definitionId={definition_id}&sourceBranch={source_branch}&api-version=7.1",
-            json={"reason": "An automated build created by the ADO-API"}, auth=ado_client.auth,  # fmt: skip
-        ).json()
-        return cls.from_request_payload(request)
+            {"reason": "An automated build created by the ADO-API"},
+        )  # type: ignore[return-value]
 
-    @staticmethod
-    def delete_by_id(ado_client: AdoClient, build_id: str) -> None:
-        delete_request = requests.delete(
+    @classmethod
+    def delete_by_id(cls, ado_client: AdoClient, build_id: str) -> None:  # type: ignore[override]
+        return super().delete_by_id(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}?api-version=7.1",
-            auth=ado_client.auth,
+            build_id,
         )
-        assert delete_request.status_code == 204
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -110,13 +109,13 @@ class Build(StateManagedResource):
 # ========================================================================================================
 
 
-@dataclass(slots=True)
+@dataclass
 class BuildDefinition(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/build/definitions?view=azure-devops-rest-7.1"""
 
-    build_definition_id: str = field(repr=True, metadata={"is_id_field": True})  # Static
-    name: str = field(repr=True, metadata={"editable": True})
-    description: str = field(repr=True, metadata={"editable": True})
+    build_definition_id: str = field(metadata={"is_id_field": True})
+    name: str = field(metadata={"editable": True})
+    description: str = field(metadata={"editable": True})
     path: str
     created_by: Member
     created_date: datetime
@@ -129,7 +128,7 @@ class BuildDefinition(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "BuildDefinition":
-        """Creates a build definition object from the response payload of a request to the ADO API. Repo is not always present"""
+        """Repo is not always present"""
         created_by = Member(data["authoredBy"]["displayName"], data["authoredBy"]["uniqueName"], data["authoredBy"]["id"])
         repo = Repo(data.get("repository", {"id": "UNKNOWN"})["id"], data.get("repository", {"name": "UNKNOWN"})["name"])
         return cls(str(data["id"]), data["name"], data.get("description", ""), data.get("process", {"yamlFilename": "UNKNOWN"})["yamlFilename"], created_by,
@@ -137,36 +136,28 @@ class BuildDefinition(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, build_definition_id: str) -> "BuildDefinition":
-        response = requests.get(
+        return super().get_by_id(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{build_definition_id}?api-version=7.1",
-            auth=ado_client.auth,
-        ).json()
-        return cls.from_request_payload(response)
+        )  # type: ignore[return-value]
 
     @classmethod
-    def create(
+    def create(  # type: ignore[override]
         cls, ado_client: AdoClient, name: str, repo_id: str, repo_name: str, path_to_pipeline: str, description: str, agent_pool_id: str, branch_name: str = "main",  # fmt: skip
     ) -> "BuildDefinition":
-        """Takes a list of variable group ids to include, and an agent_pool_id"""
-        body = get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, agent_pool_id)
-        request = requests.post(
+        return super().create(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?sourceBranch={branch_name}&api-version=7.0",
-            json=body,
-            auth=ado_client.auth,
-        ).json()
-        resource = cls.from_request_payload(request)
-        ado_client.add_resource_to_state(cls.__name__, request["id"], resource.to_json())  # type: ignore[arg-type]
-        return resource
+            payload=get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, agent_pool_id),
+        )  # type: ignore[return-value]
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, resource_id: str) -> None:
-        request = requests.delete(
+    def delete_by_id(cls, ado_client: AdoClient, resource_id: str) -> None:  # type: ignore[override]
+        return super().delete_by_id(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{resource_id}?forceDelete=true&api-version=7.1",
-            auth=ado_client.auth,
+            resource_id,
         )
-        if request.status_code != 204:
-            raise DeletionFailed(f"Failed to delete {cls.__name__} with id {resource_id}")
-        ado_client.remove_resource_from_state(cls.__name__, resource_id)  # type: ignore[arg-type]
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

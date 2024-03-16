@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 import requests
 
-from utils import from_ado_date_string, DeletionFailed
+from utils import from_ado_date_string, get_internal_field_names
 from state_managed_abc import StateManagedResource
 from resources.users import Member
 
@@ -14,14 +14,14 @@ if TYPE_CHECKING:
     from client import AdoClient
 
 
-@dataclass(slots=True)
+@dataclass
 class VariableGroup(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/distributedtask/variablegroups?view=azure-devops-rest-7.1"""
 
     variable_group_id: str = field(metadata={"is_id_field": True})
-    name: str = field(repr=True, metadata={"editable": True})
-    description: str = field(repr=True, metadata={"editable": True})
-    variables: dict[str, str]
+    name: str  # Cannot currently change the name of a variable group
+    description: str # = field(metadata={"editable": True})  # Bug in the api means this is not editable (it never returns or sets description)
+    variables: dict[str, str] = field(metadata={"editable": True})
     created_on: datetime
     created_by: Member
     modified_by: Member
@@ -40,14 +40,15 @@ class VariableGroup(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> "VariableGroup":
-        request = requests.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/distributedtask/variablegroups?groupIds={variable_group_id}&api-version=7.1-preview.2",
-            auth=ado_client.auth,
-        ).json()["value"][0]  # fmt: skip
-        return cls.from_request_payload(request)
+        return super().get_by_id(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/distributedtask/variablegroups/{variable_group_id}?api-version=7.1-preview.2",
+        )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, variable_group_name: str, variable_group_description: str, variables: dict[str, str]) -> "VariableGroup":  # fmt: skip
+    def create(  # type: ignore[override]
+        cls, ado_client: AdoClient, variable_group_name: str, variable_group_description: str, variables: dict[str, str]  # fmt: skip
+    ) -> "VariableGroup":
         payload = {
             "name": variable_group_name,
             "description": variable_group_description,
@@ -61,23 +62,36 @@ class VariableGroup(StateManagedResource):
                 }
             ],
         }
-        request = requests.post(
+        return super().create(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/distributedtask/variablegroups?api-version=7.1-preview.2",
-            json=payload, auth=ado_client.auth,  # fmt: skip
-        ).json()
-        resource = cls.from_request_payload(request)
-        ado_client.add_resource_to_state(cls.__name__, resource.variable_group_id, resource.to_json())  # type: ignore[arg-type]
-        return resource
+            payload,
+        )  # type: ignore[return-value]
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> None:
-        request = requests.delete(
+    def delete_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> None:  # type: ignore[override]
+        return super().delete_by_id(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/distributedtask/variablegroups/{variable_group_id}?projectIds={ado_client.ado_project_id}&api-version=7.1-preview.2",
-            auth=ado_client.auth,
+            variable_group_id,
         )
-        if request.status_code != 204:
-            raise DeletionFailed(f"Error deleting {cls.__name__} {variable_group_id}: {request.text}")
-        ado_client.remove_resource_from_state(cls.__name__, variable_group_id)  # type: ignore[arg-type]
+
+    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:
+        params = {
+            "variableGroupProjectReferences": [{
+                "name": self.name,
+                "projectReference": {"id": ado_client.ado_project_id}
+            }]
+        } |  {"id": self.variable_group_id, "name": self.name, "type": "Vsts", "variables": self.variables
+        } | {attribute_name: attribute_value}  # We do this to override the default value of the attribute
+        request = requests.put(
+            f"https://dev.azure.com/{ado_client.ado_org}/_apis/distributedtask/variablegroups/{self.variable_group_id}?api-version=7.1-preview.2",
+            json=params, auth=ado_client.auth,  # fmt: skip
+        )
+        assert request.status_code == 200
+        local_attribute_name = get_internal_field_names(self.__class__)[attribute_name]
+        setattr(self, local_attribute_name, attribute_value)
+        ado_client.update_resource_in_state(self.__class__.__name__, self.variable_group_id, self.to_json())  # type: ignore[arg-type]
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

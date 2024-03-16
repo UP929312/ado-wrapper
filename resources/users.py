@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal, Any, TYPE_CHECKING
-from dataclasses import dataclass  # , field
+from dataclasses import dataclass
 
 import requests
 
@@ -22,7 +22,7 @@ VoteOptions = Literal[10, 5, 0, -5, -10]
 # ======================================================================================================= #
 
 
-@dataclass(slots=True)
+@dataclass
 class AdoUser(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/graph/users?view=azure-devops-rest-7.1"""
 
@@ -53,11 +53,11 @@ class AdoUser(StateManagedResource):
         return cls.from_request_payload(request)
 
     @classmethod
-    def create(cls, ado_client: AdoClient, member_name: str, member_email: str) -> "AdoUser":
+    def create(cls, ado_client: AdoClient, member_name: str, member_email: str) -> "AdoUser":  # type: ignore[override]
         raise NotImplementedError("Creating a new user is not supported")
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, member_id: str) -> None:
+    def delete_by_id(cls, ado_client: AdoClient, member_id: str) -> None:  # type: ignore[override]
         raise NotImplementedError("Deleting a user is not supported")
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -94,40 +94,36 @@ class AdoUser(StateManagedResource):
 # ======================================================================================================= #
 
 
-class Member:
+@dataclass
+class Member(StateManagedResource):
     """A stripped down member class which is often returned by the API, for example in build requests."""
-
-    def __init__(self, name: str, email: str, member_id: str) -> None:
-        self.name = name  # Static
-        self.email = email.removeprefix("vstfs:///Classification/TeamProject/")  # Static
-        self.member_id = member_id  # Static
+    name: str # Static
+    email: str # Static
+    member_id: str # Static
 
     def __str__(self) -> str:
         return f"{self.name} ({self.email})"
-
-    def __repr__(self) -> str:
-        return f"Member({self.name}, {self.email})"
-
-    @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "Member":
-        return cls(data["name"], data["email"], data["id"])
-
-    def to_json(self) -> dict[str, Any]:
-        return {
-            "name": self.name,
-            "email": self.email,
-            "id": self.member_id,
-        }
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Member":
         return cls(data["displayName"], data["mailAddress"], data["originId"])
 
+    @classmethod
+    def get_by_id(cls, ado_client: AdoClient, member_id: str) -> "Member":
+        raise NotImplementedError("Getting a member by ID is not supported")
+
+    @classmethod
+    def create(cls, ado_client: AdoClient, member_name: str, member_email: str) -> "Member":  # type: ignore[override]
+        raise NotImplementedError("Creating a new member is not supported")
+
+    @classmethod
+    def delete_by_id(cls, ado_client: AdoClient, member_id: str) -> None:  # type: ignore[override]
+        raise NotImplementedError("Deleting a member is not supported")
+
 
 # ======================================================================================================= #
 # ------------------------------------------------------------------------------------------------------- #
 # ======================================================================================================= #
-
 
 class TeamMember(Member):
     """Identical to Member, but with an additional attribute `is_team_admin`."""
@@ -157,7 +153,6 @@ class TeamMember(Member):
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "TeamMember":
         return cls(data["identity"]["displayName"], data["identity"]["uniqueName"], data["identity"]["id"], data.get("isTeamAdmin", False))
-
 
 # ======================================================================================================= #
 # ------------------------------------------------------------------------------------------------------- #

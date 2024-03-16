@@ -1,6 +1,6 @@
 from typing import Literal, Any
 from datetime import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import requests
 
@@ -42,11 +42,11 @@ def get_commit_body_template(old_object_id: str | None, updates: dict[str, str],
     }
 
 
-@dataclass(slots=True)
+@dataclass
 class Commit(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/commits?view=azure-devops-rest-7.1"""
 
-    commit_id: str  # None are editable
+    commit_id: str = field(metadata={"is_id_field": True}) # None are editable
     author: Member
     date: datetime
     message: str
@@ -61,14 +61,13 @@ class Commit(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, repo_id: str, commit_id: str) -> "Commit":  # type: ignore[override]
-        commit = requests.get(
+        return super().get_by_id(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits/{commit_id}?api-version=5.1",
-            auth=ado_client.auth,
-        ).json()
-        return cls.from_request_payload(commit)
+        )  # type: ignore[return-value]
 
     @classmethod
-    def create(
+    def create(  # type: ignore[override]
         cls, ado_client: AdoClient, repo_id: str, from_branch_name: str, to_branch_name: str, updates: dict[str, str], change_type: ChangeType, commit_message: str,  # fmt: skip
     ) -> "Commit":
         """Creates a commit in the given repository with the given updates and returns the commit object.
@@ -82,6 +81,8 @@ class Commit(StateManagedResource):
         latest_commit_id = None if latest_commit is None else latest_commit.commit_id
         data = get_commit_body_template(latest_commit_id, updates, to_branch_name, change_type, commit_message)
         request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=5.1", json=data, auth=ado_client.auth)  # fmt: skip
+        if request.status_code == 400:
+            raise ValueError("The commit was not created successfully, the file(s) you're trying to add might already exist there.")
         if request.status_code == 403:
             raise InvalidPermissionsError("You do not have permission to create a commit in this repo (possibly due to main branch protections)")  # fmt: skip
         if not request.json().get("commits"):
@@ -89,7 +90,7 @@ class Commit(StateManagedResource):
         return cls.from_request_payload(request.json()["commits"][-1])
 
     @staticmethod
-    def delete_by_id(ado_client: AdoClient, commit_id: str) -> None:
+    def delete_by_id(ado_client: AdoClient, commit_id: str) -> None:  # type: ignore[override]
         raise NotImplementedError
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -105,7 +106,6 @@ class Commit(StateManagedResource):
         #         auth=ado_client.auth,
         #     ).json()["value"]
         # else:
-        assert branch_name != "DELETE ME EVENTUALLY"
         commits = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits?api-version=5.1",
             auth=ado_client.auth,
@@ -122,3 +122,17 @@ class Commit(StateManagedResource):
             auth=ado_client.auth,
         ).json()["value"]
         return [cls.from_request_payload(commit) for commit in commits]
+
+    @classmethod
+    def add_initial_readme(cls, ado_client: AdoClient, repo_id: str) -> "Commit":
+        default_commit_body = get_commit_body_template(None, {}, "main", "add", "")
+        default_commit_body["commits"] = [{
+            "comment": "Add README.md", "changes": [
+                {"changeType": 1, "item": {"path": "/README.md"},
+                 "newContentTemplate": {"name": "README.md", "type": "readme"}}
+        ]}]
+        request = requests.post(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=5.1",
+            json=default_commit_body, auth=ado_client.auth,  # fmt: skip
+        )
+        return cls.from_request_payload(request.json()["commits"][-1])

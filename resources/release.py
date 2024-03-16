@@ -72,7 +72,7 @@ def get_release_definition(name: str, variable_group_ids: list[int] | None, agen
 # ========================================================================================================
 
 
-@dataclass(slots=True)
+@dataclass
 class Release(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/release/releases?view=azure-devops-rest-7.1"""
 
@@ -97,30 +97,26 @@ class Release(StateManagedResource):
 
     @classmethod  # TODO: Test
     def get_by_id(cls, ado_client: AdoClient, release_id: str) -> "Release":
-        request = requests.get(
+        return super().get_by_id(
+            ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1",
-            auth=ado_client.auth,
-        )
-        if request.status_code == 404:
-            raise ResourceNotFound(f"The {cls.__name__} with id {release_id} could not be found!")
-        return cls.from_request_payload(request.json())
+        )  # type: ignore[return-value]
 
     @classmethod  # TODO: Test
-    def create(cls, ado_client: AdoClient, definition_id: str) -> "Release":
-        body = {"definitionId": definition_id, "description": "An automated release created by ADO-API"}
-        request = requests.post(
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1", json=body, auth=ado_client.auth  # fmt: skip
-        ).json()
-        return cls.from_request_payload(request)
+    def create(cls, ado_client: AdoClient, definition_id: str) -> "Release":  # type: ignore[override]
+        return super().create(
+            ado_client,
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1",
+            {"definitionId": definition_id, "description": "An automated release created by ADO-API"},
+        )  # type: ignore[return-value]
 
     @classmethod  # TODO: Test
-    def delete_by_id(cls, ado_client: AdoClient, release_id: str) -> None:  # TODO: Test
-        delete_request = requests.delete(
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1", auth=ado_client.auth  # fmt: skip
+    def delete_by_id(cls, ado_client: AdoClient, release_id: str) -> None:  # type: ignore[override]
+        return super().delete_by_id(
+            ado_client,
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1",
+            release_id,
         )
-        if delete_request.status_code != 204:
-            raise DeletionFailed(f"Error deleting {cls.__name__} {release_id}: {delete_request.text}")
-        assert delete_request.status_code == 204
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -140,28 +136,21 @@ class Release(StateManagedResource):
 # ========================================================================================================
 
 
-@dataclass(slots=True)
+@dataclass
 class ReleaseDefinition(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/release/definitions?view=azure-devops-rest-7.1"""
 
-    release_definition_id: int
+    release_definition_id: str = field(metadata={"is_id_field": True})
     name: str = field(metadata={"editable": True})
     description: str = field(metadata={"editable": True})
     created_by: Member
     created_on: datetime
-    release_name_format: str = field(metadata={"editable": True})
-    variable_groups: list[int] = field(metadata={"editable": True})
+    release_name_format: str = field(metadata={"editable": True, "internal_name": "releaseNameFormat"})
+    variable_groups: list[int] = field(metadata={"editable": True, "internal_name": "variableGroups"})
     variables: list[dict[str, Any]] | None = field(default_factory=list, repr=False)  # type: ignore[assignment]
 
     def __str__(self) -> str:
         return f"{self.name}, {self.description}, created by {self.created_by}, created on {self.created_on!s}"
-
-    def __repr__(self) -> str:
-        return (
-            f"ReleaseDefinition(name={self.name!r}, description={self.description!r}, created_by={self.created_by!r}, "
-            f"created_on={self.created_on!s}, id={self.release_definition_id}, release_name_format={self.release_name_format!r}, "
-            f"variable_groups={self.variable_groups!r}, variables={self.variables!r})"
-        )
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "ReleaseDefinition":
@@ -171,11 +160,34 @@ class ReleaseDefinition(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, release_id: str) -> "ReleaseDefinition":
-        response = requests.get(
+        return super().get_by_id(
+            ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_id}?api-version=7.0",
-            auth=ado_client.auth,
-        ).json()
-        return cls.from_request_payload(response)
+        )  # type: ignore[return-value]
+
+    @classmethod  # TODO: Test
+    def create(cls, ado_client: AdoClient, name: str, variable_group_ids: list[int] | None, agent_pool_id: int) -> "ReleaseDefinition":  # type: ignore[override]
+        """Takes a list of variable group ids to include, and an agent_pool_id"""
+        return super().create(
+            ado_client,
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions?api-version=7.0",
+            get_release_definition(name, variable_group_ids, agent_pool_id),
+        )  # type: ignore[return-value]
+
+    @classmethod
+    def delete_by_id(cls, ado_client: AdoClient, release_definition_id: str) -> None:  # type: ignore[override]
+        return super().delete_by_id(
+            ado_client,
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_definition_id}?forceDelete=true&api-version=7.1",
+            release_definition_id
+        )
+
+    # ============ End of requirement set by all state managed resources ================== #
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+    # =============== Start of additional methods included with class ===================== #
+
+    def delete(self, ado_client: AdoClient) -> None:  # TODO: Test
+        return self.delete_by_id(ado_client, self.release_definition_id)
 
     @classmethod
     def get_all_releases_for_definition(cls, ado_client: AdoClient, definition_id: int) -> "list[Release]":
@@ -184,23 +196,5 @@ class ReleaseDefinition(StateManagedResource):
             auth=ado_client.auth,
         ).json()
         return [Release.from_request_payload(release) for release in response["value"]]
-
-    @classmethod  # TODO: Test
-    def create(cls, ado_client: AdoClient, name: str, variable_group_ids: list[int] | None, agent_pool_id: int) -> "ReleaseDefinition":
-        """Takes a list of variable group ids to include, and an agent_pool_id"""
-        body = get_release_definition(name, variable_group_ids, agent_pool_id)
-        data = requests.post(
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions?api-version=7.0",
-            json=body,
-            auth=ado_client.auth,
-        ).json()
-        return cls.from_request_payload(data)
-
-    def delete(self, ado_client: AdoClient) -> None:  # TODO: Test
-        delete_request = requests.delete(
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{self.release_definition_id}?forceDelete=true&api-version=7.1",
-            auth=ado_client.auth,
-        )
-        assert delete_request.status_code == 204
 
 # ========================================================================================================

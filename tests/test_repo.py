@@ -23,12 +23,12 @@ class TestRepo:
         assert repo.to_json() == Repo.from_json(repo.to_json()).to_json()
 
     def test_create_delete(self) -> None:
-        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-delete")
-        assert repo.name == "ado-api-test-repo-for-create-delete"
+        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-delete-repo")
+        assert repo.name == "ado-api-test-repo-for-create-delete-repo"
         repo.delete(self.ado_client)
 
     def test_get_by_id(self) -> None:
-        repo_created = Repo.create(self.ado_client, "ado-api-test-repo-for-get-by-id")
+        repo_created = Repo.create(self.ado_client, "ado-api-test-repo-for-get-repo-by-id")
         repo = Repo.get_by_id(self.ado_client, repo_created.repo_id)
         assert repo.repo_id == repo_created.repo_id
         repo_created.delete(self.ado_client)
@@ -39,8 +39,8 @@ class TestRepo:
         assert all(isinstance(repo, Repo) for repo in repos)
 
     def test_get_by_name(self) -> None:
-        repo_created = Repo.create(self.ado_client, "ado-api-test-repo-for-get-by-name")
-        repo = Repo.get_by_name(self.ado_client, "ado-api-test-repo-for-get-by-name")
+        repo_created = Repo.create(self.ado_client, "ado-api-test-repo-for-get-repo-by-name")
+        repo = Repo.get_by_name(self.ado_client, "ado-api-test-repo-for-get-repo-by-name")
         assert repo.name == repo_created.name
         assert repo.repo_id == repo_created.repo_id
         repo_created.delete(self.ado_client)

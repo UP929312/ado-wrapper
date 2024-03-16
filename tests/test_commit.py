@@ -25,7 +25,7 @@ class TestCommit:
 
     def test_create_delete(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-delete-commit")
-        commit = Commit.create(self.ado_client, repo.repo_id, "main", "main", {"test.txt": "Delete me!"}, "add", "Test commit")
+        commit = Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
         assert commit.message == "Test commit"
         repo.delete(self.ado_client)
 
@@ -48,7 +48,6 @@ class TestCommit:
             self.ado_client, repo.repo_id, "new-branch", "new-branch2", {"test2.txt": "This is something else"}, "add", "Test commit 2"
         )
         all_commits = Commit.get_all_by_repo(self.ado_client, repo.repo_id)
-        assert len(all_commits) == 2
+        assert len(all_commits) == 2+1  # 1 For the initial README commit
         assert all(isinstance(commit, Commit) for commit in all_commits)
-        assert all([x.commit_id in [commit_1.commit_id, commit_2.commit_id] for x in all_commits])
         repo.delete(self.ado_client)

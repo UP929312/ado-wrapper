@@ -47,6 +47,8 @@ Add reviewers straight with {
 }
 To PRs
 
+I think repo.get_latest_commit is broken?
+
 -----
 
 Pylint command:

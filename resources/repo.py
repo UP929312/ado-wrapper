@@ -83,20 +83,24 @@ class Repo(StateManagedResource):
                 return cls.from_request_payload(repo)
         raise ValueError(f"Repo {repo_name} not found")
 
-    def get_file(self, ado_client: AdoClient, file_path: str, branch_name: str="main") -> str:
-        request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?path={file_path}&api-version=7.1&versionType={'Branch'}&version={branch_name}", auth=ado_client.auth)  # fmt: skip
+    def get_file(self, ado_client: AdoClient, file_path: str, branch_name: str = "main") -> str:
+        request = requests.get(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?path={file_path}&versionType={'Branch'}&version={branch_name}&api-version=7.1",
+            auth=ado_client.auth
+        )
         if request.status_code == 404:
             raise ResourceNotFound(f"File {file_path} not found in repo {self.repo_id}")
         if request.status_code != 200:
             raise UnknownError(f"Error getting file {file_path} from repo {self.repo_id}: {request.text}")
         return request.text  # This is the file content
 
-    def get_repo_contents(self, ado_client: AdoClient, file_types: list[str] | None = None) -> dict[str, str]:
+    def get_repo_contents(self, ado_client: AdoClient, file_types: list[str] | None = None, branch_name:str = "main") -> dict[str, str]:
+        """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/items/get?view=azure-devops-rest-7.1&tabs=HTTP"""
         """This function downloads the contents of a repo, and returns a dictionary of the files and their contents
         The file_types parameter is a list of file types to filter for, e.g. ["json", "yaml"]"""
         try:
             request = requests.get(
-                f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?recursionLevel=Full&download=true&$format=Zip&api-version=6.0",
+                f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?recursionLevel={'Full'}&download={True}&$format={'Zip'}&versionDescriptor.version={branch_name}&api-version=7.1",
                 auth=ado_client.auth,
             )
         except requests.exceptions.ConnectionError:

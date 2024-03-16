@@ -112,7 +112,7 @@ class Commit(StateManagedResource):
         ).json()["value"]
         if not commits:
             return None
-        return cls.from_request_payload(commits[0])
+        return cls.from_request_payload(max(commits, key=lambda commit: commit["author"]["date"]))
 
     @classmethod
     def get_all_by_repo(cls, ado_client: AdoClient, repo_id: str) -> "list[Commit]":

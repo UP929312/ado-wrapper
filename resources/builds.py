@@ -17,7 +17,7 @@ QueuePriority = Literal["low", "belowNormal", "normal", "aboveNormal", "high"]
 
 
 def get_build_definition(
-    name: str, repo_id: str, repo_name: str, path_to_pipeline: str, description: str, project: str, agent_pool_id: str
+    name: str, repo_id: str, repo_name: str, path_to_pipeline: str, description: str, project: str, agent_pool_id: str, branch_name: str = "main"
 ) -> dict[str, Any]:
     return {
         "name": f"{name}",
@@ -26,6 +26,7 @@ def get_build_definition(
             "id": repo_id,
             "name": repo_name,
             "type": "TfsGit",
+            "defaultBranch": f"refs/heads/{branch_name}",
         },
         "project": project,
         "process": {
@@ -78,8 +79,8 @@ class Build(StateManagedResource):
     def create(cls, ado_client: AdoClient, definition_id: str, source_branch: str = "refs/heads/main") -> "Build":  # type: ignore[override]
         return super().create(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?definitionId={definition_id}&sourceBranch={source_branch}&api-version=7.1",
-            {"reason": "An automated build created by the ADO-API"},
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?definitionId={definition_id}&api-version=7.1",
+            {"reason": "An automated build created by the ADO-API", "sourceBranch": source_branch},
         )  # type: ignore[return-value]
 
     @classmethod
@@ -147,8 +148,8 @@ class BuildDefinition(StateManagedResource):
     ) -> "BuildDefinition":
         return super().create(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?sourceBranch={branch_name}&api-version=7.0",
-            payload=get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, agent_pool_id),
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.0",
+            payload=get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, agent_pool_id, branch_name),
         )  # type: ignore[return-value]
 
     @classmethod

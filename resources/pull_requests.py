@@ -110,12 +110,15 @@ class PullRequest(StateManagedResource):
     def mark_as_draft(self, ado_client: AdoClient, is_draft: bool=True) -> None:
         # TODO: Make this call the self.update() method
         json_payload = {"isDraft": is_draft}
-        request = requests.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}/draft?api-version=7.1",
-            json_payload,
+        request = requests.patch(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",
+            json=json_payload,
             auth=ado_client.auth,
         )
+        if request.status_code == 404:
+            raise ValueError("The pull request or repo could not be found!")
         assert request.status_code < 300
+        self.is_draft = is_draft
 
     def unmark_as_draft(self, ado_client: AdoClient) -> None:
         self.mark_as_draft(ado_client, False)

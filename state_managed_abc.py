@@ -16,7 +16,6 @@ def recursively_convert_to_json(attribute_name: str, attribute_value: Any) -> tu
         class_name = str(type(attribute_value)).rsplit(".", maxsplit=1)[-1].removesuffix("'>")
         return attribute_name + "::" + class_name, attribute_value.to_json()
     if isinstance(attribute_value, dict):
-        # print("In To JSON, it's a dict:", attribute_name, attribute_value)
         return attribute_name, {key: recursively_convert_to_json("", value)[1] for key, value in attribute_value.items()}
     if isinstance(attribute_value, list):
         return attribute_name, [recursively_convert_to_json(attribute_name, value) for value in attribute_value]
@@ -59,8 +58,8 @@ class StateManagedResource(ABC):
         combined = zip(attribute_names, attribute_values)
         return dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in combined)
 
-
     @classmethod
+    @abstractmethod
     def get_by_id(cls, ado_client: "AdoClient", url: str) -> "StateManagedResource":
         request = requests.get(url, auth=ado_client.auth)
         if request.status_code == 404:
@@ -68,6 +67,7 @@ class StateManagedResource(ABC):
         return cls.from_request_payload(request.json())
 
     @classmethod
+    @abstractmethod
     def create(cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None=None) -> "StateManagedResource":
         request = requests.post(url, json=payload if payload is not None else {}, auth=ado_client.auth)  # Create a brand new dict
         if request.status_code == 401:
@@ -79,6 +79,7 @@ class StateManagedResource(ABC):
         return resource
 
     @classmethod
+    @abstractmethod
     def delete_by_id(cls, ado_client: "AdoClient", url: str, resource_id: str) -> None:
         request = requests.delete(url, auth=ado_client.auth)
         if request.status_code != 204:

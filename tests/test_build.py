@@ -53,7 +53,7 @@ class TestBuild:
         Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
         build_definition = BuildDefinition.create(
             self.ado_client, "ado-api-test-build", repo.repo_id, repo.name, "build.yaml",
-            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "my-branch"  # fmt: skip
+            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "my-branch",  # fmt: skip
         )
         build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
         assert build.build_id == Build.get_by_id(self.ado_client, build.build_id).build_id
@@ -91,11 +91,11 @@ class TestBuildDefinition:
         assert build_definition.to_json() == BuildDefinition.from_json(build_definition.to_json()).to_json()
 
     def test_create_delete(self) -> None:
-        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create_delete_builds")
-        Commit.create(self.ado_client, repo.repo_id, "main", "main", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
+        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-delete_builds")
+        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
         build_definition = BuildDefinition.create(
-            self.ado_client, "ado-api-test-build", repo.repo_id, "ado-api-test-repo", "build.yaml",
-            f"Please contact {email} if you see this build definition!", existing_agent_pool_id,  # fmt: skip
+            self.ado_client, "ado-api-test-build-for-create-delete", repo.repo_id, "ado-api-test-repo", "build.yaml",
+            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "test-branch"  # fmt: skip
         )
         assert build_definition.description == f"Please contact {email} if you see this build definition!"
         build_definition.delete(self.ado_client)
@@ -103,10 +103,10 @@ class TestBuildDefinition:
 
     def test_get_all_by_repo_id(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get_all_by_repo_id")
-        Commit.create(self.ado_client, repo.repo_id, "main", "main", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
+        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
         build_definition = BuildDefinition.create(
-            self.ado_client, "ado-api-test-build", repo.repo_id, "ado-api-test-repo", "build.yaml",
-            f"Please contact {email} if you see this build definition!", existing_agent_pool_id,  # fmt: skip
+            self.ado_client, "ado-api-test-build-for-get-all-by-repo", repo.repo_id, "ado-api-test-repo", "build.yaml",
+            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "test-branch"  # fmt: skip
         )
         build_definitions = BuildDefinition.get_all_by_repo_id(self.ado_client, repo.repo_id)
         assert len(build_definitions) == 1

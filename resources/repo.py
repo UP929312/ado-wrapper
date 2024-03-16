@@ -41,7 +41,7 @@ class Repo(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, name: str, include_readme: bool=True) -> "Repo":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, name: str, include_readme: bool = True) -> "Repo":  # type: ignore[override]
         repo = super().create(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1-preview",
@@ -86,7 +86,7 @@ class Repo(StateManagedResource):
     def get_file(self, ado_client: AdoClient, file_path: str, branch_name: str = "main") -> str:
         request = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?path={file_path}&versionType={'Branch'}&version={branch_name}&api-version=7.1",
-            auth=ado_client.auth
+            auth=ado_client.auth,
         )
         if request.status_code == 404:
             raise ResourceNotFound(f"File {file_path} not found in repo {self.repo_id}")
@@ -94,7 +94,7 @@ class Repo(StateManagedResource):
             raise UnknownError(f"Error getting file {file_path} from repo {self.repo_id}: {request.text}")
         return request.text  # This is the file content
 
-    def get_repo_contents(self, ado_client: AdoClient, file_types: list[str] | None = None, branch_name:str = "main") -> dict[str, str]:
+    def get_repo_contents(self, ado_client: AdoClient, file_types: list[str] | None = None, branch_name: str = "main") -> dict[str, str]:
         """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/items/get?view=azure-devops-rest-7.1&tabs=HTTP"""
         """This function downloads the contents of a repo, and returns a dictionary of the files and their contents
         The file_types parameter is a list of file types to filter for, e.g. ["json", "yaml"]"""
@@ -144,4 +144,18 @@ class Repo(StateManagedResource):
     def delete(self, ado_client: AdoClient) -> None:
         self.delete_by_id(ado_client, self.repo_id)
 
+
 # ====================================================================
+
+
+@dataclass
+class BuildRepository:
+    build_repository_id: str = field(metadata={"is_id_field": True})
+    name: str | None = field(default=None)
+    type: str = field(default="TfsGit")
+    clean: bool | None = field(default=None)
+    checkout_submodules: bool = field(default=False, metadata={"internal_name": "checkoutSubmodules"})
+
+    @classmethod
+    def from_request_payload(cls, data: dict[str, str | bool]) -> "BuildRepository":
+        return cls(data["id"], data.get("name"), data.get("type", "TfsGit"), data.get("clean"), data.get("checkoutSubmodules", False))  # type: ignore[arg-type]

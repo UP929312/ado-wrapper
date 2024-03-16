@@ -62,7 +62,9 @@ class TestRepo:
 
     def test_get_pull_requests(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-pull-requests")
-        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "This should be on the branch"}, "add", "Test commit")
+        Commit.create(
+            self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "This should be on the branch"}, "add", "Test commit"
+        )
         repo.create_pull_request(self.ado_client, "test-branch", "Test PR", "Test PR description")
         pull_requests = repo.get_all_pull_requests(self.ado_client, "all")
         assert len(pull_requests) == 1

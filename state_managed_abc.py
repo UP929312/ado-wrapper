@@ -68,7 +68,7 @@ class StateManagedResource(ABC):
 
     @classmethod
     @abstractmethod
-    def create(cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None=None) -> "StateManagedResource":
+    def create(cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None) -> "StateManagedResource":
         request = requests.post(url, json=payload if payload is not None else {}, auth=ado_client.auth)  # Create a brand new dict
         if request.status_code == 401:
             raise PermissionError(f"You do not have permission to create this {cls.__name__}!")

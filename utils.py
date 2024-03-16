@@ -55,8 +55,10 @@ def from_iso(dt_string: str | None) -> datetime | None:
     dt = datetime.fromisoformat(dt_string)
     return dt.replace(tzinfo=timezone.utc)
 
+
 def get_fields_metadata(cls: type["StateManagedResource"]) -> dict[str, dict[str, str]]:
     return {field_obj.name: dict(field_obj.metadata) for field_obj in fields(cls)}
+
 
 def get_id_field_name(cls: type["StateManagedResource"]) -> str:
     for field_name, metadata in get_fields_metadata(cls).items():
@@ -64,14 +66,17 @@ def get_id_field_name(cls: type["StateManagedResource"]) -> str:
             return field_name
     raise ValueError(f"No id field found for {cls.__name__}!")
 
+
 def extract_id(obj: "StateManagedResource") -> Any:
     id_field_name = get_id_field_name(obj.__class__)
     return getattr(obj, id_field_name)
 
+
 def get_editable_fields(cls: type["StateManagedResource"]) -> list[str]:
     return [field_obj.name for field_obj in cls.__dataclass_fields__.values() if field_obj.metadata.get("editable", False)]
 
-def get_internal_field_names(cls: type["StateManagedResource"], field_names: list[str] | None = None, reverse: bool=True) -> dict[str, str]:
+
+def get_internal_field_names(cls: type["StateManagedResource"], field_names: list[str] | None = None, reverse: bool = True) -> dict[str, str]:  # fmt: skip
     """Returns a mapping of field names to their internal names. If no internal name is set, the field name is used."""
     if field_names is None:
         field_names = get_editable_fields(cls)
@@ -102,10 +107,13 @@ class InvalidPermissionsError(Exception):
 
 
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports
-    from resources import (  #type: ignore[attr-defined]  # pylint: disable=possibly-unused-variable
-        Branch, Build, BuildDefinition, Commit, Project, PullRequest, Release, ReleaseDefinition, Repo, Team, AdoUser, Member, Reviewer, VariableGroup
+    from resources import (  # type: ignore[attr-defined]  # pylint: disable=possibly-unused-variable
+        Branch, Build, BuildDefinition, Commit, Project, PullRequest, Release, ReleaseDefinition, Repo, Team,
+        AdoUser, Member, Reviewer, VariableGroup,  # fmt: skip
     )
+
     return dict(locals().items())
+
 
 ResourceType = Literal[
     "Branch", "Build", "BuildDefinition", "Commit", "Project", "PullRequest", "Release", "ReleaseDefinition", "Repo",

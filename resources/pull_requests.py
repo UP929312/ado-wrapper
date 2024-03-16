@@ -107,7 +107,7 @@ class PullRequest(StateManagedResource):
     def delete(self, ado_client: AdoClient) -> None:
         self.close(ado_client)
 
-    def mark_as_draft(self, ado_client: AdoClient, is_draft: bool=True) -> None:
+    def mark_as_draft(self, ado_client: AdoClient, is_draft: bool = True) -> None:
         # TODO: Make this call the self.update() method
         json_payload = {"isDraft": is_draft}
         request = requests.patch(

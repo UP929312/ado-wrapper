@@ -6,6 +6,8 @@ from resources.builds import Build, BuildDefinition
 from resources.users import Member
 from resources.commits import Commit
 
+import pytest
+
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     (
         ado_org, ado_project, email, pat_token, _, _, _, _, _, existing_agent_pool_id, *_  # fmt: skip
@@ -49,7 +51,7 @@ class TestBuild:
         assert build.to_json() == Build.from_json(build.to_json()).to_json()
 
     def test_create_delete_build(self) -> None:
-        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-builds")
+        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-delete-builds")
         Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
         build_definition = BuildDefinition.create(
             self.ado_client, "ado-api-test-build", repo.repo_id, repo.name, "build.yaml",
@@ -61,6 +63,20 @@ class TestBuild:
         repo.delete(self.ado_client)
         build_definition.delete(self.ado_client)
         build.delete(self.ado_client)
+
+    @pytest.mark.skip(reason="This requires waiting for build agents, and running a whole build")
+    def test_create_and_wait_until_completion(self) -> None:
+        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-and-wait-builds")
+        Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
+        build_definition = BuildDefinition.create(
+            self.ado_client, "ado-api-test-build", repo.repo_id, repo.name, "build.yaml",
+            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "my-branch",  # fmt: skip
+        )
+        build = Build.create_and_wait_until_completion(self.ado_client, build_definition.build_definition_id, "my-branch")
+        assert build.status == "completed"
+        build_definition.delete(self.ado_client)  # Can't delete build_definitions without deleting builds first
+        build.delete(self.ado_client)
+        repo.delete(self.ado_client)
 
 
 # ======================================================================================================================
@@ -91,7 +107,7 @@ class TestBuildDefinition:
         assert build_definition.to_json() == BuildDefinition.from_json(build_definition.to_json()).to_json()
 
     def test_create_delete(self) -> None:
-        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-delete_builds")
+        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-delete-build-defs")
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
         build_definition = BuildDefinition.create(
             self.ado_client, "ado-api-test-build-for-create-delete", repo.repo_id, "ado-api-test-repo", "build.yaml",
@@ -102,7 +118,7 @@ class TestBuildDefinition:
         repo.delete(self.ado_client)
 
     def test_get_all_by_repo_id(self) -> None:
-        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get_all_by_repo_id")
+        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-all-by-repo-id")
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
         build_definition = BuildDefinition.create(
             self.ado_client, "ado-api-test-build-for-get-all-by-repo", repo.repo_id, "ado-api-test-repo", "build.yaml",

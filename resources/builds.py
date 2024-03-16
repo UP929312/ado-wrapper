@@ -8,7 +8,7 @@ from client import AdoClient
 from utils import from_ado_date_string
 from state_managed_abc import StateManagedResource
 from resources.users import Member
-from resources.repo import Repo
+from resources.repo import BuildRepository
 
 BuildStatus = Literal["notStarted", "inProgress", "completed", "cancelling", "postponed", "notSet", "none"]
 QueuePriority = Literal["low", "belowNormal", "normal", "aboveNormal", "high"]
@@ -17,7 +17,7 @@ QueuePriority = Literal["low", "belowNormal", "normal", "aboveNormal", "high"]
 
 
 def get_build_definition(
-    name: str, repo_id: str, repo_name: str, path_to_pipeline: str, description: str, project: str, agent_pool_id: str, branch_name: str = "main"
+    name: str, repo_id: str, repo_name: str, path_to_pipeline: str, description: str, project: str, agent_pool_id: str, branch_name: str = "main"  # fmt: skip
 ) -> dict[str, Any]:
     return {
         "name": f"{name}",
@@ -49,8 +49,9 @@ class Build(StateManagedResource):
     build_number: str
     status: BuildStatus
     requested_by: Member
-    repo: Repo
+    build_repo: BuildRepository
     parameters: dict[str, str]
+    definition: "BuildDefinition | None" = field(repr=False)
     start_time: datetime | None = field(default=None)
     finish_time: datetime | None = field(default=None)
     queue_time: datetime | None = field(default=None)
@@ -63,9 +64,10 @@ class Build(StateManagedResource):
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Build":
         requested_by = Member(data["requestedBy"]["displayName"], data["requestedBy"]["uniqueName"], data["requestedBy"]["id"])
-        repo = Repo(data["repository"]["id"], data["repository"]["name"])
-        return cls(str(data["id"]), str(data["buildNumber"]), data["status"], requested_by, repo, data.get("templateParameters", {}),
-                   from_ado_date_string(data.get("startTime")), from_ado_date_string(data.get("finishTime")),
+        build_repo = BuildRepository.from_request_payload(data["repository"])
+        build_definition = BuildDefinition.from_request_payload(data["definition"]) if "definition" in data else None
+        return cls(str(data["id"]), str(data["buildNumber"]), data["status"], requested_by, build_repo, data.get("templateParameters", {}),
+                   build_definition, from_ado_date_string(data.get("startTime")), from_ado_date_string(data.get("finishTime")),
                    from_ado_date_string(data.get("queueTime")), data["reason"], data["priority"])  # fmt: skip
 
     @classmethod
@@ -85,6 +87,7 @@ class Build(StateManagedResource):
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, build_id: str) -> None:  # type: ignore[override]
+        cls.delete_all_leases(ado_client, build_id)
         return super().delete_by_id(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}?api-version=7.1",
@@ -106,6 +109,33 @@ class Build(StateManagedResource):
     def delete(self, ado_client: AdoClient) -> None:
         return self.delete_by_id(ado_client, self.build_id)
 
+    @classmethod
+    def create_and_wait_until_completion(cls, ado_client: AdoClient, definition_id: str, branch_name: str = "main", max_timeout_seconds: int = 300) -> "Build":  # fmt: skip
+        """Creates a build and waits until it is completed, or raises a TimeoutError if it takes too long.
+        WARNING: This is a blocking operation, it will not return until the build is completed or the timeout is reached."""
+        build = cls.create(ado_client, definition_id, branch_name)
+        start_time = datetime.now()
+        while True:
+            build = Build.get_by_id(ado_client, build.build_id)
+            if build.status == "completed":
+                break
+            if (datetime.now() - start_time).seconds > max_timeout_seconds:
+                raise TimeoutError(f"The build did not complete within {max_timeout_seconds} seconds ({max_timeout_seconds//60} minutes)")
+        return build
+
+    @staticmethod
+    def delete_all_leases(ado_client: AdoClient, build_id: str) -> None:
+        leases = requests.get(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}/leases?api-version=7.1-preview.1",
+            auth=ado_client.auth,
+        ).json()["value"]
+        for lease in leases:
+            lease_response = requests.delete(
+                f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/retention/leases?ids={lease['leaseId']}&api-version=6.1",
+                auth=ado_client.auth,
+            )
+            assert lease_response.status_code <= 204
+
 
 # ========================================================================================================
 
@@ -118,9 +148,9 @@ class BuildDefinition(StateManagedResource):
     name: str = field(metadata={"editable": True})
     description: str = field(metadata={"editable": True})
     path: str
-    created_by: Member
-    created_date: datetime
-    repo: Repo = field(repr=False)
+    created_by: Member | None
+    created_date: datetime | None
+    build_repo: BuildRepository | None = field(repr=False)
     variables: dict[str, str] | None = field(default_factory=dict, repr=False)  # type: ignore[assignment]
     variable_groups: list[int] | None = field(default_factory=list, repr=False)  # type: ignore[assignment]
 
@@ -129,11 +159,14 @@ class BuildDefinition(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "BuildDefinition":
-        """Repo is not always present"""
-        created_by = Member(data["authoredBy"]["displayName"], data["authoredBy"]["uniqueName"], data["authoredBy"]["id"])
-        repo = Repo(data.get("repository", {"id": "UNKNOWN"})["id"], data.get("repository", {"name": "UNKNOWN"})["name"])
+        """Repo is not always present, Member is sometimes present, sometimes None"""
+        created_by = (
+            Member(data["authoredBy"]["displayName"], data["authoredBy"]["uniqueName"], data["authoredBy"]["id"])
+            if "authoredBy" in data else None
+        )  # fmt: skip
+        build_repository = BuildRepository.from_request_payload(data["repository"]) if "repository" in data else None
         return cls(str(data["id"]), data["name"], data.get("description", ""), data.get("process", {"yamlFilename": "UNKNOWN"})["yamlFilename"], created_by,
-                   from_ado_date_string(data["createdDate"]), repo, data.get("variables", None), data.get("variableGroups", None))  # fmt: skip
+                from_ado_date_string(data.get("createdDate")), build_repository, data.get("variables", None), data.get("variableGroups", None))  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, build_definition_id: str) -> "BuildDefinition":
@@ -149,11 +182,16 @@ class BuildDefinition(StateManagedResource):
         return super().create(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.0",
-            payload=get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, agent_pool_id, branch_name),
+            payload=get_build_definition(
+                name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, agent_pool_id, branch_name
+            ),
         )  # type: ignore[return-value]
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, resource_id: str) -> None:  # type: ignore[override]
+        builds = Build.get_all_by_definition(ado_client, resource_id)
+        for build in builds:
+            build.delete(ado_client)
         return super().delete_by_id(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{resource_id}?forceDelete=true&api-version=7.1",
@@ -177,5 +215,6 @@ class BuildDefinition(StateManagedResource):
 
     def delete(self, ado_client: AdoClient) -> None:
         return self.delete_by_id(ado_client, self.build_definition_id)
+
 
 # ========================================================================================================

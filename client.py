@@ -21,7 +21,9 @@ STATE_FILE_VERSION = "1.1"
 
 
 class AdoClient:
-    def __init__(self, ado_email: str, ado_pat: str, ado_org: str, ado_project: str, state_file_name: str | None = "main.state") -> None:  # pylint: disable=too-many-arguments
+    def __init__(
+        self, ado_email: str, ado_pat: str, ado_org: str, ado_project: str, state_file_name: str | None = "main.state"  # fmt: skip
+    ) -> None:
         self.auth = HTTPBasicAuth(ado_email, ado_pat)
         self.ado_org = ado_org
         self.ado_project = ado_project
@@ -75,6 +77,7 @@ class AdoClient:
         all_states = self.get_all_states()
         all_states["created"][resource_type][resource_id] = updated_data
         return self.write_state_file(all_states)
+
     # =======================================================================================================
 
     def delete_resource(self, resource_type: ResourceType, resource_id: str) -> None:
@@ -134,7 +137,9 @@ class AdoClient:
 if __name__ == "__main__":
     ALL_RESOURCES = get_resource_variables()
 
-    parser = argparse.ArgumentParser(prog="ADO-API", description="A tool to manage Azure DevOps resources and interface with the ADO API", usage="")
+    parser = argparse.ArgumentParser(
+        prog="ADO-API", description="A tool to manage Azure DevOps resources and interface with the ADO API", usage=""
+    )
     delete_group = parser.add_mutually_exclusive_group()
     delete_group.add_argument(
         "--delete-everything", help="Delete every resource in state and the real ADO resources", action="store_true", dest="delete_everything"  # fmt: skip
@@ -150,7 +155,9 @@ if __name__ == "__main__":
         "--refresh-resources-on-startup", help="Decides whether to update ADO resources (from state)", action="store_true", dest="refresh_resources_on_startup", default=False,  # fmt: skip
     )
     action_group = parser.add_mutually_exclusive_group()
-    action_group.add_argument("--plan", help="Runs a plan for the resources, rather than making them", action="store_true", default=False, dest="plan")
+    action_group.add_argument(
+        "--plan", help="Runs a plan for the resources, rather than making them", action="store_true", default=False, dest="plan"
+    )
     action_group.add_argument("--apply", help="Applies the plan to the resources", action="store_true", default=False, dest="apply")
     args = parser.parse_args()
     assert not (args.delete_everything and args.delete_resource_type is not None)
@@ -188,14 +195,17 @@ if __name__ == "__main__":
         internal_state = ado_client.get_all_states()
         for resource_type in up_to_date_state["created"]:  # For each class type (Repo, Build)
             for resource_id in up_to_date_state["created"][resource_type]:  # For each resource
-                state_data =   internal_state["created"][resource_type][resource_id]  # The data in state
-                real_data  = up_to_date_state["created"][resource_type][resource_id]  # The data in real world space
+                state_data = internal_state["created"][resource_type][resource_id]  # The data in state
+                real_data = up_to_date_state["created"][resource_type][resource_id]  # The data in real world space
                 if state_data != real_data:
                     print(f"[ADO-API] Updating ADO resource - {resource_type} ({resource_id}) to version found in state:")
                     instance = ALL_RESOURCES[resource_type].from_json(real_data)  # Create an instance from the real world data
                     internal_attribute_names = get_internal_field_names(instance.__class__, reverse=False)  # Mapping of internal->python
-                    differences = {internal_attribute_names[key]: value for key, value in state_data.items()
-                                   if state_data[key] != real_data[key] and key in internal_attribute_names}
+                    differences = {
+                        internal_attribute_names[key]: value
+                        for key, value in state_data.items()
+                        if state_data[key] != real_data[key] and key in internal_attribute_names
+                    }
                     for internal_attribute_name, attribute_value in differences.items():
                         instance.update(ado_client, internal_attribute_name, attribute_value)
                         print(f"____The {resource_type}'s `{internal_attribute_name}` value has been updated to {attribute_value}")

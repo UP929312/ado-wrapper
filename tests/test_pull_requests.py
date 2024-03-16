@@ -53,8 +53,8 @@ class TestCommit:
 
     def test_get_all(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-pull-requests")
-        Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add",  "Test commit 1")
-        Commit.create(self.ado_client, repo.repo_id, "main", "new-branch2", {"test2.txt": "This is one thing"}, "add",  "Test commit 2")
+        Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")
+        Commit.create(self.ado_client, repo.repo_id, "main", "new-branch2", {"test2.txt": "This is one thing"}, "add", "Test commit 2")
         pull_request_1 = PullRequest.create(self.ado_client, repo.repo_id, "new-branch", "Test PR", "Test PR description")
         pull_request_2 = PullRequest.create(self.ado_client, repo.repo_id, "new-branch2", "Test PR", "Test PR description")
         all_pull_requests = repo.get_all_pull_requests(self.ado_client, status="active")

@@ -19,6 +19,10 @@ Pull Request, Commit
 
 -----
 
+Add "Update" to more stuff
+
+I don't think we actually test builds properly???
+
 Also, Releases need vigerous testing
 
 Perhaps when creating stuff, use a "while True" loop with user input, if they input "y", go to the next step?

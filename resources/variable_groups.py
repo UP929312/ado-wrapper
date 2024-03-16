@@ -20,7 +20,7 @@ class VariableGroup(StateManagedResource):
 
     variable_group_id: str = field(metadata={"is_id_field": True})
     name: str  # Cannot currently change the name of a variable group
-    description: str # = field(metadata={"editable": True})  # Bug in the api means this is not editable (it never returns or sets description)
+    description: str  # = field(metadata={"editable": True})  # Bug in the api means this is not editable (it never returns or sets description)
     variables: dict[str, str] = field(metadata={"editable": True})
     created_on: datetime
     created_by: Member
@@ -77,13 +77,11 @@ class VariableGroup(StateManagedResource):
         )
 
     def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:
-        params = {
-            "variableGroupProjectReferences": [{
-                "name": self.name,
-                "projectReference": {"id": ado_client.ado_project_id}
-            }]
-        } |  {"id": self.variable_group_id, "name": self.name, "type": "Vsts", "variables": self.variables
-        } | {attribute_name: attribute_value}  # We do this to override the default value of the attribute
+        params = (
+            {"variableGroupProjectReferences": [{"name": self.name, "projectReference": {"id": ado_client.ado_project_id}}]}
+            | {"id": self.variable_group_id, "name": self.name, "type": "Vsts", "variables": self.variables}
+            | {attribute_name: attribute_value}
+        )  # We do this to override the default value of the attribute
         request = requests.put(
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/distributedtask/variablegroups/{self.variable_group_id}?api-version=7.1-preview.2",
             json=params, auth=ado_client.auth,  # fmt: skip

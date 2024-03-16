@@ -46,7 +46,7 @@ def get_commit_body_template(old_object_id: str | None, updates: dict[str, str],
 class Commit(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/commits?view=azure-devops-rest-7.1"""
 
-    commit_id: str = field(metadata={"is_id_field": True}) # None are editable
+    commit_id: str = field(metadata={"is_id_field": True})  # None are editable
     author: Member
     date: datetime
     message: str
@@ -126,11 +126,14 @@ class Commit(StateManagedResource):
     @classmethod
     def add_initial_readme(cls, ado_client: AdoClient, repo_id: str) -> "Commit":
         default_commit_body = get_commit_body_template(None, {}, "main", "add", "")
-        default_commit_body["commits"] = [{
-            "comment": "Add README.md", "changes": [
-                {"changeType": 1, "item": {"path": "/README.md"},
-                 "newContentTemplate": {"name": "README.md", "type": "readme"}}
-        ]}]
+        default_commit_body["commits"] = [
+            {
+                "comment": "Add README.md",
+                "changes": [
+                    {"changeType": 1, "item": {"path": "/README.md"}, "newContentTemplate": {"name": "README.md", "type": "readme"}}
+                ],
+            }  # fmt: skip
+        ]
         request = requests.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=5.1",
             json=default_commit_body, auth=ado_client.auth,  # fmt: skip

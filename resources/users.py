@@ -97,9 +97,10 @@ class AdoUser(StateManagedResource):
 @dataclass
 class Member(StateManagedResource):
     """A stripped down member class which is often returned by the API, for example in build requests."""
-    name: str # Static
-    email: str # Static
-    member_id: str # Static
+
+    name: str  # Static
+    email: str  # Static
+    member_id: str  # Static
 
     def __str__(self) -> str:
         return f"{self.name} ({self.email})"
@@ -124,6 +125,7 @@ class Member(StateManagedResource):
 # ======================================================================================================= #
 # ------------------------------------------------------------------------------------------------------- #
 # ======================================================================================================= #
+
 
 class TeamMember(Member):
     """Identical to Member, but with an additional attribute `is_team_admin`."""
@@ -153,6 +155,7 @@ class TeamMember(Member):
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "TeamMember":
         return cls(data["identity"]["displayName"], data["identity"]["uniqueName"], data["identity"]["id"], data.get("isTeamAdmin", False))
+
 
 # ======================================================================================================= #
 # ------------------------------------------------------------------------------------------------------- #

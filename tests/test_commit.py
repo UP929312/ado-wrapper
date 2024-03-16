@@ -48,6 +48,6 @@ class TestCommit:
             self.ado_client, repo.repo_id, "new-branch", "new-branch2", {"test2.txt": "This is something else"}, "add", "Test commit 2"
         )
         all_commits = Commit.get_all_by_repo(self.ado_client, repo.repo_id)
-        assert len(all_commits) == 2+1  # 1 For the initial README commit
+        assert len(all_commits) == 2 + 1  # 1 For the initial README commit
         assert all(isinstance(commit, Commit) for commit in all_commits)
         repo.delete(self.ado_client)

@@ -179,7 +179,7 @@ class ReleaseDefinition(StateManagedResource):
         return super().delete_by_id(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_definition_id}?forceDelete=true&api-version=7.1",
-            release_definition_id
+            release_definition_id,
         )
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -196,5 +196,6 @@ class ReleaseDefinition(StateManagedResource):
             auth=ado_client.auth,
         ).json()
         return [Release.from_request_payload(release) for release in response["value"]]
+
 
 # ========================================================================================================

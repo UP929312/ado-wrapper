@@ -46,7 +46,7 @@ def get_build_definition(
 class Build(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/build/builds?view=azure-devops-rest-7.1"""
 
-    build_id: str
+    build_id: str = field(metadata={"is_id_field": True})
     build_number: str
     status: BuildStatus
     requested_by: Member
@@ -153,6 +153,7 @@ class BuildDefinition(StateManagedResource):
     created_by: Member | None
     created_date: datetime | None
     build_repo: BuildRepository | None = field(repr=False)
+    process: dict[str, str | int] | None = field(repr=False, default=None)  # Used internally, mostly ignore
     revision: str = field(default="1")
     variables: dict[str, str] | None = field(default_factory=dict, repr=False)  # type: ignore[assignment]
     variable_groups: list[int] | None = field(default_factory=list, repr=False)  # type: ignore[assignment]
@@ -169,7 +170,7 @@ class BuildDefinition(StateManagedResource):
         )  # fmt: skip
         build_repository = BuildRepository.from_request_payload(data["repository"]) if "repository" in data else None
         return cls(str(data["id"]), data["name"], data.get("description", ""), data.get("process", {"yamlFilename": "UNKNOWN"})["yamlFilename"], created_by,
-                from_ado_date_string(data.get("createdDate")), build_repository, str(data["revision"]), data.get("variables", None), data.get("variableGroups", None))  # fmt: skip
+                from_ado_date_string(data.get("createdDate")), build_repository, data.get("process"), str(data["revision"]), data.get("variables", None), data.get("variableGroups", None))  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, build_definition_id: str) -> "BuildDefinition":
@@ -185,17 +186,24 @@ class BuildDefinition(StateManagedResource):
         return super().create(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.0",
-            payload=get_build_definition(
-                name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, agent_pool_id, branch_name
-            ),
+            payload=get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, agent_pool_id, branch_name),  # fmt: skip
         )  # type: ignore[return-value]
 
     def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
-        return super().update(
-            ado_client, "put",
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{self.build_definition_id}?api-version=7.1-preview.7",
-            {attribute_name: attribute_value, "revision": int(self.revision)+1}, attribute_name, attribute_value,  # fmt: skip
+        if self.build_repo is None or self.process is None:
+            raise ValueError("This build definition does not have a (repository or process) in its data, it cannot be updated")
+        payload = (
+            {"name": self.name, "id": self.build_definition_id, "revision": int(self.revision),
+             "repository": {"id": self.build_repo.build_repository_id, "type": self.build_repo.type},
+             "process": {"yamlFilename": self.process["yamlFilename"], "type": self.process["type"]}} | # fmt: skip
+            {attribute_name: attribute_value}  # fmt: skip
         )
+        super().update(
+            ado_client, "put",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{self.build_definition_id}?api-version=6.0", #secretsSourceDefinitionRevision={self.revision}&
+            payload, attribute_name, attribute_value,  # fmt: skip
+        )
+        self.revision = str(int(self.revision) + 1)
 
 
     @classmethod

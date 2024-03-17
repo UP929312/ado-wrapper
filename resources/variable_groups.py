@@ -77,6 +77,7 @@ class VariableGroup(StateManagedResource):
         )
 
     def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
+        # WARNING: This method works 80-90% of the time, for some reason, it fails randomly, ADO API is at fault.
         params = (
             {"variableGroupProjectReferences": [{"name": self.name, "projectReference": {"id": ado_client.ado_project_id}}]}
             | {"id": self.variable_group_id, "name": self.name, "type": "Vsts", "variables": self.variables}

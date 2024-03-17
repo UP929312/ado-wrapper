@@ -130,3 +130,23 @@ class TestBuildDefinition:
         assert all(isinstance(x, BuildDefinition) for x in build_definitions)
         build_definition.delete(self.ado_client)
         repo.delete(self.ado_client)
+
+    def test_update(self) -> None:
+        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-update-build-defs")
+        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
+        build_definition = BuildDefinition.create(
+            self.ado_client, "ado-api-test-build-for-update", repo.repo_id, "ado-api-test-repo", "build.yaml",
+            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "test-branch"  # fmt: skip
+        )
+        # ======
+        build_definition.update(self.ado_client, "name", "ado-api-test-build-for-update-rename")
+        assert build_definition.name == "ado-api-test-build-for-update-rename"  # Test instance attribute is updated
+        build_definition.update(self.ado_client, "description", "new-description")
+        assert build_definition.description == "new-description"  # Test instance attribute is updated
+        # ======
+        fetched_build_definition = BuildDefinition.get_by_id(self.ado_client, build_definition.build_definition_id)
+        assert fetched_build_definition.name == "ado-api-test-build-for-update-rename"
+        assert fetched_build_definition.description == "new-description"
+        # ======
+        build_definition.delete(self.ado_client)
+        repo.delete(self.ado_client)

@@ -27,17 +27,21 @@ class TestRepo:
 
     def test_update(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-update-repo")
-        repo.update(self.ado_client, "name", "ado-api-test-repo-for-update-repo-renamed")
-        assert repo.name == "ado-api-test-repo-for-update-repo-renamed"
-
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")  # Create a branch
+        # =====
+        repo.update(self.ado_client, "name", "ado-api-test-repo-for-update-repo-renamed")
+        assert repo.name == "ado-api-test-repo-for-update-repo-renamed"  # Test instance attribute is updated
         repo.update(self.ado_client, "default_branch", "refs/heads/test-branch")
-        assert repo.default_branch == "refs/heads/test-branch"
-
+        assert repo.default_branch == "refs/heads/test-branch"  # Test instance attribute is updated
+        # =====
+        fetched_repo = Repo.get_by_id(self.ado_client, repo.repo_id)
+        assert fetched_repo.name == "ado-api-test-repo-for-update-repo-renamed"
+        assert fetched_repo.default_branch == "refs/heads/test-branch"
+        # =====
         repo.update(self.ado_client, "is_disabled", True)
         assert repo.is_disabled
         repo.update(self.ado_client, "is_disabled", False)  # Disabled repos can't be deleted
-
+        # =====
         repo.delete(self.ado_client)
 
     def test_get_by_id(self) -> None:

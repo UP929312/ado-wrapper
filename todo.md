@@ -8,7 +8,7 @@ This lets us store and perhaps revert updates?
 
 Resources that are entirely state managed:
 Build
-BuildDefinition
+BuildDefinition -*
 ReleaseDefinition
 Release
 Repo -*
@@ -21,7 +21,7 @@ Pull Request, Commit
 
 -----
 
-Add "Update" to more stuff
+Add "Update" to more stuff, prevent updates on uneditable attributes in state_managed_abc/update
 
 I don't think we actually test builds properly???
 

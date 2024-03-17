@@ -49,7 +49,7 @@ class Commit(StateManagedResource):
     https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes?view=azure-devops-rest-5.1
     """
 
-    commit_id: str = field(metadata={"is_id_field": True}) # None are editable
+    commit_id: str = field(metadata={"is_id_field": True})  # None are editable
     author: Member
     date: datetime
     message: str
@@ -107,7 +107,8 @@ class Commit(StateManagedResource):
     @classmethod
     def get_all_by_repo(cls, ado_client: AdoClient, repo_id: str, branch_name: str | None = None) -> "list[Commit]":
         """Returns a list of all commits in the given repository."""
-        extra_query = f"searchCriteria.itemVersion.version={branch_name}&searchCriteria.itemVersion.versionType={'branch'}&" if branch_name is not None else ""
+        extra_query = (f"searchCriteria.itemVersion.version={branch_name}&searchCriteria.itemVersion.versionType={'branch'}&"
+                       if branch_name is not None else "")  # fmt: skip
         return super().get_all(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits?{extra_query}api-version=7.1-preview.1",

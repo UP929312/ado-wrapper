@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class Team(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/core/teams?view=azure-devops-rest-7.1"""
 
-    team_id: str = field(metadata={"is_id_field": True}) # None are editable
+    team_id: str = field(metadata={"is_id_field": True})  # None are editable
     name: str
     description: str
 

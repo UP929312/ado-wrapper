@@ -205,7 +205,6 @@ class BuildDefinition(StateManagedResource):
         )
         self.revision = str(int(self.revision) + 1)
 
-
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, resource_id: str) -> None:  # type: ignore[override]
         builds = Build.get_all_by_definition(ado_client, resource_id)
@@ -234,5 +233,6 @@ class BuildDefinition(StateManagedResource):
 
     def delete(self, ado_client: AdoClient) -> None:
         return self.delete_by_id(ado_client, self.build_definition_id)
+
 
 # ========================================================================================================

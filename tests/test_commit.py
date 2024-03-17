@@ -5,6 +5,7 @@ from resources.commits import Commit
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     ado_org, ado_project, email, pat_token, *_ = test_data.read().splitlines()  # fmt: skip
 
+
 class TestCommit:
     def setup_method(self) -> None:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)
@@ -40,9 +41,7 @@ class TestCommit:
 
     def test_get_all(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-all-commits")
-        Commit.create(
-            self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1"
-        )
+        Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")
         Commit.create(
             self.ado_client, repo.repo_id, "new-branch", "new-branch2", {"test2.txt": "This is something else"}, "add", "Test commit 2"
         )
@@ -57,6 +56,6 @@ class TestCommit:
         Commit.create(self.ado_client, repo.repo_id, "new-branch", "new-branch", {"test2.txt": "This is something else"}, "add", "Test commit 2")  # fmt: skip
         Commit.create(self.ado_client, repo.repo_id, "main", "other-branch", {"test3.txt": "Even more something else"}, "add", "Test commit 3")  # fmt: skip
         all_commits = Commit.get_all_by_repo(self.ado_client, repo.repo_id, "new-branch")
-        assert len(all_commits) == 2+1  # 1 For the initial README commit
+        assert len(all_commits) == 2 + 1  # 1 For the initial README commit
         assert all(isinstance(commit, Commit) for commit in all_commits)
         repo.delete(self.ado_client)

@@ -31,7 +31,6 @@ class TestBranch:
         )
         assert branch.to_json() == Branch.from_json(branch.to_json()).to_json()
 
-
     def test_create_delete_branch(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-branches")
         with pytest.raises(NotImplementedError):
@@ -40,6 +39,7 @@ class TestBranch:
         branch = Branch.get_all_by_repo(self.ado_client, repo.repo_id)
         assert branch[0].name == "refs/heads/test-branch" or branch[1].name == "refs/heads/test-branch"
         repo.delete(self.ado_client)
+
 
 # ======================================================================================================================
 

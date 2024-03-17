@@ -47,7 +47,7 @@ class Branch(StateManagedResource):
         return super().delete_by_id(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs/{branch_id}?api-version=7.1",
-            branch_id
+            branch_id,
         )
 
     # ============ End of requirement set by all state managed resources ================== #

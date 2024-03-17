@@ -87,7 +87,7 @@ class VariableGroup(StateManagedResource):
             ado_client, "put",
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/distributedtask/variablegroups/{self.variable_group_id}?api-version=7.1-preview.2",
              params, attribute_name, attribute_value,  # fmt: skip
-            )
+        )
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

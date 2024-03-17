@@ -64,7 +64,7 @@ def get_id_field_name(cls: type["StateManagedResource"]) -> str:
     """Returns the name of the field that is marked as the id field. If no id field is found, a ValueError is raised."""
     for field_name, metadata in get_fields_metadata(cls).items():
         if metadata.get("is_id_field", False):
-        # if field_name.endswith("_id"):
+            # if field_name.endswith("_id"):
             return field_name
     raise ValueError(f"No id field found for {cls.__name__}!")
 
@@ -108,6 +108,7 @@ class UnknownError(Exception):
 
 class InvalidPermissionsError(Exception):
     pass
+
 
 class UpdateFailed(Exception):
     pass

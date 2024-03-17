@@ -11,7 +11,7 @@ from state_managed_abc import StateManagedResource
 @dataclass
 class Project(StateManagedResource):
     "https://learn.microsoft.com/en-us/rest/api/azure/devops/core/projects?view=azure-devops-rest-7.1"
-    project_id: str = field(metadata={"is_id_field": True}) # None are editable
+    project_id: str = field(metadata={"is_id_field": True})  # None are editable
     name: str
     description: str
     last_update_time: datetime | None = field(default=None)

@@ -63,7 +63,7 @@ class PullRequest(StateManagedResource):
     ) -> "PullRequest":  # fmt: skip
         """Takes a list of reviewer ids, a branch to pull into main, and an option to start as draft"""
         # https://stackoverflow.com/questions/64655138/add-reviewers-to-azure-devops-pull-request-in-api-call   <- Why we can't allow reviewers from the get go
-        #, "reviewers": [{"id": reviewer_id for reviewer_id in reviewer_ids}]
+        # , "reviewers": [{"id": reviewer_id for reviewer_id in reviewer_ids}]
         payload = {"sourceRefName": f"refs/heads/{from_branch_name}", "targetRefName": "refs/heads/main", "title": pull_request_title,
                    "description": pull_request_description, "isDraft": is_draft}  # fmt: skip
         request = requests.post(

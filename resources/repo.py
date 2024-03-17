@@ -15,6 +15,7 @@ from resources.commits import Commit
 
 # ====================================================================
 
+
 @dataclass
 class Repo(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/repositories?view=azure-devops-rest-7.1"""
@@ -63,9 +64,7 @@ class Repo(StateManagedResource):
         super().update(
             ado_client, "patch",
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}?api-version=7.1-preview.1",
-            {internal_attribute_name: attribute_value},
-            internal_attribute_name,
-            attribute_value,
+            {internal_attribute_name: attribute_value}, internal_attribute_name, attribute_value,  # fmt: skip
         )
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -151,7 +150,9 @@ class Repo(StateManagedResource):
             self.update(ado_client, "is_disabled", False)
         self.delete_by_id(ado_client, self.repo_id)
 
+
 # ====================================================================
+
 
 @dataclass
 class BuildRepository:

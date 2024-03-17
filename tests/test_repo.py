@@ -27,7 +27,9 @@ class TestRepo:
 
     def test_update(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-update-repo")
-        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")  # Create a branch
+        Commit.create(
+            self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit"
+        )  # Create a branch
         # =====
         repo.update(self.ado_client, "name", "ado-api-test-repo-for-update-repo-renamed")
         assert repo.name == "ado-api-test-repo-for-update-repo-renamed"  # Test instance attribute is updated

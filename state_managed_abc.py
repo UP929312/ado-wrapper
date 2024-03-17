@@ -5,7 +5,9 @@ from datetime import datetime
 
 import requests
 
-from utils import get_resource_variables, extract_id, get_internal_field_names, ResourceAlreadyExists, DeletionFailed, ResourceNotFound, UpdateFailed
+from utils import (get_resource_variables, extract_id, get_internal_field_names,
+    ResourceAlreadyExists, DeletionFailed, ResourceNotFound, UpdateFailed,  # fmt: skip
+)
 
 if TYPE_CHECKING:
     from client import AdoClient
@@ -91,7 +93,9 @@ class StateManagedResource(ABC):
         func = requests.put if update_action == "put" else requests.patch
         request = func(url, json=params, auth=ado_client.auth)
         if request.status_code != 200:
-            raise UpdateFailed(f"Failed to update {self.__class__.__name__} with id {extract_id(self)} and attribute {attribute_name} to {attribute_value}. Reason:\n{request.text}")
+            raise UpdateFailed(
+                f"Failed to update {self.__class__.__name__} with id {extract_id(self)} and attribute {attribute_name} to {attribute_value}. Reason:\n{request.text}"
+            )
         local_attribute_name = get_internal_field_names(self.__class__, reverse=True)[attribute_name]
         setattr(self, local_attribute_name, attribute_value)
         ado_client.update_resource_in_state(self.__class__.__name__, extract_id(self), self.to_json())  # type: ignore[arg-type]

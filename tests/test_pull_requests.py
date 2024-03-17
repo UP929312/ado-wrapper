@@ -36,9 +36,12 @@ class TestCommit:
     def test_create_delete(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-delete-pull-request")
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
-        pull_request = PullRequest.create(self.ado_client, repo.repo_id, "test-branch", "Test PR", "Test PR description")
+        pull_request = PullRequest.create(self.ado_client, repo.repo_id, "test-branch", "Test PR",
+                                          "Test PR description", is_draft=True)  # fmt: skip
         assert pull_request.title == "Test PR"
         assert pull_request.description == "Test PR description"
+        assert pull_request.is_draft
+        # assert [x.member_id for x in pull_request.reviewers] == [existing_user_id]
         pull_request.close(self.ado_client)
         repo.delete(self.ado_client)
 

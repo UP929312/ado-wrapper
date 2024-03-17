@@ -11,7 +11,7 @@ from state_managed_abc import StateManagedResource
 @dataclass
 class Project(StateManagedResource):
     "https://learn.microsoft.com/en-us/rest/api/azure/devops/core/projects?view=azure-devops-rest-7.1"
-    project_id: str  # None are editable
+    project_id: str = field(metadata={"is_id_field": True}) # None are editable
     name: str
     description: str
     last_update_time: datetime | None = field(default=None)
@@ -41,12 +41,11 @@ class Project(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list["Project"]:
-        request = requests.get(
+    def get_all(cls, ado_client: AdoClient) -> list["Project"]:  # type: ignore[override]
+        return super().get_all(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects?api-version=7.1-preview.4",
-            auth=ado_client.auth,
-        ).json()["value"]
-        return [cls(project["id"], project["name"], project.get("description", "")) for project in request]
+        )  # type: ignore[return-value]
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, project_name: str) -> "Project | None":

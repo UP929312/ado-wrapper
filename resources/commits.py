@@ -44,9 +44,12 @@ def get_commit_body_template(old_object_id: str | None, updates: dict[str, str],
 
 @dataclass
 class Commit(StateManagedResource):
-    """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/commits?view=azure-devops-rest-7.1"""
+    """
+    https://learn.microsoft.com/en-us/rest/api/azure/devops/git/commits?view=azure-devops-rest-7.1
+    https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes?view=azure-devops-rest-5.1
+    """
 
-    commit_id: str = field(metadata={"is_id_field": True})  # None are editable
+    commit_id: str = field(metadata={"is_id_field": True}) # None are editable
     author: Member
     date: datetime
     message: str
@@ -55,9 +58,9 @@ class Commit(StateManagedResource):
         return f"{self.commit_id} by {self.author!s} on {self.date}\n{self.message}"
 
     @classmethod
-    def from_request_payload(cls, commit_response: dict[str, Any]) -> "Commit":  # TODO: Investigate this
-        member = Member(commit_response["author"]["name"], commit_response["author"]["email"], commit_response["commitId"])
-        return cls(commit_response["commitId"], member, from_ado_date_string(commit_response["author"]["date"]), commit_response["comment"])
+    def from_request_payload(cls, data: dict[str, Any]) -> "Commit":
+        member = Member(data["author"]["name"], data["author"]["email"], "UNKNOWN")
+        return cls(data["commitId"], member, from_ado_date_string(data["author"]["date"]), data["comment"])
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, repo_id: str, commit_id: str) -> "Commit":  # type: ignore[override]
@@ -96,32 +99,19 @@ class Commit(StateManagedResource):
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
-    @classmethod
-    def get_latest_by_repo(cls, ado_client: AdoClient, repo_id: str, branch_name: str | None) -> "Commit | None":
-        """Returns the latest commit in the given repository."""
-        # if False and branch_name is not None and branch_name != "main":  #  refs/heads/m
-        #     raise NotImplementedError
-        #     commits = requests.get(
-        #         f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits?searchCriteria.compareVersion.versionType=branch&searchCriteria.compareVersion.version={branch_name}&api-version=5.1",
-        #         auth=ado_client.auth,
-        #     ).json()["value"]
-        # else:
-        commits = requests.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits?api-version=5.1",
-            auth=ado_client.auth,
-        ).json()["value"]
-        if not commits:
-            return None
-        return cls.from_request_payload(max(commits, key=lambda commit: commit["author"]["date"]))
 
     @classmethod
-    def get_all_by_repo(cls, ado_client: AdoClient, repo_id: str) -> "list[Commit]":
+    def get_latest_by_repo(cls, ado_client: AdoClient, repo_id: str, branch_name: str | None = None) -> "Commit":
+        return max(cls.get_all_by_repo(ado_client, repo_id, branch_name), key=lambda commit: commit.date)
+
+    @classmethod
+    def get_all_by_repo(cls, ado_client: AdoClient, repo_id: str, branch_name: str | None = None) -> "list[Commit]":
         """Returns a list of all commits in the given repository."""
-        commits = requests.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits?api-version=5.1",
-            auth=ado_client.auth,
-        ).json()["value"]
-        return [cls.from_request_payload(commit) for commit in commits]
+        extra_query = f"searchCriteria.itemVersion.version={branch_name}&searchCriteria.itemVersion.versionType={'branch'}&" if branch_name is not None else ""
+        return super().get_all(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits?{extra_query}api-version=7.1-preview.1",
+        )  # type: ignore[return-value]
 
     @classmethod
     def add_initial_readme(cls, ado_client: AdoClient, repo_id: str) -> "Commit":
@@ -138,4 +128,4 @@ class Commit(StateManagedResource):
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=5.1",
             json=default_commit_body, auth=ado_client.auth,  # fmt: skip
         )
-        return cls.from_request_payload(request.json()["commits"][-1])
+        return cls.from_request_payload(request.json()["commits"][0])

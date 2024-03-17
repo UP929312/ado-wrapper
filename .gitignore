@@ -6,7 +6,7 @@ secret.py
 *.state
 fixer.py
 main.json
-cemetary.py
+dumps.py
 
 tests/test_data.txt
 .pytest_cache

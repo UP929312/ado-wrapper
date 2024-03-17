@@ -11,17 +11,21 @@ Build
 BuildDefinition
 ReleaseDefinition
 Release
-Repo
-VariableGroup,
+Repo -*
+VariableGroup -*
 
 Soon:
 Pull Request, Commit
+
+-* = Supports edits/updates too
 
 -----
 
 Add "Update" to more stuff
 
 I don't think we actually test builds properly???
+
+TODO: Look into Pushes vs Commits <https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes/get?view=azure-devops-rest-5.1&tabs=HTTP#gitpush>
 
 Also, Releases need vigerous testing
 
@@ -35,23 +39,6 @@ Maybe add the alternative way? I.E. if it's changed in real resources, have "upd
 Script plan mode?
 
 Teams.get_members(recursive=True)
-
-Build.wait_until_completed(build_id)
-
-Add reviewers straight with {
-  "sourceRefName": "refs/heads/npaulk/my_work",
-  "targetRefName": "refs/heads/new_feature",
-  "title": "A new feature",
-  "description": "Adding a new feature",
-  "reviewers": [
-    {
-      "id": "d6245f20-2af8-44f4-9451-8107cb2767db"
-    }
-  ]
-}
-To PRs
-
-I think repo.get_latest_commit is broken?
 
 -----
 

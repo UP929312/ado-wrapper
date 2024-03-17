@@ -3,28 +3,27 @@ from __future__ import annotations
 import io
 import zipfile
 from dataclasses import dataclass, field
+from typing import Any
 
 import requests
 
 from client import AdoClient
 from state_managed_abc import StateManagedResource
-from utils import ResourceNotFound, UnknownError
+from utils import ResourceNotFound, UnknownError, get_internal_field_names
 from resources.pull_requests import PullRequest, PullRequestStatus
 from resources.commits import Commit
 
 # ====================================================================
-# {"changeType": 1, "item": {"path": "/README.md"}, "newContentTemplate": {"name": "README.md", "type": "readme"}}
-# {"changeType": 1, "item": {"path": "/.gitignore"}, "newContentTemplate": {"name": "Python.gitignore", "type": "gitignore"}}
-
 
 @dataclass
 class Repo(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/repositories?view=azure-devops-rest-7.1"""
 
     repo_id: str = field(metadata={"is_id_field": True})
-    name: str
+    name: str = field(metadata={"editable": True})
     default_branch: str = field(default="refs/heads/main", repr=False, metadata={"editable": True, "internal_name": "defaultBranch"})
     is_disabled: bool = field(default=False, repr=False, metadata={"editable": True, "internal_name": "isDisabled"})
+    # WARNING, disabling a repo means it's not able to be deleted, proceed with caution.
 
     def __str__(self) -> str:
         return f"Repo(name={self.name}, id={self.repo_id})"
@@ -59,28 +58,34 @@ class Repo(StateManagedResource):
             repo_id,
         )
 
+    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
+        internal_attribute_name = get_internal_field_names(self.__class__)[attribute_name]
+        super().update(
+            ado_client, "patch",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}?api-version=7.1-preview.1",
+            {internal_attribute_name: attribute_value},
+            internal_attribute_name,
+            attribute_value,
+        )
+
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list["Repo"]:
-        request = requests.get(
+    def get_all(cls, ado_client: AdoClient) -> list["Repo"]:  # type: ignore[override]
+        return super().get_all(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
-            auth=ado_client.auth,
-        ).json()
-        return [cls.from_request_payload(repo) for repo in request["value"]]
+        )  # type: ignore[return-value]
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, repo_name: str) -> "Repo":
         """Warning, this function must fetch `all` repos to work, be cautious when calling it in a loop."""
-        request = requests.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
-            auth=ado_client.auth,
-        ).json()
-        for repo in request["value"]:
-            if repo["name"] == repo_name:
-                return cls.from_request_payload(repo)
+        all_repos = cls.get_all(ado_client)
+        for repo in all_repos:
+            if repo.name == repo_name:
+                return repo
         raise ValueError(f"Repo {repo_name} not found")
 
     def get_file(self, ado_client: AdoClient, file_path: str, branch_name: str = "main") -> str:
@@ -142,11 +147,11 @@ class Repo(StateManagedResource):
             return []
 
     def delete(self, ado_client: AdoClient) -> None:
+        if self.is_disabled:
+            self.update(ado_client, "is_disabled", False)
         self.delete_by_id(ado_client, self.repo_id)
 
-
 # ====================================================================
-
 
 @dataclass
 class BuildRepository:

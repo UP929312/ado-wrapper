@@ -61,22 +61,26 @@ def get_fields_metadata(cls: type["StateManagedResource"]) -> dict[str, dict[str
 
 
 def get_id_field_name(cls: type["StateManagedResource"]) -> str:
+    """Returns the name of the field that is marked as the id field. If no id field is found, a ValueError is raised."""
     for field_name, metadata in get_fields_metadata(cls).items():
         if metadata.get("is_id_field", False):
+        # if field_name.endswith("_id"):
             return field_name
     raise ValueError(f"No id field found for {cls.__name__}!")
 
 
 def extract_id(obj: "StateManagedResource") -> Any:
+    """Extracts the id from a StateManagedResource object. The id field is defined by the "is_id_field" metadata."""
     id_field_name = get_id_field_name(obj.__class__)
     return getattr(obj, id_field_name)
 
 
 def get_editable_fields(cls: type["StateManagedResource"]) -> list[str]:
+    """Returns a list of attribute that are marked as editable."""
     return [field_obj.name for field_obj in cls.__dataclass_fields__.values() if field_obj.metadata.get("editable", False)]
 
 
-def get_internal_field_names(cls: type["StateManagedResource"], field_names: list[str] | None = None, reverse: bool = True) -> dict[str, str]:  # fmt: skip
+def get_internal_field_names(cls: type["StateManagedResource"], field_names: list[str] | None = None, reverse: bool = False) -> dict[str, str]:  # fmt: skip
     """Returns a mapping of field names to their internal names. If no internal name is set, the field name is used."""
     if field_names is None:
         field_names = get_editable_fields(cls)
@@ -103,6 +107,9 @@ class UnknownError(Exception):
 
 
 class InvalidPermissionsError(Exception):
+    pass
+
+class UpdateFailed(Exception):
     pass
 
 

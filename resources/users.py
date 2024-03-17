@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal, Any, TYPE_CHECKING
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import requests
 
@@ -26,7 +26,7 @@ VoteOptions = Literal[10, 5, 0, -5, -10]
 class AdoUser(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/graph/users?view=azure-devops-rest-7.1"""
 
-    descriptor_id: str
+    descriptor_id: str = field(metadata={"is_id_field": True})
     display_name: str
     email: str
     origin: str
@@ -65,11 +65,11 @@ class AdoUser(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list["AdoUser"]:
-        request = requests.get(
-            f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users?api-version=7.1-preview.1", auth=ado_client.auth
-        ).json()
-        return [cls.from_request_payload(member) for member in request["value"]]
+    def get_all(cls, ado_client: AdoClient) -> list["AdoUser"]:  # type: ignore[override]
+        return super().get_all(
+            ado_client,
+            f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users?api-version=7.1-preview.1",
+        )  # type: ignore[return-value]
 
     @classmethod
     def get_by_email(cls, ado_client: AdoClient, member_email: str) -> "AdoUser":

@@ -1,11 +1,11 @@
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, Literal
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
 from datetime import datetime
 
 import requests
 
-from utils import get_resource_variables, extract_id, ResourceAlreadyExists, DeletionFailed, ResourceNotFound
+from utils import get_resource_variables, extract_id, get_internal_field_names, ResourceAlreadyExists, DeletionFailed, ResourceNotFound, UpdateFailed
 
 if TYPE_CHECKING:
     from client import AdoClient
@@ -86,5 +86,22 @@ class StateManagedResource(ABC):
             raise DeletionFailed(f"Error deleting that {cls.__name__} ({resource_id}): {request.text}")
         ado_client.remove_resource_from_state(cls.__name__, resource_id)  # type: ignore[arg-type]
 
-    def update(self, ado_client: "AdoClient", attribute_name: str, attribute_value: Any) -> None:
-        raise NotImplementedError
+    def update(self, ado_client: "AdoClient", update_action: Literal["put", "patch"], url: str,  # pylint: disable=too-many-arguments
+               params: dict[str, Any], attribute_name: str, attribute_value: Any) -> None:  # fmt: skip
+        func = requests.put if update_action == "put" else requests.patch
+        request = func(url, json=params, auth=ado_client.auth)
+        if request.status_code != 200:
+            raise UpdateFailed(f"Failed to update {self.__class__.__name__} with id {extract_id(self)} and attribute {attribute_name} to {attribute_value}. Reason:\n{request.text}")
+        local_attribute_name = get_internal_field_names(self.__class__, reverse=True)[attribute_name]
+        setattr(self, local_attribute_name, attribute_value)
+        ado_client.update_resource_in_state(self.__class__.__name__, extract_id(self), self.to_json())  # type: ignore[arg-type]
+
+    @classmethod
+    def get_all(cls, ado_client: "AdoClient", url: str) -> list["StateManagedResource"]:
+        request = requests.get(url, auth=ado_client.auth)
+        if request.status_code >= 300:
+            raise ValueError(f"Error getting all {cls.__name__}: {request.text}")
+        # if cls.__name__ in ["AdoUser",]:
+        #     with open("response.txt", "a") as f:
+        #         f.write(cls.__name__+": "+str(request.json()["value"][0])+"\n")
+        return [cls.from_request_payload(resource) for resource in request.json()["value"]]

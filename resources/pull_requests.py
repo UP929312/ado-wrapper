@@ -58,11 +58,14 @@ class PullRequest(StateManagedResource):
 
     @classmethod
     def create(  # type: ignore[override]
-        cls, ado_client: AdoClient, repo_id: str, from_branch_name: str, pull_request_title: str, pull_request_description: str
+        cls, ado_client: AdoClient, repo_id: str, from_branch_name: str, pull_request_title: str,
+        pull_request_description: str, is_draft: bool = False
     ) -> "PullRequest":  # fmt: skip
-
-        payload = {"sourceRefName": f"refs/heads/{from_branch_name}", "targetRefName": "refs/heads/main", "title": pull_request_title, "description": pull_request_description}  # fmt: skip
-        # "https://stackoverflow.com/questions/69097402/tf401398-the-pull-request-cannot-be-activated-because-the-source-and-or-the-tar"
+        """Takes a list of reviewer ids, a branch to pull into main, and an option to start as draft"""
+        # https://stackoverflow.com/questions/64655138/add-reviewers-to-azure-devops-pull-request-in-api-call   <- Why we can't allow reviewers from the get go
+        #, "reviewers": [{"id": reviewer_id for reviewer_id in reviewer_ids}]
+        payload = {"sourceRefName": f"refs/heads/{from_branch_name}", "targetRefName": "refs/heads/main", "title": pull_request_title,
+                   "description": pull_request_description, "isDraft": is_draft}  # fmt: skip
         request = requests.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?api-version=7.1-preview.1",
             json=payload, auth=ado_client.auth,  # fmt: skip

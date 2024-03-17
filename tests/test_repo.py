@@ -3,8 +3,6 @@ from resources.repo import Repo
 from resources.pull_requests import PullRequest
 from resources.commits import Commit
 
-import pytest
-
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     ado_org, ado_project, email, pat_token, *_ = test_data.read().splitlines()
 
@@ -25,6 +23,21 @@ class TestRepo:
     def test_create_delete(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-delete-repo")
         assert repo.name == "ado-api-test-repo-for-create-delete-repo"
+        repo.delete(self.ado_client)
+
+    def test_update(self) -> None:
+        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-update-repo")
+        repo.update(self.ado_client, "name", "ado-api-test-repo-for-update-repo-renamed")
+        assert repo.name == "ado-api-test-repo-for-update-repo-renamed"
+
+        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")  # Create a branch
+        repo.update(self.ado_client, "default_branch", "refs/heads/test-branch")
+        assert repo.default_branch == "refs/heads/test-branch"
+
+        repo.update(self.ado_client, "is_disabled", True)
+        assert repo.is_disabled
+        repo.update(self.ado_client, "is_disabled", False)  # Disabled repos can't be deleted
+
         repo.delete(self.ado_client)
 
     def test_get_by_id(self) -> None:

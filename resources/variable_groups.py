@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 import requests
 
-from utils import from_ado_date_string, get_internal_field_names
+from utils import from_ado_date_string
 from state_managed_abc import StateManagedResource
 from resources.users import Member
 
@@ -76,20 +76,17 @@ class VariableGroup(StateManagedResource):
             variable_group_id,
         )
 
-    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:
+    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
         params = (
             {"variableGroupProjectReferences": [{"name": self.name, "projectReference": {"id": ado_client.ado_project_id}}]}
             | {"id": self.variable_group_id, "name": self.name, "type": "Vsts", "variables": self.variables}
             | {attribute_name: attribute_value}
         )  # We do this to override the default value of the attribute
-        request = requests.put(
+        super().update(
+            ado_client, "put",
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/distributedtask/variablegroups/{self.variable_group_id}?api-version=7.1-preview.2",
-            json=params, auth=ado_client.auth,  # fmt: skip
-        )
-        assert request.status_code == 200
-        local_attribute_name = get_internal_field_names(self.__class__)[attribute_name]
-        setattr(self, local_attribute_name, attribute_value)
-        ado_client.update_resource_in_state(self.__class__.__name__, self.variable_group_id, self.to_json())  # type: ignore[arg-type]
+             params, attribute_name, attribute_value,  # fmt: skip
+            )
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -106,9 +103,8 @@ class VariableGroup(StateManagedResource):
         return None
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list["VariableGroup"]:
-        request = requests.get(
+    def get_all(cls, ado_client: AdoClient) -> list["VariableGroup"]:  # type: ignore[override]
+        return super().get_all(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/distributedtask/variablegroups?api-version=7.1-preview.2",
-            auth=ado_client.auth,
-        ).json()["value"]  # fmt: skip
-        return [cls.from_request_payload(variable_group) for variable_group in request]
+        )  # type: ignore[return-value]

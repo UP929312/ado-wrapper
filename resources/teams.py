@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import requests
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class Team(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/core/teams?view=azure-devops-rest-7.1"""
 
-    team_id: str  # None are editable
+    team_id: str = field(metadata={"is_id_field": True}) # None are editable
     name: str
     description: str
 
@@ -52,12 +52,11 @@ class Team(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list["Team"]:
-        request = requests.get(
+    def get_all(cls, ado_client: AdoClient) -> list["Team"]:  # type: ignore[override]
+        return super().get_all(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{ado_client.ado_project}/teams?api-version=7.1-preview.2",
-            auth=ado_client.auth,
-        ).json()["value"]
-        return [cls.from_request_payload(team) for team in request]
+        )  # type: ignore[return-value]
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, team_name: str) -> "Team":

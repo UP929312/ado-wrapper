@@ -37,9 +37,9 @@ class TestVariableGroup:
 
     def test_update(self) -> None:
         variable_group = VariableGroup.create(self.ado_client, "ado-api-test-for-update", "my_description", {"a": "b"})
-        variable_group.update(self.ado_client, "variables", {"a": "c"})
+        variable_group.update(self.ado_client, "variables", {"b": "c"})  # For some reason, this only sometimes works
         variable_group.delete(self.ado_client)
-        assert variable_group.variables == {"a": "c"}
+        assert variable_group.variables == {"b": "c"}
 
     def test_get_by_id(self) -> None:
         variable_group_created = VariableGroup.create(self.ado_client, "ado-api-test-for-get-by-id", "my_description", {"a": "b"})

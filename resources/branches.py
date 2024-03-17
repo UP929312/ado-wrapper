@@ -39,19 +39,16 @@ class Branch(StateManagedResource):
     @classmethod
     def create(cls, ado_client: AdoClient, repo_id: str, branch_name: str, source_branch: str) -> "Branch":  # type: ignore[override]
         raise NotImplementedError("You can't create a branch without a commit, use Commit.create instead")
-        Commit.create(ado_client, repo_id, source_branch, branch_name, {}, "add", "Abc")
-        return cls.get_by_name(ado_client, repo_id, branch_name)
+        # Commit.create(ado_client, repo_id, source_branch, branch_name, {}, "add", "Abc")
+        # return cls.get_by_name(ado_client, repo_id, branch_name)
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, repo_id: str, branch_id: str) -> None:
-        # Can't use super, it has repo_id and branch_id
-        request = requests.delete(
+        return super().delete_by_id(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs/{branch_id}?api-version=7.1",
-            auth=ado_client.auth,
+            branch_id
         )
-        if request.status_code != 204:
-            raise ValueError(f"Error deleting {cls.__name__} {branch_id}: {request.text}")
-        assert request.status_code == 204
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -59,11 +56,10 @@ class Branch(StateManagedResource):
 
     @classmethod
     def get_all_by_repo(cls, ado_client: AdoClient, repo_id: str) -> list["Branch"]:
-        request = requests.get(
+        return super().get_all(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs?filter=heads&api-version=7.1",
-            auth=ado_client.auth,
-        ).json()
-        return [cls.from_request_payload(branch) for branch in request["value"]]
+        )  # type: ignore[return-value]
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, repo_id: str, branch_name: str) -> "Branch":

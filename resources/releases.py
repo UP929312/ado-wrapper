@@ -126,11 +126,11 @@ class Release(StateManagedResource):
         self.delete_by_id(ado_client, self.release_id)
 
     @classmethod  # TODO: Test
-    def get_all(cls, ado_client: AdoClient, definition_id: int) -> "list[Release]":
-        response = requests.get(
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1&definitionId={definition_id}", auth=ado_client.auth  # fmt: skip
-        ).json()
-        return [cls.from_request_payload(release) for release in response["value"]]
+    def get_all(cls, ado_client: AdoClient, definition_id: str) -> "list[Release]":  # type: ignore[override]
+        return super().get_all(
+            ado_client,
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1&definitionId={definition_id}",
+        )  # type: ignore[return-value]
 
 
 # ========================================================================================================

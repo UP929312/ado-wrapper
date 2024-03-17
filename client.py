@@ -21,7 +21,7 @@ STATE_FILE_VERSION = "1.1"
 
 
 class AdoClient:
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self, ado_email: str, ado_pat: str, ado_org: str, ado_project: str, state_file_name: str | None = "main.state"  # fmt: skip
     ) -> None:
         self.auth = HTTPBasicAuth(ado_email, ado_pat)
@@ -88,6 +88,7 @@ class AdoClient:
         except DeletionFailed:
             print(f"[ADO-API] Error deleting {resource_type} {resource_id} from ADO")
         else:
+            print(f"[ADO-API] Deleted {resource_type} {resource_id} from ADO")
             self.remove_resource_from_state(resource_type, resource_id)
 
     def delete_all_resources(self, resource_type_filter: ResourceType | None = None) -> None:
@@ -170,10 +171,11 @@ if __name__ == "__main__":
 
     if args.delete_everything:
         # Deletes ADO resources and entries in the state file
+        print("[ADO-API] Deleting every resource in state and the real ADO resources")
         for resource_type in ado_client.get_all_states()["created"]:
             for resource_id in ado_client.get_all_states()["created"][resource_type]:
                 ado_client.delete_resource(resource_type, resource_id)
-        print("[ADO-API] Successfully deleted every resource in state")
+        print("[ADO-API] Finishing deleting resources in state")
 
     if args.delete_resource_type is not None:
         # Deletes ADO resources and entries in the state file of a specific type
@@ -200,14 +202,14 @@ if __name__ == "__main__":
                 if state_data != real_data:
                     print(f"[ADO-API] Updating ADO resource - {resource_type} ({resource_id}) to version found in state:")
                     instance = ALL_RESOURCES[resource_type].from_json(real_data)  # Create an instance from the real world data
-                    internal_attribute_names = get_internal_field_names(instance.__class__, reverse=False)  # Mapping of internal->python
+                    internal_attribute_names = get_internal_field_names(instance.__class__)  # Mapping of internal->python
                     differences = {
                         internal_attribute_names[key]: value
                         for key, value in state_data.items()
                         if state_data[key] != real_data[key] and key in internal_attribute_names
                     }
                     for internal_attribute_name, attribute_value in differences.items():
-                        instance.update(ado_client, internal_attribute_name, attribute_value)
+                        instance.update(ado_client, internal_attribute_name, attribute_value)  # type: ignore[arg-type, call-arg]
                         print(f"____The {resource_type}'s `{internal_attribute_name}` value has been updated to {attribute_value}")
                     internal_state["created"][resource_type][resource_id] = instance.to_json()
         ado_client.write_state_file(internal_state)

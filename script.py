@@ -10,7 +10,7 @@ from client import AdoClient
 
 from resources.projects import Project
 from resources.variable_groups import VariableGroup
-from resources.users import Member
+from resources.users import AdoUser, Member, Reviewer
 from resources.repo import Repo
 from resources.commits import Commit
 from resources.pull_requests import PullRequest
@@ -19,6 +19,8 @@ from resources.branches import Branch
 from resources.releases import Release, ReleaseDefinition
 
 ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
+
+# print(f'{AdoUser.get_by_email(ado_client, "")!r}')
 
 print("Done")
 

@@ -98,6 +98,7 @@ class TestBuildDefinition:
                 "repository": {"id": "123", "name": "test-repo"},
                 "variables": {},
                 "variableGroups": [],
+                "revision": 1,
             }
         )
         assert build_definition.build_definition_id == "123"

@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Any, Literal
 from dataclasses import dataclass, field
+import time
 
 import requests
 
@@ -45,7 +46,7 @@ def get_build_definition(
 class Build(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/build/builds?view=azure-devops-rest-7.1"""
 
-    build_id: str = field(metadata={"is_id_field": True})
+    build_id: str
     build_number: str
     status: BuildStatus
     requested_by: Member
@@ -121,6 +122,7 @@ class Build(StateManagedResource):
                 break
             if (datetime.now() - start_time).seconds > max_timeout_seconds:
                 raise TimeoutError(f"The build did not complete within {max_timeout_seconds} seconds ({max_timeout_seconds//60} minutes)")
+            time.sleep(3)
         return build
 
     @staticmethod
@@ -151,6 +153,7 @@ class BuildDefinition(StateManagedResource):
     created_by: Member | None
     created_date: datetime | None
     build_repo: BuildRepository | None = field(repr=False)
+    revision: str = field(default="1")
     variables: dict[str, str] | None = field(default_factory=dict, repr=False)  # type: ignore[assignment]
     variable_groups: list[int] | None = field(default_factory=list, repr=False)  # type: ignore[assignment]
 
@@ -166,7 +169,7 @@ class BuildDefinition(StateManagedResource):
         )  # fmt: skip
         build_repository = BuildRepository.from_request_payload(data["repository"]) if "repository" in data else None
         return cls(str(data["id"]), data["name"], data.get("description", ""), data.get("process", {"yamlFilename": "UNKNOWN"})["yamlFilename"], created_by,
-                from_ado_date_string(data.get("createdDate")), build_repository, data.get("variables", None), data.get("variableGroups", None))  # fmt: skip
+                from_ado_date_string(data.get("createdDate")), build_repository, str(data["revision"]), data.get("variables", None), data.get("variableGroups", None))  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, build_definition_id: str) -> "BuildDefinition":
@@ -186,6 +189,14 @@ class BuildDefinition(StateManagedResource):
                 name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, agent_pool_id, branch_name
             ),
         )  # type: ignore[return-value]
+
+    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
+        return super().update(
+            ado_client, "put",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{self.build_definition_id}?api-version=7.1-preview.7",
+            {attribute_name: attribute_value, "revision": int(self.revision)+1}, attribute_name, attribute_value,  # fmt: skip
+        )
+
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, resource_id: str) -> None:  # type: ignore[override]
@@ -215,6 +226,5 @@ class BuildDefinition(StateManagedResource):
 
     def delete(self, ado_client: AdoClient) -> None:
         return self.delete_by_id(ado_client, self.build_definition_id)
-
 
 # ========================================================================================================

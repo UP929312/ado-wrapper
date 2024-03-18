@@ -4,11 +4,10 @@ from datetime import datetime
 from typing import Any, TYPE_CHECKING
 from dataclasses import dataclass, field
 
-import requests
-
 from utils import from_ado_date_string
 from state_managed_abc import StateManagedResource
 from resources.users import Member
+from attribute_types import VariableGroupEditableAttribute
 
 if TYPE_CHECKING:
     from client import AdoClient
@@ -25,7 +24,7 @@ class VariableGroup(StateManagedResource):
     created_on: datetime
     created_by: Member
     modified_by: Member
-    modified_on: datetime | None = field(default=None)
+    modified_on: datetime | None = None
 
     def __str__(self) -> str:
         return repr(self)
@@ -76,17 +75,16 @@ class VariableGroup(StateManagedResource):
             variable_group_id,
         )
 
-    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
+    def update(self, ado_client: AdoClient, attribute_name: VariableGroupEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
         # WARNING: This method works 80-90% of the time, for some reason, it fails randomly, ADO API is at fault.
-        params = (
-            {"variableGroupProjectReferences": [{"name": self.name, "projectReference": {"id": ado_client.ado_project_id}}]}
-            | {"id": self.variable_group_id, "name": self.name, "type": "Vsts", "variables": self.variables}
-            | {attribute_name: attribute_value}
-        )  # We do this to override the default value of the attribute
+        params = {
+            "variableGroupProjectReferences": [{"name": self.name, "projectReference": {"id": ado_client.ado_project_id}}],
+             "id": self.variable_group_id, "name": self.name, "type": "Vsts", "variables": self.variables  # fmt: skip
+        }
         super().update(
             ado_client, "put",
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/distributedtask/variablegroups/{self.variable_group_id}?api-version=7.1-preview.2",
-             params, attribute_name, attribute_value,  # fmt: skip
+            attribute_name, attribute_value, params  # fmt: skip
         )
 
     # ============ End of requirement set by all state managed resources ================== #

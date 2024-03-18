@@ -10,6 +10,7 @@ from utils import from_ado_date_string
 from state_managed_abc import StateManagedResource
 from resources.users import Member
 from resources.repo import BuildRepository
+from attribute_types import BuildDefinitionEditableAttribute
 
 BuildStatus = Literal["notStarted", "inProgress", "completed", "cancelling", "postponed", "notSet", "none"]
 QueuePriority = Literal["low", "belowNormal", "normal", "aboveNormal", "high"]
@@ -48,16 +49,16 @@ class Build(StateManagedResource):
 
     build_id: str = field(metadata={"is_id_field": True})
     build_number: str
-    status: BuildStatus
+    status: BuildStatus = field(metadata={"editable": True})  # Only this is editable ):
     requested_by: Member
     build_repo: BuildRepository
     parameters: dict[str, str]
     definition: "BuildDefinition | None" = field(repr=False)
-    start_time: datetime | None = field(default=None)
-    finish_time: datetime | None = field(default=None)
-    queue_time: datetime | None = field(default=None)
-    reason: str = field(default="An automated build created by the ADO-API")
-    priority: QueuePriority = field(default="normal")
+    start_time: datetime | None = None
+    finish_time: datetime | None = None
+    queue_time: datetime | None = field(repr=False, default=None)
+    reason: str = "An automated build created by the ADO-API"
+    priority: QueuePriority = "normal"
 
     def __str__(self) -> str:
         return f"{self.build_number} ({self.build_id}), {self.status}"
@@ -93,6 +94,13 @@ class Build(StateManagedResource):
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}?api-version=7.1",
             build_id,
+        )
+
+    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:
+        return super().update(
+            ado_client, "patch",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{self.build_id}?api-version=7.1-preview.7",
+            attribute_name, attribute_value, {attribute_name: attribute_value}  # fmt: skip
         )
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -153,8 +161,8 @@ class BuildDefinition(StateManagedResource):
     created_by: Member | None
     created_date: datetime | None
     build_repo: BuildRepository | None = field(repr=False)
+    revision: str = "1"
     process: dict[str, str | int] | None = field(repr=False, default=None)  # Used internally, mostly ignore
-    revision: str = field(default="1")
     variables: dict[str, str] | None = field(default_factory=dict, repr=False)  # type: ignore[assignment]
     variable_groups: list[int] | None = field(default_factory=list, repr=False)  # type: ignore[assignment]
 
@@ -170,7 +178,7 @@ class BuildDefinition(StateManagedResource):
         )  # fmt: skip
         build_repository = BuildRepository.from_request_payload(data["repository"]) if "repository" in data else None
         return cls(str(data["id"]), data["name"], data.get("description", ""), data.get("process", {"yamlFilename": "UNKNOWN"})["yamlFilename"], created_by,
-                from_ado_date_string(data.get("createdDate")), build_repository, data.get("process"), str(data["revision"]), data.get("variables", None), data.get("variableGroups", None))  # fmt: skip
+                from_ado_date_string(data.get("createdDate")), build_repository, str(data["revision"]), data.get("process"), data.get("variables", None), data.get("variableGroups", None))  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, build_definition_id: str) -> "BuildDefinition":
@@ -189,7 +197,7 @@ class BuildDefinition(StateManagedResource):
             payload=get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, agent_pool_id, branch_name),  # fmt: skip
         )  # type: ignore[return-value]
 
-    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
+    def update(self, ado_client: AdoClient, attribute_name: BuildDefinitionEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
         if self.build_repo is None or self.process is None:
             raise ValueError("This build definition does not have a (repository or process) in its data, it cannot be updated")
         payload = (
@@ -201,7 +209,7 @@ class BuildDefinition(StateManagedResource):
         super().update(
             ado_client, "put",
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{self.build_definition_id}?api-version=6.0", #secretsSourceDefinitionRevision={self.revision}&
-            payload, attribute_name, attribute_value,  # fmt: skip
+            attribute_name, attribute_value, payload  # fmt: skip
         )
         self.revision = str(int(self.revision) + 1)
 

@@ -5,7 +5,8 @@ from datetime import datetime
 
 import requests
 
-from utils import (get_resource_variables, extract_id, get_internal_field_names,
+from utils import (
+    get_resource_variables, extract_id, get_internal_field_names,
     ResourceAlreadyExists, DeletionFailed, ResourceNotFound, UpdateFailed,  # fmt: skip
 )
 
@@ -89,15 +90,20 @@ class StateManagedResource(ABC):
         ado_client.remove_resource_from_state(cls.__name__, resource_id)  # type: ignore[arg-type]
 
     def update(self, ado_client: "AdoClient", update_action: Literal["put", "patch"], url: str,  # pylint: disable=too-many-arguments
-               params: dict[str, Any], attribute_name: str, attribute_value: Any) -> None:  # fmt: skip
+               attribute_name: str, attribute_value: Any, params: dict[str, Any]) -> None:  # fmt: skip
+        """The params should be a dictionary which will be combined with the internal name and value of the attribute to be updated."""
+        interal_names = get_internal_field_names(self.__class__)
+        if attribute_name not in get_internal_field_names(self.__class__):
+            raise ValueError(f"The attribute {attribute_name} is not editable!  Editable attributes: {interal_names}")
+        params |= {interal_names[attribute_name]: attribute_value}
+
         func = requests.put if update_action == "put" else requests.patch
         request = func(url, json=params, auth=ado_client.auth)
         if request.status_code != 200:
             raise UpdateFailed(
-                f"Failed to update {self.__class__.__name__} with id {extract_id(self)} and attribute {attribute_name} to {attribute_value}. Reason:\n{request.text}"
+                f"Failed to update {self.__class__.__name__} with id {extract_id(self)} and attribute {attribute_name} to {attribute_value}. \nReason:\n{request.text}"
             )
-        local_attribute_name = get_internal_field_names(self.__class__, reverse=True)[attribute_name]
-        setattr(self, local_attribute_name, attribute_value)
+        setattr(self, attribute_name, attribute_value)
         ado_client.update_resource_in_state(self.__class__.__name__, extract_id(self), self.to_json())  # type: ignore[arg-type]
 
     @classmethod
@@ -105,7 +111,4 @@ class StateManagedResource(ABC):
         request = requests.get(url, auth=ado_client.auth)
         if request.status_code >= 300:
             raise ValueError(f"Error getting all {cls.__name__}: {request.text}")
-        # if cls.__name__ in ["AdoUser",]:
-        #     with open("response.txt", "a") as f:
-        #         f.write(cls.__name__+": "+str(request.json()["value"][0])+"\n")
         return [cls.from_request_payload(resource) for resource in request.json()["value"]]

@@ -1,11 +1,8 @@
 from dataclasses import dataclass, field
 
-import requests
-
 from client import AdoClient
 from state_managed_abc import StateManagedResource
-from resources.commits import Commit
-
+# from editable_attribute_types import BranchEditableAttribute
 
 @dataclass
 class Branch(StateManagedResource):
@@ -17,9 +14,9 @@ class Branch(StateManagedResource):
     branch_id: str = field(metadata={"is_id_field": True})
     name: str = field(metadata={"editable": True})  # Maybe more?
     repo_id: str
-    is_main: bool = field(default=True)
-    is_protected: bool = field(default=False)
-    is_deleted: bool = field(default=False)
+    is_main: bool = True
+    is_protected: bool = False
+    is_deleted: bool = False
 
     def __str__(self) -> str:
         return f"Branch(name={self.name}, id={self.branch_id}, is_main={self.is_main}, is_protected={self.is_protected}, is_deleted={self.is_deleted})"

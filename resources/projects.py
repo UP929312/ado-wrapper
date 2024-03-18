@@ -14,7 +14,7 @@ class Project(StateManagedResource):
     project_id: str = field(metadata={"is_id_field": True})  # None are editable
     name: str
     description: str
-    last_update_time: datetime | None = field(default=None)
+    last_update_time: datetime | None = None
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Project":

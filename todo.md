@@ -7,7 +7,7 @@ Maybe show a type when adding to state too, like "Add": abc
 This lets us store and perhaps revert updates?
 
 Resources that are entirely state managed:
-Build
+Build -*
 BuildDefinition -*
 ReleaseDefinition
 Release
@@ -21,7 +21,11 @@ Pull Request, Commit
 
 -----
 
+Never test build "Get by id", hmm
+
 Add "Update" to more stuff, prevent updates on uneditable attributes in state_managed_abc/update
+
+When I am testing .from_request_payload, maybe use the plan object's data?
 
 I don't think we actually test builds properly???
 
@@ -39,6 +43,11 @@ Maybe add the alternative way? I.E. if it's changed in real resources, have "upd
 Script plan mode?
 
 Teams.get_members(recursive=True)
+
+<https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict>
+This might allow us to remove "as_json"
+
+For the "grab the creator from the key" part, it's not possible from what I have researched, come back to this.
 
 -----
 

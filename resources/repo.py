@@ -12,6 +12,7 @@ from state_managed_abc import StateManagedResource
 from utils import ResourceNotFound, UnknownError, get_internal_field_names
 from resources.pull_requests import PullRequest, PullRequestStatus
 from resources.commits import Commit
+from attribute_types import RepoEditableAttribute
 
 # ====================================================================
 
@@ -53,18 +54,19 @@ class Repo(StateManagedResource):
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, repo_id: str) -> None:  # type: ignore[override]
+        for pull_request in Repo.get_all_pull_requests(ado_client, repo_id, "all"):
+            ado_client.remove_resource_from_state("PullRequest", pull_request.pull_request_id)
         return super().delete_by_id(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1",
             repo_id,
         )
 
-    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
-        internal_attribute_name = get_internal_field_names(self.__class__)[attribute_name]
+    def update(self, ado_client: AdoClient, attribute_name: RepoEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
         super().update(
             ado_client, "patch",
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}?api-version=7.1-preview.1",
-            {internal_attribute_name: attribute_value}, internal_attribute_name, attribute_value,  # fmt: skip
+            attribute_name, attribute_value, {}, # fmt: skip
         )
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -131,9 +133,10 @@ class Repo(StateManagedResource):
         """Helper function which redirects to the PullRequest class to make a PR"""
         return PullRequest.create(ado_client, self.repo_id, branch_name, pull_request_title, pull_request_description)
 
-    def get_all_pull_requests(self, ado_client: AdoClient, status: PullRequestStatus) -> list["PullRequest"]:
+    @staticmethod
+    def get_all_pull_requests(ado_client: AdoClient, repo_id: str, status: PullRequestStatus) -> list["PullRequest"]:
         pull_requests = requests.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
             auth=ado_client.auth,
         ).json()
         try:
@@ -157,9 +160,9 @@ class Repo(StateManagedResource):
 @dataclass
 class BuildRepository:
     build_repository_id: str = field(metadata={"is_id_field": True})
-    name: str | None = field(default=None)
-    type: str = field(default="TfsGit")
-    clean: bool | None = field(default=None)
+    name: str | None = None
+    type: str = "TfsGit"
+    clean: bool | None = None
     checkout_submodules: bool = field(default=False, metadata={"internal_name": "checkoutSubmodules"})
 
     @classmethod

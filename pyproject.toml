@@ -59,6 +59,11 @@ disable = [
 log_cli = true
 markers = [
     "wip: mark test as a work in progress",
+    "from_request_payload: mark test which convert payloads to resources",
+    "update: Tests which are used to update the API",
+    "create_delete: Tests which are used to create and delete resources",
+    "get_by_id: Tests which are used to get resources by their ID",
+    "get_all: Tests which are used to get all resources",
 ]
 
 [tool.black]

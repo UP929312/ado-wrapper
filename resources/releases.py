@@ -6,7 +6,7 @@ import requests
 
 from client import AdoClient
 from state_managed_abc import StateManagedResource
-from utils import DeletionFailed, from_ado_date_string, ResourceNotFound
+from utils import from_ado_date_string
 from resources.users import Member
 
 ReleaseStatus = Literal["active", "abandoned", "draft", "undefined"]

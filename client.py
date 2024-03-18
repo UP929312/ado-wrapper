@@ -2,13 +2,15 @@ import argparse
 import json
 from pathlib import Path
 from typing import Literal, Any, TypedDict
+import requests
 
 from requests.auth import HTTPBasicAuth
 
-from utils import DeletionFailed, get_resource_variables, ResourceType, get_internal_field_names
+from utils import DeletionFailed, get_resource_variables, get_internal_field_names
+from attribute_types import ResourceType
 
 
-ActionType = Literal["created", "updated"]
+ActionType = Literal["created"]
 StateFileEntryType = dict[str, Any]
 
 
@@ -29,9 +31,15 @@ class AdoClient:
         self.ado_project = ado_project
         self.state_file_name = state_file_name
 
-        from resources.projects import Project  # Stop circular import
+        # Verify Token is working (helps with setup for first time users):
+        request = requests.get(f"https://dev.azure.com/{self.ado_org}/_apis/projects?api-version=6.0", auth=self.auth)
+        assert request.status_code == 200, f"Failed to authenticate with ADO: {request.text}"
 
+        from resources.projects import Project  # Stop circular import
         self.ado_project_id: str = Project.get_by_name(self, self.ado_project).project_id  # type: ignore[union-attr]
+
+        # data = requests.get(f"https://dev.azure.com/{self.ado_org}/_apis/tokenadministration/tokens?api-version=6.0", auth=self.auth)
+        # print(data.status_code)
 
         # If they have a state file, and it doesn't exist:
         if self.state_file_name is not None and not Path(self.state_file_name).exists():
@@ -121,7 +129,7 @@ class AdoClient:
                 {
                     "state_file_version": STATE_FILE_VERSION,
                     "created": {resource: {} for resource in all_resource_names},
-                    "updated": {resource: {} for resource in all_resource_names},
+                    # "updated": {resource: {} for resource in all_resource_names},
                 },
                 state_file,
             )
@@ -162,6 +170,9 @@ if __name__ == "__main__":
         "--plan", help="Runs a plan for the resources, rather than making them", action="store_true", default=False, dest="plan"
     )
     action_group.add_argument("--apply", help="Applies the plan to the resources", action="store_true", default=False, dest="apply")
+    parser.add_argument(
+        "--purge-state", help="Deletes everything in the state file", action="store_true", default=False, dest="purge_state"
+    )
     args = parser.parse_args()
     assert not (args.delete_everything and args.delete_resource_type is not None)
     if args.refresh_resources_on_startup:
@@ -170,6 +181,11 @@ if __name__ == "__main__":
     from secret import email, ado_access_token, ado_org, ado_project
 
     ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)  #  state_file_name="main.json"
+
+    if args.purge_state:
+        # Deletes everything in the state file
+        print("[ADO-API] Purging state")
+        ado_client.wipe_state()
 
     if args.delete_everything:
         # Deletes ADO resources and entries in the state file

@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 import requests
 
-from utils import from_ado_date_string, DeletionFailed
+from utils import from_ado_date_string, get_internal_field_names
 from state_managed_abc import StateManagedResource
 from resources.users import Member, Reviewer
 
@@ -31,8 +31,10 @@ class PullRequest(StateManagedResource):
     creation_date: datetime = field(repr=False)
     repository: Repo
     close_date: datetime | None = field(default=None, repr=False)
-    is_draft: bool = field(default=False, repr=False, metadata={"editable": True, "internal_name": "isDraft"})
-    merge_status: MergeStatus = field(default="notSet")  # Static(ish)
+    is_draft: bool = field(default=False, repr=False)  # , metadata={"editable": True, "internal_name": "isDraft"})  # Hmmm
+    merge_status: MergeStatus = field(
+        default="notSet", metadata={"editable": True, "internal_name": "status"}
+    )  # It's actual name is mergeStatus, but the update endpoint uses this name
     reviewers: list[Reviewer] = field(default_factory=list, repr=False)  # Static(ish)
 
     def __str__(self) -> str:
@@ -76,10 +78,19 @@ class PullRequest(StateManagedResource):
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str) -> None:
-        return super().delete_by_id(
-            ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}?api-version=7.1",
-            pull_request_id,
+        raise NotImplemented
+        # return super().delete_by_id(
+        #     ado_client,
+        #     f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}?api-version=7.1",
+        #     pull_request_id,
+        # )
+
+    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
+        internal_attribute_name = get_internal_field_names(self.__class__)[attribute_name]
+        return super().update(
+            ado_client, "patch",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1-preview.1",
+            {internal_attribute_name: attribute_value}, internal_attribute_name, attribute_value,  # fmt: skip
         )
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -96,16 +107,17 @@ class PullRequest(StateManagedResource):
                                 json={"vote": "0", "isRequired": "true"}, auth=ado_client.auth)  # fmt: skip
         assert request.status_code < 300
 
-    def change_status(self, ado_client: AdoClient, status: PullRequestStatus) -> "PullRequest":
-        request = requests.patch(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",
-            json={"status": status}, auth=ado_client.auth,  # fmt: skip
-        )
-        assert request.status_code < 300
-        return self.__class__.from_request_payload(request.json())
+    def change_status(self, ado_client: AdoClient, status: PullRequestStatus) -> None:
+        self.update(ado_client, "status", status)
+        # request = requests.patch(
+        #     f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",
+        #     json={"status": status}, auth=ado_client.auth,  # fmt: skip
+        # )
+        # assert request.status_code < 300
+        # return self.__class__.from_request_payload(request.json())
 
     def close(self, ado_client: AdoClient) -> None:
-        self.change_status(ado_client, "abandoned")
+        self.update(ado_client, "status", "abandoned")
 
     def delete(self, ado_client: AdoClient) -> None:
         self.close(ado_client)

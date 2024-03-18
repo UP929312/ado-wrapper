@@ -123,6 +123,17 @@ def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We d
     return dict(locals().items())
 
 
+# def generate_editable_attributes_types():
+#     resource_objects = get_resource_variables().values()
+#     string = "from typing import Literal\n\n\n"
+#     for resource in resource_objects:
+#         # print(f"{resource.__name__}EditableAttributes = Literal[{', '.join([f'"{field}"' for field in get_editable_fields(resource)])}]")  # fmt: skip
+#         infix = ', '.join([f'"{field}"' for field in get_editable_fields(resource)])
+#         string += f"{resource.__name__}EditableAttributes = Literal[{infix}]\n"  # fmt: skip
+#     string += "\n\nResourceType = Literal[\n"+",\n".join([f'    "{resource.__name__}"' for resource in resource_objects])+"  # fmt: skip\n]"
+#     with open("editable_attribute_types.py", "a") as f:
+#         f.write(string)
+
 ResourceType = Literal[
     "Branch", "Build", "BuildDefinition", "Commit", "Project", "PullRequest", "Release", "ReleaseDefinition", "Repo",
     "Team", "AdoUser", "Member", "Reviewer", "VariableGroup"  # fmt: skip

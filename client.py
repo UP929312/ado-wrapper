@@ -87,6 +87,8 @@ class AdoClient:
             class_reference.delete_by_id(self, resource_id)  # type: ignore[call-arg]
         except DeletionFailed:
             print(f"[ADO-API] Error deleting {resource_type} {resource_id} from ADO")
+        except (NotImplementedError, TypeError):
+            print(f"[ADO-API] Cannot {resource_type} {resource_id} from state or real space, please delete this manually or using code.")
         else:
             print(f"[ADO-API] Deleted {resource_type} {resource_id} from ADO")
             self.remove_resource_from_state(resource_type, resource_id)

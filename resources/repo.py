@@ -42,14 +42,14 @@ class Repo(StateManagedResource):
 
     @classmethod
     def create(cls, ado_client: AdoClient, name: str, include_readme: bool = True) -> "Repo":  # type: ignore[override]
-        repo = super().create(
+        repo: Repo = super().create(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1-preview",
             {"name": name},
-        )
+        )  # type: ignore[assignment]
         if include_readme:
-            Commit.add_initial_readme(ado_client, repo.repo_id)  # type: ignore[attr-defined]
-        return repo  # type: ignore[return-value]
+            Commit.add_initial_readme(ado_client, repo.repo_id)
+        return repo
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, repo_id: str) -> None:  # type: ignore[override]

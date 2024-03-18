@@ -52,3 +52,12 @@ python3.11 -m client --delete-everything
 python3.11 -m client --refresh-resources-on-startup
 
 pytest tests/ -vvvv -s -m wip
+
+For tbe plans, have a new folder, called "plan_resources", which has all the same resources, but a few differences:
+
+1. Each object will hold a dictionary of key=tuple, with first item, request type, second item, regex pattern (for the url) to match against. The value of each key, value pair will be a fake requets object with it's json set to a dump of what it normally returns, with ids containing a new singleton.
+2. When we want planned things, we should decorate functions, which when run, will take over requests.get or whatever to use our custom classes.
+3. On startup, the plan will refresh all state, and if it tried to fetch stuff that's not in state, it'll also try in the real world
+4. The ado_client should have a "is_planning" bool, which will dictate stuff.
+5. When we are in planning mode, we should have an in memory state, which will start as a duplicate of the updated local state
+6. This local state will get updated when we create or destroy things

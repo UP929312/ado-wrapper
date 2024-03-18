@@ -7,7 +7,7 @@ with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     ado_org, ado_project, email, pat_token, *_ = test_data.read().splitlines()  # fmt: skip
 
 
-class TestCommit:
+class TestPullRequest:
     def setup_method(self) -> None:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)
 
@@ -72,5 +72,25 @@ class TestCommit:
         pull_request = PullRequest.create(self.ado_client, repo.repo_id, "test-branch", "Test PR", "Test PR description")
         pull_request.mark_as_draft(self.ado_client)
         assert pull_request.is_draft
+        pull_request.close(self.ado_client)
+        repo.delete(self.ado_client)
+
+    def test_update(self) -> None:
+        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-update-pull-request")
+        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
+        pull_request = PullRequest.create(self.ado_client, repo.repo_id, "test-branch", "Test PR", "Test PR description")
+        # =====
+        pull_request.update(self.ado_client, "title", "ado-api-test-repo-for-update-pull-request-renamed")
+        assert pull_request.title == "ado-api-test-repo-for-update-pull-request-renamed"  # Test instance attribute is updated
+        pull_request.update(self.ado_client, "description", "Updated description")
+        assert pull_request.description == "Updated description"  # Test instance attribute is updated
+        pull_request.update(self.ado_client, "merge_status", "succeeded")
+        assert pull_request.merge_status == "succeeded"
+        # =====
+        fetched_pull_request = PullRequest.get_by_id(self.ado_client, repo.repo_id, pull_request.pull_request_id)
+        assert fetched_pull_request.title == "ado-api-test-repo-for-update-pull-request-renamed"
+        assert fetched_pull_request.description == "Updated description"
+        assert fetched_pull_request.merge_status == "succeeded"
+        # =====
         pull_request.close(self.ado_client)
         repo.delete(self.ado_client)

@@ -12,6 +12,7 @@ class TestTeam:
     def setup_method(self) -> None:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)
 
+    @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:
         team = Team.from_request_payload({"id": "123", "name": "test-Team", "description": "test-Team"})
         assert isinstance(team, Team)
@@ -20,12 +21,14 @@ class TestTeam:
         assert team.description == "test-Team"
         assert team.to_json() == Team.from_json(team.to_json()).to_json()
 
+    @pytest.mark.create_delete
     def test_create_delete_team(self) -> None:
         with pytest.raises(NotImplementedError):
             Team.create(self.ado_client, "ado-api-test-Team", "description")
         with pytest.raises(NotImplementedError):
             Team.delete_by_id(self.ado_client, "abc")
 
+    @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
         team = Team.get_by_id(self.ado_client, existing_team_id)
         assert team.team_id == existing_team_id

@@ -1,3 +1,5 @@
+import pytest
+
 from client import AdoClient
 from resources.repo import Repo
 from resources.commits import Commit
@@ -10,6 +12,7 @@ class TestCommit:
     def setup_method(self) -> None:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)
 
+    @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:
         commit = Commit.from_request_payload(
             {
@@ -23,6 +26,7 @@ class TestCommit:
         assert commit.message == "Test commit"
         assert commit.to_json() == Commit.from_json(commit.to_json()).to_json()
 
+    @pytest.mark.create_delete
     def test_create_delete(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-delete-commit")
         commit = Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")

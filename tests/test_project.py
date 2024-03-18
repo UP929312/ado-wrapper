@@ -14,6 +14,7 @@ class TestProject:
     def setup_method(self) -> None:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)
 
+    @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:
         project = Project.from_request_payload(
             {
@@ -28,12 +29,14 @@ class TestProject:
         assert project.description == "test-description"
         assert project.to_json() == Project.from_json(project.to_json()).to_json()
 
+    @pytest.mark.create_delete
     def test_create_delete_project(self) -> None:
         with pytest.raises(NotImplementedError):
             Project.create(self.ado_client, "ado-api-test-project", "description")
         with pytest.raises(NotImplementedError):
             Project.delete_by_id(self.ado_client, "abc")
 
+    @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
         project = Project.get_by_id(self.ado_client, existing_project_id)
         assert project.project_id == existing_project_id

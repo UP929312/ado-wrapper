@@ -11,6 +11,7 @@ class TestVariableGroup:
     def setup_method(self) -> None:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)
 
+    @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:
         variable_group = VariableGroup.from_request_payload(
             {
@@ -32,12 +33,14 @@ class TestVariableGroup:
         assert variable_group.created_on.year == 2023
         assert variable_group.to_json() == VariableGroup.from_json(variable_group.to_json()).to_json()
 
+    @pytest.mark.create_delete
     def test_create_delete(self) -> None:
         variable_group = VariableGroup.create(self.ado_client, "ado-api-test-for-create-delete", "my_description", {"a": "b"})
         variable_group.delete(self.ado_client)
         assert variable_group.variables == {"a": "b"}
 
     @pytest.mark.skip(reason="This test is flakey, and randomly fails, even with no changes")
+    @pytest.mark.update
     def test_update(self) -> None:
         # Variable group updating is quite flakey, and randomly fails, even with no changes
         variable_group = VariableGroup.create(self.ado_client, "ado-api-test-for-update", "my_description", {"a": "b"})
@@ -51,6 +54,7 @@ class TestVariableGroup:
         # =====
         variable_group.delete(self.ado_client)
 
+    @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
         variable_group_created = VariableGroup.create(self.ado_client, "ado-api-test-for-get-by-id", "my_description", {"a": "b"})
         variable_group = VariableGroup.get_by_id(self.ado_client, variable_group_created.variable_group_id)

@@ -1,3 +1,5 @@
+import pytest
+
 from client import AdoClient
 from resources.repo import Repo
 from resources.pull_requests import PullRequest
@@ -11,6 +13,7 @@ class TestRepo:
     def setup_method(self) -> None:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)
 
+    @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:
         repo = Repo.from_request_payload({"id": "123", "name": "test-repo", "defaultBranch": "master"})
         assert isinstance(repo, Repo)
@@ -20,11 +23,13 @@ class TestRepo:
         assert not repo.is_disabled
         assert repo.to_json() == Repo.from_json(repo.to_json()).to_json()
 
+    @pytest.mark.create_delete
     def test_create_delete(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-delete-repo")
         assert repo.name == "ado-api-test-repo-for-create-delete-repo"
         repo.delete(self.ado_client)
 
+    @pytest.mark.update
     def test_update(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-update-repo")
         Commit.create(
@@ -46,6 +51,7 @@ class TestRepo:
         # =====
         repo.delete(self.ado_client)
 
+    @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
         repo_created = Repo.create(self.ado_client, "ado-api-test-repo-for-get-repo-by-id")
         repo = Repo.get_by_id(self.ado_client, repo_created.repo_id)
@@ -85,7 +91,7 @@ class TestRepo:
             self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "This should be on the branch"}, "add", "Test commit"
         )
         repo.create_pull_request(self.ado_client, "test-branch", "Test PR", "Test PR description")
-        pull_requests = repo.get_all_pull_requests(self.ado_client, "all")
+        pull_requests = repo.get_all_pull_requests(self.ado_client, repo_id=repo.repo_id, status="all")
         assert len(pull_requests) == 1
         assert all(isinstance(pr, PullRequest) for pr in pull_requests)
         pull_requests[0].close(self.ado_client)

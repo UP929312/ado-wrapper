@@ -14,6 +14,7 @@ class TestAdoUser:
     def setup_method(self) -> None:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)
 
+    @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:
         user = AdoUser.from_request_payload({"descriptor": "123", "displayName": "test-AdoUser", "mailAddress": "test@test.com",
                                              "origin": "aad", "originId": "123"})  # fmt: skip
@@ -24,12 +25,14 @@ class TestAdoUser:
         assert user.origin == "aad"
         assert user.to_json() == AdoUser.from_json(user.to_json()).to_json()
 
+    @pytest.mark.create_delete
     def test_create_delete(self) -> None:
         with pytest.raises(NotImplementedError):
             AdoUser.create(self.ado_client, "ado-api-test-user", "ado-api")
         with pytest.raises(NotImplementedError):
             AdoUser.delete_by_id(self.ado_client, "abc")
 
+    @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
         user = AdoUser.get_by_id(self.ado_client, existing_user_id)
         assert user.descriptor_id == existing_user_id

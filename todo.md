@@ -31,7 +31,9 @@ I don't think we actually test builds properly???
 
 TODO: Look into Pushes vs Commits <https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes/get?view=azure-devops-rest-5.1&tabs=HTTP#gitpush>
 
-Also, Releases need vigerous testing
+Also, Releases need vigerous testing - kinda wip
+
+Get this packaged up!
 
 Perhaps when creating stuff, use a "while True" loop with user input, if they input "y", go to the next step?
 
@@ -62,7 +64,7 @@ python3.11 -m client --refresh-resources-on-startup
 
 pytest tests/ -vvvv -s -m wip
 
-For tbe plans, have a new folder, called "plan_resources", which has all the same resources, but a few differences:
+For the plans, have a new folder, called "plan_resources", which has all the same resources, but a few differences:
 
 1. Each object will hold a dictionary of key=tuple, with first item, request type, second item, regex pattern (for the url) to match against. The value of each key, value pair will be a fake requets object with it's json set to a dump of what it normally returns, with ids containing a new singleton.
 2. When we want planned things, we should decorate functions, which when run, will take over requests.get or whatever to use our custom classes.

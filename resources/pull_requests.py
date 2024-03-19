@@ -53,7 +53,7 @@ class PullRequest(StateManagedResource):
                    from_ado_date_string(data.get("closedDate")), data["isDraft"], data.get("mergeStatus", "notSet"), reviewers)  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> "PullRequest":  # type: ignore[override]
+    def get_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> "PullRequest":
         return super().get_by_id(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/pullrequests/{pull_request_id}?api-version=7.1-preview.1"
@@ -78,7 +78,7 @@ class PullRequest(StateManagedResource):
         return cls.from_request_payload(request)
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> None:
+    def delete_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> None:  # type: ignore[override]
         # raise NotImplementedError("You can't delete pull requests, only close them.")
         pr = cls.get_by_id(ado_client, pull_request_id)
         pr.update(ado_client, "status", "abandoned")

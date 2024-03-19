@@ -33,10 +33,10 @@ class TestBranch:
     def test_create_delete_branch(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-branches")
         with pytest.raises(NotImplementedError):
-            Branch.create(self.ado_client, "", "branch", "main")
+            Branch.create(self.ado_client, "", "", "")
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"text.txt": "Contents of the file"}, "add", "Test commmit 1")
         branch = Branch.get_all_by_repo(self.ado_client, repo.repo_id)
-        assert branch[0].name == "refs/heads/test-branch" or branch[1].name == "refs/heads/test-branch"
+        assert branch[0].name == "test-branch" or branch[1].name == "test-branch"
         repo.delete(self.ado_client)
 
 

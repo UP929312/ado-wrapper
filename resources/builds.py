@@ -96,7 +96,7 @@ class Build(StateManagedResource):
             build_id,
         )
 
-    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:
+    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
         return super().update(
             ado_client, "patch",
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{self.build_id}?api-version=7.1-preview.7",

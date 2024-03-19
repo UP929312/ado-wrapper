@@ -17,7 +17,7 @@ ReleaseStatus = Literal["active", "abandoned", "draft", "undefined"]
 # ========================================================================================================
 
 
-def get_release_definition(name: str, variable_group_ids: list[int] | None, agent_pool_id: int) -> dict[str, Any]:
+def get_release_definition(name: str, variable_group_ids: list[int] | None, agent_pool_id: str) -> dict[str, Any]:
     return {
         "id": 0,
         "name": name,
@@ -135,6 +135,11 @@ class Release(StateManagedResource):
 
 # ========================================================================================================
 
+"""
+artifacts': [],
+    'triggers': [],
+    'properties': {'DefinitionCreationSource': {'$type': 'System.String', '$value': 'ReleaseNew'},"
+"""
 
 @dataclass
 class ReleaseDefinition(StateManagedResource):
@@ -145,28 +150,33 @@ class ReleaseDefinition(StateManagedResource):
     description: str = field(metadata={"editable": True})
     created_by: Member
     created_on: datetime
+    # modified_by: Member  # Meh
+    # modified_on: datetime  # Meh
+    # path: str  # Meh
+    # tags: list[str]
     release_name_format: str = field(metadata={"editable": True, "internal_name": "releaseNameFormat"})
     variable_groups: list[int] = field(metadata={"editable": True, "internal_name": "variableGroups"})
-    variables: list[dict[str, Any]] | None = field(default_factory=list, repr=False)  # type: ignore[assignment]
+    is_disabled: bool = field(default=False, repr=False, metadata={"editable": True, "internal_name": "isDisabled"})
+    variables: dict[str, Any] | None = field(default_factory=dict, repr=False)  # type: ignore[assignment]
 
     def __str__(self) -> str:
-        return f"{self.name}, {self.description}, created by {self.created_by}, created on {self.created_on!s}"
+        return f"ReleaseDefinition(name=\"{self.name}\", description=\"{self.description}\", created_by={self.created_by!r}, created_on={self.created_on!s}"
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "ReleaseDefinition":
         created_by = Member(data["createdBy"]["displayName"], data["createdBy"]["uniqueName"], data["createdBy"]["id"])
         return cls(data["id"], data["name"], data["description"], created_by, from_ado_date_string(data["createdOn"]),
-                   data["releaseNameFormat"], data["variableGroups"], data.get("variables", None))  # fmt: skip
+                   data["releaseNameFormat"], data["variableGroups"], data.get("isDeleted", False), data.get("variables", None))  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, release_id: str) -> "ReleaseDefinition":
+    def get_by_id(cls, ado_client: AdoClient, release_definition_id: str) -> "ReleaseDefinition":
         return super().get_by_id(
             ado_client,
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_id}?api-version=7.0",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_definition_id}?api-version=7.0",
         )  # type: ignore[return-value]
 
     @classmethod  # TODO: Test
-    def create(cls, ado_client: AdoClient, name: str, variable_group_ids: list[int] | None, agent_pool_id: int) -> "ReleaseDefinition":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, name: str, variable_group_ids: list[int] | None, agent_pool_id: str) -> "ReleaseDefinition":  # type: ignore[override]
         """Takes a list of variable group ids to include, and an agent_pool_id"""
         return super().create(
             ado_client,
@@ -190,12 +200,53 @@ class ReleaseDefinition(StateManagedResource):
         return self.delete_by_id(ado_client, self.release_definition_id)
 
     @classmethod
-    def get_all_releases_for_definition(cls, ado_client: AdoClient, definition_id: int) -> "list[Release]":
+    def get_all_releases_for_definition(cls, ado_client: AdoClient, definition_id: str) -> "list[Release]":
         response = requests.get(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1&definitionId={definition_id}",
             auth=ado_client.auth,
         ).json()
         return [Release.from_request_payload(release) for release in response["value"]]
 
+    @classmethod
+    def get_all(cls, ado_client: AdoClient) -> "list[ReleaseDefinition]":  # type: ignore[override]
+        response = requests.get(
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions?api-version=7.1-preview.4",
+            auth=ado_client.auth,
+        ).json()["value"]
+        return [cls.from_request_payload(data) for data in response]
 
 # ========================================================================================================
+
+#"""
+# environments=[
+#     {'id': 9, 'name': 'Stage 1', 'rank': 1, 'variables': {}, 'variableGroups': [], 
+#     'preDeployApprovals': {'approvals': [{'rank': 1, 'isAutomated': True, 'isNotificationOn': False, 'id': 26}], 'approvalOptions': {'requiredApproverCount': None, 'releaseCreatorCanBeApprover': False, 'autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped': False, 'enforceIdentityRevalidation': False, 'timeoutInMinutes': 0, 'executionOrder': 'beforeGates'}},
+#     'deployStep': {'id': 29},
+#     'postDeployApprovals': {'approvals': [{'rank': 1, 'isAutomated': True, 'isNotificationOn': False, 'id': 30}], 'approvalOptions': {'requiredApproverCount': None, 'releaseCreatorCanBeApprover': False, 'autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped': False, 'enforceIdentityRevalidation': False, 'timeoutInMinutes': 0, 'executionOrder': 'afterSuccessfulGates'}},
+#     'deployPhases': [{'deploymentInput': {'parallelExecution': {'parallelExecutionType': 'none'}, 'agentSpecification': None, 'skipArtifactsDownload': False, 'artifactsDownloadInput': {'downloadInputs': []}, 'queueId': 31, 'demands': [], 'enableAccessToken': False, 'timeoutInMinutes': 0, 'jobCancelTimeoutInMinutes': 1, 'condition': 'succeeded()', 'overrideInputs': {}}, 'rank': 1, 'phaseType': 'agentBasedDeployment', 'name': 'Agent job', 'refName': None, 'workflowTasks': []}],
+#     'environmentOptions': {'emailNotificationType': 'OnlyOnFailure', 'emailRecipients': 'release.environment.owner;release.creator', 'skipArtifactsDownload': False, 'timeoutInMinutes': 0, 'enableAccessToken': False, 'publishDeploymentStatus': True, 'badgeEnabled': False, 'autoLinkWorkItems': False, 'pullRequestDeploymentEnabled': False},
+#     'demands': [],
+#     'conditions': [{'name': 'ReleaseStarted', 'conditionType': 'event', 'value': '', 'result': None}],
+#     'executionPolicy': {'concurrencyCount': 1, 'queueDepthCount': 0},
+#     'schedules': [],
+#     'currentRelease': {'id': 0, 'url': 'https://vsrm.dev.azure.com/VFCloudEngineering/1d88f59f-723d-44eb-b97a-57e48d410848/_apis/Release/releases/0', '_links': {}},
+#     'retentionPolicy': {'daysToKeep': 30, 'releasesToKeep': 3, 'retainBuild': True},
+#     'processParameters': {},
+#     'properties': {'BoardsEnvironmentType': {'$type': 'System.String', '$value': 'unmapped'}, 'LinkBoardsWorkItems': {'$type': 'System.String', '$value': 'False'}},
+#     'preDeploymentGates': {'id': 0, 'gatesOptions': None, 'gates': []},
+#     'postDeploymentGates': {'id': 0, 'gatesOptions': None, 'gates': []},
+#     'environmentTriggers': [],
+#     'badgeUrl': 'https://vsrm.dev.azure.com/VFCloudEngineering/_apis/public/Release/badge/1d88f59f-723d-44eb-b97a-57e48d410848/9/9'},
+    
+#     {'id': 10, 'name': 'Stage 2', 'rank': 2, 'owner': {'displayName': 'Ben Skerritt', 'url': 'https://spsprodweu5.vssps.visualstudio.com/A6b7eafe0-46f5-4363-b3be-9c99ddedc97b/_apis/Identities/09615253-ea52-637f-b8e4-63cab674eac7', '_links': {'avatar': {'href': 'https://dev.azure.com/VFCloudEngineering/_apis/GraphProfile/MemberAvatars/aad.MDk2MTUyNTMtZWE1Mi03MzdmLWI4ZTQtNjNjYWI2NzRlYWM3'}}, 'id': '09615253-ea52-637f-b8e4-63cab674eac7', 'uniqueName': 'ben.skerritt@vodafone.com', 'imageUrl': 'https://dev.azure.com/VFCloudEngineering/_apis/GraphProfile/MemberAvatars/aad.MDk2MTUyNTMtZWE1Mi03MzdmLWI4ZTQtNjNjYWI2NzRlYWM3', 'descriptor': 'aad.MDk2MTUyNTMtZWE1Mi03MzdmLWI4ZTQtNjNjYWI2NzRlYWM3'}, 'variables': {}, 'variableGroups': [], 'preDeployApprovals': {'approvals': [{'rank': 1, 'isAutomated': True, 'isNotificationOn': False, 'id': 27}], 'approvalOptions': {'requiredApproverCount': None, 'releaseCreatorCanBeApprover': False, 'autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped': False, 'enforceIdentityRevalidation': False, 'timeoutInMinutes': 0, 'executionOrder': 'beforeGates'}}, 'deployStep': {'id': 28}, 'postDeployApprovals': {'approvals': [{'rank': 1, 'isAutomated': True, 'isNotificationOn': False, 'id': 31}], 'approvalOptions': {'requiredApproverCount': None, 'releaseCreatorCanBeApprover': False, 'autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped': False, 'enforceIdentityRevalidation': False, 'timeoutInMinutes': 0, 'executionOrder': 'afterSuccessfulGates'}}, 'deployPhases': [{'deploymentInput': {'parallelExecution': {'parallelExecutionType': 'none'}, 'agentSpecification': None, 'skipArtifactsDownload': False, 'artifactsDownloadInput': {'downloadInputs': []}, 'queueId': 31, 'demands': [], 'enableAccessToken': False, 'timeoutInMinutes': 0, 'jobCancelTimeoutInMinutes': 1, 'condition': 'succeeded()', 'overrideInputs': {}}, 'rank': 1, 'phaseType': 'agentBasedDeployment', 'name': 'Agent job', 'refName': None, 'workflowTasks': []}], 'environmentOptions': {'emailNotificationType': 'OnlyOnFailure', 'emailRecipients': 'release.environment.owner;release.creator', 'skipArtifactsDownload': False, 'timeoutInMinutes': 0, 'enableAccessToken': False, 'publishDeploymentStatus': True, 'badgeEnabled': False, 'autoLinkWorkItems': False, 'pullRequestDeploymentEnabled': False}, 'demands': [], 'conditions': [{'name': 'Stage 1', 'conditionType': 'environmentState', 'value': '4', 'result': None}], 'executionPolicy': {'concurrencyCount': 1, 'queueDepthCount': 0}, 'schedules': [], 'currentRelease': {'id': 0, 'url': 'https://vsrm.dev.azure.com/VFCloudEngineering/1d88f59f-723d-44eb-b97a-57e48d410848/_apis/Release/releases/0', '_links': {}}, 'retentionPolicy': {'daysToKeep': 30, 'releasesToKeep': 3, 'retainBuild': True}, 'processParameters': {}, 'properties': {'BoardsEnvironmentType': {'$type': 'System.String', '$value': 'unmapped'}, 'LinkBoardsWorkItems': {'$type': 'System.String', '$value': 'False'}}, 'preDeploymentGates': {'id': 0, 'gatesOptions': None, 'gates': []}, 'postDeploymentGates': {'id': 0, 'gatesOptions': None, 'gates': []}, 'environmentTriggers': [], 'badgeUrl': 'https://vsrm.dev.azure.com/VFCloudEngineering/_apis/public/Release/badge/1d88f59f-723d-44eb-b97a-57e48d410848/9/10'}],
+
+# #"""
+
+# @dataclass
+# class ReleaseEnvironment:
+#     """https://learn.microsoft.com/en-us/rest/api/azure/devops/release/definitions/list?view=azure-devops-rest-7.1&tabs=HTTP#releasedefinitionenvironment"""
+#     release_environment_id: str = field(metadata={"is_id_field": True})
+#     name: str = field(metadata={"editable": True})
+#     rank: str = field(metadata={"editable": True})
+#     variables: dict[str, Any] = field(default_factory=dict, repr=False, metadata={"editable": True})
+#     variable_groups: list[int] = field(default_factory=list, repr=False, metadata={"editable": True})

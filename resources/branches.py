@@ -23,7 +23,7 @@ class Branch(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, str | bool | dict[str, str]]) -> "Branch":
-        return cls(data["objectId"], data["name"], data["url"].split("/")[-2],  # type: ignore[union-attr, arg-type]
+        return cls(data["objectId"], data["name"].removeprefix("refs/heads/"), data["url"].split("/")[-2],  # type: ignore[union-attr, arg-type]
                    bool(data.get("isMain", False)), bool(data.get("isProtected", False)), bool(data.get("isDeleted")))  # fmt: skip
 
     @classmethod
@@ -34,7 +34,7 @@ class Branch(StateManagedResource):
         raise ValueError(f"Branch {branch_id} not found")
 
     @classmethod
-    def create(cls, ado_client: AdoClient, repo_id: str, branch_name: str, source_branch: str) -> "Branch":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, repo_id: str, branch_name: str, source_branch: str="main") -> "Branch":  # type: ignore[override]
         raise NotImplementedError("You can't create a branch without a commit, use Commit.create instead")
         # Commit.create(ado_client, repo_id, source_branch, branch_name, {}, "add", "Abc")
         # return cls.get_by_name(ado_client, repo_id, branch_name)

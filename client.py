@@ -24,12 +24,17 @@ STATE_FILE_VERSION = "1.1"
 
 class AdoClient:
     def __init__(  # pylint: disable=too-many-arguments
-        self, ado_email: str, ado_pat: str, ado_org: str, ado_project: str, state_file_name: str | None = "main.state"  # fmt: skip
+        self, ado_email: str, ado_pat: str, ado_org: str, ado_project: str,
+        state_file_name: str | None = "main.state", pat_author_email: str = ""  # fmt: skip
     ) -> None:
+        """Takes an email, PAT, org, project, and state file name. The state file name is optional, and if not provided,
+        state will not be stored in "main.state", the pat_author_email is for better plans."""
         self.auth = HTTPBasicAuth(ado_email, ado_pat)
         self.ado_org = ado_org
         self.ado_project = ado_project
         self.state_file_name = state_file_name
+        self.pat_author_email = pat_author_email
+        self.plan = True
 
         # Verify Token is working (helps with setup for first time users):
         request = requests.get(f"https://dev.azure.com/{self.ado_org}/_apis/projects?api-version=6.0", auth=self.auth)

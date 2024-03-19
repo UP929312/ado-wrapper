@@ -54,7 +54,7 @@ class TestPullRequest:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-pull-request-by-id")
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
         pull_request_created = PullRequest.create(self.ado_client, repo.repo_id, "test-branch", "Test PR For Get PR By ID", "Test description")
-        pull_request = PullRequest.get_by_id(self.ado_client, repo.repo_id, pull_request_created.pull_request_id)
+        pull_request = PullRequest.get_by_id(self.ado_client, pull_request_created.pull_request_id)
         assert pull_request.pull_request_id == pull_request_created.pull_request_id
         pull_request_created.close(self.ado_client)
         repo.delete(self.ado_client)
@@ -93,7 +93,7 @@ class TestPullRequest:
         pull_request.update(self.ado_client, "status", "succeeded")
         assert pull_request.status == "succeeded"
         # =====
-        fetched_pull_request = PullRequest.get_by_id(self.ado_client, repo.repo_id, pull_request.pull_request_id)
+        fetched_pull_request = PullRequest.get_by_id(self.ado_client, pull_request.pull_request_id)
         assert fetched_pull_request.title == "ado-api-test-repo-for-update-pull-request-renamed"
         assert fetched_pull_request.description == "Updated description"
         assert fetched_pull_request.status == "succeeded"

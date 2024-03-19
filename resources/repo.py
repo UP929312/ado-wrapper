@@ -9,10 +9,11 @@ import requests
 
 from client import AdoClient
 from state_managed_abc import StateManagedResource
-from utils import ResourceNotFound, UnknownError, get_internal_field_names
+from utils import ResourceNotFound, UnknownError
 from resources.pull_requests import PullRequest, PullRequestStatus
 from resources.commits import Commit
 from attribute_types import RepoEditableAttribute
+# from plan_resources.singletons import plannable_resource
 
 # ====================================================================
 
@@ -23,7 +24,7 @@ class Repo(StateManagedResource):
 
     repo_id: str = field(metadata={"is_id_field": True})
     name: str = field(metadata={"editable": True})
-    default_branch: str = field(default="refs/heads/main", repr=False, metadata={"editable": True, "internal_name": "defaultBranch"})
+    default_branch: str = field(default="main", repr=False, metadata={"editable": True, "internal_name": "defaultBranch"})
     is_disabled: bool = field(default=False, repr=False, metadata={"editable": True, "internal_name": "isDisabled"})
     # WARNING, disabling a repo means it's not able to be deleted, proceed with caution.
 
@@ -32,7 +33,7 @@ class Repo(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, str]) -> "Repo":
-        return cls(data["id"], data["name"], data.get("defaultBranch", "refs/heads/main"), bool(data.get("isDisabled", False)))
+        return cls(data["id"], data["name"], data.get("defaultBranch", "main").removeprefix("refs/heads/"), bool(data.get("isDisabled", False)))
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> "Repo":
@@ -42,6 +43,7 @@ class Repo(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod
+    # @plannable_resource
     def create(cls, ado_client: AdoClient, name: str, include_readme: bool = True) -> "Repo":  # type: ignore[override]
         repo: Repo = super().create(
             ado_client,
@@ -111,6 +113,10 @@ class Repo(StateManagedResource):
             )
         except requests.exceptions.ConnectionError:
             print(f"=== Connection error, failed to download {self.repo_id}")
+            return {}
+        if request.status_code != 200:
+            print(f"Error getting repo contents for {self.name} ({self.repo_id}):", request.text)
+            return {}
         # ============ We do this because ADO ===================
         bytes_io = io.BytesIO()
         for chunk in request.iter_content(chunk_size=128):
@@ -121,9 +127,12 @@ class Repo(StateManagedResource):
             with zipfile.ZipFile(bytes_io) as zip_ref:
                 # For each file, read the bytes and convert to string
                 for file_name in [x for x in zip_ref.namelist() if file_types is None or x.split(".")[-1] in file_types]:
-                    files[file_name] = zip_ref.read(file_name).decode()  # fmt: skip
+                    try:
+                        files[file_name] = zip_ref.read(file_name).decode()  # fmt: skip
+                    except UnicodeDecodeError:
+                        print(f"Error decoding file: {file_name} in {self.name}")
         except zipfile.BadZipFile as e:
-            print(f"{self.repo_id} couldn't be unzipped:", e)
+            print(f"{self.name} ({self.repo_id}) couldn't be unzipped:", e)
 
         bytes_io.close()
         # =========== That's all I have to say ==================

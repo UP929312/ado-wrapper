@@ -53,10 +53,10 @@ class PullRequest(StateManagedResource):
                    from_ado_date_string(data.get("closedDate")), data["isDraft"], data.get("mergeStatus", "notSet"), reviewers)  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str) -> "PullRequest":  # type: ignore[override]
+    def get_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> "PullRequest":  # type: ignore[override]
         return super().get_by_id(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/pullrequests/{pull_request_id}?api-version=7.1-preview.1"
         )  # type: ignore[return-value]
 
     @classmethod
@@ -78,13 +78,11 @@ class PullRequest(StateManagedResource):
         return cls.from_request_payload(request)
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str) -> None:
-        raise NotImplemented
-        # return super().delete_by_id(
-        #     ado_client,
-        #     f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}?api-version=7.1",
-        #     pull_request_id,
-        # )
+    def delete_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> None:
+        # raise NotImplementedError("You can't delete pull requests, only close them.")
+        pr = cls.get_by_id(ado_client, pull_request_id)
+        pr.update(ado_client, "status", "abandoned")
+        ado_client.remove_resource_from_state("PullRequest", pull_request_id)
 
     def update(self, ado_client: AdoClient, attribute_name: PullRequestEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
         return super().update(
@@ -109,21 +107,15 @@ class PullRequest(StateManagedResource):
 
     def change_status(self, ado_client: AdoClient, status: PullRequestStatus) -> None:
         self.update(ado_client, "status", status)
-        # request = requests.patch(
-        #     f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",
-        #     json={"status": status}, auth=ado_client.auth,  # fmt: skip
-        # )
-        # assert request.status_code < 300
-        # return self.__class__.from_request_payload(request.json())
 
     def close(self, ado_client: AdoClient) -> None:
         self.update(ado_client, "status", "abandoned")
 
     def delete(self, ado_client: AdoClient) -> None:
-        self.close(ado_client)
+        self.delete_by_id(ado_client, self.pull_request_id)
 
     def mark_as_draft(self, ado_client: AdoClient, is_draft: bool = True) -> None:
-        # TODO: Make this call the self.update() method
+        # TODO: Make this call the self.update() method EDIT: Not sure we can?
         json_payload = {"isDraft": is_draft}
         request = requests.patch(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",

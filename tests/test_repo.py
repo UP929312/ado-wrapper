@@ -43,7 +43,7 @@ class TestRepo:
         # =====
         fetched_repo = Repo.get_by_id(self.ado_client, repo.repo_id)
         assert fetched_repo.name == "ado-api-test-repo-for-update-repo-renamed"
-        assert fetched_repo.default_branch == "refs/heads/test-branch"
+        assert fetched_repo.default_branch == "test-branch"
         # =====
         repo.update(self.ado_client, "is_disabled", True)
         assert repo.is_disabled
@@ -51,6 +51,7 @@ class TestRepo:
         # =====
         repo.delete(self.ado_client)
 
+    @pytest.mark.wip
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
         repo_created = Repo.create(self.ado_client, "ado-api-test-repo-for-get-repo-by-id")

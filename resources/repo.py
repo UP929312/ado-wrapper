@@ -152,7 +152,7 @@ class Repo(StateManagedResource):
             return [PullRequest.from_request_payload(pr) for pr in pull_requests["value"]]
         except KeyError:
             if pull_requests.get("message", "").startswith("TF401019"):
-                print(f"Repo {pull_requests['message'].split('identifier')[1].split(' ')[0]} was disabled, or you had no access.")
+                print(f"Repo `{pull_requests['message'].split('identifier')[1].split(' ')[0]}` was disabled, or you had no access.")
             else:
                 raise ResourceNotFound(pull_requests)  # pylint: disable=raise-missing-from
             return []

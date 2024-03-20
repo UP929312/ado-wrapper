@@ -30,7 +30,7 @@ class AdoUser(StateManagedResource):
     display_name: str
     email: str
     origin: str
-    # "originId": "<>",
+    origin_id: str  # DON'T USE THIS, USE `descriptor_id` INSTEAD
     # "subjectKind": "user",
     # "metaType": "member",
     # "directoryAlias": "MiryabblliS",
@@ -42,7 +42,8 @@ class AdoUser(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, str]) -> "AdoUser":
-        return cls(data["descriptor"], data["displayName"], data["mailAddress"].removeprefix("vstfs:///Classification/TeamProject/"), data["origin"])  # fmt: skip
+        return cls(data["descriptor"], data["displayName"], data["mailAddress"].removeprefix("vstfs:///Classification/TeamProject/"),
+                   data["origin"], data["originId"])  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, descriptor_id: str) -> "AdoUser":

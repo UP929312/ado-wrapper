@@ -51,7 +51,6 @@ class TestRepo:
         # =====
         repo.delete(self.ado_client)
 
-    @pytest.mark.wip
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
         repo_created = Repo.create(self.ado_client, "ado-api-test-repo-for-get-repo-by-id")

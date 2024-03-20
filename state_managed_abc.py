@@ -86,7 +86,10 @@ class StateManagedResource(ABC):
     def delete_by_id(cls, ado_client: "AdoClient", url: str, resource_id: str) -> None:
         request = requests.delete(url, auth=ado_client.auth)
         if request.status_code != 204:
-            raise DeletionFailed(f"Error deleting that {cls.__name__} ({resource_id}): {request.text}")
+            if request.status_code == 404:
+                print("[ADO-API] Resource not found, probably already deleted, removing from state")
+            else:
+                raise DeletionFailed(f"[ADO-API] Error deleting {cls.__name__} ({resource_id}): {request.json()['message']}")
         ado_client.remove_resource_from_state(cls.__name__, resource_id)  # type: ignore[arg-type]
 
     def update(self, ado_client: "AdoClient", update_action: Literal["put", "patch"], url: str,  # pylint: disable=too-many-arguments

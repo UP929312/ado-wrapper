@@ -31,7 +31,7 @@ I don't think we actually test builds properly???
 
 TODO: Look into Pushes vs Commits <https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes/get?view=azure-devops-rest-5.1&tabs=HTTP#gitpush>
 
-Also, Releases need vigerous testing - kinda wip
+Also, Releases need vigerous testing - kinda wip, ReleaseDef - Update
 
 Get this packaged up!
 
@@ -40,7 +40,7 @@ Perhaps when creating stuff, use a "while True" loop with user input, if they in
 Rollback a commit? Tricky...
 
 Update the state file on startup, and have an option to disable it - DONE
-Maybe add the alternative way? I.E. if it's changed in real resources, have "update" as part of the StateManged Standard?
+Maybe add the alternative way? I.E. if it's changed in real resources
 
 Script plan mode?
 
@@ -49,7 +49,7 @@ Teams.get_members(recursive=True)
 <https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict>
 This might allow us to remove "as_json"
 
-For the "grab the creator from the key" part, it's not possible from what I have researched, come back to this.
+For state, have lifecycle policies
 
 -----
 

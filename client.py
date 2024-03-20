@@ -1,39 +1,35 @@
 import argparse
 import json
 from pathlib import Path
-from typing import Literal, Any, TypedDict
-import requests
+from typing import Any, TypedDict
 
+import requests
 from requests.auth import HTTPBasicAuth
 
 from utils import DeletionFailed, get_resource_variables, get_internal_field_names
 from attribute_types import ResourceType
 
-
-ActionType = Literal["created"]
-StateFileEntryType = dict[str, Any]
+STATE_FILE_VERSION = "1.2"
 
 
 class StateFileType(TypedDict):
-    created: dict[ResourceType, StateFileEntryType]
+    created: dict[ResourceType, dict[str, Any]]
     updated: dict[ResourceType, dict[str, tuple[Any, Any]]]
-
-
-STATE_FILE_VERSION = "1.1"
 
 
 class AdoClient:
     def __init__(  # pylint: disable=too-many-arguments
         self, ado_email: str, ado_pat: str, ado_org: str, ado_project: str,
-        state_file_name: str | None = "main.state", pat_author_email: str = ""  # fmt: skip
+        state_file_name: str | None = "main.state" # fmt: skip
     ) -> None:
         """Takes an email, PAT, org, project, and state file name. The state file name is optional, and if not provided,
-        state will not be stored in "main.state", the pat_author_email is for better plans."""
+        state will not be stored in "main.state" """
+        self.ado_email = ado_email
+        self.ado_pat = ado_pat
         self.auth = HTTPBasicAuth(ado_email, ado_pat)
         self.ado_org = ado_org
         self.ado_project = ado_project
         self.state_file_name = state_file_name
-        self.pat_author_email = pat_author_email
         self.plan = True
 
         # Verify Token is working (helps with setup for first time users):
@@ -41,12 +37,15 @@ class AdoClient:
         assert request.status_code == 200, f"Failed to authenticate with ADO: {request.text}"
 
         from resources.projects import Project  # Stop circular import
-        self.ado_project_id: str = Project.get_by_name(self, self.ado_project).project_id  # type: ignore[union-attr]
+        self.ado_project_id = Project.get_by_name(self, self.ado_project).project_id  # type: ignore[union-attr]
 
-        # data = requests.get(f"https://dev.azure.com/{self.ado_org}/_apis/tokenadministration/tokens?api-version=6.0", auth=self.auth)
-        # print(data.status_code)
+        from resources.users import AdoUser  # Stop circular import
+        try:
+            self.pat_author: AdoUser = AdoUser.get_by_email(self, ado_email)  # type: ignore[assignment]
+        except ValueError:
+            print(f"[ADO-API] WARNING: User {ado_email} not found in ADO, nothing critical, but stops releases from being made, and plans from being accurate.")
 
-        # If they have a state file, and it doesn't exist:
+        # If they have a state file name input, but the file doesn't exist:
         if self.state_file_name is not None and not Path(self.state_file_name).exists():
             self.wipe_state()  # Will automatically create the file
 
@@ -98,8 +97,8 @@ class AdoClient:
         class_reference = [value for key, value in all_resource_classes.items() if key == resource_type][0]
         try:
             class_reference.delete_by_id(self, resource_id)  # type: ignore[call-arg]
-        except DeletionFailed:
-            print(f"[ADO-API] Error deleting {resource_type} {resource_id} from ADO")
+        except DeletionFailed as exc:
+            print(str(exc))
         except (NotImplementedError, TypeError):
             print(f"[ADO-API] Cannot {resource_type} {resource_id} from state or real space, please delete this manually or using code.")
         else:

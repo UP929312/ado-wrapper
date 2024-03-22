@@ -1,5 +1,4 @@
 from typing import Any, TYPE_CHECKING, Literal
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
 from datetime import datetime
 
@@ -45,9 +44,8 @@ def recursively_convert_from_json(dictionary: dict[str, Any]) -> Any:
 
 
 @dataclass
-class StateManagedResource(ABC):
+class StateManagedResource:
     @classmethod
-    @abstractmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "StateManagedResource":
         raise NotImplementedError
 
@@ -62,7 +60,6 @@ class StateManagedResource(ABC):
         return dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in combined)
 
     @classmethod
-    @abstractmethod
     def get_by_id(cls, ado_client: "AdoClient", url: str) -> "StateManagedResource":
         request = requests.get(url, auth=ado_client.auth)
         if request.status_code == 404:
@@ -72,7 +69,6 @@ class StateManagedResource(ABC):
         return cls.from_request_payload(request.json())
 
     @classmethod
-    @abstractmethod
     def create(cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None) -> "StateManagedResource":
         request = requests.post(url, json=payload if payload is not None else {}, auth=ado_client.auth)  # Create a brand new dict
         if request.status_code == 401:
@@ -84,7 +80,6 @@ class StateManagedResource(ABC):
         return resource
 
     @classmethod
-    @abstractmethod
     def delete_by_id(cls, ado_client: "AdoClient", url: str, resource_id: str) -> None:
         request = requests.delete(url, auth=ado_client.auth)
         if request.status_code != 204:

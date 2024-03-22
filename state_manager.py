@@ -19,7 +19,6 @@ class StateManager:
     def __init__(self, ado_client: "AdoClient", state_file_name: str | None = "main.state") -> None:
         self.ado_client = ado_client
         self.state_file_name = state_file_name
-        # self.load_state()
 
         # If they have a state file name input, but the file doesn't exist:
         if self.state_file_name is not None and not Path(self.state_file_name).exists():
@@ -31,7 +30,7 @@ class StateManager:
             try:
                 return json.load(state_file)  # type: ignore[no-any-return]
             except json.JSONDecodeError as exc:
-                raise json.JSONDecodeError("State file is not valid JSON", exc.doc, exc.pos)
+                raise json.JSONDecodeError("State file is not valid JSON, it might have been corrupted?", exc.doc, exc.pos)
 
     def write_state_file(self, state_data: StateFileType) -> None:
         assert self.state_file_name is not None
@@ -65,6 +64,7 @@ class StateManager:
         all_states = self.load_state()
         all_states["resources"][resource_type][resource_id] = updated_data
         return self.write_state_file(all_states)
+        # The line below broke the code, so I commented it out
         # return self.write_state_file(self.load_state() | {"resources": {resource_type: {resource_id: updated_data}}})  # type: ignore[arg-type]
 
     # =======================================================================================================
@@ -104,12 +104,11 @@ class StateManager:
     def wipe_state(self) -> None:
         if self.state_file_name is None:
             return
-        all_resource_names = get_resource_variables().keys()
         with open(self.state_file_name, "w", encoding="utf-8") as state_file:
             json.dump(
                 {
                     "state_file_version": STATE_FILE_VERSION,
-                    "resources": {resource: {} for resource in all_resource_names},
+                    "resources": {resource: {} for resource in get_resource_variables().keys()},
                 },
                 state_file,
                 indent=4,

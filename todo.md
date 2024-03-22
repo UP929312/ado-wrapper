@@ -21,6 +21,10 @@ Pull Request, Commit
 
 -----
 
+When we update release definitions, download a fresh copy using .get_by_id, then merge our attribute dict in with it?
+
+Integrations testing, we already kind of do that, but with variable groups + repos + builds?
+
 Never test build "Get by id", hmm
 
 Add "Update" to more stuff, prevent updates on uneditable attributes in state_managed_abc/update

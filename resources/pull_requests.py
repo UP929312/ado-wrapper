@@ -75,14 +75,16 @@ class PullRequest(StateManagedResource):
         ).json()
         if request.get("message", "").startswith("TF401398"):
             raise ValueError("The branch you are trying to create a pull request from does not exist.")
-        return cls.from_request_payload(request)
+        obj = cls.from_request_payload(request)
+        ado_client.state_manager.add_resource_to_state(cls.__name__, obj.pull_request_id, obj.to_json())  # type: ignore[arg-type]
+        return obj
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> None:  # type: ignore[override]
         # raise NotImplementedError("You can't delete pull requests, only close them.")
         pr = cls.get_by_id(ado_client, pull_request_id)
         pr.update(ado_client, "status", "abandoned")
-        ado_client.remove_resource_from_state("PullRequest", pull_request_id)
+        ado_client.state_manager.remove_resource_from_state("PullRequest", pull_request_id)
 
     def update(self, ado_client: AdoClient, attribute_name: PullRequestEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
         return super().update(

@@ -57,7 +57,7 @@ class Repo(StateManagedResource):
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, repo_id: str) -> None:  # type: ignore[override]
         for pull_request in Repo.get_all_pull_requests(ado_client, repo_id, "all"):
-            ado_client.remove_resource_from_state("PullRequest", pull_request.pull_request_id)
+            ado_client.state_manager.remove_resource_from_state("PullRequest", pull_request.pull_request_id)
         return super().delete_by_id(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1",

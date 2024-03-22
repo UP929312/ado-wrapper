@@ -1,6 +1,6 @@
 # ado-api
 
-This is a Python Package which works as an interface to the AzureDevOps API
+This is a Python Package which works as an interface to the Azure DevOps API
 
 It is essentially a wrapper for the horrible to work with ADO API, and supports OOP principals.
 

@@ -16,30 +16,31 @@ ReleaseStatus = Literal["active", "abandoned", "draft", "undefined"]
 # FEEL FREE TO MAKE A PR TO FIX/IMPROVE THIS FILE
 # ========================================================================================================
 
-
-def get_release_definition(name: str, variable_group_ids: list[int] | None, agent_pool_id: str) -> dict[str, Any]:
+def get_release_definition(ado_client: AdoClient, name: str, variable_group_ids: list[int], agent_pool_id: str, revision: str="1", _id: str = "") -> dict[str, Any]:
     return {
-        "id": 0,
         "name": name,
-        "variableGroups": variable_group_ids or [],
+        "id": _id,
+        "variableGroups": variable_group_ids,
         "path": "\\",
         "releaseNameFormat": "Release-$(rev: r)",
+        "revision": int(revision),
+        "modifiedOn": datetime.now().isoformat(),
         "environments": [
             {
                 "name": "Stage 1",
-                "retentionPolicy": {
-                    "daysToKeep": 30,
-                    "releasesToKeep": 3,
-                    "retainBuild": True,
-                },
-                "preDeployApprovals": {
-                    "approvals": [
+                'preDeployApprovals': {
+                    'approvals': [
                         {
-                            "rank": 1,
-                            "isAutomated": True,
-                            "isNotificationOn": False,
+                            'rank': 1,
+                            'isAutomated': False,
+                            'isNotificationOn': False,
+                            "id": 0,
+                            "approver": {
+                                "id": ado_client.pat_author.origin_id,
+                                "displayName": "Automated",
+                            },
                         }
-                    ],
+                    ]
                 },
                 "postDeployApprovals": {
                     "approvals": [
@@ -47,23 +48,36 @@ def get_release_definition(name: str, variable_group_ids: list[int] | None, agen
                             "rank": 1,
                             "isAutomated": True,
                             "isNotificationOn": False,
+                            "id": 0,
                         }
-                    ],
+                    ]
                 },
-                "deployPhases": [
+                'deployPhases': [
                     {
-                        "deploymentInput": {
-                            "queueId": agent_pool_id,
-                            "enableAccessToken": False,
-                            "timeoutInMinutes": 0,
-                            "jobCancelTimeoutInMinutes": 1,
-                            "condition": "succeeded()",
+                        'rank': 1,
+                        'phaseType': 'agentBasedDeployment',
+                        'name': 'Run on agent',
+                        'workflowTasks': [],
+                        'deploymentInput': {
+                            'parallelExecution': {
+                                'parallelExecutionType': 'none'
+                            },
+                            'skipArtifactsDownload': False,
+                            'queueId': agent_pool_id,
+                            'demands': [],
+                            'enableAccessToken': False,
+                            'timeoutInMinutes': 0,
+                            'jobCancelTimeoutInMinutes': 1,
+                            'condition': 'succeeded()',
+                            'overrideInputs': {}
                         },
-                        "rank": 1,
-                        "phaseType": 1,
-                        "name": "Agent job",
                     }
                 ],
+                "retentionPolicy": {
+                    "daysToKeep": 30,
+                    "releasesToKeep": 3,
+                    "retainBuild": True
+                }
             }
         ],
     }
@@ -76,7 +90,7 @@ def get_release_definition(name: str, variable_group_ids: list[int] | None, agen
 class Release(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/release/releases?view=azure-devops-rest-7.1"""
 
-    release_id: str
+    release_id: str = field(metadata={"is_id_field": True})
     name: str
     status: ReleaseStatus
     created_on: datetime
@@ -103,11 +117,11 @@ class Release(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod  # TODO: Test
-    def create(cls, ado_client: AdoClient, definition_id: str) -> "Release":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, definition_id: str, description: str="Made by ADO-API") -> "Release":  # type: ignore[override]
         return super().create(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1",
-            {"definitionId": definition_id, "description": "An automated release created by ADO-API"},
+            {"definitionId": definition_id, "description": description},
         )  # type: ignore[return-value]
 
     @classmethod  # TODO: Test
@@ -135,38 +149,43 @@ class Release(StateManagedResource):
 
 # ========================================================================================================
 
-"""
-artifacts': [],
-    'triggers': [],
-    'properties': {'DefinitionCreationSource': {'$type': 'System.String', '$value': 'ReleaseNew'},"
-"""
-
 @dataclass
 class ReleaseDefinition(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/release/definitions?view=azure-devops-rest-7.1"""
 
     release_definition_id: str = field(metadata={"is_id_field": True})
     name: str = field(metadata={"editable": True})
-    description: str = field(metadata={"editable": True})
+    description: str# = field(metadata={"editable": True})
     created_by: Member
     created_on: datetime
-    # modified_by: Member  # Meh
-    # modified_on: datetime  # Meh
-    # path: str  # Meh
-    # tags: list[str]
+    # modified_by: Member  # Could be added later on
+    # modified_on: datetime  # Could be added later on
+    # path: str  # Could be added later on
+    # tags: list[str]  # Could be added later on
     release_name_format: str = field(metadata={"editable": True, "internal_name": "releaseNameFormat"})
-    variable_groups: list[int] = field(metadata={"editable": True, "internal_name": "variableGroups"})
-    is_disabled: bool = field(default=False, repr=False, metadata={"editable": True, "internal_name": "isDisabled"})
+    variable_group_ids: list[int]# = field(metadata={"editable": True, "internal_name": "variableGroups"})
+    is_disabled: bool = field(default=False, repr=False)#, metadata={"editable": True, "internal_name": "isDisabled"})
     variables: dict[str, Any] | None = field(default_factory=dict, repr=False)  # type: ignore[assignment]
+    environments: list[dict[str, Any]] = field(default_factory=list, repr=False)  # type: ignore[assignment]
+    _agent_pool_id: str = field(default="1")
+    revision: str = field(default="1")
 
     def __str__(self) -> str:
         return f"ReleaseDefinition(name=\"{self.name}\", description=\"{self.description}\", created_by={self.created_by!r}, created_on={self.created_on!s}"
 
+    @property
+    def agent_pool_id(self) -> str:
+        if self._agent_pool_id == "1":
+            raise ValueError("No agent pool id has been found! Cannot do this operation!")
+        return self._agent_pool_id
+
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "ReleaseDefinition":
         created_by = Member(data["createdBy"]["displayName"], data["createdBy"]["uniqueName"], data["createdBy"]["id"])
-        return cls(data["id"], data["name"], data["description"], created_by, from_ado_date_string(data["createdOn"]),
-                   data["releaseNameFormat"], data["variableGroups"], data.get("isDeleted", False), data.get("variables", None))  # fmt: skip
+        return cls(data["id"], data["name"], data.get("description") or "", created_by, from_ado_date_string(data["createdOn"]),
+                   data["releaseNameFormat"], data["variableGroups"], data.get("isDeleted", False), data.get("variables", None),
+                   data.get("environments", []), data.get("environments", [{"deployPhases": [{"deploymentInput": {"queueId": "1"}}]}]
+                            )[0]["deployPhases"][0]["deploymentInput"]["queueId"], data.get("revision", "1"))  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, release_definition_id: str) -> "ReleaseDefinition":
@@ -175,28 +194,38 @@ class ReleaseDefinition(StateManagedResource):
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_definition_id}?api-version=7.0",
         )  # type: ignore[return-value]
 
-    @classmethod  # TODO: Test
-    def create(cls, ado_client: AdoClient, name: str, variable_group_ids: list[int] | None, agent_pool_id: str) -> "ReleaseDefinition":  # type: ignore[override]
+    @classmethod
+    def create(cls, ado_client: AdoClient, name: str, variable_group_ids: list[int], agent_pool_id: str) -> "ReleaseDefinition":  # type: ignore[override]
         """Takes a list of variable group ids to include, and an agent_pool_id"""
         return super().create(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions?api-version=7.0",
-            get_release_definition(name, variable_group_ids, agent_pool_id),
+            get_release_definition(ado_client, name, variable_group_ids, agent_pool_id),
         )  # type: ignore[return-value]
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, release_definition_id: str) -> None:  # type: ignore[override]
+        for release in ReleaseDefinition.get_all_releases_for_definition(ado_client, release_definition_id):
+            release.delete(ado_client)
         return super().delete_by_id(
             ado_client,
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_definition_id}?forceDelete=true&api-version=7.1",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_definition_id}?forceDelete=True&api-version=7.1",
             release_definition_id,
         )
 
+    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:
+        self.revision = str(int(self.revision)+1)
+        payload = get_release_definition(ado_client, self.name, self.variable_group_ids, self.agent_pool_id, revision=self.revision, _id=self.release_definition_id)
+        return super().update(
+            ado_client, "put",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{self.release_definition_id}?api-version=7.1",
+            attribute_name, attribute_value, payload
+        )
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
 
-    def delete(self, ado_client: AdoClient) -> None:  # TODO: Test
+    def delete(self, ado_client: AdoClient) -> None:
         return self.delete_by_id(ado_client, self.release_definition_id)
 
     @classmethod
@@ -216,31 +245,6 @@ class ReleaseDefinition(StateManagedResource):
         return [cls.from_request_payload(data) for data in response]
 
 # ========================================================================================================
-
-#"""
-# environments=[
-#     {'id': 9, 'name': 'Stage 1', 'rank': 1, 'variables': {}, 'variableGroups': [], 
-#     'preDeployApprovals': {'approvals': [{'rank': 1, 'isAutomated': True, 'isNotificationOn': False, 'id': 26}], 'approvalOptions': {'requiredApproverCount': None, 'releaseCreatorCanBeApprover': False, 'autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped': False, 'enforceIdentityRevalidation': False, 'timeoutInMinutes': 0, 'executionOrder': 'beforeGates'}},
-#     'deployStep': {'id': 29},
-#     'postDeployApprovals': {'approvals': [{'rank': 1, 'isAutomated': True, 'isNotificationOn': False, 'id': 30}], 'approvalOptions': {'requiredApproverCount': None, 'releaseCreatorCanBeApprover': False, 'autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped': False, 'enforceIdentityRevalidation': False, 'timeoutInMinutes': 0, 'executionOrder': 'afterSuccessfulGates'}},
-#     'deployPhases': [{'deploymentInput': {'parallelExecution': {'parallelExecutionType': 'none'}, 'agentSpecification': None, 'skipArtifactsDownload': False, 'artifactsDownloadInput': {'downloadInputs': []}, 'queueId': 31, 'demands': [], 'enableAccessToken': False, 'timeoutInMinutes': 0, 'jobCancelTimeoutInMinutes': 1, 'condition': 'succeeded()', 'overrideInputs': {}}, 'rank': 1, 'phaseType': 'agentBasedDeployment', 'name': 'Agent job', 'refName': None, 'workflowTasks': []}],
-#     'environmentOptions': {'emailNotificationType': 'OnlyOnFailure', 'emailRecipients': 'release.environment.owner;release.creator', 'skipArtifactsDownload': False, 'timeoutInMinutes': 0, 'enableAccessToken': False, 'publishDeploymentStatus': True, 'badgeEnabled': False, 'autoLinkWorkItems': False, 'pullRequestDeploymentEnabled': False},
-#     'demands': [],
-#     'conditions': [{'name': 'ReleaseStarted', 'conditionType': 'event', 'value': '', 'result': None}],
-#     'executionPolicy': {'concurrencyCount': 1, 'queueDepthCount': 0},
-#     'schedules': [],
-#     'currentRelease': {'id': 0, 'url': 'https://vsrm.dev.azure.com/VFCloudEngineering/1d88f59f-723d-44eb-b97a-57e48d410848/_apis/Release/releases/0', '_links': {}},
-#     'retentionPolicy': {'daysToKeep': 30, 'releasesToKeep': 3, 'retainBuild': True},
-#     'processParameters': {},
-#     'properties': {'BoardsEnvironmentType': {'$type': 'System.String', '$value': 'unmapped'}, 'LinkBoardsWorkItems': {'$type': 'System.String', '$value': 'False'}},
-#     'preDeploymentGates': {'id': 0, 'gatesOptions': None, 'gates': []},
-#     'postDeploymentGates': {'id': 0, 'gatesOptions': None, 'gates': []},
-#     'environmentTriggers': [],
-#     'badgeUrl': 'https://vsrm.dev.azure.com/VFCloudEngineering/_apis/public/Release/badge/1d88f59f-723d-44eb-b97a-57e48d410848/9/9'},
-    
-#     {'id': 10, 'name': 'Stage 2', 'rank': 2, 'owner': {'displayName': 'Ben Skerritt', 'url': 'https://spsprodweu5.vssps.visualstudio.com/A6b7eafe0-46f5-4363-b3be-9c99ddedc97b/_apis/Identities/09615253-ea52-637f-b8e4-63cab674eac7', '_links': {'avatar': {'href': 'https://dev.azure.com/VFCloudEngineering/_apis/GraphProfile/MemberAvatars/aad.MDk2MTUyNTMtZWE1Mi03MzdmLWI4ZTQtNjNjYWI2NzRlYWM3'}}, 'id': '09615253-ea52-637f-b8e4-63cab674eac7', 'uniqueName': 'ben.skerritt@vodafone.com', 'imageUrl': 'https://dev.azure.com/VFCloudEngineering/_apis/GraphProfile/MemberAvatars/aad.MDk2MTUyNTMtZWE1Mi03MzdmLWI4ZTQtNjNjYWI2NzRlYWM3', 'descriptor': 'aad.MDk2MTUyNTMtZWE1Mi03MzdmLWI4ZTQtNjNjYWI2NzRlYWM3'}, 'variables': {}, 'variableGroups': [], 'preDeployApprovals': {'approvals': [{'rank': 1, 'isAutomated': True, 'isNotificationOn': False, 'id': 27}], 'approvalOptions': {'requiredApproverCount': None, 'releaseCreatorCanBeApprover': False, 'autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped': False, 'enforceIdentityRevalidation': False, 'timeoutInMinutes': 0, 'executionOrder': 'beforeGates'}}, 'deployStep': {'id': 28}, 'postDeployApprovals': {'approvals': [{'rank': 1, 'isAutomated': True, 'isNotificationOn': False, 'id': 31}], 'approvalOptions': {'requiredApproverCount': None, 'releaseCreatorCanBeApprover': False, 'autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped': False, 'enforceIdentityRevalidation': False, 'timeoutInMinutes': 0, 'executionOrder': 'afterSuccessfulGates'}}, 'deployPhases': [{'deploymentInput': {'parallelExecution': {'parallelExecutionType': 'none'}, 'agentSpecification': None, 'skipArtifactsDownload': False, 'artifactsDownloadInput': {'downloadInputs': []}, 'queueId': 31, 'demands': [], 'enableAccessToken': False, 'timeoutInMinutes': 0, 'jobCancelTimeoutInMinutes': 1, 'condition': 'succeeded()', 'overrideInputs': {}}, 'rank': 1, 'phaseType': 'agentBasedDeployment', 'name': 'Agent job', 'refName': None, 'workflowTasks': []}], 'environmentOptions': {'emailNotificationType': 'OnlyOnFailure', 'emailRecipients': 'release.environment.owner;release.creator', 'skipArtifactsDownload': False, 'timeoutInMinutes': 0, 'enableAccessToken': False, 'publishDeploymentStatus': True, 'badgeEnabled': False, 'autoLinkWorkItems': False, 'pullRequestDeploymentEnabled': False}, 'demands': [], 'conditions': [{'name': 'Stage 1', 'conditionType': 'environmentState', 'value': '4', 'result': None}], 'executionPolicy': {'concurrencyCount': 1, 'queueDepthCount': 0}, 'schedules': [], 'currentRelease': {'id': 0, 'url': 'https://vsrm.dev.azure.com/VFCloudEngineering/1d88f59f-723d-44eb-b97a-57e48d410848/_apis/Release/releases/0', '_links': {}}, 'retentionPolicy': {'daysToKeep': 30, 'releasesToKeep': 3, 'retainBuild': True}, 'processParameters': {}, 'properties': {'BoardsEnvironmentType': {'$type': 'System.String', '$value': 'unmapped'}, 'LinkBoardsWorkItems': {'$type': 'System.String', '$value': 'False'}}, 'preDeploymentGates': {'id': 0, 'gatesOptions': None, 'gates': []}, 'postDeploymentGates': {'id': 0, 'gatesOptions': None, 'gates': []}, 'environmentTriggers': [], 'badgeUrl': 'https://vsrm.dev.azure.com/VFCloudEngineering/_apis/public/Release/badge/1d88f59f-723d-44eb-b97a-57e48d410848/9/10'}],
-
-# #"""
 
 # @dataclass
 # class ReleaseEnvironment:

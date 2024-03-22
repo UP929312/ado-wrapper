@@ -67,6 +67,8 @@ class StateManagedResource(ABC):
         request = requests.get(url, auth=ado_client.auth)
         if request.status_code == 404:
             raise ResourceNotFound(f"No {cls.__name__} found with that identifier!")
+        elif request.status_code >= 300:
+            raise ValueError(f"Error getting {cls.__name__} by id: {request.text}")
         return cls.from_request_payload(request.json())
 
     @classmethod
@@ -78,7 +80,7 @@ class StateManagedResource(ABC):
         if request.status_code == 409:
             raise ResourceAlreadyExists(f"The {cls.__name__} with that identifier already exist!")
         resource = cls.from_request_payload(request.json())
-        ado_client.add_resource_to_state(cls.__name__, extract_id(resource), resource.to_json())  # type: ignore[arg-type]
+        ado_client.state_manager.add_resource_to_state(cls.__name__, extract_id(resource), resource.to_json())  # type: ignore[arg-type]
         return resource
 
     @classmethod
@@ -90,7 +92,7 @@ class StateManagedResource(ABC):
                 print("[ADO-API] Resource not found, probably already deleted, removing from state")
             else:
                 raise DeletionFailed(f"[ADO-API] Error deleting {cls.__name__} ({resource_id}): {request.json()['message']}")
-        ado_client.remove_resource_from_state(cls.__name__, resource_id)  # type: ignore[arg-type]
+        ado_client.state_manager.remove_resource_from_state(cls.__name__, resource_id)  # type: ignore[arg-type]
 
     def update(self, ado_client: "AdoClient", update_action: Literal["put", "patch"], url: str,  # pylint: disable=too-many-arguments
                attribute_name: str, attribute_value: Any, params: dict[str, Any]) -> None:  # fmt: skip
@@ -101,13 +103,16 @@ class StateManagedResource(ABC):
         params |= {interal_names[attribute_name]: attribute_value}
 
         func = requests.put if update_action == "put" else requests.patch
-        request = func(url, json=params, auth=ado_client.auth)
+        if ado_client.plan:
+            pass  # Do something different
+        else:
+            request = func(url, json=params, auth=ado_client.auth)
         if request.status_code != 200:
             raise UpdateFailed(
                 f"Failed to update {self.__class__.__name__} with id {extract_id(self)} and attribute {attribute_name} to {attribute_value}. \nReason:\n{request.text}"
             )
         setattr(self, attribute_name, attribute_value)
-        ado_client.update_resource_in_state(self.__class__.__name__, extract_id(self), self.to_json())  # type: ignore[arg-type]
+        ado_client.state_manager.update_resource_in_state(self.__class__.__name__, extract_id(self), self.to_json())  # type: ignore[arg-type]
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient", url: str) -> list["StateManagedResource"]:

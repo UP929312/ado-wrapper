@@ -166,7 +166,7 @@ class ReleaseDefinition(StateManagedResource):
     variable_group_ids: list[int]# = field(metadata={"editable": True, "internal_name": "variableGroups"})
     is_disabled: bool = field(default=False, repr=False)#, metadata={"editable": True, "internal_name": "isDisabled"})
     variables: dict[str, Any] | None = field(default_factory=dict, repr=False)  # type: ignore[assignment]
-    environments: list[dict[str, Any]] = field(default_factory=list, repr=False)  # type: ignore[assignment]
+    environments: list[dict[str, Any]] = field(default_factory=list, repr=False)
     _agent_pool_id: str = field(default="1")
     revision: str = field(default="1")
 
@@ -213,7 +213,7 @@ class ReleaseDefinition(StateManagedResource):
             release_definition_id,
         )
 
-    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:
+    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
         self.revision = str(int(self.revision)+1)
         payload = get_release_definition(ado_client, self.name, self.variable_group_ids, self.agent_pool_id, revision=self.revision, _id=self.release_definition_id)
         return super().update(

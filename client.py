@@ -32,7 +32,7 @@ class AdoClient:
 
         from resources.users import AdoUser  # Stop circular import
         try:
-            self.pat_author: AdoUser = AdoUser.get_by_email(self, ado_email)  # type: ignore[assignment]
+            self.pat_author: AdoUser = AdoUser.get_by_email(self, ado_email)
         except ValueError:
             print(f"[ADO-API] WARNING: User {ado_email} not found in ADO, nothing critical, but stops releases from being made, and plans from being accurate.")
 

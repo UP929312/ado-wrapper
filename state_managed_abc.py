@@ -64,7 +64,7 @@ class StateManagedResource:
         request = requests.get(url, auth=ado_client.auth)
         if request.status_code == 404:
             raise ResourceNotFound(f"No {cls.__name__} found with that identifier!")
-        elif request.status_code >= 300:
+        if request.status_code >= 300:
             raise ValueError(f"Error getting {cls.__name__} by id: {request.text}")
         return cls.from_request_payload(request.json())
 

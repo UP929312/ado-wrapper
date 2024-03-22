@@ -1,8 +1,6 @@
-STATE_FILE_VERSION = "1.3"
-
 import json
 from pathlib import Path
-from typing import Any, TypedDict, TYPE_CHECKING, Generator
+from typing import Any, TypedDict, TYPE_CHECKING  # , Generator
 
 from attribute_types import ResourceType
 from utils import DeletionFailed, get_resource_variables
@@ -10,6 +8,7 @@ from utils import DeletionFailed, get_resource_variables
 if TYPE_CHECKING:
     from client import AdoClient
 
+STATE_FILE_VERSION = "1.3"
 
 class StateFileType(TypedDict):
     state_file_version: str
@@ -116,7 +115,7 @@ class StateManager:
 
     def generate_in_memory_state(self) -> StateFileType:
         ALL_RESOURCES = get_resource_variables()
-        """This method goes through every resource in state and updates it to the latest version in real world space"""
+        # """This method goes through every resource in state and updates it to the latest version in real world space"""
         all_states = self.load_state()
         for resource_type in all_states["resources"]:
             for resource_id in all_states["resources"][resource_type]:

@@ -21,17 +21,14 @@ Pull Request, Commit
 
 -----
 
-When we update release definitions, download a fresh copy using .get_by_id, then merge our attribute dict in with it?
-
 Integrations testing, we already kind of do that, but with variable groups + repos + builds?
 
 Never test build "Get by id", hmm
+I don't think we actually test builds properly???
 
 Add "Update" to more stuff, prevent updates on uneditable attributes in state_managed_abc/update
 
 When I am testing .from_request_payload, maybe use the plan object's data?
-
-I don't think we actually test builds properly???
 
 TODO: Look into Pushes vs Commits <https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes/get?view=azure-devops-rest-5.1&tabs=HTTP#gitpush>
 
@@ -53,7 +50,10 @@ Teams.get_members(recursive=True)
 <https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict>
 This might allow us to remove "as_json"
 
-For state, have lifecycle policies
+For state, have lifecycle policies, split each id into id -> {data, lifecyclepolicy, run_id?}
+
+Look into tags for resources?
+<https://learn.microsoft.com/en-us/rest/api/azure/devops/git/annotated-tags/get?view=azure-devops-rest-7.1&tabs=HTTP>
 
 -----
 

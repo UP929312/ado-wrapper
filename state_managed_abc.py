@@ -14,20 +14,20 @@ if TYPE_CHECKING:
 
 
 def recursively_convert_to_json(attribute_name: str, attribute_value: Any) -> tuple[str, Any]:
-    if type(attribute_value) in get_resource_variables().values():
-        class_name = str(type(attribute_value)).rsplit(".", maxsplit=1)[-1].removesuffix("'>")
-        return attribute_name + "::" + class_name, attribute_value.to_json()
     if isinstance(attribute_value, dict):
         return attribute_name, {key: recursively_convert_to_json("", value)[1] for key, value in attribute_value.items()}
     if isinstance(attribute_value, list):
         return attribute_name, [recursively_convert_to_json(attribute_name, value) for value in attribute_value]
     if isinstance(attribute_value, datetime):
-        return attribute_name + "::datetime", attribute_value.isoformat()
+        return f"{attribute_name}::datetime", attribute_value.isoformat()
+    if type(attribute_value) in get_resource_variables().values():
+        class_name = str(type(attribute_value)).rsplit(".", maxsplit=1)[-1].removesuffix("'>")
+        return attribute_name + "::" + class_name, attribute_value.to_json()
     return attribute_name, str(attribute_value)
 
 
 def recursively_convert_from_json(dictionary: dict[str, Any]) -> Any:
-    data_copy = dict(dictionary.items())
+    data_copy = dict(dictionary.items())  # Deep copy
     for key, value in dictionary.items():
         if isinstance(key, str) and "::" in key and key.split("::")[-1] != "datetime":
             instance_name, class_type = key.split("::")

@@ -143,7 +143,7 @@ class Repo(StateManagedResource):
         return PullRequest.create(ado_client, self.repo_id, branch_name, pull_request_title, pull_request_description)
 
     @staticmethod
-    def get_all_pull_requests(ado_client: AdoClient, repo_id: str, status: PullRequestStatus) -> list["PullRequest"]:
+    def get_all_pull_requests(ado_client: AdoClient, repo_id: str, status: PullRequestStatus="all") -> list["PullRequest"]:
         pull_requests = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
             auth=ado_client.auth,
@@ -177,3 +177,10 @@ class BuildRepository:
     @classmethod
     def from_request_payload(cls, data: dict[str, str | bool]) -> "BuildRepository":
         return cls(data["id"], data.get("name"), data.get("type", "TfsGit"), data.get("clean"), data.get("checkoutSubmodules", False))  # type: ignore[arg-type]
+
+    @classmethod
+    def from_json(cls, data: dict[str, str | bool]) -> "BuildRepository":
+        return cls(data["id"], data.get("name"), data.get("type", "TfsGit"), data.get("clean"), data.get("checkoutSubmodules", False))  # type: ignore[arg-type]
+
+    def to_json(self) -> dict[str, str | bool | None]:
+        return {"id": self.build_repository_id, "name": self.name, "type": self.type, "clean": self.clean, "checkoutSubmodules": self.checkout_submodules}

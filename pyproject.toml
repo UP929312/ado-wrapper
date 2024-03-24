@@ -64,6 +64,7 @@ markers = [
     "create_delete: Tests which are used to create and delete resources",
     "get_by_id: Tests which are used to get resources by their ID",
     "get_all: Tests which are used to get all resources",
+    "integrations: Tests which are used to test full integrations of multiple resources",
 ]
 
 [tool.black]

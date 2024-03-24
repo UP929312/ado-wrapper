@@ -155,7 +155,7 @@ class ReleaseDefinition(StateManagedResource):
 
     release_definition_id: str = field(metadata={"is_id_field": True})
     name: str = field(metadata={"editable": True})
-    description: str# = field(metadata={"editable": True})
+    description: str = field(metadata={"editable": True})
     created_by: Member
     created_on: datetime
     # modified_by: Member  # Could be added later on
@@ -169,6 +169,7 @@ class ReleaseDefinition(StateManagedResource):
     environments: list[dict[str, Any]] = field(default_factory=list, repr=False)
     _agent_pool_id: str = field(default="1")
     revision: str = field(default="1")
+    _raw_data: dict[str, Any] = field(default_factory=dict, repr=False)  # Used in update, don't use this directly
 
     def __str__(self) -> str:
         return f"ReleaseDefinition(name=\"{self.name}\", description=\"{self.description}\", created_by={self.created_by!r}, created_on={self.created_on!s}"
@@ -185,7 +186,7 @@ class ReleaseDefinition(StateManagedResource):
         return cls(data["id"], data["name"], data.get("description") or "", created_by, from_ado_date_string(data["createdOn"]),
                    data["releaseNameFormat"], data["variableGroups"], data.get("isDeleted", False), data.get("variables", None),
                    data.get("environments", []), data.get("environments", [{"deployPhases": [{"deploymentInput": {"queueId": "1"}}]}]
-                            )[0]["deployPhases"][0]["deploymentInput"]["queueId"], data.get("revision", "1"))  # fmt: skip
+                            )[0]["deployPhases"][0]["deploymentInput"]["queueId"], data.get("revision", "1"), data)  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, release_definition_id: str) -> "ReleaseDefinition":
@@ -215,11 +216,10 @@ class ReleaseDefinition(StateManagedResource):
 
     def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
         self.revision = str(int(self.revision)+1)
-        payload = get_release_definition(ado_client, self.name, self.variable_group_ids, self.agent_pool_id, revision=self.revision, _id=self.release_definition_id)
         return super().update(
             ado_client, "put",
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{self.release_definition_id}?api-version=7.1",
-            attribute_name, attribute_value, payload
+            attribute_name, attribute_value, self._raw_data
         )
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

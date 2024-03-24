@@ -80,7 +80,15 @@ class Build(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, definition_id: str, source_branch: str = "refs/heads/main") -> "Build":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, definition_id: str,  # type: ignore[override]
+               source_branch: str = "refs/heads/main", permit_use_of_var_groups: bool=False) -> "Build":
+        """`permit_var_groups` defines whether the variable group will be automatically allowed for the build or need manual approval."""
+        # if permit_use_of_var_groups:
+        #     print(f"Variable Groups: {BuildDefinition.get_by_id(ado_client, definition_id).variable_groups}")
+        #     for var_group_id in BuildDefinition.get_by_id(ado_client, definition_id).variable_groups:
+        #         request = requests.patch(f"https://dev.azure.com/{ado_client.ado_org}/{definition_id}/_apis/pipelines/pipelinePermissions/variablegroup/{var_group_id}")  # fmt: skip
+        #         print(request.text, request.status_code)
+        #         assert request.status_code <= 204
         return super().create(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?definitionId={definition_id}&api-version=7.1",
@@ -119,10 +127,11 @@ class Build(StateManagedResource):
         return self.delete_by_id(ado_client, self.build_id)
 
     @classmethod
-    def create_and_wait_until_completion(cls, ado_client: AdoClient, definition_id: str, branch_name: str = "main", max_timeout_seconds: int = 300) -> "Build":  # fmt: skip
+    def create_and_wait_until_completion(cls, ado_client: AdoClient, definition_id: str, branch_name: str = "main",
+                                         max_timeout_seconds: int = 300) -> "Build":  # fmt: skip
         """Creates a build and waits until it is completed, or raises a TimeoutError if it takes too long.
         WARNING: This is a blocking operation, it will not return until the build is completed or the timeout is reached."""
-        build = cls.create(ado_client, definition_id, branch_name)
+        build = cls.create(ado_client, definition_id, branch_name, True)
         start_time = datetime.now()
         while True:
             build = Build.get_by_id(ado_client, build.build_id)
@@ -163,8 +172,8 @@ class BuildDefinition(StateManagedResource):
     build_repo: BuildRepository | None = field(repr=False)
     revision: str = "1"
     process: dict[str, str | int] | None = field(repr=False, default=None)  # Used internally, mostly ignore
-    variables: dict[str, str] | None = field(default_factory=dict, repr=False)  # type: ignore[assignment]
-    variable_groups: list[int] | None = field(default_factory=list, repr=False)  # type: ignore[assignment]
+    variables: dict[str, str] = field(default_factory=dict, repr=False)
+    variable_groups: list[int] = field(default_factory=list, repr=False)
 
     def __str__(self) -> str:
         return f"{self.name}, {self.build_definition_id}, created by {self.created_by}, created on {self.created_date!s}"
@@ -178,7 +187,7 @@ class BuildDefinition(StateManagedResource):
         )  # fmt: skip
         build_repository = BuildRepository.from_request_payload(data["repository"]) if "repository" in data else None
         return cls(str(data["id"]), data["name"], data.get("description", ""), data.get("process", {"yamlFilename": "UNKNOWN"})["yamlFilename"], created_by,
-                from_ado_date_string(data.get("createdDate")), build_repository, str(data["revision"]), data.get("process"), data.get("variables", None), data.get("variableGroups", None))  # fmt: skip
+                from_ado_date_string(data.get("createdDate")), build_repository, str(data["revision"]), data.get("process"), data.get("variables", {}), data.get("variableGroups", []))  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, build_definition_id: str) -> "BuildDefinition":
@@ -189,13 +198,16 @@ class BuildDefinition(StateManagedResource):
 
     @classmethod
     def create(  # type: ignore[override]
-        cls, ado_client: AdoClient, name: str, repo_id: str, repo_name: str, path_to_pipeline: str, description: str, agent_pool_id: str, branch_name: str = "main",  # fmt: skip
+        cls, ado_client: AdoClient, name: str, repo_id: str, repo_name: str, path_to_pipeline: str,
+        description: str, agent_pool_id: str, variable_groups: list[str], branch_name: str = "main",  # fmt: skip
     ) -> "BuildDefinition":
         return super().create(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.0",
-            payload=get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, agent_pool_id, branch_name),  # fmt: skip
+            payload=get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, 
+                                         agent_pool_id, branch_name)  # fmt: skip
         )  # type: ignore[return-value]
+        #  | {"variableGroups": [{"id": x for x in variable_groups}]},
 
     def update(self, ado_client: AdoClient, attribute_name: BuildDefinitionEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
         if self.build_repo is None or self.process is None:
@@ -227,6 +239,13 @@ class BuildDefinition(StateManagedResource):
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
+
+    @classmethod
+    def get_all(cls, ado_client: AdoClient) -> "list[BuildDefinition]":  # type: ignore[override]
+        return super().get_all(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.1-preview.7"
+        )  # type: ignore[return-value]
 
     def get_all_builds_by_definition(self, ado_client: AdoClient) -> "list[Build]":
         return Build.get_all_by_definition(ado_client, self.build_definition_id)

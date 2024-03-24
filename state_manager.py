@@ -124,6 +124,28 @@ class StateManager:
                     all_states["resources"][resource_type][resource_id] = instance.to_json()
         return all_states
 
+    def load_all_resources_with_prefix_into_state(self, prefix: str) -> None:
+        from resources.variable_groups import VariableGroup
+        from resources.repo import Repo
+        from resources.releases import ReleaseDefinition
+        from resources.builds import BuildDefinition
+
+        for repo in Repo.get_all(self.ado_client):
+            if repo.name.startswith(prefix):
+                self.ado_client.state_manager.import_into_state("Repo", repo.repo_id)
+
+        for variable_group in VariableGroup.get_all(self.ado_client):
+            if variable_group.name.startswith(prefix):
+                self.ado_client.state_manager.import_into_state("VariableGroup", variable_group.variable_group_id)
+
+        for release_definition in ReleaseDefinition.get_all(self.ado_client):
+            if release_definition.name.startswith(prefix):
+                self.ado_client.state_manager.import_into_state("ReleaseDefinition", release_definition.release_definition_id)
+
+        for build_definition in BuildDefinition.get_all(self.ado_client):
+            if build_definition.name.startswith(prefix):
+                self.ado_client.state_manager.import_into_state("BuildDefinition", build_definition.build_definition_id)
+
     # Unused
     # def all_resources(self) -> Generator[tuple[ResourceType, str], None, None]:
     #     for resource_type in self.load_state()["resources"]:

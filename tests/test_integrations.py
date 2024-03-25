@@ -28,7 +28,7 @@ steps:
 
 class TestIntegrations:
     def setup_method(self) -> None:
-        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project)
+        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, state_file_name="tests/test_state.state")
 
     @pytest.mark.integrations
     @pytest.mark.skip("This test is not meant to be run in CI/CD, just manually")

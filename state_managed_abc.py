@@ -98,10 +98,7 @@ class StateManagedResource:
         params |= {interal_names[attribute_name]: attribute_value}
 
         func = requests.put if update_action == "put" else requests.patch
-        if ado_client.plan:
-            pass  # Do something different
-        else:
-            request = func(url, json=params, auth=ado_client.auth)
+        request = func(url, json=params, auth=ado_client.auth)
         if request.status_code != 200:
             raise UpdateFailed(
                 f"Failed to update {self.__class__.__name__} with id {extract_id(self)} and attribute {attribute_name} to {attribute_value}. \nReason:\n{request.text}"

@@ -63,10 +63,11 @@ mypy . --strict
 black . --line-length 140
 pytest tests/ -vvvv -s
 python3.11 -m client --delete-everything
-
+python3.11 -m client --delete-everything --state-file "test_state.state"
 python3.11 -m client --refresh-resources-on-startup
-
 pytest tests/ -vvvv -s -m wip
+
+Re-run on "connction error"
 
 For the plans, have a new folder, called "plan_resources", which has all the same resources, but a few differences:
 

@@ -41,10 +41,6 @@ class AdoClient:
 if __name__ == "__main__":
     ALL_RESOURCES = get_resource_variables()
 
-    from secret import email, ado_access_token, ado_org, ado_project
-    ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)  #  state_file_name="main.json"
-
-
     parser = argparse.ArgumentParser(
         prog="ADO-API", description="A tool to manage Azure DevOps resources and interface with the ADO API", usage=""
     )
@@ -70,7 +66,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--purge-state", "--wipe-state-", help="Deletes everything in the state file", action="store_true", default=False, dest="purge_state"
     )
+    parser.add_argument("--state-file", help="The name of the state file to use", type=str, default="main.state", dest="state_file")
     args = parser.parse_args()
+
+    from secret import email, ado_access_token, ado_org, ado_project
+    ado_client = AdoClient(email, ado_access_token, ado_org, ado_project, state_file_name=args.state_file)
 
     if args.purge_state:
         # Deletes everything in the state file

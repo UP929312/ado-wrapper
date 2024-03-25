@@ -23,9 +23,6 @@ Pull Request, Commit
 
 Integrations testing, we already kind of do that, but with variable groups + repos + builds?
 
-Never test build "Get by id", hmm
-I don't think we actually test builds properly???
-
 Add "Update" to more stuff, prevent updates on uneditable attributes in state_managed_abc/update
 
 When I am testing .from_request_payload, maybe use the plan object's data?
@@ -45,7 +42,7 @@ Maybe add the alternative way? I.E. if it's changed in real resources
 
 Script plan mode?
 
-Teams.get_members(recursive=True)
+Teams.get_members(recursive=True)  Not sure that Teams are the right thing, maybe Groups? Idk
 
 <https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict>
 This might allow us to remove "as_json"

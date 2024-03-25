@@ -154,6 +154,19 @@ class TestBuildDefinition:
         repo.delete(self.ado_client)
 
     @pytest.mark.get_by_id
+    def test_get_by_id(self) -> None:
+        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-build-defs-by-id")
+        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
+        build_definition = BuildDefinition.create(
+            self.ado_client, "ado-api-test-build-for-get-by-id", repo.repo_id, "ado-api-test-repo", "build.yaml",
+            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
+        )
+        fetched_build_definition = BuildDefinition.get_by_id(self.ado_client, build_definition.build_definition_id)
+        assert fetched_build_definition.build_definition_id == build_definition.build_definition_id
+        build_definition.delete(self.ado_client)
+        repo.delete(self.ado_client)
+
+    @pytest.mark.get_by_id
     def test_get_all_by_repo_id(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-all-by-repo-id")
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")

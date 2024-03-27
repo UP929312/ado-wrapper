@@ -77,10 +77,10 @@ class TestRepo:
         assert len(file) > 5
         repo.delete(self.ado_client)
 
-    def test_get_repo_contents(self) -> None:
+    def test_get_contents(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-repo-contents")
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
-        contents = repo.get_repo_contents(self.ado_client)
+        contents = repo.get_contents(self.ado_client)
         assert len(contents.keys()) == 1
         assert isinstance(contents, dict)
         repo.delete(self.ado_client)

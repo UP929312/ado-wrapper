@@ -102,7 +102,7 @@ class Repo(StateManagedResource):
             raise UnknownError(f"Error getting file {file_path} from repo {self.repo_id}: {request.text}")
         return request.text  # This is the file content
 
-    def get_repo_contents(self, ado_client: AdoClient, file_types: list[str] | None = None, branch_name: str = "main") -> dict[str, str]:
+    def get_contents(self, ado_client: AdoClient, file_types: list[str] | None = None, branch_name: str = "main") -> dict[str, str]:
         """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/items/get?view=azure-devops-rest-7.1&tabs=HTTP"""
         """This function downloads the contents of a repo, and returns a dictionary of the files and their contents
         The file_types parameter is a list of file types to filter for, e.g. ["json", "yaml"]"""
@@ -162,7 +162,10 @@ class Repo(StateManagedResource):
             self.update(ado_client, "is_disabled", False)
         self.delete_by_id(ado_client, self.repo_id)
 
-
+    @staticmethod
+    def get_content_static(ado_client: AdoClient, repo_id: str, file_types: list[str] | None = None, branch_name: str = "main") -> dict[str, str]:
+        repo = Repo.get_by_id(ado_client, repo_id)
+        return repo.get_contents(ado_client, file_types, branch_name)
 # ====================================================================
 
 

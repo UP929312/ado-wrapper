@@ -10,9 +10,11 @@ if TYPE_CHECKING:
 
 STATE_FILE_VERSION = "1.3"
 
+
 class StateFileType(TypedDict):
     state_file_version: str
     resources: dict[ResourceType, dict[str, Any]]
+
 
 class StateManager:
     def __init__(self, ado_client: "AdoClient", state_file_name: str | None = "main.state") -> None:

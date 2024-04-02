@@ -80,8 +80,10 @@ class Build(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, definition_id: str,  # type: ignore[override]
-               source_branch: str = "refs/heads/main", permit_use_of_var_groups: bool=False) -> "Build":
+    def create(
+        cls, ado_client: AdoClient, definition_id: str,  # type: ignore[override]
+        source_branch: str = "refs/heads/main", permit_use_of_var_groups: bool = False,  # fmt: skip
+    ) -> "Build":
         """`permit_var_groups` defines whether the variable group will be automatically allowed for the build or need manual approval."""
         # if permit_use_of_var_groups:
         #     print(f"Variable Groups: {BuildDefinition.get_by_id(ado_client, definition_id).variable_groups}")
@@ -244,7 +246,7 @@ class BuildDefinition(StateManagedResource):
     def get_all(cls, ado_client: AdoClient) -> "list[BuildDefinition]":  # type: ignore[override]
         return super().get_all(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.1-preview.7"
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.1-preview.7",
         )  # type: ignore[return-value]
 
     def get_all_builds_by_definition(self, ado_client: AdoClient) -> "list[Build]":

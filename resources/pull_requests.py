@@ -56,7 +56,7 @@ class PullRequest(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> "PullRequest":
         return super().get_by_id(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/pullrequests/{pull_request_id}?api-version=7.1-preview.1"
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/pullrequests/{pull_request_id}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -90,14 +90,14 @@ class PullRequest(StateManagedResource):
         return super().update(
             ado_client, "patch",
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1-preview.1",
-            attribute_name, attribute_value, {} # fmt: skip
+            attribute_name, attribute_value, {}  # fmt: skip
         )
 
     @classmethod
     def get_all(cls, ado_client: AdoClient, status: PullRequestStatus = "all") -> list[PullRequest]:  # type: ignore[override]
         return super().get_all(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/pullrequests?searchCriteria.status={status}&api-version=7.1"
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/pullrequests?searchCriteria.status={status}&api-version=7.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -169,7 +169,9 @@ class PullRequest(StateManagedResource):
     def get_my_pull_requests(cls, ado_client: AdoClient) -> list[PullRequest]:
         """This is super tempremental, I have to do a bunch of splits, it's not official so might not work"""
         import json
+
         request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/_pulls", auth=ado_client.auth)
-        raw_data = request.text.split("application/json")[1].split("pullRequests\"")[1].split("queries")[0].removeprefix("\"").removeprefix(":").removesuffix(",\"")
-        json_data = json.loads(raw_data)
-        return [cls.from_request_payload(pr) for pr in json_data.values()]
+        raw_data = (
+            request.text.split("application/json")[1].split('pullRequests"')[1].split("queries")[0].removeprefix(":").removesuffix(',"')
+        )
+        return [cls.from_request_payload(pr) for pr in json.loads(raw_data).values()]

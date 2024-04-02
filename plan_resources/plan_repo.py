@@ -22,7 +22,9 @@ class FakeResponse(requests.Response):
     def json(self) -> dict[str, Any]:  # type: ignore[override]
         return self._json
 
+
 CreateMethod = Callable[[str, dict[str, Any], Any], FakeResponse]
+
 
 class PlanRepo:
     @staticmethod

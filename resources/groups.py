@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 import requests
 
 from state_managed_abc import StateManagedResource
+
 # from resources.users import GroupMember
 
 if TYPE_CHECKING:
@@ -35,7 +36,7 @@ class Group(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, group_descriptor: str) -> "Group":
         return super().get_by_id(
             ado_client,
-            f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/groups/{group_descriptor}?api-version=7.1-preview.1"
+            f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/groups/{group_descriptor}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -50,7 +51,7 @@ class Group(StateManagedResource):
     def get_all(cls, ado_client: AdoClient) -> list["Group"]:  # type: ignore[override]
         return super().get_all(
             ado_client,
-            f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/groups?api-version=7.1-preview.1"
+            f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/groups?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #

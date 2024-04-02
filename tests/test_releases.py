@@ -36,7 +36,9 @@ class TestRelease:
 
     @pytest.mark.create_delete
     def test_create_delete_release(self) -> None:
-        release_definition = ReleaseDefinition.create(self.ado_client, "ado-api-test-releasefor-create-delete-release", [], existing_agent_pool_id)
+        release_definition = ReleaseDefinition.create(
+            self.ado_client, "ado-api-test-releasefor-create-delete-release", [], existing_agent_pool_id
+        )
         release = Release.create(self.ado_client, release_definition.release_definition_id)
         assert release.release_id == Release.get_by_id(self.ado_client, release.release_id).release_id
         assert len(Release.get_all(self.ado_client, release_definition.release_definition_id)) == 1
@@ -101,7 +103,7 @@ class TestReleaseDefinition:
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
         release_definition = ReleaseDefinition.create(
-            self.ado_client, "ado-api-test-release-for-create-delete", [], existing_agent_pool_id,   # fmt: skip
+            self.ado_client, "ado-api-test-release-for-create-delete", [], existing_agent_pool_id,  # fmt: skip
         )
         release_definition.delete(self.ado_client)
         assert release_definition.description == ""

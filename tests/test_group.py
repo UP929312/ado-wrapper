@@ -2,6 +2,7 @@ import pytest
 
 from client import AdoClient
 from resources.groups import Group
+
 # from resources.users import GroupMember
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:

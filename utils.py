@@ -117,10 +117,12 @@ class UpdateFailed(Exception):
 
 
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports
+    """This returns a mapping of resource name (str) to the class type of the resource. This is used to dynamically create instances of resources."""
     from resources import (  # type: ignore[attr-defined]  # pylint: disable=possibly-unused-variable
         Branch, Build, BuildDefinition, Commit, Project, PullRequest, Release, ReleaseDefinition, Repo, BuildRepository, Team,
         AdoUser, Member, Reviewer, VariableGroup,  # fmt: skip
     )
+
     # When you update that ^, also run generate_type hints.py
 
-    return dict(locals().items())
+    return locals()

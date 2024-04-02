@@ -13,6 +13,7 @@ from utils import ResourceNotFound, UnknownError
 from resources.pull_requests import PullRequest, PullRequestStatus
 from resources.commits import Commit
 from attribute_types import RepoEditableAttribute
+
 # from plan_resources.singletons import plannable_resource
 
 # ====================================================================
@@ -33,7 +34,9 @@ class Repo(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, str]) -> "Repo":
-        return cls(data["id"], data["name"], data.get("defaultBranch", "main").removeprefix("refs/heads/"), bool(data.get("isDisabled", False)))
+        return cls(
+            data["id"], data["name"], data.get("defaultBranch", "main").removeprefix("refs/heads/"), bool(data.get("isDisabled", False))
+        )
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> "Repo":
@@ -58,7 +61,7 @@ class Repo(StateManagedResource):
         super().update(
             ado_client, "patch",
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}?api-version=7.1-preview.1",
-            attribute_name, attribute_value, {}, # fmt: skip
+            attribute_name, attribute_value, {},  # fmt: skip
         )
 
     @classmethod
@@ -143,7 +146,7 @@ class Repo(StateManagedResource):
         return PullRequest.create(ado_client, self.repo_id, branch_name, pull_request_title, pull_request_description)
 
     @staticmethod
-    def get_all_pull_requests(ado_client: AdoClient, repo_id: str, status: PullRequestStatus="all") -> list["PullRequest"]:
+    def get_all_pull_requests(ado_client: AdoClient, repo_id: str, status: PullRequestStatus = "all") -> list["PullRequest"]:
         return PullRequest.get_all_by_repo_id(ado_client, repo_id, status)
 
     def delete(self, ado_client: AdoClient) -> None:
@@ -152,9 +155,13 @@ class Repo(StateManagedResource):
         self.delete_by_id(ado_client, self.repo_id)
 
     @staticmethod
-    def get_content_static(ado_client: AdoClient, repo_id: str, file_types: list[str] | None = None, branch_name: str = "main") -> dict[str, str]:
+    def get_content_static(
+        ado_client: AdoClient, repo_id: str, file_types: list[str] | None = None, branch_name: str = "main"
+    ) -> dict[str, str]:
         repo = Repo.get_by_id(ado_client, repo_id)
         return repo.get_contents(ado_client, file_types, branch_name)
+
+
 # ====================================================================
 
 
@@ -175,4 +182,7 @@ class BuildRepository:
         return cls(data["id"], data.get("name"), data.get("type", "TfsGit"), data.get("clean"), data.get("checkoutSubmodules", False))  # type: ignore[arg-type]
 
     def to_json(self) -> dict[str, str | bool | None]:
-        return {"id": self.build_repository_id, "name": self.name, "type": self.type, "clean": self.clean, "checkoutSubmodules": self.checkout_submodules}
+        return {
+            "id": self.build_repository_id, "name": self.name, "type": self.type,
+            "clean": self.clean, "checkoutSubmodules": self.checkout_submodules,  # fmt: skip
+        }

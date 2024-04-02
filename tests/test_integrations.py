@@ -26,6 +26,7 @@ steps:
   - script: echo Hello, world!
     displayName: 'Integrations Testing'"""
 
+
 class TestIntegrations:
     def setup_method(self) -> None:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, state_file_name="tests/test_state.state")
@@ -46,4 +47,3 @@ class TestIntegrations:
         variable_group.delete(self.ado_client)
         build_definition.delete(self.ado_client)
         repo.delete(self.ado_client)
-

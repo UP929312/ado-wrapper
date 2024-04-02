@@ -23,14 +23,14 @@ class Team(StateManagedResource):
     team_members: list[TeamMember] = field(default_factory=list)
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.team_id}" + "" if not self.team_members else (", ".join([str(member) for member in self.team_members]))+")"
+        return f"{self.name} ({self.team_id}" + (", ".join([str(member) for member in self.team_members])) + ")"
 
     @classmethod
     def from_request_payload(cls, data: dict[str, str]) -> "Team":
         return cls(data["id"], data["name"], data.get("description", ""), [])
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, team_id: str) -> "Team": 
+    def get_by_id(cls, ado_client: AdoClient, team_id: str) -> "Team":
         resource: Team = super().get_by_id(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{ado_client.ado_project}/teams/{team_id}?$expandIdentity={True}&api-version=7.1-preview.2",

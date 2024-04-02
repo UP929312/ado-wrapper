@@ -53,7 +53,9 @@ class TestPullRequest:
     def test_get_by_id(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-pull-request-by-id")
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
-        pull_request_created = PullRequest.create(self.ado_client, repo.repo_id, "test-branch", "Test PR For Get PR By ID", "Test description")
+        pull_request_created = PullRequest.create(
+            self.ado_client, repo.repo_id, "test-branch", "Test PR For Get PR By ID", "Test description"
+        )
         pull_request = PullRequest.get_by_id(self.ado_client, pull_request_created.pull_request_id)
         assert pull_request.pull_request_id == pull_request_created.pull_request_id
         pull_request_created.close(self.ado_client)
@@ -63,8 +65,12 @@ class TestPullRequest:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-pull-requests")
         Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")
         Commit.create(self.ado_client, repo.repo_id, "main", "new-branch2", {"test2.txt": "This is one thing"}, "add", "Test commit 2")
-        pull_request_1 = PullRequest.create(self.ado_client, repo.repo_id, "new-branch", "Test PR For Get Pull Requests 1", "Test description")
-        pull_request_2 = PullRequest.create(self.ado_client, repo.repo_id, "new-branch2", "Test PR For Get Pull Requests 1", "Test description")
+        pull_request_1 = PullRequest.create(
+            self.ado_client, repo.repo_id, "new-branch", "Test PR For Get Pull Requests 1", "Test description"
+        )
+        pull_request_2 = PullRequest.create(
+            self.ado_client, repo.repo_id, "new-branch2", "Test PR For Get Pull Requests 1", "Test description"
+        )
         all_pull_requests = Repo.get_all_pull_requests(self.ado_client, repo_id=repo.repo_id, status="active")
         assert len(all_pull_requests) == 2
         assert all(isinstance(pull_request, PullRequest) for pull_request in all_pull_requests)
@@ -104,7 +110,9 @@ class TestPullRequest:
     def test_get_all_by_repo_id(self) -> None:
         repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-all-by-repo-id")
         Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")
-        pull_request_1 = PullRequest.create(self.ado_client, repo.repo_id, "new-branch", "Test PR For Get Pull Requests 1", "Test description")
+        pull_request_1 = PullRequest.create(
+            self.ado_client, repo.repo_id, "new-branch", "Test PR For Get Pull Requests 1", "Test description"
+        )
         all_pull_requests = PullRequest.get_all_by_repo_id(self.ado_client, repo_id=repo.repo_id, status="active")
         assert len(all_pull_requests) == 1
         assert all(isinstance(pull_request, PullRequest) for pull_request in all_pull_requests)

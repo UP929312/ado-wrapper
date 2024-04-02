@@ -16,7 +16,10 @@ ReleaseStatus = Literal["active", "abandoned", "draft", "undefined"]
 # FEEL FREE TO MAKE A PR TO FIX/IMPROVE THIS FILE
 # ========================================================================================================
 
-def get_release_definition(ado_client: AdoClient, name: str, variable_group_ids: list[int], agent_pool_id: str, revision: str="1", _id: str = "") -> dict[str, Any]:
+
+def get_release_definition(
+    ado_client: AdoClient, name: str, variable_group_ids: list[int], agent_pool_id: str, revision: str = "1", _id: str = ""
+) -> dict[str, Any]:
     return {
         "name": name,
         "id": _id,
@@ -28,12 +31,12 @@ def get_release_definition(ado_client: AdoClient, name: str, variable_group_ids:
         "environments": [
             {
                 "name": "Stage 1",
-                'preDeployApprovals': {
-                    'approvals': [
+                "preDeployApprovals": {
+                    "approvals": [
                         {
-                            'rank': 1,
-                            'isAutomated': False,
-                            'isNotificationOn': False,
+                            "rank": 1,
+                            "isAutomated": False,
+                            "isNotificationOn": False,
                             "id": 0,
                             "approver": {
                                 "id": ado_client.pat_author.origin_id,
@@ -52,32 +55,26 @@ def get_release_definition(ado_client: AdoClient, name: str, variable_group_ids:
                         }
                     ]
                 },
-                'deployPhases': [
+                "deployPhases": [
                     {
-                        'rank': 1,
-                        'phaseType': 'agentBasedDeployment',
-                        'name': 'Run on agent',
-                        'workflowTasks': [],
-                        'deploymentInput': {
-                            'parallelExecution': {
-                                'parallelExecutionType': 'none'
-                            },
-                            'skipArtifactsDownload': False,
-                            'queueId': agent_pool_id,
-                            'demands': [],
-                            'enableAccessToken': False,
-                            'timeoutInMinutes': 0,
-                            'jobCancelTimeoutInMinutes': 1,
-                            'condition': 'succeeded()',
-                            'overrideInputs': {}
+                        "rank": 1,
+                        "phaseType": "agentBasedDeployment",
+                        "name": "Run on agent",
+                        "workflowTasks": [],
+                        "deploymentInput": {
+                            "parallelExecution": {"parallelExecutionType": "none"},
+                            "skipArtifactsDownload": False,
+                            "queueId": agent_pool_id,
+                            "demands": [],
+                            "enableAccessToken": False,
+                            "timeoutInMinutes": 0,
+                            "jobCancelTimeoutInMinutes": 1,
+                            "condition": "succeeded()",
+                            "overrideInputs": {},
                         },
                     }
                 ],
-                "retentionPolicy": {
-                    "daysToKeep": 30,
-                    "releasesToKeep": 3,
-                    "retainBuild": True
-                }
+                "retentionPolicy": {"daysToKeep": 30, "releasesToKeep": 3, "retainBuild": True},
             }
         ],
     }
@@ -117,7 +114,7 @@ class Release(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod  # TODO: Test
-    def create(cls, ado_client: AdoClient, definition_id: str, description: str="Made by ADO-API") -> "Release":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, definition_id: str, description: str = "Made by ADO-API") -> "Release":  # type: ignore[override]
         return super().create(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1",
@@ -149,6 +146,7 @@ class Release(StateManagedResource):
 
 # ========================================================================================================
 
+
 @dataclass
 class ReleaseDefinition(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/release/definitions?view=azure-devops-rest-7.1"""
@@ -163,8 +161,8 @@ class ReleaseDefinition(StateManagedResource):
     # path: str  # Could be added later on
     # tags: list[str]  # Could be added later on
     release_name_format: str = field(metadata={"editable": True, "internal_name": "releaseNameFormat"})
-    variable_group_ids: list[int]# = field(metadata={"editable": True, "internal_name": "variableGroups"})
-    is_disabled: bool = field(default=False, repr=False)#, metadata={"editable": True, "internal_name": "isDisabled"})
+    variable_group_ids: list[int]  # = field(metadata={"editable": True, "internal_name": "variableGroups"})
+    is_disabled: bool = field(default=False, repr=False)  # , metadata={"editable": True, "internal_name": "isDisabled"})
     variables: dict[str, Any] | None = field(default_factory=dict, repr=False)  # type: ignore[assignment]
     environments: list[dict[str, Any]] = field(default_factory=list, repr=False)
     _agent_pool_id: str = field(default="1")
@@ -172,7 +170,7 @@ class ReleaseDefinition(StateManagedResource):
     _raw_data: dict[str, Any] = field(default_factory=dict, repr=False)  # Used in update, don't use this directly
 
     def __str__(self) -> str:
-        return f"ReleaseDefinition(name=\"{self.name}\", description=\"{self.description}\", created_by={self.created_by!r}, created_on={self.created_on!s}"
+        return f'ReleaseDefinition(name="{self.name}", description="{self.description}", created_by={self.created_by!r}, created_on={self.created_on!s}'
 
     @property
     def agent_pool_id(self) -> str:
@@ -215,12 +213,13 @@ class ReleaseDefinition(StateManagedResource):
         )
 
     def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
-        self.revision = str(int(self.revision)+1)
+        self.revision = str(int(self.revision) + 1)
         return super().update(
             ado_client, "put",
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{self.release_definition_id}?api-version=7.1",
-            attribute_name, attribute_value, self._raw_data
+            attribute_name, attribute_value, self._raw_data,  # fmt: skip
         )
+
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
@@ -243,6 +242,7 @@ class ReleaseDefinition(StateManagedResource):
             auth=ado_client.auth,
         ).json()["value"]
         return [cls.from_request_payload(data) for data in response]
+
 
 # ========================================================================================================
 

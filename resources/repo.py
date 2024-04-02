@@ -54,6 +54,13 @@ class Repo(StateManagedResource):
             Commit.add_initial_readme(ado_client, repo.repo_id)
         return repo
 
+    def update(self, ado_client: AdoClient, attribute_name: RepoEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
+        super().update(
+            ado_client, "patch",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}?api-version=7.1-preview.1",
+            attribute_name, attribute_value, {}, # fmt: skip
+        )
+
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, repo_id: str) -> None:  # type: ignore[override]
         for pull_request in Repo.get_all_pull_requests(ado_client, repo_id, "all"):
@@ -64,23 +71,16 @@ class Repo(StateManagedResource):
             repo_id,
         )
 
-    def update(self, ado_client: AdoClient, attribute_name: RepoEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
-        super().update(
-            ado_client, "patch",
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}?api-version=7.1-preview.1",
-            attribute_name, attribute_value, {}, # fmt: skip
-        )
-
-    # ============ End of requirement set by all state managed resources ================== #
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-    # =============== Start of additional methods included with class ===================== #
-
     @classmethod
     def get_all(cls, ado_client: AdoClient) -> list["Repo"]:  # type: ignore[override]
         return super().get_all(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
         )  # type: ignore[return-value]
+
+    # ============ End of requirement set by all state managed resources ================== #
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+    # =============== Start of additional methods included with class ===================== #
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, repo_name: str) -> "Repo":
@@ -144,18 +144,7 @@ class Repo(StateManagedResource):
 
     @staticmethod
     def get_all_pull_requests(ado_client: AdoClient, repo_id: str, status: PullRequestStatus="all") -> list["PullRequest"]:
-        pull_requests = requests.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
-            auth=ado_client.auth,
-        ).json()
-        try:
-            return [PullRequest.from_request_payload(pr) for pr in pull_requests["value"]]
-        except KeyError:
-            if pull_requests.get("message", "").startswith("TF401019"):
-                print(f"Repo `{pull_requests['message'].split('identifier')[1].split(' ')[0]}` was disabled, or you had no access.")
-            else:
-                raise ResourceNotFound(pull_requests)  # pylint: disable=raise-missing-from
-            return []
+        return PullRequest.get_all_by_repo_id(ado_client, repo_id, status)
 
     def delete(self, ado_client: AdoClient) -> None:
         if self.is_disabled:

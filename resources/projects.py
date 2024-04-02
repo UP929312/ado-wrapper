@@ -36,16 +36,16 @@ class Project(StateManagedResource):
     def delete_by_id(ado_client: AdoClient, project_id: str) -> None:  # type: ignore[override]
         raise NotImplementedError
 
-    # ============ End of requirement set by all state managed resources ================== #
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-    # =============== Start of additional methods included with class ===================== #
-
     @classmethod
     def get_all(cls, ado_client: AdoClient) -> list["Project"]:  # type: ignore[override]
         return super().get_all(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects?api-version=7.1-preview.4",
         )  # type: ignore[return-value]
+
+    # ============ End of requirement set by all state managed resources ================== #
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+    # =============== Start of additional methods included with class ===================== #
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, project_name: str) -> "Project | None":

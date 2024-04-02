@@ -52,6 +52,9 @@ For state, have lifecycle policies, split each id into id -> {data, lifecyclepol
 Look into tags for resources?
 <https://learn.microsoft.com/en-us/rest/api/azure/devops/git/annotated-tags/get?view=azure-devops-rest-7.1&tabs=HTTP>
 
+This?
+<https://www.reddit.com/r/azuredevops/comments/xj56gs/complete_pull_request_with_bypass_policy_via_api/>
+
 -----
 
 Pylint command:
@@ -60,11 +63,16 @@ mypy . --strict
 black . --line-length 140
 pytest tests/ -vvvv -s
 python3.11 -m client --delete-everything
-python3.11 -m client --delete-everything --state-file "test_state.state"
+python3.11 -m client --delete-everything --state-file "tests/test_state.state"
 python3.11 -m client --refresh-resources-on-startup
 pytest tests/ -vvvv -s -m wip
+coverage run -m pytest
 
 Re-run on "connction error"
+
+Pull request by author? Using get_all()
+
+GET @ <https://dev.azure.com/vfuk-digital/_pulls>
 
 For the plans, have a new folder, called "plan_resources", which has all the same resources, but a few differences:
 

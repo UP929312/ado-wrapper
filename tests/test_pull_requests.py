@@ -100,3 +100,13 @@ class TestPullRequest:
         # =====
         pull_request.close(self.ado_client)
         repo.delete(self.ado_client)
+
+    def test_get_all_by_repo_id(self) -> None:
+        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-all-by-repo-id")
+        Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")
+        pull_request_1 = PullRequest.create(self.ado_client, repo.repo_id, "new-branch", "Test PR For Get Pull Requests 1", "Test description")
+        all_pull_requests = PullRequest.get_all_by_repo_id(self.ado_client, repo_id=repo.repo_id, status="active")
+        assert len(all_pull_requests) == 1
+        assert all(isinstance(pull_request, PullRequest) for pull_request in all_pull_requests)
+        assert all([x.pull_request_id in [pull_request_1.pull_request_id] for x in all_pull_requests])
+        repo.delete(self.ado_client)

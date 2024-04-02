@@ -80,16 +80,13 @@ if __name__ == "__main__":
     if args.delete_everything:
         # Deletes ADO resources and entries in the state file
         print("[ADO-API] Deleting every resource in state and the real ADO resources")
-        for resource_type in ado_client.state_manager.load_state()["resources"]:
-            for resource_id in ado_client.state_manager.load_state()["resources"][resource_type]:
-                ado_client.state_manager.delete_resource(resource_type, resource_id)
+        ado_client.state_manager.delete_all_resources()
         print("[ADO-API] Finishing deleting resources in state")
 
     if args.delete_resource_type is not None:
         # Deletes ADO resources and entries in the state file of a specific type
-        resource_type: ResourceType = args.delete_resource_type  # type: ignore[no-redef]
-        for resource_id in ado_client.state_manager.load_state()["resources"][resource_type]:
-            ado_client.state_manager.delete_resource(resource_type, resource_id)
+        resource_type: ResourceType = args.delete_resource_type
+        ado_client.state_manager.delete_all_resources(resource_type_filter=resource_type)
         print(f"[ADO-API] Successfully deleted every resource of type {resource_type} in state")
 
     if args.refresh_internal_state:

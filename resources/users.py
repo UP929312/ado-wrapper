@@ -61,16 +61,16 @@ class AdoUser(StateManagedResource):
     def delete_by_id(cls, ado_client: AdoClient, member_id: str) -> None:  # type: ignore[override]
         raise NotImplementedError("Deleting a user is not supported")
 
-    # ============ End of requirement set by all state managed resources ================== #
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-    # =============== Start of additional methods included with class ===================== #
-
     @classmethod
     def get_all(cls, ado_client: AdoClient) -> list["AdoUser"]:  # type: ignore[override]
         return super().get_all(
             ado_client,
             f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
+
+    # ============ End of requirement set by all state managed resources ================== #
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+    # =============== Start of additional methods included with class ===================== #
 
     @classmethod
     def get_by_email(cls, ado_client: AdoClient, member_email: str) -> "AdoUser":

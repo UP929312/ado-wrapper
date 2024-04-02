@@ -19,6 +19,8 @@ def from_ado_date_string(date_string: None) -> None:
 def from_ado_date_string(date_string: str | None) -> datetime | None:
     if date_string is None:
         return None
+    if date_string.startswith("/Date("):
+        return datetime.fromtimestamp(int(date_string[6:-2]) / 1000, tz=timezone.utc)
     no_milliseconds = date_string.split(".")[0].removesuffix("Z")
     return datetime.strptime(no_milliseconds, "%Y-%m-%dT%H:%M:%S")
 

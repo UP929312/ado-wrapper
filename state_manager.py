@@ -70,7 +70,7 @@ class StateManager:
 
     def delete_resource(self, resource_type: ResourceType, resource_id: str) -> None:
         all_resource_classes = get_resource_variables()
-        class_reference = [value for key, value in all_resource_classes.items() if key == resource_type][0]
+        class_reference = all_resource_classes[resource_type]
         try:
             class_reference.delete_by_id(self.ado_client, resource_id)  # type: ignore[call-arg]
         except DeletionFailed as exc:

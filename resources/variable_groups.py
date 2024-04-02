@@ -87,6 +87,13 @@ class VariableGroup(StateManagedResource):
             attribute_name, attribute_value, params  # fmt: skip
         )
 
+    @classmethod
+    def get_all(cls, ado_client: AdoClient) -> list["VariableGroup"]:  # type: ignore[override]
+        return super().get_all(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/distributedtask/variablegroups?api-version=7.1-preview.2",
+        )  # type: ignore[return-value]
+
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
@@ -100,10 +107,3 @@ class VariableGroup(StateManagedResource):
             if variable_group.name == name:
                 return variable_group
         return None
-
-    @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list["VariableGroup"]:  # type: ignore[override]
-        return super().get_all(
-            ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/distributedtask/variablegroups?api-version=7.1-preview.2",
-        )  # type: ignore[return-value]

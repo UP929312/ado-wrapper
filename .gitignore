@@ -11,3 +11,4 @@ dumps.py
 tests/test_data.txt
 .pytest_cache
 prototype/
+.coverage

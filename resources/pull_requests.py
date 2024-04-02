@@ -7,7 +7,7 @@ from attribute_types import PullRequestEditableAttribute
 
 import requests
 
-from utils import from_ado_date_string, get_internal_field_names
+from utils import from_ado_date_string, ResourceNotFound
 from state_managed_abc import StateManagedResource
 from resources.users import Member, Reviewer
 
@@ -93,6 +93,13 @@ class PullRequest(StateManagedResource):
             attribute_name, attribute_value, {} # fmt: skip
         )
 
+    @classmethod
+    def get_all(cls, ado_client: AdoClient, status: PullRequestStatus = "all") -> list[PullRequest]:  # type: ignore[override]
+        return super().get_all(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/pullrequests?searchCriteria.status={status}&api-version=7.1"
+        )  # type: ignore[return-value]
+
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
@@ -138,3 +145,31 @@ class PullRequest(StateManagedResource):
             auth=ado_client.auth,
         ).json()
         return [Member(reviewer["displayName"], reviewer["uniqueName"], reviewer["id"]) for reviewer in request["value"]]
+
+    @classmethod
+    def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str, status: PullRequestStatus = "all") -> list[PullRequest]:
+        pull_requests = requests.get(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
+            auth=ado_client.auth,
+        ).json()
+        try:
+            return [PullRequest.from_request_payload(pr) for pr in pull_requests["value"]]
+        except KeyError:
+            if pull_requests.get("message", "").startswith("TF401019"):
+                print(f"Repo `{pull_requests['message'].split('identifier')[1].split(' ')[0]}` was disabled, or you had no access.")
+                return []
+            raise ResourceNotFound(pull_requests)  # pylint: disable=raise-missing-from
+
+    @classmethod
+    def get_all_by_author(cls, ado_client: AdoClient, author_email: str, status: PullRequestStatus = "all") -> list[PullRequest]:
+        all_pull_requests: list[PullRequest] = cls.get_all(ado_client, status)
+        return [pr for pr in all_pull_requests if pr.author.email == author_email]
+
+    @classmethod
+    def get_my_pull_requests(cls, ado_client: AdoClient) -> list[PullRequest]:
+        """This is super tempremental, I have to do a bunch of splits, it's not official so might not work"""
+        import json
+        request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/_pulls", auth=ado_client.auth)
+        raw_data = request.text.split("application/json")[1].split("pullRequests\"")[1].split("queries")[0].removeprefix("\"").removeprefix(":").removesuffix(",\"")
+        json_data = json.loads(raw_data)
+        return [cls.from_request_payload(pr) for pr in json_data.values()]

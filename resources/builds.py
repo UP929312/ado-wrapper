@@ -80,16 +80,15 @@ class Build(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(
-        cls, ado_client: AdoClient, definition_id: str,  # type: ignore[override]
-        source_branch: str = "refs/heads/main", permit_use_of_var_groups: bool = False,  # fmt: skip
+    def create(  # type: ignore[override]
+        cls, ado_client: AdoClient, definition_id: str, source_branch: str = "refs/heads/main", permit_use_of_var_groups: bool = False,  # fmt: skip
     ) -> "Build":
         """`permit_var_groups` defines whether the variable group will be automatically allowed for the build or need manual approval."""
         # if permit_use_of_var_groups:
-        #     print(f"Variable Groups: {BuildDefinition.get_by_id(ado_client, definition_id).variable_groups}")
+        #     rint(f"Variable Groups: {BuildDefinition.get_by_id(ado_client, definition_id).variable_groups}")
         #     for var_group_id in BuildDefinition.get_by_id(ado_client, definition_id).variable_groups:
         #         request = requests.patch(f"https://dev.azure.com/{ado_client.ado_org}/{definition_id}/_apis/pipelines/pipelinePermissions/variablegroup/{var_group_id}")  # fmt: skip
-        #         print(request.text, request.status_code)
+        #         rint(request.text, request.status_code)
         #         assert request.status_code <= 204
         return super().create(
             ado_client,

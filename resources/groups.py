@@ -70,7 +70,7 @@ class Group(StateManagedResource):
     #         f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{ado_client.ado_project}/groups/{self.group_id}/members?api-version=7.1-preview.2",
     #         auth=ado_client.auth,
     #     ).json()
-    #     print(request)
+    #     rint(request)
     #     # return [GroupMember.from_request_payload(member) for member in request]
 
     def delete(self, ado_client: AdoClient, group_id: str) -> None:

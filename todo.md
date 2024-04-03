@@ -1,11 +1,5 @@
 # To-do
 
-The whole state idea, for each class that creates stuff, add it to the state file
-Have a CLI to clear state, maybe of certain resources
-When you delete from ado, it should also delete from state
-Maybe show a type when adding to state too, like "Add": abc
-This lets us store and perhaps revert updates?
-
 Resources that are entirely state managed:
 Build -*
 BuildDefinition -*
@@ -21,9 +15,7 @@ Pull Request, Commit
 
 -----
 
-Integrations testing, we already kind of do that, but with variable groups + repos + builds?
-
-Add "Update" to more stuff, prevent updates on uneditable attributes in state_managed_abc/update
+Add "Update" to more stuff
 
 When I am testing .from_request_payload, maybe use the plan object's data?
 
@@ -47,7 +39,9 @@ Teams.get_members(recursive=True)  Not sure that Teams are the right thing, mayb
 <https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict>
 This might allow us to remove "as_json"
 
-For state, have lifecycle policies, split each id into id -> {data, lifecyclepolicy, run_id?}
+For state, have lifecycle policies, split each id into id -> {data, lifecyclepolicy, run_id/metadata? Created timestamp}
+We now have the ["data"] bit, so we can add lifecycle policies and run ids and that kind of thing more easily
+We can maybe use run id to delete all by run id?
 
 Look into tags for resources?
 <https://learn.microsoft.com/en-us/rest/api/azure/devops/git/annotated-tags/get?view=azure-devops-rest-7.1&tabs=HTTP>
@@ -71,10 +65,6 @@ pytest tests/ -vvvv -s -m wip
 coverage run -m pytest
 
 Re-run on "connction error"
-
-Pull request by author? Using get_all()
-
-GET @ <https://dev.azure.com/vfuk-digital/_pulls>
 
 For the plans, have a new folder, called "plan_resources", which has all the same resources, but a few differences:
 

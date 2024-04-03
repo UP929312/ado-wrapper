@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "ado-api"
-description = "A high level wrapper around the ADO API"
+description = "A high level wrapper around the ADO API including OOP principals and state management"
 authors = ["Ben Skerritt"]
-version = "0.1.0"
+version = "0.0.1"
 license = "Proprietary"
 readme = "README.md"
 packages = [{include = "src"}]
@@ -27,7 +27,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.mypy]
 plugins = ["pydantic.mypy"]
 exclude = ['.venv', '.vscode', '.pytest_cache', '.mypy_cache', '.git', '__pycache__']
-strict = false
+strict = true
 
 [tool.pylint.main]
 ignore = [".venv"]

@@ -88,7 +88,7 @@ class Team(StateManagedResource):
     # @staticmethod
     # def _recursively_extract_teams(ado_client: AdoClient, team_or_member: Team | TeamMember):
     #     if isinstance(team_or_member, Team):
-    #         print("Found a team!")
+    #         rint("Found a team!")
     #         team_or_member.get_members(ado_client)
     #         for member in team_or_member.team_members:
     #             Team._recursively_extract_teams(ado_client, member)

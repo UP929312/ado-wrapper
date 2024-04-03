@@ -47,7 +47,7 @@ class StateManager:
         all_states = self.load_state()
         if resource_id in all_states["resources"][resource_type]:
             self.remove_resource_from_state(resource_type, resource_id)
-        all_states["resources"][resource_type] |= {resource_id: resource_data}
+        all_states["resources"][resource_type] |= {resource_id: {"data": resource_data}}
         return self.write_state_file(all_states)
 
     def remove_resource_from_state(self, resource_type: ResourceType, resource_id: str) -> None:
@@ -63,10 +63,8 @@ class StateManager:
             print("[ADO-API] Not storing state, so not updating resource in state")
             return None
         all_states = self.load_state()
-        all_states["resources"][resource_type][resource_id] = updated_data
+        all_states["resources"][resource_type][resource_id]["data"] = updated_data
         return self.write_state_file(all_states)
-        # The line below broke the code, so I commented it out
-        # return self.write_state_file(self.load_state() | {"resources": {resource_type: {resource_id: updated_data}}})  # type: ignore[arg-type]
 
     # =======================================================================================================
 
@@ -122,8 +120,8 @@ class StateManager:
         for resource_type in all_states["resources"]:
             for resource_id in all_states["resources"][resource_type]:
                 instance = ALL_RESOURCES[resource_type].get_by_id(self.ado_client, resource_id)
-                if instance.to_json() != all_states["resources"][resource_type][resource_id]:
-                    all_states["resources"][resource_type][resource_id] = instance.to_json()
+                if instance.to_json() != all_states["resources"][resource_type][resource_id]["data"]:
+                    all_states["resources"][resource_type][resource_id]["data"] = instance.to_json()
         return all_states
 
     def load_all_resources_with_prefix_into_state(self, prefix: str) -> None:

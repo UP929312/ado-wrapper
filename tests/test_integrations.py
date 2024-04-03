@@ -34,7 +34,7 @@ class TestIntegrations:
     @pytest.mark.integrations
     @pytest.mark.skip("This test is not meant to be run in CI/CD, just manually")
     def test_through(self) -> None:
-        # Creates a variable group, repo, build definition (which prints out the variable group value),
+        # Creates a variable group, repo, build definition (which outputs out the variable group value),
         # then runs the build, waits for it to complete, then clears up
         BRANCH_NAME = "testing-branch"
         variable_group = VariableGroup.create(self.ado_client, "ado-api-test-for-integrations", "my_description", {"a": "b"})

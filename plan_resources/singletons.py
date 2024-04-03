@@ -20,9 +20,9 @@ def plannable_resource(func: Callable[[Any, AdoClient], Any]) -> Callable[[Any],
         method_type = plan_class.method_types[func.__name__]
         old_requests_method = getattr(requests, method_type)
         setattr(requests, method_type, plan_class.create)
-        print("Before")
+        # rint("Before")
         result = func(cls, ado_client, *args, **kwargs)
-        print("After")
+        # rint("After")
         setattr(requests, method_type, old_requests_method)
         return result
 

@@ -3,6 +3,7 @@ __pycache__/
 /.vscode
 
 secret.py
+script.py
 *.state
 fixer.py
 main.json

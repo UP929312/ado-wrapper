@@ -49,7 +49,7 @@ Look into tags for resources?
 This?
 <https://www.reddit.com/r/azuredevops/comments/xj56gs/complete_pull_request_with_bypass_policy_via_api/>
 
-TODO: Test State ----
+IMPORT TODO: main.py has creds loaded in, we should maybe have the script take a config file or something, or maybe just params for org, project, etc
 
 -----
 

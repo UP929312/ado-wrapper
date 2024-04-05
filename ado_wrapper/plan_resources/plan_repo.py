@@ -1,15 +1,11 @@
 from typing import Callable, Any
 # import re
+import requests
 # from datetime import datetime
+
 from ado_wrapper.client import AdoClient
 from ado_wrapper.resources.repo import Repo
 
-import requests
-
-# class UnknownUntilApply(str):
-#     def __str__(self) -> str:
-#         return "Unknown until apply"
-# UnknownUntilApply = UnknownUntilApply()  # type: ignore
 UNKNOWN_UNTIL_APPLY = "Unknown until apply"
 
 

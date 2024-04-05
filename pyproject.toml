@@ -47,7 +47,9 @@ disable = [
 
     "too-few-public-methods",
     "too-many-instance-attributes",
+    "too-many-arguments",
 
+    "arguments-differ",
     "arguments-renamed",
     "invalid-name",
     "too-many-locals",

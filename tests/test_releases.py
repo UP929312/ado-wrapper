@@ -60,7 +60,7 @@ class TestRelease:
         release_definition = ReleaseDefinition.create(
             self.ado_client, "ado_wrapper-test-release-for-update", [], existing_agent_pool_id,  # fmt: skip
         )
-        Release.create(self.ado_client, release_definition.release_definition_id)  # release = 
+        Release.create(self.ado_client, release_definition.release_definition_id)  # release =
         # ======
         # release.update(self.ado_client, "status", "completed")
         # assert release.status == "completed"

@@ -117,7 +117,7 @@ class Build(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all_by_definition(cls, ado_client: AdoClient, definition_id: str) -> "list[Build]":  # type: ignore[override]
+    def get_all_by_definition(cls, ado_client: AdoClient, definition_id: str) -> "list[Build]":
         return super().get_all(ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?api-version=7.1&definitions={definition_id}",
         )  # type: ignore[return-value]

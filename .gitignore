@@ -5,6 +5,7 @@ __pycache__/
 prototype/
 .coverage
 dist/
+htmlcov/
 
 *.state
 tests/test_data.txt

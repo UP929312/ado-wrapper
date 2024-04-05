@@ -102,20 +102,20 @@ class Team(StateManagedResource):
     #     ]
     #     return all_teams  # type: ignore[return-value]
 
-    """
-    The output should be as follows:
-    [
-        Team 1 = [
-            TeamMember 1,
-            TeamMember 2,
-            TeamMember 3
-        ],
-        Team 2 = [
-            TeamMember 4,
-            Team 3 = [
-                TeamMember 5,
-                TeamMember 6
-            ]
-        ],
-    ]
-    """
+    # """
+    # The output should be as follows:
+    # [
+    #     Team 1 = [
+    #         TeamMember 1,
+    #         TeamMember 2,
+    #         TeamMember 3
+    #     ],
+    #     Team 2 = [
+    #         TeamMember 4,
+    #         Team 3 = [
+    #             TeamMember 5,
+    #             TeamMember 6
+    #         ]
+    #     ],
+    # ]
+    # """

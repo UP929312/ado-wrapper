@@ -49,7 +49,7 @@ def main() -> None:
     if args.email is not None and args.token is not None and args.ado_org is not None and args.ado_project is not None:
         ado_client = AdoClient(args.email, args.token, args.ado_org, args.ado_project, state_file_name=args.state_file)
     elif args.creds_file:
-        with open(args.creds_file, "r") as f:
+        with open(args.creds_file, "r", encoding="utf-8") as f:
             creds = f.read().split("\n")
             ado_client = AdoClient(creds[0], creds[1], creds[2], creds[3], state_file_name=args.state_file)
 

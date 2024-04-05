@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+from datetime import datetime
+from uuid import uuid4
 from typing import Any, TypedDict, TYPE_CHECKING  # , Generator
 
 from ado_wrapper.attribute_types import ResourceType
@@ -8,7 +10,7 @@ from ado_wrapper.utils import DeletionFailed, get_resource_variables
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 
-STATE_FILE_VERSION = "1.3"
+STATE_FILE_VERSION = "1.4"
 
 
 class StateFileType(TypedDict):
@@ -20,6 +22,7 @@ class StateManager:
     def __init__(self, ado_client: "AdoClient", state_file_name: str | None = "main.state") -> None:
         self.ado_client = ado_client
         self.state_file_name = state_file_name
+        self.run_id = str(uuid4())
 
         # If they have a state file name input, but the file doesn't exist:
         if self.state_file_name is not None and not Path(self.state_file_name).exists():
@@ -47,7 +50,9 @@ class StateManager:
         all_states = self.load_state()
         if resource_id in all_states["resources"][resource_type]:
             self.remove_resource_from_state(resource_type, resource_id)
-        all_states["resources"][resource_type] |= {resource_id: {"data": resource_data}}
+        metadata = {"created_datetime": datetime.now().isoformat(), "run_id": self.run_id}
+        all_data = {resource_id: {"data": resource_data, "metadata": metadata, "lifecycle-status": {}}}
+        all_states["resources"][resource_type] |= all_data
         return self.write_state_file(all_states)
 
     def remove_resource_from_state(self, resource_type: ResourceType, resource_id: str) -> None:
@@ -64,6 +69,7 @@ class StateManager:
             return None
         all_states = self.load_state()
         all_states["resources"][resource_type][resource_id]["data"] = updated_data
+        all_states["resources"][resource_type][resource_id]["metadata"]["updated_datetime"] = datetime.now().isoformat()
         return self.write_state_file(all_states)
 
     # =======================================================================================================

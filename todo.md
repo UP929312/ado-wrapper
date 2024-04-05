@@ -49,8 +49,6 @@ This?
 
 Re-run on "connction error"
 
-IMPORT TODO: main.py has creds loaded in, we should maybe have the script take a config file or something, or maybe just params for org, project, etc
-
 -----
 
 Pylint command:
@@ -58,11 +56,12 @@ pylint *.py
 mypy . --strict
 black . --line-length 140
 pytest tests/ -vvvv -s
-python3.11 -m client --delete-everything --creds_file "credentials.txt"
-python3.11 -m client --delete-everything --creds_file "credentials.txt" --state-file "tests/test_state.state"
-python3.11 -m client --refresh-resources-on-startup --creds_file "credentials.txt"
-pytest tests/ -vvvv -s -m wip
+python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt"
+python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt" --state-file "tests/test_state.state"
+python3.11 -m ado_wrapper --refresh-resources-on-startup --creds_file "credentials.txt"
 coverage run -m pytest
+
+python3.11 -m pip install ado_wrapper --upgrade
 
 -----
 

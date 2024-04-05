@@ -74,7 +74,7 @@ class TestPullRequest:
         all_pull_requests = Repo.get_all_pull_requests(self.ado_client, repo_id=repo.repo_id, status="active")
         assert len(all_pull_requests) == 2
         assert all(isinstance(pull_request, PullRequest) for pull_request in all_pull_requests)
-        assert all([x.pull_request_id in [pull_request_1.pull_request_id, pull_request_2.pull_request_id] for x in all_pull_requests])
+        assert all(x.pull_request_id in [pull_request_1.pull_request_id, pull_request_2.pull_request_id] for x in all_pull_requests)
         repo.delete(self.ado_client)
 
     def test_mark_as_draft(self) -> None:
@@ -116,5 +116,5 @@ class TestPullRequest:
         all_pull_requests = PullRequest.get_all_by_repo_id(self.ado_client, repo_id=repo.repo_id, status="active")
         assert len(all_pull_requests) == 1
         assert all(isinstance(pull_request, PullRequest) for pull_request in all_pull_requests)
-        assert all([x.pull_request_id in [pull_request_1.pull_request_id] for x in all_pull_requests])
+        assert all(x.pull_request_id in [pull_request_1.pull_request_id] for x in all_pull_requests)
         repo.delete(self.ado_client)

@@ -117,12 +117,10 @@ class Build(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all_by_definition(cls, ado_client: AdoClient, definition_id: str) -> "list[Build]":
-        response = requests.get(
+    def get_all_by_definition(cls, ado_client: AdoClient, definition_id: str) -> "list[Build]":  # type: ignore[override]
+        return super().get_all(ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?api-version=7.1&definitions={definition_id}",
-            auth=ado_client.auth,
-        ).json()["value"]
-        return [cls.from_request_payload(build) for build in response]
+        )  # type: ignore[return-value]
 
     def delete(self, ado_client: AdoClient) -> None:
         return self.delete_by_id(ado_client, self.build_id)
@@ -145,10 +143,14 @@ class Build(StateManagedResource):
 
     @staticmethod
     def delete_all_leases(ado_client: AdoClient, build_id: str) -> None:
-        leases = requests.get(
+        leases_request = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}/leases?api-version=7.1-preview.1",
             auth=ado_client.auth,
-        ).json()["value"]
+        )
+        if leases_request.status_code != 200:
+            print(f"Could not delete leases, {leases_request.status_code}")
+            return
+        leases = leases_request.json()["value"]
         for lease in leases:
             lease_response = requests.delete(
                 f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/retention/leases?ids={lease['leaseId']}&api-version=6.1",
@@ -205,7 +207,7 @@ class BuildDefinition(StateManagedResource):
         return super().create(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.0",
-            payload=get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project, 
+            payload=get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project,
                                          agent_pool_id, branch_name)  # fmt: skip
         )  # type: ignore[return-value]
         #  | {"variableGroups": [{"id": x for x in variable_groups}]},

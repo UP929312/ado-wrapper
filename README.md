@@ -1,8 +1,8 @@
-# ado_wrapper
+# Ado Wrapper
 
 This is a Python Package which works as an interface to the Azure DevOps API
 
-It is essentially a wrapper for the horrible to work with ADO API, and supports OOP principals.
+It is essentially a wrapper for the (horrible to work with) ADO API, and supports OOP principals.
 
 Any resource can be fetched by calling the `<resource>.get_by_id()` function.
 

@@ -11,6 +11,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         prog="AdoWrapper", description="A tool to manage Azure DevOps resources and interface with the ADO API", usage=""
     )
+
+    parser.add_argument("--ado-org", dest="ado_org", required=False)
+    parser.add_argument("--ado-project", dest="ado_project", required=False)
+    parser.add_argument("--email", dest="email", required=False)
+    parser.add_argument("--token", dest="token", required=False)
+    parser.add_argument("--creds_file", dest="creds_file", required=False)
+
     delete_group = parser.add_mutually_exclusive_group()
     delete_group.add_argument(
         "--delete-everything", help="Delete every resource in state and the real ADO resources", action="store_true", dest="delete_everything"  # fmt: skip
@@ -36,8 +43,15 @@ def main() -> None:
     parser.add_argument("--state-file", help="The name of the state file to use", type=str, default="main.state", dest="state_file")
     args = parser.parse_args()
 
-    from secret import email, ado_access_token, ado_org, ado_project
-    ado_client = AdoClient(email, ado_access_token, ado_org, ado_project, state_file_name=args.state_file)
+    if args.email is None and args.token is None and args.ado_org is None and args.ado_project is None and args.creds_file is None:
+        raise ValueError("You must provide either --email and --token or --creds_file")
+
+    if args.email is not None and args.token is not None and args.ado_org is not None and args.ado_project is not None:
+        ado_client = AdoClient(args.email, args.token, args.ado_org, args.ado_project, state_file_name=args.state_file)
+    elif args.creds_file:
+        with open(args.creds_file, "r") as f:
+            creds = f.read().split("\n")
+            ado_client = AdoClient(creds[0], creds[1], creds[2], creds[3], state_file_name=args.state_file)
 
     if args.purge_state:
         # Deletes everything in the state file

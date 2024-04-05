@@ -5,13 +5,11 @@ import re
 import requests
 import json
 
-from secret import email, ado_access_token, ado_org, ado_project
-
-# from secret import email, alternative_ado_access_token, old_ado_org, old_ado_project
+with open("credentials.txt", "r") as file:
+    email, ado_access_token, ado_org, ado_project = file.read().split("\n")
 
 from ado_wrapper import AdoClient, Project, VariableGroup, AdoUser, Member, Reviewer, Repo, Commit, PullRequest, Build, BuildDefinition, Branch, Release, ReleaseDefinition, Team
 
-# ado_client = AdoClient(email, alternative_ado_access_token, old_ado_org, old_ado_project)
 ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
 # ado_client.state_manager.load_all_resources_with_prefix_into_state("ado_wrapper-")
 

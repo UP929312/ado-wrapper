@@ -47,6 +47,8 @@ Look into tags for resources?
 This?
 <https://www.reddit.com/r/ado_wrapper/comments/xj56gs/complete_pull_request_with_bypass_policy_via_api/>
 
+Re-run on "connction error"
+
 IMPORT TODO: main.py has creds loaded in, we should maybe have the script take a config file or something, or maybe just params for org, project, etc
 
 -----
@@ -56,13 +58,13 @@ pylint *.py
 mypy . --strict
 black . --line-length 140
 pytest tests/ -vvvv -s
-python3.11 -m client --delete-everything
-python3.11 -m client --delete-everything --state-file "tests/test_state.state"
-python3.11 -m client --refresh-resources-on-startup
+python3.11 -m client --delete-everything --creds_file "credentials.txt"
+python3.11 -m client --delete-everything --creds_file "credentials.txt" --state-file "tests/test_state.state"
+python3.11 -m client --refresh-resources-on-startup --creds_file "credentials.txt"
 pytest tests/ -vvvv -s -m wip
 coverage run -m pytest
 
-Re-run on "connction error"
+-----
 
 For the plans, have a new folder, called "plan_resources", which has all the same resources, but a few differences:
 

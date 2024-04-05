@@ -6,8 +6,8 @@ prototype/
 .coverage
 dist/
 
-secret.py
-script.py
 *.state
-
 tests/test_data.txt
+
+script.py
+credentials.txt

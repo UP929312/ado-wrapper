@@ -9,23 +9,13 @@ from secret import email, ado_access_token, ado_org, ado_project
 
 # from secret import email, alternative_ado_access_token, old_ado_org, old_ado_project
 
-from client import AdoClient
-
-from resources.projects import Project
-from resources.variable_groups import VariableGroup
-from resources.users import AdoUser, Member, Reviewer
-from resources.repo import Repo
-from resources.commits import Commit
-from resources.pull_requests import PullRequest
-from resources.builds import Build, BuildDefinition
-from resources.branches import Branch
-from resources.releases import Release, ReleaseDefinition
-from resources.teams import Team
-from resources.groups import Group
+from azuredevops import AdoClient, Project, VariableGroup, AdoUser, Member, Reviewer, Repo, Commit, PullRequest, Build, BuildDefinition, Branch, Release, ReleaseDefinition, Team
 
 # ado_client = AdoClient(email, alternative_ado_access_token, old_ado_org, old_ado_project)
 ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
-# ado_client.state_manager.load_all_resources_with_prefix_into_state("ado-api-")
+# ado_client.state_manager.load_all_resources_with_prefix_into_state("azuredevops-")
+
+print([x.name for x in Repo.get_all(ado_client)])
 
 #  https://dev.azure.com/{ado_client.ado_org}/{id}/_apis/pipelines/pipelinePermissions/variablegroup/703
 # PATCH

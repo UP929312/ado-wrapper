@@ -4,13 +4,13 @@ from datetime import datetime
 from typing import Any, TYPE_CHECKING
 from dataclasses import dataclass, field
 
-from utils import from_ado_date_string
-from state_managed_abc import StateManagedResource
-from resources.users import Member
-from attribute_types import VariableGroupEditableAttribute
+from azuredevops.utils import from_ado_date_string
+from azuredevops.state_managed_abc import StateManagedResource
+from azuredevops.resources.users import Member
+from azuredevops.attribute_types import VariableGroupEditableAttribute
 
 if TYPE_CHECKING:
-    from client import AdoClient
+    from azuredevops.client import AdoClient
 
 
 @dataclass

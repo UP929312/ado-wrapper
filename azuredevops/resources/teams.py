@@ -5,11 +5,11 @@ from dataclasses import dataclass, field
 
 import requests
 
-from state_managed_abc import StateManagedResource
-from resources.users import TeamMember
+from azuredevops.state_managed_abc import StateManagedResource
+from azuredevops.resources.users import TeamMember
 
 if TYPE_CHECKING:
-    from client import AdoClient
+    from azuredevops.client import AdoClient
 
 
 @dataclass

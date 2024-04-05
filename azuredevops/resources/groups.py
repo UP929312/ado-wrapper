@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from dataclasses import dataclass, field
 
-import requests
+# import requests
 
-from state_managed_abc import StateManagedResource
+from azuredevops.state_managed_abc import StateManagedResource
 
-# from resources.users import GroupMember
+# from azuredevops.resources.users import GroupMember
 
 if TYPE_CHECKING:
-    from client import AdoClient
+    from azuredevops.client import AdoClient
 
 
 @dataclass

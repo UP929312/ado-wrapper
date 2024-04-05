@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
-from client import AdoClient
-from state_managed_abc import StateManagedResource
+from azuredevops.client import AdoClient
+from azuredevops.state_managed_abc import StateManagedResource
 
 # from editable_attribute_types import BranchEditableAttribute
 

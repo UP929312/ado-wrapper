@@ -3,7 +3,7 @@ from typing import overload, TYPE_CHECKING, Any
 from dataclasses import fields
 
 if TYPE_CHECKING:
-    from state_managed_abc import StateManagedResource
+    from azuredevops.state_managed_abc import StateManagedResource
 
 
 @overload
@@ -118,7 +118,7 @@ class UpdateFailed(Exception):
 
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports
     """This returns a mapping of resource name (str) to the class type of the resource. This is used to dynamically create instances of resources."""
-    from resources import (  # type: ignore[attr-defined]  # pylint: disable=possibly-unused-variable
+    from azuredevops.resources import (  # type: ignore[attr-defined]  # pylint: disable=possibly-unused-variable
         Branch, Build, BuildDefinition, Commit, Project, PullRequest, Release, ReleaseDefinition, Repo, BuildRepository, Team,
         AdoUser, Member, Reviewer, VariableGroup,  # fmt: skip
     )

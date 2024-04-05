@@ -5,10 +5,10 @@ from dataclasses import dataclass, field
 
 import requests
 
-from state_managed_abc import StateManagedResource
+from azuredevops.state_managed_abc import StateManagedResource
 
 if TYPE_CHECKING:
-    from client import AdoClient
+    from azuredevops.client import AdoClient
 
 VOTE_ID_TO_TYPE = {
     10: "approved",

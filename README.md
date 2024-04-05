@@ -1,4 +1,4 @@
-# ado-api
+# azuredevops
 
 This is a Python Package which works as an interface to the Azure DevOps API
 

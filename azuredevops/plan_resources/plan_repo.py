@@ -1,8 +1,8 @@
 from typing import Callable, Any
 import re
 from datetime import datetime
-from client import AdoClient
-from resources.repo import Repo
+from azuredevops.client import AdoClient
+from azuredevops.resources.repo import Repo
 
 import requests
 

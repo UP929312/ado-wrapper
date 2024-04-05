@@ -2,11 +2,11 @@ import json
 from pathlib import Path
 from typing import Any, TypedDict, TYPE_CHECKING  # , Generator
 
-from attribute_types import ResourceType
-from utils import DeletionFailed, get_resource_variables
+from azuredevops.attribute_types import ResourceType
+from azuredevops.utils import DeletionFailed, get_resource_variables
 
 if TYPE_CHECKING:
-    from client import AdoClient
+    from azuredevops.client import AdoClient
 
 STATE_FILE_VERSION = "1.3"
 
@@ -42,7 +42,7 @@ class StateManager:
 
     def add_resource_to_state(self, resource_type: ResourceType, resource_id: str, resource_data: dict[str, Any]) -> None:
         if self.state_file_name is None:
-            print("[ADO-API] Not storing state, so not adding resource to state")
+            print("[AZUREDEVOPS] Not storing state, so not adding resource to state")
             return None
         all_states = self.load_state()
         if resource_id in all_states["resources"][resource_type]:
@@ -52,7 +52,7 @@ class StateManager:
 
     def remove_resource_from_state(self, resource_type: ResourceType, resource_id: str) -> None:
         if self.state_file_name is None:
-            print("[ADO-API] Not storing state, so not removing resource to state")
+            print("[AZUREDEVOPS] Not storing state, so not removing resource to state")
             return None
         all_states = self.load_state()
         all_states["resources"][resource_type] = {k: v for k, v in all_states["resources"][resource_type].items() if k != resource_id}
@@ -60,7 +60,7 @@ class StateManager:
 
     def update_resource_in_state(self, resource_type: ResourceType, resource_id: str, updated_data: dict[str, Any]) -> None:
         if self.state_file_name is None:
-            print("[ADO-API] Not storing state, so not updating resource in state")
+            print("[AZUREDEVOPS] Not storing state, so not updating resource in state")
             return None
         all_states = self.load_state()
         all_states["resources"][resource_type][resource_id]["data"] = updated_data
@@ -76,9 +76,9 @@ class StateManager:
         except DeletionFailed as exc:
             print(str(exc))
         except (NotImplementedError, TypeError):
-            print(f"[ADO-API] Cannot {resource_type} {resource_id} from state or real space, please delete this manually or using code.")
+            print(f"[AZUREDEVOPS] Cannot {resource_type} {resource_id} from state or real space, please delete this manually or using code.")
         else:
-            print(f"[ADO-API] Deleted {resource_type} {resource_id} from ADO")
+            print(f"[AZUREDEVOPS] Deleted {resource_type} {resource_id} from ADO")
             self.remove_resource_from_state(resource_type, resource_id)
 
     def delete_all_resources(self, resource_type_filter: ResourceType | None = None) -> None:
@@ -92,7 +92,7 @@ class StateManager:
                 try:
                     self.delete_resource(resource_type, resource_id)  # pyright: ignore[reportArgumentType]
                 except DeletionFailed as e:
-                    print(f"[ADO-API] Error deleting {resource_type} {resource_id}: {e}")
+                    print(f"[AZUREDEVOPS] Error deleting {resource_type} {resource_id}: {e}")
 
     def import_into_state(self, resource_type: ResourceType, resource_id: str) -> None:
         all_resource_classes = get_resource_variables()
@@ -125,10 +125,10 @@ class StateManager:
         return all_states
 
     def load_all_resources_with_prefix_into_state(self, prefix: str) -> None:
-        from resources.variable_groups import VariableGroup
-        from resources.repo import Repo
-        from resources.releases import ReleaseDefinition
-        from resources.builds import BuildDefinition
+        from azuredevops.resources.variable_groups import VariableGroup
+        from azuredevops.resources.repo import Repo
+        from azuredevops.resources.releases import ReleaseDefinition
+        from azuredevops.resources.builds import BuildDefinition
 
         for repo in Repo.get_all(self.ado_client):
             if repo.name.startswith(prefix):

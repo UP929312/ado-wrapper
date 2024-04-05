@@ -5,12 +5,12 @@ import time
 
 import requests
 
-from client import AdoClient
-from utils import from_ado_date_string
-from state_managed_abc import StateManagedResource
-from resources.users import Member
-from resources.repo import BuildRepository
-from attribute_types import BuildDefinitionEditableAttribute
+from azuredevops.client import AdoClient
+from azuredevops.utils import from_ado_date_string
+from azuredevops.state_managed_abc import StateManagedResource
+from azuredevops.resources.users import Member
+from azuredevops.resources.repo import BuildRepository
+from azuredevops.attribute_types import BuildDefinitionEditableAttribute
 
 BuildStatus = Literal["notStarted", "inProgress", "completed", "cancelling", "postponed", "notSet", "none"]
 QueuePriority = Literal["low", "belowNormal", "normal", "aboveNormal", "high"]
@@ -57,7 +57,7 @@ class Build(StateManagedResource):
     start_time: datetime | None = None
     finish_time: datetime | None = None
     queue_time: datetime | None = field(repr=False, default=None)
-    reason: str = "An automated build created by the ADO-API"
+    reason: str = "An automated build created with the azuredevops Python library"
     priority: QueuePriority = "normal"
 
     def __str__(self) -> str:
@@ -93,7 +93,7 @@ class Build(StateManagedResource):
         return super().create(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?definitionId={definition_id}&api-version=7.1",
-            {"reason": "An automated build created by the ADO-API", "sourceBranch": source_branch},
+            {"reason": "An automated build created with the azuredevops Python library", "sourceBranch": source_branch},
         )  # type: ignore[return-value]
 
     @classmethod

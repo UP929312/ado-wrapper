@@ -4,13 +4,13 @@ from datetime import datetime
 
 import requests
 
-from utils import (
+from azuredevops.utils import (
     get_resource_variables, extract_id, get_internal_field_names,
     ResourceAlreadyExists, DeletionFailed, ResourceNotFound, UpdateFailed,  # fmt: skip
 )
 
 if TYPE_CHECKING:
-    from client import AdoClient
+    from azuredevops.client import AdoClient
 
 
 def recursively_convert_to_json(attribute_name: str, attribute_value: Any) -> tuple[str, Any]:
@@ -84,9 +84,9 @@ class StateManagedResource:
         request = requests.delete(url, auth=ado_client.auth)
         if request.status_code != 204:
             if request.status_code == 404:
-                print("[ADO-API] Resource not found, probably already deleted, removing from state")
+                print("[AZUREDEVOPS] Resource not found, probably already deleted, removing from state")
             else:
-                raise DeletionFailed(f"[ADO-API] Error deleting {cls.__name__} ({resource_id}): {request.json()['message']}")
+                raise DeletionFailed(f"[AZUREDEVOPS] Error deleting {cls.__name__} ({resource_id}): {request.json()['message']}")
         ado_client.state_manager.remove_resource_from_state(cls.__name__, resource_id)  # type: ignore[arg-type]
 
     def update(self, ado_client: "AdoClient", update_action: Literal["put", "patch"], url: str,  # pylint: disable=too-many-arguments

@@ -1,14 +1,14 @@
 [tool.poetry]
-name = "ado-api"
-description = "A high level wrapper around the ADO API including OOP principals and state management"
+name = "azuredevops"
+description = "A high level wrapper around the AzureDevops API including OOP principals and state management"
 authors = ["Ben Skerritt"]
 version = "0.0.1"
 license = "Proprietary"
 readme = "README.md"
-packages = [{include = "src"}]
+packages = [{include = "azuredevops"}]
 
 [tool.poetry.scripts]
-ado-api = "__main__:main"
+azuredevops = "azuredevops.__main__:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -30,7 +30,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]
-exclude = ['.venv', '.vscode', '.pytest_cache', '.mypy_cache', '.git', '__pycache__']
+exclude = ['.venv', '.vscode', '.pytest_cache', '.mypy_cache', '.git', '__pycache__', 'script.py']
 strict = true
 
 [tool.pylint.main]

@@ -4,10 +4,10 @@ from dataclasses import dataclass, field
 
 import requests
 
-from client import AdoClient
-from state_managed_abc import StateManagedResource
-from utils import from_ado_date_string
-from resources.users import Member
+from azuredevops.client import AdoClient
+from azuredevops.state_managed_abc import StateManagedResource
+from azuredevops.utils import from_ado_date_string
+from azuredevops.resources.users import Member
 
 ReleaseStatus = Literal["active", "abandoned", "draft", "undefined"]
 
@@ -114,7 +114,7 @@ class Release(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod  # TO-DO: Test
-    def create(cls, ado_client: AdoClient, definition_id: str, description: str = "Made by ADO-API") -> "Release":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, definition_id: str, description: str = "Made with the azuredevops Python library") -> "Release":  # type: ignore[override]
         return super().create(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1",

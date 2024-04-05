@@ -1,7 +1,7 @@
 import pytest
 
-from client import AdoClient
-from resources.projects import Project
+from azuredevops.client import AdoClient
+from azuredevops.resources.projects import Project
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     (
@@ -32,7 +32,7 @@ class TestProject:
     @pytest.mark.create_delete
     def test_create_delete_project(self) -> None:
         with pytest.raises(NotImplementedError):
-            Project.create(self.ado_client, "ado-api-test-project", "description")
+            Project.create(self.ado_client, "azuredevops-test-project", "description")
         with pytest.raises(NotImplementedError):
             Project.delete_by_id(self.ado_client, "abc")
 

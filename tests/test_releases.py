@@ -2,9 +2,9 @@ from datetime import datetime
 
 import pytest
 
-from client import AdoClient
-from resources.releases import Release, ReleaseDefinition
-from resources.users import Member
+from azuredevops.client import AdoClient
+from azuredevops.resources.releases import Release, ReleaseDefinition
+from azuredevops.resources.users import Member
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     (
@@ -37,7 +37,7 @@ class TestRelease:
     @pytest.mark.create_delete
     def test_create_delete_release(self) -> None:
         release_definition = ReleaseDefinition.create(
-            self.ado_client, "ado-api-test-releasefor-create-delete-release", [], existing_agent_pool_id
+            self.ado_client, "azuredevops-test-releasefor-create-delete-release", [], existing_agent_pool_id
         )
         release = Release.create(self.ado_client, release_definition.release_definition_id)
         assert release.release_id == Release.get_by_id(self.ado_client, release.release_id).release_id
@@ -47,7 +47,7 @@ class TestRelease:
 
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
-        release_definition = ReleaseDefinition.create(self.ado_client, "ado-api-test-release-for-get-by-id", [], existing_agent_pool_id)  # fmt: skip
+        release_definition = ReleaseDefinition.create(self.ado_client, "azuredevops-test-release-for-get-by-id", [], existing_agent_pool_id)  # fmt: skip
         release = Release.create(self.ado_client, release_definition.release_definition_id)
         fetched_release = Release.get_by_id(self.ado_client, release.release_id)
         assert fetched_release.release_id == release.release_id
@@ -58,7 +58,7 @@ class TestRelease:
     @pytest.mark.skip("This test is skipped because it is not yet implemented")
     def test_update(self) -> None:
         release_definition = ReleaseDefinition.create(
-            self.ado_client, "ado-api-test-release-for-update", [], existing_agent_pool_id,  # fmt: skip
+            self.ado_client, "azuredevops-test-release-for-update", [], existing_agent_pool_id,  # fmt: skip
         )
         release = Release.create(self.ado_client, release_definition.release_definition_id)
         # ======
@@ -103,16 +103,16 @@ class TestReleaseDefinition:
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
         release_definition = ReleaseDefinition.create(
-            self.ado_client, "ado-api-test-release-for-create-delete", [], existing_agent_pool_id,  # fmt: skip
+            self.ado_client, "azuredevops-test-release-for-create-delete", [], existing_agent_pool_id,  # fmt: skip
         )
         release_definition.delete(self.ado_client)
         assert release_definition.description == ""
-        assert release_definition.name == "ado-api-test-release-for-create-delete"
+        assert release_definition.name == "azuredevops-test-release-for-create-delete"
 
     @pytest.mark.get_by_id
     def test_get_all_by_definition_id(self) -> None:
         release_definition = ReleaseDefinition.create(
-            self.ado_client, "ado-api-test-release-for-get-all-by-repo", [], existing_agent_pool_id  # fmt: skip
+            self.ado_client, "azuredevops-test-release-for-get-all-by-repo", [], existing_agent_pool_id  # fmt: skip
         )
         releases = ReleaseDefinition.get_all_releases_for_definition(self.ado_client, release_definition.release_definition_id)
         assert len(releases) == 0
@@ -121,7 +121,7 @@ class TestReleaseDefinition:
     @pytest.mark.get_all
     def test_get_all(self) -> None:
         release_definition = ReleaseDefinition.create(
-            self.ado_client, "ado-api-test-release-for-get-all-by-repo", [], existing_agent_pool_id  # fmt: skip
+            self.ado_client, "azuredevops-test-release-for-get-all-by-repo", [], existing_agent_pool_id  # fmt: skip
         )
         release_definitions = ReleaseDefinition.get_all(self.ado_client)
         release_definition.delete(self.ado_client)
@@ -131,13 +131,13 @@ class TestReleaseDefinition:
     @pytest.mark.update
     def test_update(self) -> None:
         release_definition = ReleaseDefinition.create(
-            self.ado_client, "ado-api-test-release-for-update", [], existing_agent_pool_id,  # fmt: skip
+            self.ado_client, "azuredevops-test-release-for-update", [], existing_agent_pool_id,  # fmt: skip
         )
         # ======
-        release_definition.update(self.ado_client, "name", "ado-api-test-release-for-update-rename")
-        assert release_definition.name == "ado-api-test-release-for-update-rename"  # Test instance attribute is updated
+        release_definition.update(self.ado_client, "name", "azuredevops-test-release-for-update-rename")
+        assert release_definition.name == "azuredevops-test-release-for-update-rename"  # Test instance attribute is updated
         # ======
         fetched_release_definition = ReleaseDefinition.get_by_id(self.ado_client, release_definition.release_definition_id)
-        assert fetched_release_definition.name == "ado-api-test-release-for-update-rename"
+        assert fetched_release_definition.name == "azuredevops-test-release-for-update-rename"
         # ======
         release_definition.delete(self.ado_client)

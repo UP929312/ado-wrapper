@@ -2,11 +2,11 @@ from datetime import datetime
 
 import pytest
 
-from client import AdoClient
-from resources.repo import Repo
-from resources.builds import Build, BuildDefinition
-from resources.users import Member
-from resources.commits import Commit
+from azuredevops.client import AdoClient
+from azuredevops.resources.repo import Repo
+from azuredevops.resources.builds import Build, BuildDefinition
+from azuredevops.resources.users import Member
+from azuredevops.resources.commits import Commit
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     (
@@ -53,10 +53,10 @@ class TestBuild:
 
     @pytest.mark.create_delete
     def test_create_delete_build(self) -> None:
-        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-delete-builds")
+        repo = Repo.create(self.ado_client, "azuredevops-test-repo-for-create-delete-builds")
         Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
         build_definition = BuildDefinition.create(
-            self.ado_client, "ado-api-test-buildfor-create-delete-build", repo.repo_id, repo.name, "build.yaml",
+            self.ado_client, "azuredevops-test-buildfor-create-delete-build", repo.repo_id, repo.name, "build.yaml",
             f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
         )
         build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
@@ -68,10 +68,10 @@ class TestBuild:
 
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
-        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-builds-by-id")
+        repo = Repo.create(self.ado_client, "azuredevops-test-repo-for-get-builds-by-id")
         Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
         build_definition = BuildDefinition.create(
-            self.ado_client, "ado-api-test-build-for-get-by-id", repo.repo_id, repo.name, "build.yaml",
+            self.ado_client, "azuredevops-test-build-for-get-by-id", repo.repo_id, repo.name, "build.yaml",
             f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
         )
         build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
@@ -82,10 +82,10 @@ class TestBuild:
 
     @pytest.mark.update
     def test_update(self) -> None:
-        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-update-builds")
+        repo = Repo.create(self.ado_client, "azuredevops-test-repo-for-update-builds")
         Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
         build_definition = BuildDefinition.create(
-            self.ado_client, "ado-api-test-build-for-update", repo.repo_id, repo.name, "build.yaml",
+            self.ado_client, "azuredevops-test-build-for-update", repo.repo_id, repo.name, "build.yaml",
             f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
         )
         build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
@@ -101,10 +101,10 @@ class TestBuild:
 
     @pytest.mark.skip(reason="This requires waiting for build agents, and running a whole build")
     def test_create_and_wait_until_completion(self) -> None:
-        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-and-wait-builds")
+        repo = Repo.create(self.ado_client, "azuredevops-test-repo-for-create-and-wait-builds")
         Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
         build_definition = BuildDefinition.create(
-            self.ado_client, "ado-api-test-build-for-wait-until-completion", repo.repo_id, repo.name, "build.yaml",
+            self.ado_client, "azuredevops-test-build-for-wait-until-completion", repo.repo_id, repo.name, "build.yaml",
             f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
         )
         build = Build.create_and_wait_until_completion(self.ado_client, build_definition.build_definition_id, "my-branch")
@@ -145,10 +145,10 @@ class TestBuildDefinition:
 
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
-        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-create-delete-build-defs")
+        repo = Repo.create(self.ado_client, "azuredevops-test-repo-for-create-delete-build-defs")
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
         build_definition = BuildDefinition.create(
-            self.ado_client, "ado-api-test-build-for-create-delete", repo.repo_id, "ado-api-test-repo", "build.yaml",
+            self.ado_client, "azuredevops-test-build-for-create-delete", repo.repo_id, "azuredevops-test-repo", "build.yaml",
             f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
         )
         assert build_definition.description == f"Please contact {email} if you see this build definition!"
@@ -157,10 +157,10 @@ class TestBuildDefinition:
 
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
-        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-build-defs-by-id")
+        repo = Repo.create(self.ado_client, "azuredevops-test-repo-for-get-build-defs-by-id")
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
         build_definition = BuildDefinition.create(
-            self.ado_client, "ado-api-test-build-for-get-by-id", repo.repo_id, "ado-api-test-repo", "build.yaml",
+            self.ado_client, "azuredevops-test-build-for-get-by-id", repo.repo_id, "azuredevops-test-repo", "build.yaml",
             f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
         )
         fetched_build_definition = BuildDefinition.get_by_id(self.ado_client, build_definition.build_definition_id)
@@ -170,10 +170,10 @@ class TestBuildDefinition:
 
     @pytest.mark.get_by_id
     def test_get_all_by_repo_id(self) -> None:
-        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-get-all-by-repo-id")
+        repo = Repo.create(self.ado_client, "azuredevops-test-repo-for-get-all-by-repo-id")
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
         build_definition = BuildDefinition.create(
-            self.ado_client, "ado-api-test-build-for-get-all-by-repo", repo.repo_id, "ado-api-test-repo", "build.yaml",
+            self.ado_client, "azuredevops-test-build-for-get-all-by-repo", repo.repo_id, "azuredevops-test-repo", "build.yaml",
             f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
         )
         build_definitions = BuildDefinition.get_all_by_repo_id(self.ado_client, repo.repo_id)
@@ -184,20 +184,20 @@ class TestBuildDefinition:
 
     @pytest.mark.update
     def test_update(self) -> None:
-        repo = Repo.create(self.ado_client, "ado-api-test-repo-for-update-build-defs")
+        repo = Repo.create(self.ado_client, "azuredevops-test-repo-for-update-build-defs")
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
         build_definition = BuildDefinition.create(
-            self.ado_client, "ado-api-test-build-for-update", repo.repo_id, "ado-api-test-repo", "build.yaml",
+            self.ado_client, "azuredevops-test-build-for-update", repo.repo_id, "azuredevops-test-repo", "build.yaml",
             f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
         )
         # ======
-        build_definition.update(self.ado_client, "name", "ado-api-test-build-for-update-rename")
-        assert build_definition.name == "ado-api-test-build-for-update-rename"  # Test instance attribute is updated
+        build_definition.update(self.ado_client, "name", "azuredevops-test-build-for-update-rename")
+        assert build_definition.name == "azuredevops-test-build-for-update-rename"  # Test instance attribute is updated
         build_definition.update(self.ado_client, "description", "new-description")
         assert build_definition.description == "new-description"  # Test instance attribute is updated
         # ======
         fetched_build_definition = BuildDefinition.get_by_id(self.ado_client, build_definition.build_definition_id)
-        assert fetched_build_definition.name == "ado-api-test-build-for-update-rename"
+        assert fetched_build_definition.name == "azuredevops-test-build-for-update-rename"
         assert fetched_build_definition.description == "new-description"
         # ======
         build_definition.delete(self.ado_client)

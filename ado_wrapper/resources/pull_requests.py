@@ -9,12 +9,12 @@ import requests
 from ado_wrapper.utils import from_ado_date_string, ResourceNotFound
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member, Reviewer
-from ado_wrapper.attribute_types import PullRequestEditableAttribute
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
     from ado_wrapper.resources.repo import Repo
 
+PullRequestEditableAttribute = Literal["title", "description", "status"]
 PullRequestStatus = Literal["active", "completed", "abandoned", "all", "notSet"]
 MergeStatus = Literal["succeeded", "conflicts", "rejectedByPolicy", "rejectedByUser", "queued", "notSet"]
 
@@ -30,26 +30,26 @@ class PullRequest(StateManagedResource):
     target_branch: str = field(repr=False)
     author: Member
     creation_date: datetime = field(repr=False)
-    repository: Repo
+    repo: Repo
     close_date: datetime | None = field(default=None, repr=False)
     is_draft: bool = field(default=False, repr=False)  # , metadata={"editable": True, "internal_name": "isDraft"})  # Hmmm
-    status: MergeStatus = field(
+    merge_status: MergeStatus = field(
         default="notSet", metadata={"editable": True}
     )  # It's actual name is mergeStatus, but the update endpoint uses this name
     reviewers: list[Reviewer] = field(default_factory=list, repr=False)  # Static(ish)
 
     def __str__(self) -> str:
-        return f"PullRequest(id={self.pull_request_id}, title={self.title}, author={self.author!s}, status={self.status})"
+        return f"PullRequest(id={self.pull_request_id}, title={self.title}, repo_name={self.repo.name}, author={self.author!s}, status={self.merge_status})"
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "PullRequest":
         from ado_wrapper.resources.repo import Repo  # Circular import
 
-        member = Member(data["createdBy"]["displayName"], data["createdBy"]["uniqueName"], data["createdBy"]["id"])
+        author = Member(data["createdBy"]["displayName"], data["createdBy"]["uniqueName"], data["createdBy"]["id"])
         reviewers = [Reviewer.from_request_payload(reviewer) for reviewer in data["reviewers"]]
         repository = Repo(data["repository"]["id"], data["repository"]["name"])
         return cls(str(data["pullRequestId"]), data["title"], data.get("description", ""), data["sourceRefName"],
-                   data["targetRefName"], member, from_ado_date_string(data["creationDate"]), repository,
+                   data["targetRefName"], author, from_ado_date_string(data["creationDate"]), repository,
                    from_ado_date_string(data.get("closedDate")), data["isDraft"], data.get("mergeStatus", "notSet"), reviewers)  # fmt: skip
 
     @classmethod
@@ -89,7 +89,7 @@ class PullRequest(StateManagedResource):
     def update(self, ado_client: AdoClient, attribute_name: PullRequestEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
         return super().update(
             ado_client, "patch",
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1-preview.1",
             attribute_name, attribute_value, {}  # fmt: skip
         )
 
@@ -105,7 +105,7 @@ class PullRequest(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     def add_reviewer(self, ado_client: AdoClient, reviewer_id: str) -> None:
-        return self.add_reviewer_static(ado_client, self.repository.repo_id, self.pull_request_id, reviewer_id)
+        return self.add_reviewer_static(ado_client, self.repo.repo_id, self.pull_request_id, reviewer_id)
 
     @staticmethod
     def add_reviewer_static(ado_client: AdoClient, repo_id: str, pull_request_id: str, reviewer_id: str) -> None:
@@ -126,7 +126,7 @@ class PullRequest(StateManagedResource):
     def mark_as_draft(self, ado_client: AdoClient, is_draft: bool = True) -> None:
         json_payload = {"isDraft": is_draft}
         request = requests.patch(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",
             json=json_payload,
             auth=ado_client.auth,
         )
@@ -140,7 +140,7 @@ class PullRequest(StateManagedResource):
 
     def get_reviewers(self, ado_client: AdoClient) -> list[Member]:
         request = requests.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}/reviewers?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}/reviewers?api-version=7.1",
             auth=ado_client.auth,
         ).json()
         return [Member(reviewer["displayName"], reviewer["uniqueName"], reviewer["id"]) for reviewer in request["value"]]
@@ -161,12 +161,11 @@ class PullRequest(StateManagedResource):
 
     @classmethod
     def get_all_by_author(cls, ado_client: AdoClient, author_email: str, status: PullRequestStatus = "all") -> list[PullRequest]:
-        all_pull_requests: list[PullRequest] = cls.get_all(ado_client, status)
-        return [pr for pr in all_pull_requests if pr.author.email == author_email]
+        return [pr for pr in cls.get_all(ado_client, status) if pr.author.email == author_email]
 
     @classmethod
     def get_my_pull_requests(cls, ado_client: AdoClient) -> list[PullRequest]:
-        """This is super tempremental, I have to do a bunch of splits, it's not official so might not work"""
+        """This is super tempremental, I have to do a bunch of splits, it's not official so might not work, the statuses are also numerical."""
         import json
 
         request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/_pulls", auth=ado_client.auth)

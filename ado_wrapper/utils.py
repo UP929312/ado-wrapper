@@ -1,9 +1,14 @@
 from datetime import datetime, timezone
-from typing import overload, TYPE_CHECKING, Any
+from typing import overload, TYPE_CHECKING, Any, Literal
 from dataclasses import fields
 
 if TYPE_CHECKING:
     from ado_wrapper.state_managed_abc import StateManagedResource
+
+ResourceType = Literal[
+    "Branch", "Build", "BuildDefinition", "Commit", "Project", "PullRequest", "Release", "ReleaseDefinition",
+    "Repo", "Team", "AdoUser", "Member", "Reviewer", "VariableGroup"  # fmt: skip
+]
 
 
 @overload
@@ -113,6 +118,9 @@ class InvalidPermissionsError(Exception):
 
 
 class UpdateFailed(Exception):
+    pass
+
+class AuthenticationError(Exception):
     pass
 
 

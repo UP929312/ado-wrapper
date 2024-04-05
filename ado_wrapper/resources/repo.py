@@ -3,7 +3,7 @@ from __future__ import annotations
 import io
 import zipfile
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Literal
 
 import requests
 
@@ -12,9 +12,9 @@ from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import ResourceNotFound, UnknownError
 from ado_wrapper.resources.pull_requests import PullRequest, PullRequestStatus
 from ado_wrapper.resources.commits import Commit
-from ado_wrapper.attribute_types import RepoEditableAttribute
 
 # from plan_resources.singletons import plannable_resource
+RepoEditableAttribute = Literal["name", "default_branch", "is_disabled"]
 
 # ====================================================================
 

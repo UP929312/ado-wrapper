@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, Literal
 from dataclasses import dataclass, field
 
 from ado_wrapper.utils import from_ado_date_string
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member
-from ado_wrapper.attribute_types import VariableGroupEditableAttribute
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
+
+VariableGroupEditableAttribute = Literal["variables"]
 
 
 @dataclass

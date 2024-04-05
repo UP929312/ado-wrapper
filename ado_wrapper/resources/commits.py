@@ -46,7 +46,7 @@ def get_commit_body_template(old_object_id: str | None, updates: dict[str, str],
 class Commit(StateManagedResource):
     """
     https://learn.microsoft.com/en-us/rest/api/azure/devops/git/commits?view=azure-devops-rest-7.1
-    https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes?view=azure-devops-rest-5.1
+    https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes?view=azure-devops-rest-7.1
     """
 
     commit_id: str = field(metadata={"is_id_field": True})  # None are editable
@@ -66,7 +66,7 @@ class Commit(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, repo_id: str, commit_id: str) -> "Commit":  # type: ignore[override]
         return super().get_by_id(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits/{commit_id}?api-version=5.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits/{commit_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -83,7 +83,7 @@ class Commit(StateManagedResource):
         latest_commit = cls.get_latest_by_repo(ado_client, repo_id, from_branch_name)
         latest_commit_id = None if latest_commit is None else latest_commit.commit_id
         data = get_commit_body_template(latest_commit_id, updates, to_branch_name, change_type, commit_message)
-        request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=5.1", json=data, auth=ado_client.auth)  # fmt: skip
+        request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=7.1", json=data, auth=ado_client.auth)  # fmt: skip
         if request.status_code == 400:
             raise ValueError("The commit was not created successfully, the file(s) you're trying to add might already exist there.")
         if request.status_code == 403:
@@ -124,7 +124,7 @@ class Commit(StateManagedResource):
                 ],
         }]  # fmt: skip
         request = requests.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=5.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=7.1",
             json=default_commit_body, auth=ado_client.auth,  # fmt: skip
         )
         return cls.from_request_payload(request.json()["commits"][0])

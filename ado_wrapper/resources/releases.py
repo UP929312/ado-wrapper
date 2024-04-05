@@ -9,6 +9,7 @@ from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import from_ado_date_string
 from ado_wrapper.resources.users import Member
 
+ReleaseDefinitionEditableAttribute = Literal["name", "description", "release_name_format", "variable_groups"]
 ReleaseStatus = Literal["active", "abandoned", "draft", "undefined"]
 
 # ========================================================================================================
@@ -212,7 +213,7 @@ class ReleaseDefinition(StateManagedResource):
             release_definition_id,
         )
 
-    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
+    def update(self, ado_client: AdoClient, attribute_name: ReleaseDefinitionEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
         self.revision = str(int(self.revision) + 1)
         return super().update(
             ado_client, "put",

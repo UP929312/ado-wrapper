@@ -1,6 +1,6 @@
 # pylint: disable-all
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 import requests
 import json
@@ -11,9 +11,13 @@ with open("credentials.txt", "r") as file:
 from ado_wrapper import AdoClient, Project, VariableGroup, AdoUser, Member, Reviewer, Repo, Commit, PullRequest, Build, BuildDefinition, Branch, Release, ReleaseDefinition, Team
 
 ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
-# ado_client.state_manager.load_all_resources_with_prefix_into_state("ado_wrapper-")
+ado_client.state_manager.load_all_resources_with_prefix_into_state("ado_wrapper-")
 
-print([x.name for x in Repo.get_all(ado_client)])
+for pr in PullRequest.get_all(ado_client, status="active"):
+    if datetime.now() - pr.creation_date > timedelta(days=185):
+        print(pr)
+
+# print([x.name for x in Repo.get_all(ado_client)])
 
 #  https://dev.azure.com/{ado_client.ado_org}/{id}/_apis/pipelines/pipelinePermissions/variablegroup/703
 # PATCH

@@ -4,8 +4,7 @@ from datetime import datetime
 from uuid import uuid4
 from typing import Any, TypedDict, TYPE_CHECKING  # , Generator
 
-from ado_wrapper.attribute_types import ResourceType
-from ado_wrapper.utils import DeletionFailed, get_resource_variables
+from ado_wrapper.utils import DeletionFailed, get_resource_variables, ResourceType
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient

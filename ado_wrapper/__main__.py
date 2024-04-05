@@ -1,8 +1,7 @@
 import argparse
 
-from ado_wrapper.attribute_types import ResourceType
 from ado_wrapper.client import AdoClient
-from ado_wrapper.utils import get_internal_field_names, get_resource_variables
+from ado_wrapper.utils import get_internal_field_names, get_resource_variables, ResourceType
 
 
 def main() -> None:

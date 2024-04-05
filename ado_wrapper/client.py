@@ -2,6 +2,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from ado_wrapper.state_manager import StateManager
+from ado_wrapper.utils import AuthenticationError
 
 
 class AdoClient:
@@ -21,7 +22,8 @@ class AdoClient:
         if not bypass_initialisation:
             # Verify Token is working (helps with setup for first time users):
             request = requests.get(f"https://dev.azure.com/{self.ado_org}/_apis/projects?api-version=6.0", auth=self.auth)
-            assert request.status_code == 200, f"Failed to authenticate with ADO: {request.text}"
+            if request.status_code != 200:
+                raise AuthenticationError(f"Failed to authenticate with ADO: {request.text}")
 
             from ado_wrapper.resources.projects import Project  # Stop circular import
             self.ado_project_id = Project.get_by_name(self, self.ado_project).project_id  # type: ignore[union-attr]

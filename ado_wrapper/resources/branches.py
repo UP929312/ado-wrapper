@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
+from typing import Literal
 
 from ado_wrapper.client import AdoClient
 from ado_wrapper.state_managed_abc import StateManagedResource
 
-# from editable_attribute_types import BranchEditableAttribute
-
+BranchEditableAttribute = Literal["name"]
 
 @dataclass
 class Branch(StateManagedResource):

@@ -7,7 +7,7 @@ license = "Proprietary"
 readme = "README.md"
 packages = [{include = "src"}]
 
-[project.scripts]
+[tool.poetry.scripts]
 ado-api = "__main__:main"
 
 [tool.poetry.dependencies]
@@ -50,8 +50,8 @@ disable = [
 
     "arguments-renamed",
     "invalid-name",
+    "too-many-locals",
     "line-too-long",
-    "fixme",
     "broad-exception-caught",
     "import-outside-toplevel",
     "attribute-defined-outside-init",

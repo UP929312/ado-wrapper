@@ -5,7 +5,7 @@ from client import AdoClient
 from utils import get_internal_field_names, get_resource_variables
 
 
-def main():
+def main() -> None:
     ALL_RESOURCES = get_resource_variables()
 
     parser = argparse.ArgumentParser(

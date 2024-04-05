@@ -124,7 +124,6 @@ class PullRequest(StateManagedResource):
         self.delete_by_id(ado_client, self.pull_request_id)
 
     def mark_as_draft(self, ado_client: AdoClient, is_draft: bool = True) -> None:
-        # TODO: Make this call the self.update() method EDIT: Not sure we can?
         json_payload = {"isDraft": is_draft}
         request = requests.patch(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repository.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",

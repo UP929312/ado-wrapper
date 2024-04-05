@@ -106,14 +106,14 @@ class Release(StateManagedResource):
         return cls(data["id"], data["name"], data["status"], from_ado_date_string(data["createdOn"]), created_by, data["description"],
                    data.get("variables", None), data.get("variableGroups", None), data["keepForever"])  # fmt: skip
 
-    @classmethod  # TODO: Test
+    @classmethod  # TO-DO: Test
     def get_by_id(cls, ado_client: AdoClient, release_id: str) -> "Release":
         return super().get_by_id(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
-    @classmethod  # TODO: Test
+    @classmethod  # TO-DO: Test
     def create(cls, ado_client: AdoClient, definition_id: str, description: str = "Made by ADO-API") -> "Release":  # type: ignore[override]
         return super().create(
             ado_client,
@@ -121,7 +121,7 @@ class Release(StateManagedResource):
             {"definitionId": definition_id, "description": description},
         )  # type: ignore[return-value]
 
-    @classmethod  # TODO: Test
+    @classmethod  # TO-DO: Test
     def delete_by_id(cls, ado_client: AdoClient, release_id: str) -> None:  # type: ignore[override]
         return super().delete_by_id(
             ado_client,
@@ -133,10 +133,10 @@ class Release(StateManagedResource):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
 
-    def delete(self, ado_client: AdoClient) -> None:  # TODO: Test
+    def delete(self, ado_client: AdoClient) -> None:
         self.delete_by_id(ado_client, self.release_id)
 
-    @classmethod  # TODO: Test
+    @classmethod
     def get_all(cls, ado_client: AdoClient, definition_id: str) -> "list[Release]":  # type: ignore[override]
         return super().get_all(
             ado_client,

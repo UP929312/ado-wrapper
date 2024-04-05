@@ -1,7 +1,7 @@
 import requests
 from requests.auth import HTTPBasicAuth
 
-from azuredevops.state_manager import StateManager
+from ado_wrapper.state_manager import StateManager
 
 
 class AdoClient:
@@ -23,13 +23,13 @@ class AdoClient:
             request = requests.get(f"https://dev.azure.com/{self.ado_org}/_apis/projects?api-version=6.0", auth=self.auth)
             assert request.status_code == 200, f"Failed to authenticate with ADO: {request.text}"
 
-            from azuredevops.resources.projects import Project  # Stop circular import
+            from ado_wrapper.resources.projects import Project  # Stop circular import
             self.ado_project_id = Project.get_by_name(self, self.ado_project).project_id  # type: ignore[union-attr]
 
-            from azuredevops.resources.users import AdoUser  # Stop circular import
+            from ado_wrapper.resources.users import AdoUser  # Stop circular import
             try:
                 self.pat_author: AdoUser = AdoUser.get_by_email(self, ado_email)
             except ValueError:
-                print(f"[AZUREDEVOPS] WARNING: User {ado_email} not found in ADO, nothing critical, but stops releases from being made, and plans from being accurate.")
+                print(f"[ADO_WRAPPER] WARNING: User {ado_email} not found in ADO, nothing critical, but stops releases from being made, and plans from being accurate.")
 
         self.state_manager: StateManager = StateManager(self, state_file_name)  # Has to be last

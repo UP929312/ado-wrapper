@@ -1,7 +1,7 @@
 import os
 
-from azuredevops.client import AdoClient
-from azuredevops.resources.repo import Repo
+from ado_wrapper.client import AdoClient
+from ado_wrapper.resources.repo import Repo
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     ado_org, ado_project, email, pat_token, *_ = test_data.read().splitlines()

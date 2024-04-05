@@ -1,4 +1,4 @@
-from azuredevops.utils import get_resource_variables, get_editable_fields
+from ado_wrapper.utils import get_resource_variables, get_editable_fields
 
 def generate_editable_attributes_types() -> None:
     resource_objects = get_resource_variables().values()

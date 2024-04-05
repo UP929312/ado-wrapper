@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache
 prototype/
 .coverage
+dist/
 
 secret.py
 script.py

@@ -1,4 +1,4 @@
-# azuredevops
+# ado_wrapper
 
 This is a Python Package which works as an interface to the Azure DevOps API
 

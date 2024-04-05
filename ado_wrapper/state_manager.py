@@ -2,11 +2,11 @@ import json
 from pathlib import Path
 from typing import Any, TypedDict, TYPE_CHECKING  # , Generator
 
-from azuredevops.attribute_types import ResourceType
-from azuredevops.utils import DeletionFailed, get_resource_variables
+from ado_wrapper.attribute_types import ResourceType
+from ado_wrapper.utils import DeletionFailed, get_resource_variables
 
 if TYPE_CHECKING:
-    from azuredevops.client import AdoClient
+    from ado_wrapper.client import AdoClient
 
 STATE_FILE_VERSION = "1.3"
 
@@ -42,7 +42,7 @@ class StateManager:
 
     def add_resource_to_state(self, resource_type: ResourceType, resource_id: str, resource_data: dict[str, Any]) -> None:
         if self.state_file_name is None:
-            print("[AZUREDEVOPS] Not storing state, so not adding resource to state")
+            print("[ADO_WRAPPER] Not storing state, so not adding resource to state")
             return None
         all_states = self.load_state()
         if resource_id in all_states["resources"][resource_type]:
@@ -52,7 +52,7 @@ class StateManager:
 
     def remove_resource_from_state(self, resource_type: ResourceType, resource_id: str) -> None:
         if self.state_file_name is None:
-            print("[AZUREDEVOPS] Not storing state, so not removing resource to state")
+            print("[ADO_WRAPPER] Not storing state, so not removing resource to state")
             return None
         all_states = self.load_state()
         all_states["resources"][resource_type] = {k: v for k, v in all_states["resources"][resource_type].items() if k != resource_id}
@@ -60,7 +60,7 @@ class StateManager:
 
     def update_resource_in_state(self, resource_type: ResourceType, resource_id: str, updated_data: dict[str, Any]) -> None:
         if self.state_file_name is None:
-            print("[AZUREDEVOPS] Not storing state, so not updating resource in state")
+            print("[ADO_WRAPPER] Not storing state, so not updating resource in state")
             return None
         all_states = self.load_state()
         all_states["resources"][resource_type][resource_id]["data"] = updated_data
@@ -76,9 +76,9 @@ class StateManager:
         except DeletionFailed as exc:
             print(str(exc))
         except (NotImplementedError, TypeError):
-            print(f"[AZUREDEVOPS] Cannot {resource_type} {resource_id} from state or real space, please delete this manually or using code.")
+            print(f"[ADO_WRAPPER] Cannot {resource_type} {resource_id} from state or real space, please delete this manually or using code.")
         else:
-            print(f"[AZUREDEVOPS] Deleted {resource_type} {resource_id} from ADO")
+            print(f"[ADO_WRAPPER] Deleted {resource_type} {resource_id} from ADO")
             self.remove_resource_from_state(resource_type, resource_id)
 
     def delete_all_resources(self, resource_type_filter: ResourceType | None = None) -> None:
@@ -92,7 +92,7 @@ class StateManager:
                 try:
                     self.delete_resource(resource_type, resource_id)  # pyright: ignore[reportArgumentType]
                 except DeletionFailed as e:
-                    print(f"[AZUREDEVOPS] Error deleting {resource_type} {resource_id}: {e}")
+                    print(f"[ADO_WRAPPER] Error deleting {resource_type} {resource_id}: {e}")
 
     def import_into_state(self, resource_type: ResourceType, resource_id: str) -> None:
         all_resource_classes = get_resource_variables()
@@ -125,10 +125,10 @@ class StateManager:
         return all_states
 
     def load_all_resources_with_prefix_into_state(self, prefix: str) -> None:
-        from azuredevops.resources.variable_groups import VariableGroup
-        from azuredevops.resources.repo import Repo
-        from azuredevops.resources.releases import ReleaseDefinition
-        from azuredevops.resources.builds import BuildDefinition
+        from ado_wrapper.resources.variable_groups import VariableGroup
+        from ado_wrapper.resources.repo import Repo
+        from ado_wrapper.resources.releases import ReleaseDefinition
+        from ado_wrapper.resources.builds import BuildDefinition
 
         for repo in Repo.get_all(self.ado_client):
             if repo.name.startswith(prefix):

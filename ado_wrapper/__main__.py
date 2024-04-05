@@ -1,15 +1,15 @@
 import argparse
 
-from azuredevops.attribute_types import ResourceType
-from azuredevops.client import AdoClient
-from azuredevops.utils import get_internal_field_names, get_resource_variables
+from ado_wrapper.attribute_types import ResourceType
+from ado_wrapper.client import AdoClient
+from ado_wrapper.utils import get_internal_field_names, get_resource_variables
 
 
 def main() -> None:
     ALL_RESOURCES = get_resource_variables()
 
     parser = argparse.ArgumentParser(
-        prog="AzureDevOps", description="A tool to manage Azure DevOps resources and interface with the ADO API", usage=""
+        prog="AdoWrapper", description="A tool to manage Azure DevOps resources and interface with the ADO API", usage=""
     )
     delete_group = parser.add_mutually_exclusive_group()
     delete_group.add_argument(
@@ -41,30 +41,30 @@ def main() -> None:
 
     if args.purge_state:
         # Deletes everything in the state file
-        print("[AZUREDEVOPS] Purging state")
+        print("[ADO_WRAPPER] Purging state")
         ado_client.state_manager.wipe_state()
 
     if args.delete_everything:
         # Deletes ADO resources and entries in the state file
-        print("[AZUREDEVOPS] Deleting every resource in state and the real ADO resources")
+        print("[ADO_WRAPPER] Deleting every resource in state and the real ADO resources")
         ado_client.state_manager.delete_all_resources()
-        print("[AZUREDEVOPS] Finishing deleting resources in state")
+        print("[ADO_WRAPPER] Finishing deleting resources in state")
 
     if args.delete_resource_type is not None:
         # Deletes ADO resources and entries in the state file of a specific type
         resource_type: ResourceType = args.delete_resource_type
         ado_client.state_manager.delete_all_resources(resource_type_filter=resource_type)
-        print(f"[AZUREDEVOPS] Successfully deleted every resource of type {resource_type} in state")
+        print(f"[ADO_WRAPPER] Successfully deleted every resource of type {resource_type} in state")
 
     if args.refresh_internal_state:
         # Updates the state file to the latest version of every resource in ADO space
         up_to_date_states = ado_client.state_manager.generate_in_memory_state()
         ado_client.state_manager.write_state_file(up_to_date_states)
-        print("[AZUREDEVOPS] Successfully updated state to latest version of ADO resources")
+        print("[ADO_WRAPPER] Successfully updated state to latest version of ADO resources")
 
     if args.refresh_resources_on_startup:
         # Updates every resource in ADO space to the version found in state"""
-        print("[AZUREDEVOPS] Updating real world resources with data from state:")
+        print("[ADO_WRAPPER] Updating real world resources with data from state:")
         up_to_date_state = ado_client.state_manager.generate_in_memory_state()
         internal_state = ado_client.state_manager.load_state()
         for resource_type in up_to_date_state["resources"]:  # For each class type (Repo, Build)
@@ -72,7 +72,7 @@ def main() -> None:
                 state_data = internal_state["resources"][resource_type][resource_id]  # The data in state
                 real_data = up_to_date_state["resources"][resource_type][resource_id]  # The data in real world space
                 if state_data != real_data:
-                    print(f"[AZUREDEVOPS] Updating ADO resource - {resource_type} ({resource_id}) to version found in state:")
+                    print(f"[ADO_WRAPPER] Updating ADO resource - {resource_type} ({resource_id}) to version found in state:")
                     instance = ALL_RESOURCES[resource_type].from_json(real_data)  # Create an instance from the real world data
                     internal_attribute_names = get_internal_field_names(instance.__class__)  # Mapping of internal->python
                     differences = {
@@ -87,7 +87,7 @@ def main() -> None:
         ado_client.state_manager.write_state_file(internal_state)
 
     if args.plan:
-        print("[AZUREDEVOPS] Running plan for resources:")
+        print("[ADO_WRAPPER] Running plan for resources:")
         # Plan for resources
 
 if __name__ == "__main__":

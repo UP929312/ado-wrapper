@@ -4,10 +4,10 @@ from dataclasses import dataclass, field
 
 import requests
 
-from azuredevops.client import AdoClient
-from azuredevops.utils import from_ado_date_string, InvalidPermissionsError
-from azuredevops.state_managed_abc import StateManagedResource
-from azuredevops.resources.users import Member
+from ado_wrapper.client import AdoClient
+from ado_wrapper.utils import from_ado_date_string, InvalidPermissionsError
+from ado_wrapper.state_managed_abc import StateManagedResource
+from ado_wrapper.resources.users import Member
 
 ChangeType = Literal["edit", "add", "delete"]
 FIRST_COMMIT_ID = "0000000000000000000000000000000000000000"  # I don't know why this works, but it does, please leave it.

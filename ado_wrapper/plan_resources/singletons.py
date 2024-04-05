@@ -1,7 +1,7 @@
 from typing import Any, Callable
 
-from azuredevops.client import AdoClient
-from azuredevops.plan_resources.mapping import get_resource_variables_plans
+from ado_wrapper.client import AdoClient
+from ado_wrapper.plan_resources.mapping import get_resource_variables_plans
 
 import requests
 

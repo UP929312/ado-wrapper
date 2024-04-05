@@ -6,14 +6,14 @@ from dataclasses import dataclass, field
 
 import requests
 
-from azuredevops.utils import from_ado_date_string, ResourceNotFound
-from azuredevops.state_managed_abc import StateManagedResource
-from azuredevops.resources.users import Member, Reviewer
-from azuredevops.attribute_types import PullRequestEditableAttribute
+from ado_wrapper.utils import from_ado_date_string, ResourceNotFound
+from ado_wrapper.state_managed_abc import StateManagedResource
+from ado_wrapper.resources.users import Member, Reviewer
+from ado_wrapper.attribute_types import PullRequestEditableAttribute
 
 if TYPE_CHECKING:
-    from azuredevops.client import AdoClient
-    from azuredevops.resources.repo import Repo
+    from ado_wrapper.client import AdoClient
+    from ado_wrapper.resources.repo import Repo
 
 PullRequestStatus = Literal["active", "completed", "abandoned", "all", "notSet"]
 MergeStatus = Literal["succeeded", "conflicts", "rejectedByPolicy", "rejectedByUser", "queued", "notSet"]
@@ -43,7 +43,7 @@ class PullRequest(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "PullRequest":
-        from azuredevops.resources.repo import Repo  # Circular import
+        from ado_wrapper.resources.repo import Repo  # Circular import
 
         member = Member(data["createdBy"]["displayName"], data["createdBy"]["uniqueName"], data["createdBy"]["id"])
         reviewers = [Reviewer.from_request_payload(reviewer) for reviewer in data["reviewers"]]

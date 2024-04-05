@@ -7,12 +7,12 @@ from typing import Any
 
 import requests
 
-from azuredevops.client import AdoClient
-from azuredevops.state_managed_abc import StateManagedResource
-from azuredevops.utils import ResourceNotFound, UnknownError
-from azuredevops.resources.pull_requests import PullRequest, PullRequestStatus
-from azuredevops.resources.commits import Commit
-from azuredevops.attribute_types import RepoEditableAttribute
+from ado_wrapper.client import AdoClient
+from ado_wrapper.state_managed_abc import StateManagedResource
+from ado_wrapper.utils import ResourceNotFound, UnknownError
+from ado_wrapper.resources.pull_requests import PullRequest, PullRequestStatus
+from ado_wrapper.resources.commits import Commit
+from ado_wrapper.attribute_types import RepoEditableAttribute
 
 # from plan_resources.singletons import plannable_resource
 

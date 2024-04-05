@@ -1,9 +1,9 @@
 import pytest
 
-from azuredevops.client import AdoClient
-from azuredevops.resources.groups import Group
+from ado_wrapper.client import AdoClient
+from ado_wrapper.resources.groups import Group
 
-# from azuredevops.resources.users import GroupMember
+# from ado_wrapper.resources.users import GroupMember
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     (
@@ -36,7 +36,7 @@ class TestGroup:
     @pytest.mark.create_delete
     def test_create_delete_group(self) -> None:
         with pytest.raises(NotImplementedError):
-            Group.create(self.ado_client, "azuredevops-test-Group")
+            Group.create(self.ado_client, "ado_wrapper-test-Group")
         with pytest.raises(NotImplementedError):
             Group.delete_by_id(self.ado_client, "abc")
 

@@ -36,7 +36,7 @@ BUILD_DUMP = {
     'status': 'notStarted',
     'queueTime': '2024-03-17T11:03:29.2982876Z',
     'url': 'https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/build/Builds/{build_id}',
-    'definition': {'drafts': [], 'id': "{build_def_id}", 'name': 'azuredevops-test-build', 'url': 'https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/build/Definitions/{build_id}?revision=1', 'uri': 'vstfs:///Build/Definition/{build_id}', 'path': '\\', 'type': 'build', 'queueStatus': 'enabled', 'revision': 1, 'project': {'id': '{ado_client.project_id}', 'name': 'Platform', 'url': 'https://dev.azure.com/{ado_client.org}/_apis/projects/{ado_client.project_id}', 'state': 'wellFormed', 'revision': "{revision}", 'visibility': 'private', 'lastUpdateTime': '2024-01-01T12:14:30.36Z'}},
+    'definition': {'drafts': [], 'id': "{build_def_id}", 'name': 'ado_wrapper-test-build', 'url': 'https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/build/Definitions/{build_id}?revision=1', 'uri': 'vstfs:///Build/Definition/{build_id}', 'path': '\\', 'type': 'build', 'queueStatus': 'enabled', 'revision': 1, 'project': {'id': '{ado_client.project_id}', 'name': 'Platform', 'url': 'https://dev.azure.com/{ado_client.org}/_apis/projects/{ado_client.project_id}', 'state': 'wellFormed', 'revision': "{revision}", 'visibility': 'private', 'lastUpdateTime': '2024-01-01T12:14:30.36Z'}},
     'buildNumberRevision': 1,
     'project': {'id': '{ado_client.project_id}', 'name': 'Platform', 'url': 'https://dev.azure.com/{ado_client.org}/_apis/projects/{ado_client.project_id}', 'state': 'wellFormed', 'revision': 399, 'visibility': 'private', 'lastUpdateTime': '2024-02-06T14:14:30.36Z'},
     'uri': 'vstfs:///Build/Build/93458',
@@ -51,7 +51,7 @@ BUILD_DUMP = {
     'lastChangedBy': {'displayName': '<First Last>', 'url': 'https://spsprodweu5.vssps.visualstudio.com/<some_id>/_apis/Identities/<user_id>', '_links': {'avatar': {'href': 'https://dev.azure.com/{ado_client.org}/_apis/GraphProfile/MemberAvatars/<user_descriptor>'}}, 'id': '<user_id>', 'uniqueName': '<first.last@company.com>', 'imageUrl': 'https://dev.azure.com/{ado_client.org}/_apis/GraphProfile/MemberAvatars/<user_descriptor>', 'descriptor': '<user_descriptor>'},
     'orchestrationPlan': {'planId': '<plan_id>'},
     'logs': {'id': 0, 'type': 'Container', 'url': 'https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/build/builds/93458/logs'},
-    'repository': {'id': '<repo_id>', 'type': 'TfsGit', 'name': 'azuredevops-test-repo-for-create-delete-builds', 'url': 'https://dev.azure.com/{ado_client.org}/{ado_client.project}/_git/azuredevops-test-repo-for-create-delete-builds', 'clean': None, 'checkoutSubmodules': False},
+    'repository': {'id': '<repo_id>', 'type': 'TfsGit', 'name': 'ado_wrapper-test-repo-for-create-delete-builds', 'url': 'https://dev.azure.com/{ado_client.org}/{ado_client.project}/_git/ado_wrapper-test-repo-for-create-delete-builds', 'clean': None, 'checkoutSubmodules': False},
     'retainedByRelease': False,
     'triggeredByBuild': None,
     'appendCommitMessageToRunName': True
@@ -64,13 +64,13 @@ BUILD_DEFINITION_DUMP = {
     'description': '<description>',
     'jobAuthorizationScope': 'projectCollection',
     'process': {'yamlFilename': 'build.yaml', 'type': 2},
-    'repository': {'id': '<repo_id>','type': 'TfsGit', 'name': 'azuredevops-test-repo-for-create-delete-builds', 'url': 'https://dev.azure.com/{ado_client.org}/{ado_client.project}/_git/azuredevops-test-repo-for-create-delete-builds', 'defaultBranch': 'refs/heads/my-branch', 'clean': None, 'checkoutSubmodules': False},
+    'repository': {'id': '<repo_id>','type': 'TfsGit', 'name': 'ado_wrapper-test-repo-for-create-delete-builds', 'url': 'https://dev.azure.com/{ado_client.org}/{ado_client.project}/_git/ado_wrapper-test-repo-for-create-delete-builds', 'defaultBranch': 'refs/heads/my-branch', 'clean': None, 'checkoutSubmodules': False},
     'quality': 'definition',
     'authoredBy': {'displayName': '<First> <Last>', 'url': 'https://spsprodweu5.vssps.visualstudio.com/<some_id>/_apis/Identities/<user_id>', '_links': {'avatar': {'href': 'https://dev.azure.com/{ado_client.org}/_apis/GraphProfile/MemberAvatars/<user_descriptor>'}},'id': '<user_id>', 'uniqueName': '<first.last@company.com>', 'imageUrl': 'https://dev.azure.com/{ado_client.org}/_apis/GraphProfile/MemberAvatars/<user_descriptor>', 'descriptor': '<user_descriptor>'},
     'drafts': [],
     'queue': {'_links': {'self': {'href': 'https://dev.azure.com/{ado_client.org}/_apis/build/Queues/575'}}, 'id': 575, 'name': '<pool_name>', 'url': 'https://dev.azure.com/{ado_client.org}/_apis/build/Queues/575', 'pool': {'id': 195, 'name': '<pool_name>'}},
     'id': 2601,
-    'name': 'azuredevops-test-build',
+    'name': 'ado_wrapper-test-build',
     'url': 'https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/build/Definitions/2601?revision=1',
     'uri': 'vstfs:///Build/Definition/2601',
     'path': '\\',
@@ -88,7 +88,7 @@ COMMIT_DUMP = {
     'comment': 'Add README.md',
     'changeCounts': {'Add': 1, 'Edit': 0, 'Delete': 0},
     'url': 'https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/git/repositories/<repo_id>/commits/<commit_id>',
-    'remoteUrl': 'https://dev.azure.com/{ado_client.org}/{ado_client.project}/_git/azuredevops-test-repo-for-create-delete-builds/commit/<other_commit_id>',
+    'remoteUrl': 'https://dev.azure.com/{ado_client.org}/{ado_client.project}/_git/ado_wrapper-test-repo-for-create-delete-builds/commit/<other_commit_id>',
 }
 
 GROUP_DUMP = {
@@ -116,7 +116,7 @@ PROJECT_DUMP = {
 }
 
 PULL_REQUEST_DUMP = {
-    'repository ': {'id': '<repo_id>', 'name': 'azuredevops-test-repo-for-get-pull-request-by-id', 'url': 'https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/git/repositories/<repo_id>', 'project': {'id': '<project_id>', 'name': '<project_name>', 'url': 'https://dev.azure.com/{ado_client.org}/_apis/projects/{ado_client.project_id}', 'state': 'wellFormed', 'revision': 399, 'visibility': 'private', 'lastUpdateTime': '2024-02-06T14:14:30.36Z'}, 'size': 980, 'remoteUrl': 'https://{ado_client.org}@dev.azure.com/{ado_client.org}/{ado_client.project}/_git/azuredevops-test-repo-for-get-pull-request-by-id', 'sshUrl': 'git@ssh.dev.azure.com:v3/{ado_client.org}/{ado_client.project}/azuredevops-test-repo-for-get-pull-request-by-id', 'webUrl': 'https://dev.azure.com/{ado_client.org}/{ado_client.project}/_git/azuredevops-test-repo-for-get-pull-request-by-id', 'isDisabled': False, 'isInMaintenance': False},
+    'repository ': {'id': '<repo_id>', 'name': 'ado_wrapper-test-repo-for-get-pull-request-by-id', 'url': 'https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/git/repositories/<repo_id>', 'project': {'id': '<project_id>', 'name': '<project_name>', 'url': 'https://dev.azure.com/{ado_client.org}/_apis/projects/{ado_client.project_id}', 'state': 'wellFormed', 'revision': 399, 'visibility': 'private', 'lastUpdateTime': '2024-02-06T14:14:30.36Z'}, 'size': 980, 'remoteUrl': 'https://{ado_client.org}@dev.azure.com/{ado_client.org}/{ado_client.project}/_git/ado_wrapper-test-repo-for-get-pull-request-by-id', 'sshUrl': 'git@ssh.dev.azure.com:v3/{ado_client.org}/{ado_client.project}/ado_wrapper-test-repo-for-get-pull-request-by-id', 'webUrl': 'https://dev.azure.com/{ado_client.org}/{ado_client.project}/_git/ado_wrapper-test-repo-for-get-pull-request-by-id', 'isDisabled': False, 'isInMaintenance': False},
     'pullRequestId': "{pull_request_id}",
     'codeReviewId': "{code_review_id}",
     'status': 'active',
@@ -166,7 +166,7 @@ VARIABLE_GROUP_DUMP = {
     'variables': {'a': {'value': 'b', 'isReadOnly': True}},
     'id': 528,
     'type': 'Vsts',
-    'name': 'azuredevops-test-for-create-delete',
+    'name': 'ado_wrapper-test-for-create-delete',
     'description': 'my_description',
     'createdBy': {'displayName': None, 'id': '<user_id>'},
     'createdOn': '2024-03-17T11:04:25.4233333Z',

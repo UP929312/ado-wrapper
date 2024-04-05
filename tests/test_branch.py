@@ -1,9 +1,9 @@
 import pytest
 
-from azuredevops.client import AdoClient
-from azuredevops.resources.branches import Branch
-from azuredevops.resources.repo import Repo
-from azuredevops.resources.commits import Commit
+from ado_wrapper.client import AdoClient
+from ado_wrapper.resources.branches import Branch
+from ado_wrapper.resources.repo import Repo
+from ado_wrapper.resources.commits import Commit
 
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
@@ -31,7 +31,7 @@ class TestBranch:
 
     @pytest.mark.create_delete
     def test_create_delete_branch(self) -> None:
-        repo = Repo.create(self.ado_client, "azuredevops-test-repo-for-branches")
+        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-branches")
         with pytest.raises(NotImplementedError):
             Branch.create(self.ado_client, "", "", "")
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"text.txt": "Contents of the file"}, "add", "Test commmit 1")

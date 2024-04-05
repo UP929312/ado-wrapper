@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 
 import requests
 
-from azuredevops.client import AdoClient
-from azuredevops.state_managed_abc import StateManagedResource
+from ado_wrapper.client import AdoClient
+from ado_wrapper.state_managed_abc import StateManagedResource
 
 
 @dataclass

@@ -1,7 +1,7 @@
 import pytest
 
-from azuredevops.client import AdoClient
-from azuredevops.resources.users import AdoUser
+from ado_wrapper.client import AdoClient
+from ado_wrapper.resources.users import AdoUser
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     (
@@ -28,7 +28,7 @@ class TestAdoUser:
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
         with pytest.raises(NotImplementedError):
-            AdoUser.create(self.ado_client, "azuredevops-test-user", "azuredevops")
+            AdoUser.create(self.ado_client, "ado_wrapper-test-user", "ado_wrapper")
         with pytest.raises(NotImplementedError):
             AdoUser.delete_by_id(self.ado_client, "abc")
 

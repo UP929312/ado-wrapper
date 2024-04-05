@@ -23,8 +23,6 @@ TODO: Look into Pushes vs Commits <https://learn.microsoft.com/en-us/rest/api/az
 
 Also, Releases need vigerous testing - kinda wip, ReleaseDef - Update
 
-Get this packaged up!
-
 Perhaps when creating stuff, use a "while True" loop with user input, if they input "y", go to the next step?
 
 Rollback a commit? Tricky...
@@ -47,7 +45,7 @@ Look into tags for resources?
 <https://learn.microsoft.com/en-us/rest/api/azure/devops/git/annotated-tags/get?view=azure-devops-rest-7.1&tabs=HTTP>
 
 This?
-<https://www.reddit.com/r/azuredevops/comments/xj56gs/complete_pull_request_with_bypass_policy_via_api/>
+<https://www.reddit.com/r/ado_wrapper/comments/xj56gs/complete_pull_request_with_bypass_policy_via_api/>
 
 IMPORT TODO: main.py has creds loaded in, we should maybe have the script take a config file or something, or maybe just params for org, project, etc
 

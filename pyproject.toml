@@ -1,14 +1,14 @@
 [tool.poetry]
-name = "azuredevops"
+name = "ado_wrapper"
 description = "A high level wrapper around the AzureDevops API including OOP principals and state management"
 authors = ["Ben Skerritt"]
 version = "0.0.1"
 license = "Proprietary"
 readme = "README.md"
-packages = [{include = "azuredevops"}]
+packages = [{include = "ado_wrapper"}]
 
 [tool.poetry.scripts]
-azuredevops = "azuredevops.__main__:main"
+ado_wrapper = "ado_wrapper.__main__:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"

@@ -1,7 +1,7 @@
 import pytest
 
-from azuredevops.client import AdoClient
-from azuredevops.resources.variable_groups import VariableGroup
+from ado_wrapper.client import AdoClient
+from ado_wrapper.resources.variable_groups import VariableGroup
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     ado_org, ado_project, email, pat_token, *_ = test_data.read().splitlines()
@@ -35,7 +35,7 @@ class TestVariableGroup:
 
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
-        variable_group = VariableGroup.create(self.ado_client, "azuredevops-test-for-create-delete", "my_description", {"a": "b"})
+        variable_group = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-create-delete", "my_description", {"a": "b"})
         variable_group.delete(self.ado_client)
         assert variable_group.variables == {"a": "b"}
 
@@ -43,7 +43,7 @@ class TestVariableGroup:
     @pytest.mark.update
     def test_update(self) -> None:
         # Variable group updating is quite flakey, and randomly fails, even with no changes
-        variable_group = VariableGroup.create(self.ado_client, "azuredevops-test-for-update", "my_description", {"a": "b"})
+        variable_group = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-update", "my_description", {"a": "b"})
         changed_variables = {"b": "c"}
         # =====
         variable_group.update(self.ado_client, "variables", changed_variables)  # For some reason, this only sometimes works
@@ -56,21 +56,21 @@ class TestVariableGroup:
 
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
-        variable_group_created = VariableGroup.create(self.ado_client, "azuredevops-test-for-get-by-id", "my_description", {"a": "b"})
+        variable_group_created = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-get-by-id", "my_description", {"a": "b"})
         variable_group = VariableGroup.get_by_id(self.ado_client, variable_group_created.variable_group_id)
         variable_group_created.delete(self.ado_client)
         assert variable_group.variable_group_id == variable_group_created.variable_group_id
 
     def test_get_all(self) -> None:
-        variable_group_created = VariableGroup.create(self.ado_client, "azuredevops-test-for-get-all", "my_description", {"a": "b"})
+        variable_group_created = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-get-all", "my_description", {"a": "b"})
         variable_groups = VariableGroup.get_all(self.ado_client)
         variable_group_created.delete(self.ado_client)
         assert len(variable_groups) >= 1
         assert all(isinstance(user, VariableGroup) for user in variable_groups)
 
     def test_get_by_name(self) -> None:
-        variable_group_created = VariableGroup.create(self.ado_client, "azuredevops-test-for-get-by-name", "my_description", {"a": "b"})
-        variable_group = VariableGroup.get_by_name(self.ado_client, "azuredevops-test-for-get-by-name")
+        variable_group_created = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-get-by-name", "my_description", {"a": "b"})
+        variable_group = VariableGroup.get_by_name(self.ado_client, "ado_wrapper-test-for-get-by-name")
         variable_group_created.delete(self.ado_client)
         assert variable_group is not None
         assert variable_group.variable_group_id == variable_group_created.variable_group_id

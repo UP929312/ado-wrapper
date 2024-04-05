@@ -1,8 +1,8 @@
 import pytest
 
-from azuredevops.client import AdoClient
-from azuredevops.resources.teams import Team
-from azuredevops.resources.users import TeamMember
+from ado_wrapper.client import AdoClient
+from ado_wrapper.resources.teams import Team
+from ado_wrapper.resources.users import TeamMember
 
 with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
     ado_org, ado_project, email, pat_token, existing_team_name, existing_team_id, *_ = test_data.read().splitlines()  # fmt: skip
@@ -24,7 +24,7 @@ class TestTeam:
     @pytest.mark.create_delete
     def test_create_delete_team(self) -> None:
         with pytest.raises(NotImplementedError):
-            Team.create(self.ado_client, "azuredevops-test-Team", "description")
+            Team.create(self.ado_client, "ado_wrapper-test-Team", "description")
         with pytest.raises(NotImplementedError):
             Team.delete_by_id(self.ado_client, "abc")
 

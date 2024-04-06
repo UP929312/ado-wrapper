@@ -118,10 +118,11 @@ class Commit(StateManagedResource):
     def add_initial_readme(cls, ado_client: AdoClient, repo_id: str) -> "Commit":
         default_commit_body = get_commit_body_template(None, {}, "main", "add", "")
         default_commit_body["commits"] = [{
-                "comment": "Add README.md",
-                "changes": [
-                    {"changeType": 1, "item": {"path": "/README.md"}, "newContentTemplate": {"name": "README.md", "type": "readme"}}
-                ],
+            "comment": "Add README.md",
+            "changes": [{
+                "changeType": 1, "item": {"path": "/README.md"},
+                "newContentTemplate": {"name": "README.md", "type": "readme"}
+            }],
         }]  # fmt: skip
         request = requests.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=7.1",

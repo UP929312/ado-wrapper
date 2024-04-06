@@ -39,8 +39,7 @@ Teams.get_members(recursive=True)  Not sure that Teams are the right thing, mayb
 <https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict>
 This might allow us to remove "as_json"
 
-For state, have lifecycle policies, split each id into id -> {data, lifecyclepolicy, run_id/metadata? Created timestamp}
-We now have the ["data"] bit, so we can add lifecycle policies and run ids and that kind of thing more easily
+For state, have metadata, and lifecycle policies, split each id into id -> {data, lifecyclepolicy, metadata: {created_timestamp, run_id}}
 We can maybe use run id to delete all by run id?
 
 Look into tags for resources?
@@ -49,7 +48,7 @@ Look into tags for resources?
 This?
 <https://www.reddit.com/r/ado_wrapper/comments/xj56gs/complete_pull_request_with_bypass_policy_via_api/>
 
-Re-run on "connction error"
+Re-run on "connection error"
 
 -----
 

@@ -9,9 +9,9 @@ import requests
 
 from ado_wrapper.client import AdoClient
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import ResourceNotFound, UnknownError
 from ado_wrapper.resources.pull_requests import PullRequest, PullRequestStatus
 from ado_wrapper.resources.commits import Commit
+from ado_wrapper.utils import ResourceNotFound, UnknownError
 
 # from plan_resources.singletons import plannable_resource
 RepoEditableAttribute = Literal["name", "default_branch", "is_disabled"]
@@ -88,8 +88,7 @@ class Repo(StateManagedResource):
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, repo_name: str) -> "Repo":
         """Warning, this function must fetch `all` repos to work, be cautious when calling it in a loop."""
-        all_repos = cls.get_all(ado_client)
-        for repo in all_repos:
+        for repo in cls.get_all(ado_client):
             if repo.name == repo_name:
                 return repo
         raise ValueError(f"Repo {repo_name} not found")

@@ -50,7 +50,7 @@ class StateManager:
         if resource_id in all_states["resources"][resource_type]:
             self.remove_resource_from_state(resource_type, resource_id)
         metadata = {"created_datetime": datetime.now().isoformat(), "run_id": self.run_id}
-        all_data = {resource_id: {"data": resource_data, "metadata": metadata, "lifecycle-status": {}}}
+        all_data = {resource_id: {"data": resource_data, "metadata": metadata, "lifecycle-policies": {}}}
         all_states["resources"][resource_type] |= all_data
         return self.write_state_file(all_states)
 
@@ -100,8 +100,7 @@ class StateManager:
                     print(f"[ADO_WRAPPER] Error deleting {resource_type} {resource_id}: {e}")
 
     def import_into_state(self, resource_type: ResourceType, resource_id: str) -> None:
-        all_resource_classes = get_resource_variables()
-        class_reference = [value for key, value in all_resource_classes.items() if key == resource_type][0]
+        class_reference = get_resource_variables()[resource_type]
         data = class_reference.get_by_id(self.ado_client, resource_id).to_json()
         self.add_resource_to_state(resource_type, resource_id, data)
 

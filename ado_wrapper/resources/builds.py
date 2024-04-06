@@ -108,7 +108,7 @@ class Build(StateManagedResource):
     def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
         return super().update(
             ado_client, "patch",
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{self.build_id}?api-version=7.1-preview.7",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{self.build_id}?api-version=7.1",
             attribute_name, attribute_value, {attribute_name: attribute_value}  # fmt: skip
         )
 
@@ -119,7 +119,7 @@ class Build(StateManagedResource):
     @classmethod
     def get_all_by_definition(cls, ado_client: AdoClient, definition_id: str) -> "list[Build]":
         return super().get_all(ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?api-version=7.1&definitions={definition_id}",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?definitions={definition_id}&api-version=7.1",
         )  # type: ignore[return-value]
 
     def delete(self, ado_client: AdoClient) -> None:
@@ -144,7 +144,7 @@ class Build(StateManagedResource):
     @staticmethod
     def delete_all_leases(ado_client: AdoClient, build_id: str) -> None:
         leases_request = requests.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}/leases?api-version=7.1-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}/leases?api-version=7.1",
             auth=ado_client.auth,
         )
         if leases_request.status_code != 200:
@@ -247,7 +247,7 @@ class BuildDefinition(StateManagedResource):
     def get_all(cls, ado_client: AdoClient) -> "list[BuildDefinition]":  # type: ignore[override]
         return super().get_all(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.1-preview.7",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.1",
         )  # type: ignore[return-value]
 
     def get_all_builds_by_definition(self, ado_client: AdoClient) -> "list[Build]":

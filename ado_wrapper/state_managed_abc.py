@@ -31,7 +31,8 @@ def recursively_convert_from_json(dictionary: dict[str, Any]) -> Any:
     for key, value in dictionary.items():
         if isinstance(key, str) and "::" in key and key.split("::")[-1] != "datetime":
             instance_name, class_type = key.split("::")
-            class_ = [x for x in get_resource_variables().values() if x.__name__ == class_type][0]
+            class_ = [x for x in get_resource_variables().values() if x.__name__ == class_type][0]  # TODO, replace!
+            # class_ = get_resource_variables()[class_type]
             del data_copy[key]
             data_copy[instance_name] = class_.from_json(value)
         elif isinstance(key, str) and key.endswith("::datetime"):

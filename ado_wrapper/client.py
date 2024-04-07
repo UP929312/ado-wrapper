@@ -21,7 +21,7 @@ class AdoClient:
 
         if not bypass_initialisation:
             # Verify Token is working (helps with setup for first time users):
-            request = requests.get(f"https://dev.azure.com/{self.ado_org}/_apis/projects?api-version=6.0", auth=self.auth)
+            request = requests.get(f"https://dev.azure.com/{self.ado_org}/_apis/projects?api-version=7.1", auth=self.auth)
             if request.status_code != 200:
                 raise AuthenticationError(f"Failed to authenticate with ADO: {request.text}")
 

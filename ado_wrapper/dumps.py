@@ -152,6 +152,22 @@ REPO_DUMP = {
     'isInMaintenance': False,
 }
 
+SERVICE_ENDPOINT_DUMP = {
+    'data': {},
+    'id': '{service_endpoint_id}',
+    'name': '{service_connection_name}',
+    'type': 'github',
+    'url': 'https://github.com',
+    'createdBy': "<Member>",
+    'description': '{description}',
+    'authorization': {'parameters': {'AccessToken': None}, 'scheme': 'Token'},
+    'isShared': False,
+    'isOutdated': False, 'isReady': True,
+    'owner': 'Library',
+    'serviceEndpointProjectReferences': [{'projectReference': {'id': '{project_id}', 'name': '{project_name}'},
+                                          'name': '{service_connection_name}', 'description': '{description}'}]
+}
+
 TEAM_DUMP = {
     'id': '<32_char_uuid>',
     'name': 'Systems Team',

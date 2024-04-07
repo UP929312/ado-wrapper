@@ -17,7 +17,7 @@ def recursively_convert_to_json(attribute_name: str, attribute_value: Any) -> tu
     if isinstance(attribute_value, dict):
         return attribute_name, {key: recursively_convert_to_json("", value)[1] for key, value in attribute_value.items()}
     if isinstance(attribute_value, list):
-        return attribute_name, [recursively_convert_to_json(attribute_name, value) for value in attribute_value]
+        return attribute_name, [recursively_convert_to_json(attribute_name, value)[1] for value in attribute_value]
     if isinstance(attribute_value, datetime):
         return f"{attribute_name}::datetime", attribute_value.isoformat()
     if type(attribute_value) in get_resource_variables().values():
@@ -31,8 +31,7 @@ def recursively_convert_from_json(dictionary: dict[str, Any]) -> Any:
     for key, value in dictionary.items():
         if isinstance(key, str) and "::" in key and key.split("::")[-1] != "datetime":
             instance_name, class_type = key.split("::")
-            class_ = [x for x in get_resource_variables().values() if x.__name__ == class_type][0]  # TODO, replace!
-            # class_ = get_resource_variables()[class_type]
+            class_ = get_resource_variables()[class_type]
             del data_copy[key]
             data_copy[instance_name] = class_.from_json(value)
         elif isinstance(key, str) and key.endswith("::datetime"):
@@ -58,19 +57,25 @@ class StateManagedResource:
         attribute_names = [field_obj.name for field_obj in fields(self)]
         attribute_values = [getattr(self, field_obj.name) for field_obj in fields(self)]
         combined = zip(attribute_names, attribute_values)
-        return dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in combined)
+        return dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in combined) ####
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", url: str) -> "StateManagedResource":
+        if not url.startswith("https://"):
+            url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
         request = requests.get(url, auth=ado_client.auth)
         if request.status_code == 404:
             raise ResourceNotFound(f"No {cls.__name__} found with that identifier!")
         if request.status_code >= 300:
             raise ValueError(f"Error getting {cls.__name__} by id: {request.text}")
+        if "value" in request.json():
+            return cls.from_request_payload(request.json()["value"][0])
         return cls.from_request_payload(request.json())
 
     @classmethod
     def create(cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None) -> "StateManagedResource":
+        if not url.startswith("https://"):
+            url = f"https://dev.azure.com/{ado_client.ado_org}" + url
         request = requests.post(url, json=payload or {}, auth=ado_client.auth)  # Create a brand new dict
         if request.status_code == 401:
             raise PermissionError(f"You do not have permission to create this {cls.__name__}!")
@@ -82,6 +87,9 @@ class StateManagedResource:
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", url: str, resource_id: str) -> None:
+        """Deletes an object by its id. The id is passed so it can be removed from state"""
+        if not url.startswith("https://"):
+            url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
         request = requests.delete(url, auth=ado_client.auth)
         if request.status_code != 204:
             if request.status_code == 404:
@@ -95,10 +103,13 @@ class StateManagedResource:
         """The params should be a dictionary which will be combined with the internal name and value of the attribute to be updated."""
         interal_names = get_internal_field_names(self.__class__)
         if attribute_name not in get_internal_field_names(self.__class__):
-            raise ValueError(f"The attribute {attribute_name} is not editable!  Editable attributes: {interal_names}")
+            raise ValueError(f"The attribute `{attribute_name}` is not editable!  Editable attributes are: {list(interal_names.keys())}")
         params |= {interal_names[attribute_name]: attribute_value}
 
         func = requests.put if update_action == "put" else requests.patch
+        # request = requests.request(update_action, url, json=params, auth=ado_client.auth)
+        if not url.startswith("https://"):
+            url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
         request = func(url, json=params, auth=ado_client.auth)
         if request.status_code != 200:
             raise UpdateFailed(
@@ -109,6 +120,8 @@ class StateManagedResource:
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient", url: str) -> list["StateManagedResource"]:
+        if not url.startswith("https://"):
+            url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
         request = requests.get(url, auth=ado_client.auth)
         if request.status_code >= 300:
             raise ValueError(f"Error getting all {cls.__name__}: {request.text}")

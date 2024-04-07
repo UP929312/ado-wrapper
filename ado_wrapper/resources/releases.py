@@ -239,7 +239,7 @@ class ReleaseDefinition(StateManagedResource):
     @classmethod
     def get_all(cls, ado_client: AdoClient) -> "list[ReleaseDefinition]":  # type: ignore[override]
         response = requests.get(
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions?api-version=7.1-preview.4",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions?api-version=7.1",
             auth=ado_client.auth,
         ).json()["value"]
         return [cls.from_request_payload(data) for data in response]

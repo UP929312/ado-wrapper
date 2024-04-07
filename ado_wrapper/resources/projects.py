@@ -22,11 +22,10 @@ class Project(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, project_id: str) -> "Project":
-        request = requests.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{project_id}?api-version=7.1-preview.4",
-            auth=ado_client.auth,
-        ).json()
-        return cls.from_request_payload(request)
+        return super().get_by_id(
+            ado_client,
+            f"/_apis/projects/{project_id}?api-version=7.1",
+        )  # type: ignore[return-value]
 
     @classmethod
     def create(cls, ado_client: AdoClient, project_name: str, project_description: str) -> "Project":  # type: ignore[override]
@@ -40,7 +39,7 @@ class Project(StateManagedResource):
     def get_all(cls, ado_client: AdoClient) -> list["Project"]:  # type: ignore[override]
         return super().get_all(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects?api-version=7.1-preview.4",
+            "/_apis/projects?api-version=7.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #

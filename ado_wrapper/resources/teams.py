@@ -33,7 +33,7 @@ class Team(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, team_id: str) -> "Team":
         resource: Team = super().get_by_id(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{ado_client.ado_project}/teams/{team_id}?$expandIdentity={True}&api-version=7.1-preview.2",
+            f"/_apis/projects/{ado_client.ado_project}/teams/{team_id}?$expandIdentity={True}&api-version=7.1-preview.1",
         )  # type: ignore[assignment]
         resource.team_members = resource.get_members(ado_client)
         return resource
@@ -41,7 +41,7 @@ class Team(StateManagedResource):
     @classmethod
     def create(cls, ado_client: AdoClient, name: str, description: str) -> "Team":  # type: ignore[override]
         raise NotImplementedError
-        # request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/_apis/teams?api-version=7.1-preview.2", json={"name": name, "description": description}, auth=ado_client.auth).json()
+        # request = requests.post(f"/_apis/teams?api-version=7.1", json={"name": name, "description": description}, auth=ado_client.auth).json()
         # return cls.from_request_payload(request)
 
     def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: str) -> None:  # type: ignore[override]
@@ -50,14 +50,12 @@ class Team(StateManagedResource):
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, team_id: str) -> None:  # type: ignore[override]
         raise NotImplementedError
-        # request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/_apis/teams/{team_id}?api-version=7.1-preview.2", auth=ado_client.auth)
-        # assert request.status_code < 300
 
     @classmethod
     def get_all(cls, ado_client: AdoClient) -> list["Team"]:  # type: ignore[override]
         return super().get_all(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/_apis/teams?api-version=7.1-preview.2",  # /projects/{ado_client.ado_project}
+            "/_apis/teams?api-version=7.1-preview.2",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #

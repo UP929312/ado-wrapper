@@ -42,7 +42,7 @@ class Repo(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> "Repo":
         return super().get_by_id(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1",
+            f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -50,7 +50,7 @@ class Repo(StateManagedResource):
     def create(cls, ado_client: AdoClient, name: str, include_readme: bool = True) -> "Repo":  # type: ignore[override]
         repo: Repo = super().create(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1-preview",
+            f"/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
             {"name": name},
         )  # type: ignore[assignment]
         if include_readme:
@@ -58,9 +58,9 @@ class Repo(StateManagedResource):
         return repo
 
     def update(self, ado_client: AdoClient, attribute_name: RepoEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
-        super().update(
+        return super().update(
             ado_client, "patch",
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}?api-version=7.1-preview.1",
+            f"/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}?api-version=7.1",
             attribute_name, attribute_value, {},  # fmt: skip
         )
 
@@ -70,7 +70,7 @@ class Repo(StateManagedResource):
             ado_client.state_manager.remove_resource_from_state("PullRequest", pull_request.pull_request_id)
         return super().delete_by_id(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1",
+            f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1",
             repo_id,
         )
 
@@ -78,7 +78,7 @@ class Repo(StateManagedResource):
     def get_all(cls, ado_client: AdoClient) -> list["Repo"]:  # type: ignore[override]
         return super().get_all(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
+            f"/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #

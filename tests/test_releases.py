@@ -98,7 +98,7 @@ class TestReleaseDefinition:
         assert release_definition.name == "test-release-definition"
         assert isinstance(release_definition.created_by, Member)
         assert isinstance(release_definition.created_on, datetime)
-        # assert release_definition.to_json() == ReleaseDefinition.from_json(release_definition.to_json()).to_json()
+        assert release_definition.to_json() == ReleaseDefinition.from_json(release_definition.to_json()).to_json()
 
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:

@@ -47,11 +47,10 @@ class AdoUser(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, descriptor_id: str) -> "AdoUser":
-        request = requests.get(
-            f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users/{descriptor_id}?api-version=6.0-preview.1",
-            auth=ado_client.auth,
-        ).json()
-        return cls.from_request_payload(request)
+        return super().get_by_id(
+            ado_client,  # Preview required
+            f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users/{descriptor_id}?api-version=7.1-preview.1",
+        )  # type: ignore[return-value]
 
     @classmethod
     def create(cls, ado_client: AdoClient, member_name: str, member_email: str) -> "AdoUser":  # type: ignore[override]
@@ -64,7 +63,7 @@ class AdoUser(StateManagedResource):
     @classmethod
     def get_all(cls, ado_client: AdoClient) -> list["AdoUser"]:  # type: ignore[override]
         return super().get_all(
-            ado_client,
+            ado_client,  # Preview required
             f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 

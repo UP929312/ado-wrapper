@@ -76,7 +76,7 @@ class Build(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, build_id: str) -> "Build":
         return super().get_by_id(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}?api-version=7.1",
+            f"/{ado_client.ado_project}/_apis/build/builds/{build_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -92,7 +92,7 @@ class Build(StateManagedResource):
         #         assert request.status_code <= 204
         return super().create(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?definitionId={definition_id}&api-version=7.1",
+            f"/{ado_client.ado_project}/_apis/build/builds?definitionId={definition_id}&api-version=7.1",
             {"reason": "An automated build created with the ado_wrapper Python library", "sourceBranch": source_branch},
         )  # type: ignore[return-value]
 
@@ -101,14 +101,14 @@ class Build(StateManagedResource):
         cls.delete_all_leases(ado_client, build_id)
         return super().delete_by_id(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}?api-version=7.1",
+            f"/{ado_client.ado_project}/_apis/build/builds/{build_id}?api-version=7.1",
             build_id,
         )
 
     def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
         return super().update(
             ado_client, "patch",
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{self.build_id}?api-version=7.1",
+            f"/{ado_client.ado_project}/_apis/build/builds/{self.build_id}?api-version=7.1",
             attribute_name, attribute_value, {attribute_name: attribute_value}  # fmt: skip
         )
 
@@ -119,7 +119,7 @@ class Build(StateManagedResource):
     @classmethod
     def get_all_by_definition(cls, ado_client: AdoClient, definition_id: str) -> "list[Build]":
         return super().get_all(ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds?definitions={definition_id}&api-version=7.1",
+            f"/{ado_client.ado_project}/_apis/build/builds?definitions={definition_id}&api-version=7.1",
         )  # type: ignore[return-value]
 
     def delete(self, ado_client: AdoClient) -> None:
@@ -196,7 +196,7 @@ class BuildDefinition(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, build_definition_id: str) -> "BuildDefinition":
         return super().get_by_id(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{build_definition_id}?api-version=7.1",
+            f"/{ado_client.ado_project}/_apis/build/definitions/{build_definition_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -206,7 +206,7 @@ class BuildDefinition(StateManagedResource):
     ) -> "BuildDefinition":
         return super().create(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.0",
+            f"/{ado_client.ado_project}/_apis/build/definitions?api-version=7.0",
             payload=get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project,
                                          agent_pool_id, branch_name)  # fmt: skip
         )  # type: ignore[return-value]
@@ -223,7 +223,7 @@ class BuildDefinition(StateManagedResource):
         )
         super().update(
             ado_client, "put",
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{self.build_definition_id}?api-version=6.0", #secretsSourceDefinitionRevision={self.revision}&
+            f"/{ado_client.ado_project}/_apis/build/definitions/{self.build_definition_id}?api-version=7.1", #secretsSourceDefinitionRevision={self.revision}&
             attribute_name, attribute_value, payload  # fmt: skip
         )
         self.revision = str(int(self.revision) + 1)
@@ -235,7 +235,7 @@ class BuildDefinition(StateManagedResource):
             build.delete(ado_client)
         return super().delete_by_id(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions/{resource_id}?forceDelete=true&api-version=7.1",
+            f"/{ado_client.ado_project}/_apis/build/definitions/{resource_id}?forceDelete=true&api-version=7.1",
             resource_id,
         )
 
@@ -247,7 +247,7 @@ class BuildDefinition(StateManagedResource):
     def get_all(cls, ado_client: AdoClient) -> "list[BuildDefinition]":  # type: ignore[override]
         return super().get_all(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?api-version=7.1",
+            f"/{ado_client.ado_project}/_apis/build/definitions?api-version=7.1",
         )  # type: ignore[return-value]
 
     def get_all_builds_by_definition(self, ado_client: AdoClient) -> "list[Build]":

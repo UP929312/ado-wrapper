@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 ResourceType = Literal[
     "Branch", "Build", "BuildDefinition", "Commit", "Project", "PullRequest", "Release", "ReleaseDefinition",
-    "Repo", "Team", "AdoUser", "Member", "Reviewer", "VariableGroup"  # fmt: skip
+    "Repo", "Team", "AdoUser", "Member", "ServiceEndpoint", "Reviewer", "VariableGroup"  # fmt: skip
 ]
 
 
@@ -128,9 +128,8 @@ def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We d
     """This returns a mapping of resource name (str) to the class type of the resource. This is used to dynamically create instances of resources."""
     from ado_wrapper.resources import (  # type: ignore[attr-defined]  # pylint: disable=possibly-unused-variable
         Branch, Build, BuildDefinition, Commit, Project, PullRequest, Release, ReleaseDefinition, Repo, BuildRepository, Team,
-        AdoUser, Member, Reviewer, VariableGroup,  # fmt: skip
+        AdoUser, Member, ServiceEndpoint, Reviewer, VariableGroup,  # fmt: skip
     )
 
     # When you update that ^, also run generate_type hints.py
-
     return locals()

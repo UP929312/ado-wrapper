@@ -35,7 +35,7 @@ class Group(StateManagedResource):
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, group_descriptor: str) -> "Group":
         return super().get_by_id(
-            ado_client,
+            ado_client,  # Preview required
             f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/groups/{group_descriptor}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
@@ -50,7 +50,7 @@ class Group(StateManagedResource):
     @classmethod
     def get_all(cls, ado_client: AdoClient) -> list["Group"]:  # type: ignore[override]
         return super().get_all(
-            ado_client,
+            ado_client,  # Preview required
             f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/groups?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 

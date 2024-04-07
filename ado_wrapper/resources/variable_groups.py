@@ -42,7 +42,7 @@ class VariableGroup(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> "VariableGroup":
         return super().get_by_id(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/distributedtask/variablegroups/{variable_group_id}?api-version=7.1-preview.2",
+            f"/{ado_client.ado_project}/_apis/distributedtask/variablegroups/{variable_group_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -64,7 +64,7 @@ class VariableGroup(StateManagedResource):
         }
         return super().create(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/distributedtask/variablegroups?api-version=7.1-preview.2",
+            f"/{ado_client.ado_project}/_apis/distributedtask/variablegroups?api-version=7.1",
             payload,
         )  # type: ignore[return-value]
 
@@ -72,7 +72,7 @@ class VariableGroup(StateManagedResource):
     def delete_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> None:  # type: ignore[override]
         return super().delete_by_id(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/_apis/distributedtask/variablegroups/{variable_group_id}?projectIds={ado_client.ado_project_id}&api-version=7.1-preview.2",
+            f"/_apis/distributedtask/variablegroups/{variable_group_id}?projectIds={ado_client.ado_project_id}&api-version=7.1",
             variable_group_id,
         )
 
@@ -84,7 +84,7 @@ class VariableGroup(StateManagedResource):
         }
         super().update(
             ado_client, "put",
-            f"https://dev.azure.com/{ado_client.ado_org}/_apis/distributedtask/variablegroups/{self.variable_group_id}?api-version=7.1-preview.2",
+            f"/_apis/distributedtask/variablegroups/{self.variable_group_id}?api-version=7.1",
             attribute_name, attribute_value, params  # fmt: skip
         )
 
@@ -92,7 +92,7 @@ class VariableGroup(StateManagedResource):
     def get_all(cls, ado_client: AdoClient) -> list["VariableGroup"]:  # type: ignore[override]
         return super().get_all(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/distributedtask/variablegroups?api-version=7.1-preview.2",
+            f"/{ado_client.ado_project}/_apis/distributedtask/variablegroups?api-version=7.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #

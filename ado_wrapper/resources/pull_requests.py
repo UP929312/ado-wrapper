@@ -14,9 +14,11 @@ if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
     from ado_wrapper.resources.repo import Repo
 
-PullRequestEditableAttribute = Literal["title", "description", "status"]
+PullRequestEditableAttribute = Literal["title", "description", "merge_status", "is_draft"]
 PullRequestStatus = Literal["active", "completed", "abandoned", "all", "notSet"]
 MergeStatus = Literal["succeeded", "conflicts", "rejectedByPolicy", "rejectedByUser", "queued", "notSet"]
+CommentType = Literal["system", "regular", "codeChange", "unknown"]
+PrCommentStatus = Literal["active", "pending", "fixed", "wontFix", "closed"]
 
 
 @dataclass
@@ -32,10 +34,8 @@ class PullRequest(StateManagedResource):
     creation_date: datetime = field(repr=False)
     repo: Repo
     close_date: datetime | None = field(default=None, repr=False)
-    is_draft: bool = field(default=False, repr=False)  # , metadata={"editable": True, "internal_name": "isDraft"})  # Hmmm
-    merge_status: MergeStatus = field(
-        default="notSet", metadata={"editable": True}
-    )  # It's actual name is mergeStatus, but the update endpoint uses this name
+    is_draft: bool = field(default=False, repr=False, metadata={"editable": True, "internal_name": "isDraft"})
+    merge_status: MergeStatus = field(default="notSet", metadata={"editable": True, "internal_name": "status"})
     reviewers: list[Reviewer] = field(default_factory=list, repr=False)  # Static(ish)
 
     def __str__(self) -> str:
@@ -56,7 +56,7 @@ class PullRequest(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> "PullRequest":
         return super().get_by_id(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/pullrequests/{pull_request_id}?api-version=7.1-preview.1",
+            f"/{ado_client.ado_project}/_apis/git/pullrequests/{pull_request_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -70,7 +70,7 @@ class PullRequest(StateManagedResource):
         payload = {"sourceRefName": f"refs/heads/{from_branch_name}", "targetRefName": "refs/heads/main", "title": pull_request_title,
                    "description": pull_request_description, "isDraft": is_draft}  # fmt: skip
         request = requests.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?api-version=7.1-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?api-version=7.1",
             json=payload, auth=ado_client.auth,  # fmt: skip
         ).json()
         if request.get("message", "").startswith("TF401398"):
@@ -83,13 +83,13 @@ class PullRequest(StateManagedResource):
     def delete_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> None:  # type: ignore[override]
         # raise NotImplementedError("You can't delete pull requests, only close them.")
         pr = cls.get_by_id(ado_client, pull_request_id)
-        pr.update(ado_client, "status", "abandoned")
+        pr.update(ado_client, "merge_status", "abandoned")
         ado_client.state_manager.remove_resource_from_state("PullRequest", pull_request_id)
 
     def update(self, ado_client: AdoClient, attribute_name: PullRequestEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
         return super().update(
             ado_client, "patch",
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1-preview.1",
+            f"/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",
             attribute_name, attribute_value, {}  # fmt: skip
         )
 
@@ -97,7 +97,7 @@ class PullRequest(StateManagedResource):
     def get_all(cls, ado_client: AdoClient, status: PullRequestStatus = "all") -> list[PullRequest]:  # type: ignore[override]
         return super().get_all(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/pullrequests?searchCriteria.status={status}&api-version=7.1",
+            f"/{ado_client.ado_project}/_apis/git/pullrequests?searchCriteria.status={status}&api-version=7.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -110,33 +110,21 @@ class PullRequest(StateManagedResource):
     @staticmethod
     def add_reviewer_static(ado_client: AdoClient, repo_id: str, pull_request_id: str, reviewer_id: str) -> None:
         """Copy of the add_reviewer method, but static, i.e. if you have the repo id and pr id, you don't need to fetch them again"""
-        request = requests.put(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/reviewers/{reviewer_id}?api-version=7.1-preview.1",
+        request = requests.put(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/reviewers/{reviewer_id}?api-version=7.1",
                                 json={"vote": "0", "isRequired": "true"}, auth=ado_client.auth)  # fmt: skip
         assert request.status_code < 300
 
-    def change_status(self, ado_client: AdoClient, status: PullRequestStatus) -> None:
-        self.update(ado_client, "status", status)
-
     def close(self, ado_client: AdoClient) -> None:
-        self.update(ado_client, "status", "abandoned")
+        self.update(ado_client, "merge_status", "abandoned")
 
     def delete(self, ado_client: AdoClient) -> None:
         self.delete_by_id(ado_client, self.pull_request_id)
 
-    def mark_as_draft(self, ado_client: AdoClient, is_draft: bool = True) -> None:
-        json_payload = {"isDraft": is_draft}
-        request = requests.patch(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",
-            json=json_payload,
-            auth=ado_client.auth,
-        )
-        if request.status_code == 404:
-            raise ValueError("The pull request or repo could not be found!")
-        assert request.status_code < 300
-        self.is_draft = is_draft
+    def mark_as_draft(self, ado_client: AdoClient) -> None:
+        return self.update(ado_client, "is_draft", True)
 
     def unmark_as_draft(self, ado_client: AdoClient) -> None:
-        self.mark_as_draft(ado_client, False)
+        return self.update(ado_client, "is_draft", True)
 
     def get_reviewers(self, ado_client: AdoClient) -> list[Member]:
         request = requests.get(
@@ -173,3 +161,94 @@ class PullRequest(StateManagedResource):
             request.text.split("application/json")[1].split('pullRequests"')[1].split("queries")[0].removeprefix(":").removesuffix(',"')
         )
         return [cls.from_request_payload(pr) for pr in json.loads(raw_data).values()]
+
+    def get_comment_threads(self, ado_client: AdoClient, ignore_system_messages: bool = True) -> list[PullRequestCommentThread]:
+        request = requests.get(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}/threads?api-version=7.1",
+            auth=ado_client.auth,
+        ).json()["value"]
+        comments = [PullRequestCommentThread.from_request_payload(data) for data in request]
+        if ignore_system_messages:
+            comments = [comment for comment in comments if comment.comments[0].comment_type != "system"]
+        return comments
+
+    def get_comments(self, ado_client: AdoClient, ignore_system_messages: bool = True) -> list[PullRequestComment]:
+        """Gets a list of comments on a pull request, optionally ignoring system messages."""
+        return [comment for thread in self.get_comment_threads(ado_client, ignore_system_messages) for comment in thread.comments]
+
+    def post_comment(self, ado_client: AdoClient, content: str) -> PullRequestComment:
+        payload = {"comments": [{"commentType": 1, "content": content}], "status": "1"}
+        request = requests.post(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}/threads?api-version=7.1",
+            json=payload, auth=ado_client.auth,
+        ).json()
+        return PullRequestComment.from_request_payload(request["comments"][0])
+
+
+@dataclass
+class PullRequestCommentThread(StateManagedResource):
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-thread-comments/list?view=azure-devops-rest-7.1
+    Represents a chain of comments on a pull request, with the status e.g. Resolved, Active, etc."""
+    thread_id: str
+    status: str | None
+    comments: list["PullRequestComment"]
+
+    @classmethod
+    def from_request_payload(cls, data: dict[str, Any]) -> "PullRequestCommentThread":
+        comments = [PullRequestComment.from_request_payload(comment) for comment in data["comments"]]
+        return cls(data["id"], data.get("status"), comments)
+
+    @classmethod
+    def get_by_id(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str, thread_id: str) -> PullRequestCommentThread:  # type: ignore[override]
+        return super().get_by_id(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads/{thread_id}?api-version=7.1",
+        )  # type: ignore[return-value]
+
+    @classmethod
+    def create(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str, content: str) -> StateManagedResource:  # type: ignore[override]
+        return super().create(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads?api-version=7.1",
+            {"comments": [{"commentType": 1, "content": content}]},
+        )
+
+    def update(self, ado_client: AdoClient, attribute_name: PrCommentStatus, attribute_value: Any) -> None:  # type: ignore[override]
+        raise NotImplementedError
+
+    def delete_by_id(self, ado_client: AdoClient, repo_id: str, pull_request_id: str, thread_id: str) -> None:  # type: ignore[override]
+        return super().delete_by_id(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads/{thread_id}?api-version=7.1",
+            thread_id
+        )
+
+    @classmethod
+    def get_all(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str) -> list[PullRequestCommentThread]:  # type: ignore[override]
+        return super().get_all(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads?api-version=7.1",
+        )  # type: ignore[return-value]
+
+@dataclass
+class PullRequestComment:
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-thread-comments/list?view=azure-devops-rest-7.1
+    Comments' content will be None if they've been deleted, or if they're system comments."""
+    comment_id: str
+    parent_comment_id: str = field(repr=False)
+    content: str | None
+    author: Member
+    creation_date: datetime = field(repr=False)
+    comment_type: CommentType
+    is_deleted: bool = field(repr=False)
+    liked_users: list[Member] = field(repr=False)
+
+    def __str__(self) -> str:
+        return f"PullRequestComment(id={self.comment_id}, author_email=`{self.author.email}`, content=`{self.content}`, creation_date={self.creation_date}, comment_type={self.comment_type}" + (", is_deleted=True" if self.is_deleted else "") + ")"
+
+    @classmethod
+    def from_request_payload(cls, data: dict[str, Any]) -> "PullRequestComment":
+        author = Member(data["author"]["displayName"], data["author"]["uniqueName"], data["author"]["id"])
+        liked_users = [Member(user["displayName"], user["uniqueName"], user["id"]) for user in data.get("usersLiked", [])]
+        return cls(str(data["id"]), str(data["parentCommentId"]), data.get("content"), author, from_ado_date_string(data["publishedDate"]),
+                   data.get("commentType", "regular"), data.get("isDeleted", False), liked_users)  # fmt: skip

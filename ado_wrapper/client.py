@@ -1,14 +1,17 @@
 import requests
 from requests.auth import HTTPBasicAuth
+from typing import Literal
 
 from ado_wrapper.state_manager import StateManager
+from ado_wrapper.plan_resources.plan_state_manager import PlanStateManager
 from ado_wrapper.utils import AuthenticationError
 
 
 class AdoClient:
     def __init__(  # pylint: disable=too-many-arguments
         self, ado_email: str, ado_pat: str, ado_org: str, ado_project: str,
-        state_file_name: str | None = "main.state", bypass_initialisation: bool = False  # fmt: skip
+        state_file_name: str | None = "main.state", bypass_initialisation: bool = False,
+        action: Literal["plan", "apply"] = "apply"  # fmt: skip
     ) -> None:
         """Takes an email, PAT, org, project, and state file name. The state file name is optional, and if not provided,
         state will not be stored in "main.state" """
@@ -17,7 +20,7 @@ class AdoClient:
         self.auth = HTTPBasicAuth(ado_email, ado_pat)
         self.ado_org = ado_org
         self.ado_project = ado_project
-        self.plan_mode = False
+        self.plan_mode = action=="plan"
 
         if not bypass_initialisation:
             # Verify Token is working (helps with setup for first time users):
@@ -36,4 +39,4 @@ class AdoClient:
                     f"[ADO_WRAPPER] WARNING: User {ado_email} not found in ADO, nothing critical, but stops releases from being made, and plans from being accurate."
                 )
 
-        self.state_manager: StateManager = StateManager(self, state_file_name)  # Has to be last
+        self.state_manager = StateManager(self, state_file_name) if action=="apply" else PlanStateManager(self)  # Has to be last

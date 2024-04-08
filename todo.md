@@ -52,8 +52,6 @@ This?
 
 Re-run on "connection error"
 
-More work with comments on PRs! =#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=
-
 Dataclass "init=False" part of a field, but this won't work for type hinting I guess, also, while things like
 normally take 1 input (id), things like create can take more complicated stuff
 

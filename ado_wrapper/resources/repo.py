@@ -87,12 +87,11 @@ class Repo(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, repo_name: str) -> "Repo":
+    def get_by_name(cls, ado_client: AdoClient, repo_name: str) -> "Repo | None":
         """Warning, this function must fetch `all` repos to work, be cautious when calling it in a loop."""
         for repo in cls.get_all(ado_client):
             if repo.name == repo_name:
                 return repo
-        raise ValueError(f"Repo {repo_name} not found")
 
     def get_file(self, ado_client: AdoClient, file_path: str, branch_name: str = "main") -> str:
         request = requests.get(

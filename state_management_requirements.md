@@ -6,4 +6,12 @@ To be viable as a state managed resources, a class must define the following att
 - get_by_id(resouce_id: str)
 - create() (can just raise NotImplementedError)
 - update(attribute_name, attribute_value) (can just raise NotImplementedError)
-- delete_by_id(resource_id: str)
+- delete_by_id(resource_id: str) (can just raise NotImplementedError)
+
+They automatically get:
+
+- to_json()
+- from_json()
+- __init__()
+- __repr__()
+- delete()

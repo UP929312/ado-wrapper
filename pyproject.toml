@@ -2,7 +2,7 @@
 name = "ado_wrapper"
 description = "A high level wrapper around the AzureDevops API including OOP principals and state management"
 authors = ["Ben Skerritt"]
-version = "0.0.4"
+version = "0.0.5"
 license = "Proprietary"
 readme = "README.md"
 packages = [{include = "ado_wrapper"}]
@@ -59,6 +59,8 @@ disable = [
     "attribute-defined-outside-init",
     "cyclic-import",
     "redefined-outer-name",
+    "abstract-method",
+    "pointless-statement"
 ]
 
 [tool.pytest.ini_options]

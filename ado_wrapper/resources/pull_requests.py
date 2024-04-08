@@ -206,13 +206,12 @@ class PullRequestCommentThread(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str, content: str) -> StateManagedResource:  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str, content: str) -> "PullRequest":  # type: ignore[override]
         return super().create(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads?api-version=7.1",
             {"comments": [{"commentType": 1, "content": content}]},
-        )
-
+        )  # type: ignore[return-value]
     def update(self, ado_client: AdoClient, attribute_name: PrCommentStatus, attribute_value: Any) -> None:  # type: ignore[override]
         raise NotImplementedError
 

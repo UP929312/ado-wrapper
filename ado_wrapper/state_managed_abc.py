@@ -8,6 +8,7 @@ from ado_wrapper.utils import (
     get_resource_variables, extract_id, get_internal_field_names,
     ResourceAlreadyExists, DeletionFailed, ResourceNotFound, UpdateFailed,  # fmt: skip
 )
+from ado_wrapper.plan_resources.plan_resource import PlannedStateManagedResource
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -73,7 +74,9 @@ class StateManagedResource:
         return cls.from_request_payload(request.json())
 
     @classmethod
-    def create(cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None) -> "StateManagedResource":
+    def create(cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None) -> "StateManagedResource | PlannedStateManagedResource":
+        if ado_client.plan_mode:
+            return PlannedStateManagedResource.create(cls, ado_client, url, payload)
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org}" + url
         request = requests.post(url, json=payload or {}, auth=ado_client.auth)  # Create a brand new dict
@@ -132,11 +135,13 @@ class StateManagedResource:
 
     @classmethod
     def get_by_abstract_filter(cls, ado_client: "AdoClient", func: Callable[["StateManagedResource"], bool]) -> "StateManagedResource | None":
+        """Used internally for getting resources by a filter function. The function should return True if the resource is the one you want."""
         resources = cls.get_all(ado_client)  # type: ignore[call-arg]
         for resource in resources:
             if func(resource):
                 return resource
         return None
 
-    def set_lifecycle_policy(self, policy: Literal["prevent_destroy", "ignore_changes"]) -> None:
+    def set_lifecycle_policy(self, ado_client: "AdoClient", policy: Literal["prevent_destroy", "ignore_changes"]) -> None:
         self.life_cycle_policy = policy  # TODO
+        ado_client.state_manager.update_lifecycle_policy(self.__class__.__name__, extract_id(self), policy)  # type: ignore[arg-type]

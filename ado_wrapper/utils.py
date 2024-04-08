@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import overload, TYPE_CHECKING, Any, Literal
+from typing import overload, TYPE_CHECKING, Literal
 from dataclasses import fields
 
 if TYPE_CHECKING:

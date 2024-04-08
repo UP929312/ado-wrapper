@@ -17,7 +17,7 @@ class AdoClient:
         self.auth = HTTPBasicAuth(ado_email, ado_pat)
         self.ado_org = ado_org
         self.ado_project = ado_project
-        self.plan = False
+        self.plan_mode = False
 
         if not bypass_initialisation:
             # Verify Token is working (helps with setup for first time users):

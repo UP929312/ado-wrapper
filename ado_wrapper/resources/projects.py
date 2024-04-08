@@ -2,8 +2,6 @@ from typing import Any
 from datetime import datetime
 from dataclasses import dataclass, field
 
-import requests
-
 from ado_wrapper.client import AdoClient
 from ado_wrapper.state_managed_abc import StateManagedResource
 
@@ -49,4 +47,3 @@ class Project(StateManagedResource):
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, project_name: str) -> "Project | None":
         return cls.get_by_abstract_filter(ado_client, lambda project: project.name == project_name)  # type: ignore[return-value, attr-defined]
-

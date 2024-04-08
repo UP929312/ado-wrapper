@@ -20,11 +20,9 @@ Add "Update" to more stuff
 
 When I am testing .from_request_payload, maybe use the plan object's data?
 
-TODO: Look into Pushes vs Commits <https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes/get?view=azure-devops-rest-7.1&tabs=HTTP#gitpush>
-
 Also, Releases need vigerous testing - kinda wip, ReleaseDef - Update
 
-Perhaps when creating stuff, use a "while True" loop with user input, if they input "y", go to the next step?
+TODO: Look into Pushes vs Commits <https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes/get?view=azure-devops-rest-7.1&tabs=HTTP#gitpush>
 
 Rollback a commit? Tricky...
 
@@ -32,8 +30,6 @@ Update the state file on startup, and have an option to disable it - DONE
 Maybe add the alternative way? I.E. if it's changed in real resources
 
 Script plan mode?
-
-Versions for the repo, make sure everything's up to do, e.g. apiVersion=7.1
 
 Teams.get_members(recursive=True)  Not sure that Teams are the right thing, maybe Groups? Idk
 
@@ -68,7 +64,7 @@ Service connections perms on pipelines
 -----
 
 Pylint command:
-pylint *.py
+pylint *
 mypy . --strict
 black . --line-length 140
 pytest tests/ -vvvv -s

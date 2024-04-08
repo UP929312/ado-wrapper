@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+import requests
+
 from ado_wrapper.client import AdoClient
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member
@@ -99,8 +101,8 @@ class ServiceEndpoint(StateManagedResource):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
 
-    def delete(self, ado_client: AdoClient) -> None:
-        return self.delete_by_id(ado_client, self.service_endpoint_id)
+    # def delete(self, ado_client: AdoClient) -> None:
+    #     return self.delete_by_id(ado_client, self.service_endpoint_id)
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, name: str) -> ServiceEndpoint:
@@ -108,3 +110,17 @@ class ServiceEndpoint(StateManagedResource):
             ado_client,
             f"/{ado_client.ado_project}/_apis/serviceendpoint/endpoints?endpointNames={name}&api-version=7.1",
         )  # type: ignore[return-value]
+
+    def update_pipeline_perms(self, ado_client: AdoClient, pipeline_id: str | Literal["all"]) -> dict[str, Any]:
+        """Updates the permissions of a service endpoint in a pipeline.
+        UNTESTED
+        https://learn.microsoft.com/en-us/rest/api/azure/devops/approvalsandchecks/pipeline-permissions/update-pipeline-permisions-for-resources?view=azure-devops-rest-7.1"""
+        PAYLOAD = {
+            "resource":{"id": self.service_endpoint_id, "type": "endpoint", "name": ""},
+            "pipelines": [] if pipeline_id == "all" else [{"id": pipeline_id}],
+            "allPipelines": {"authorized": True, "authorizedBy": "null", "authorizedOn": "null"},
+        }
+        return requests.patch(  # type: ignore[no-any-return]
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/pipelines/pipelinePermissions/endpoint/{self.service_endpoint_id}?api-version=7.1",
+            json=PAYLOAD, auth=ado_client.auth,
+        ).json()

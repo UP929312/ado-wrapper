@@ -44,8 +44,10 @@ class TestAdoUser:
 
     def test_get_by_name(self) -> None:
         user = AdoUser.get_by_name(self.ado_client, existing_user_name)
+        assert user is not None
         assert user.descriptor_id == existing_user_id
 
     def test_get_by_email(self) -> None:
         user = AdoUser.get_by_email(self.ado_client, existing_user_email)
+        assert user is not None
         assert user.descriptor_id == existing_user_id

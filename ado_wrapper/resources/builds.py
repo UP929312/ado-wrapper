@@ -122,8 +122,8 @@ class Build(StateManagedResource):
             f"/{ado_client.ado_project}/_apis/build/builds?definitions={definition_id}&api-version=7.1",
         )  # type: ignore[return-value]
 
-    def delete(self, ado_client: AdoClient) -> None:
-        return self.delete_by_id(ado_client, self.build_id)
+    # def delete(self, ado_client: AdoClient) -> None:
+    #     return self.delete_by_id(ado_client, self.build_id)
 
     @classmethod
     def create_and_wait_until_completion(cls, ado_client: AdoClient, definition_id: str, branch_name: str = "main",
@@ -255,14 +255,13 @@ class BuildDefinition(StateManagedResource):
 
     @classmethod
     def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str) -> "list[BuildDefinition]":
-        response = requests.get(
+        return super().get_all(
+            ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?repositoryId={repo_id}&repositoryType={'TfsGit'}&api-version=7.1",
-            auth=ado_client.auth,
-        ).json()["value"]
-        return [cls.from_request_payload(build) for build in response]
+        )  # type: ignore[return-value]
 
-    def delete(self, ado_client: AdoClient) -> None:
-        return self.delete_by_id(ado_client, self.build_definition_id)
+    # def delete(self, ado_client: AdoClient) -> None:
+    #     return self.delete_by_id(ado_client, self.build_definition_id)
 
 
 # ========================================================================================================

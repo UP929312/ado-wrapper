@@ -45,6 +45,9 @@ This might allow us to remove "as_json"
 For state, have metadata, and lifecycle policies, split each id into id -> {data, lifecyclepolicy, metadata: {created_timestamp, run_id}}
 We can maybe use run id to delete all by run id? "prevent_destroy", "ignore_changes"
 
+We need to do something differently with creating stuff, currently if you run the same script twice, it'll just error because the
+object already exists, so the creator in SMR should check try, and if it fails, update the already existing one?
+
 Look into tags for resources?
 <https://learn.microsoft.com/en-us/rest/api/azure/devops/git/annotated-tags/get?view=azure-devops-rest-7.1&tabs=HTTP>
 

@@ -66,6 +66,7 @@ class Repo(StateManagedResource):
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, repo_id: str) -> None:  # type: ignore[override]
+        # TODO: This never checks if it's disabled, so might error
         for pull_request in Repo.get_all_pull_requests(ado_client, repo_id, "all"):
             ado_client.state_manager.remove_resource_from_state("PullRequest", pull_request.pull_request_id)
         return super().delete_by_id(

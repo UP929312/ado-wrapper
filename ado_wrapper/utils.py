@@ -76,10 +76,10 @@ def get_id_field_name(cls: type["StateManagedResource"]) -> str:
     raise ValueError(f"No id field found for {cls.__name__}!")
 
 
-def extract_id(obj: "StateManagedResource") -> Any:
+def extract_id(obj: "StateManagedResource") -> str:
     """Extracts the id from a StateManagedResource object. The id field is defined by the "is_id_field" metadata."""
     id_field_name = get_id_field_name(obj.__class__)
-    return getattr(obj, id_field_name)
+    return getattr(obj, id_field_name)  # type: ignore[no-any-return]
 
 
 def get_editable_fields(cls: type["StateManagedResource"]) -> list[str]:

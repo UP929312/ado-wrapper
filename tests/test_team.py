@@ -40,9 +40,12 @@ class TestTeam:
 
     def test_get_by_name(self) -> None:
         team = Team.get_by_name(self.ado_client, existing_team_name)
+        assert team is not None
         assert team.name == existing_team_name
 
     def test_get_members(self) -> None:
-        members = Team.get_by_name(self.ado_client, existing_team_name).get_members(self.ado_client)
+        team = Team.get_by_name(self.ado_client, existing_team_name)
+        assert team is not None
+        members = team.get_members(self.ado_client)
         assert len(members) > 1
         assert all(isinstance(member, TeamMember) for member in members)

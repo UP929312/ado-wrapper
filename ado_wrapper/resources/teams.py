@@ -63,11 +63,8 @@ class Team(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, team_name: str) -> "Team":
-        for team in cls.get_all(ado_client):
-            if team.name == team_name:
-                return team
-        raise ValueError(f"Team {team_name} not found")
+    def get_by_name(cls, ado_client: AdoClient, team_name: str) -> "Team | None":
+        return cls.get_by_abstract_filter(ado_client, lambda team: team.name == team_name)  # type: ignore[return-value, attr-defined]
 
     def get_members(self, ado_client: AdoClient) -> list["TeamMember"]:
         request = requests.get(
@@ -79,9 +76,6 @@ class Team(StateManagedResource):
         team_members = [TeamMember.from_request_payload(member) for member in request["value"]]
         self.team_members = team_members
         return team_members
-
-    def delete(self, ado_client: AdoClient, team_id: str) -> None:
-        self.delete_by_id(ado_client, team_id)
 
     # @staticmethod
     # def _recursively_extract_teams(ado_client: AdoClient, team_or_member: Team | TeamMember):

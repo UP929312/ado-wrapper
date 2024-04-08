@@ -59,11 +59,8 @@ class Group(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, group_name: str) -> "Group":
-        for group in cls.get_all(ado_client):
-            if group.name == group_name:
-                return group
-        raise ValueError(f"Group {group_name} not found")
+    def get_by_name(cls, ado_client: AdoClient, group_name: str) -> "Group | None":
+        return cls.get_by_abstract_filter(ado_client, lambda group: group.name == group_name)  # type: ignore[return-value, attr-defined]
 
     # def get_members(self, ado_client: AdoClient) -> list["GroupMember"]:
     #     request = requests.get(
@@ -72,9 +69,6 @@ class Group(StateManagedResource):
     #     ).json()
     #     rint(request)
     #     # return [GroupMember.from_request_payload(member) for member in request]
-
-    def delete(self, ado_client: AdoClient, group_id: str) -> None:
-        self.delete_by_id(ado_client, group_id)
 
     @classmethod
     def get_all_by_member(cls, ado_client: AdoClient, member_descriptor_id: str) -> list["Group"]:

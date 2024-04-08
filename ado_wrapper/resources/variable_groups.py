@@ -99,12 +99,6 @@ class VariableGroup(StateManagedResource):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
 
-    def delete(self, ado_client: AdoClient) -> None:
-        self.delete_by_id(ado_client, self.variable_group_id)
-
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, name: str) -> "VariableGroup | None":
-        for variable_group in cls.get_all(ado_client):
-            if variable_group.name == name:
-                return variable_group
-        return None
+        return cls.get_by_abstract_filter(ado_client, lambda variable_group: variable_group.name == name)  # type: ignore[return-value, attr-defined]

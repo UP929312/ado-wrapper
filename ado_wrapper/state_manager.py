@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 from uuid import uuid4
-from typing import Any, TypedDict, TYPE_CHECKING  # , Generator
+from typing import Any, TypedDict, TYPE_CHECKING, Literal
 
 from ado_wrapper.utils import DeletionFailed, get_resource_variables, ResourceType
 
@@ -50,7 +50,7 @@ class StateManager:
         if resource_id in all_states["resources"][resource_type]:
             self.remove_resource_from_state(resource_type, resource_id)
         metadata = {"created_datetime": datetime.now().isoformat(), "run_id": self.run_id}
-        all_data = {resource_id: {"data": resource_data, "metadata": metadata, "lifecycle-policies": {}}}
+        all_data = {resource_id: {"data": resource_data, "metadata": metadata, "lifecycle-policy": {}}}
         all_states["resources"][resource_type] |= all_data
         return self.write_state_file(all_states)
 
@@ -71,6 +71,13 @@ class StateManager:
         all_states["resources"][resource_type][resource_id]["metadata"]["updated_datetime"] = datetime.now().isoformat()
         return self.write_state_file(all_states)
 
+    def update_lifecycle_policy(self, resource_type: ResourceType, resource_id: str,
+                                policy: Literal["prevent_destroy", "ignore_changes"]) -> None:  # fmt: skip
+        if self.state_file_name is None:
+            return print("[ADO_WRAPPER] Not storing state, so not updating lifecycle policy")
+        all_states = self.load_state()
+        all_states["resources"][resource_type][resource_id]["lifecycle-policy"] = policy
+        return self.write_state_file(all_states)
     # =======================================================================================================
 
     def delete_resource(self, resource_type: ResourceType, resource_id: str) -> None:

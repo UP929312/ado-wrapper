@@ -1,4 +1,4 @@
-from typing import Any, TYPE_CHECKING, Literal
+from typing import Any, TYPE_CHECKING, Literal, Callable
 from dataclasses import dataclass, fields
 from datetime import datetime
 
@@ -98,6 +98,9 @@ class StateManagedResource:
                 raise DeletionFailed(f"[ADO_WRAPPER] Error deleting {cls.__name__} ({resource_id}): {request.json()['message']}")
         ado_client.state_manager.remove_resource_from_state(cls.__name__, resource_id)  # type: ignore[arg-type]
 
+    def delete(self, ado_client: "AdoClient") -> None:
+        return self.delete_by_id(ado_client, extract_id(self))  # type: ignore[call-arg]
+
     def update(self, ado_client: "AdoClient", update_action: Literal["put", "patch"], url: str,  # pylint: disable=too-many-arguments
                attribute_name: str, attribute_value: Any, params: dict[str, Any]) -> None:  # fmt: skip
         """The params should be a dictionary which will be combined with the internal name and value of the attribute to be updated."""
@@ -126,3 +129,14 @@ class StateManagedResource:
         if request.status_code >= 300:
             raise ValueError(f"Error getting all {cls.__name__}: {request.text}")
         return [cls.from_request_payload(resource) for resource in request.json()["value"]]
+
+    @classmethod
+    def get_by_abstract_filter(cls, ado_client: "AdoClient", func: Callable[["StateManagedResource"], bool]) -> "StateManagedResource | None":
+        resources = cls.get_all(ado_client)  # type: ignore[call-arg]
+        for resource in resources:
+            if func(resource):
+                return resource
+        return None
+
+    def set_lifecycle_policy(self, policy: Literal["prevent_destroy", "ignore_changes"]) -> None:
+        self.life_cycle_policy = policy  # TODO

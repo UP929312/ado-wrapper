@@ -61,7 +61,7 @@ class Branch(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, repo_id: str, branch_name: str) -> "Branch":
+    def get_by_name(cls, ado_client: AdoClient, repo_id: str, branch_name: str) -> "Branch | None":
         for branch in cls.get_all_by_repo(ado_client, repo_id):
             if branch.name == branch_name:
                 return branch

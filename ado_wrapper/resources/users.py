@@ -73,21 +73,14 @@ class AdoUser(StateManagedResource):
 
     @classmethod
     def get_by_email(cls, ado_client: AdoClient, member_email: str) -> "AdoUser":
-        for member in cls.get_all(ado_client):
-            if member.email == member_email:
-                return member
-        raise ValueError(f"Member with email {member_email} not found")
+        user: AdoUser = cls.get_by_abstract_filter(ado_client, lambda user: user.email == member_email)  # type: ignore[attr-defined, assignment]
+        if not user:
+            raise ValueError(f"Member with email {member_email} not found")
+        return user
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, member_name: str) -> "AdoUser":
-        for member in cls.get_all(ado_client):
-            if member.display_name == member_name:
-                return member
-        raise ValueError(f"Member with name {member_name} not found")
-
-    def delete(self, ado_client: AdoClient) -> None:
-        self.delete_by_id(ado_client, self.descriptor_id)
-
+    def get_by_name(cls, ado_client: AdoClient, member_name: str) -> "AdoUser | None":
+        return cls.get_by_abstract_filter(ado_client, lambda user: user.display_name == member_name)  # type: ignore[return-value, attr-defined]
 
 # ======================================================================================================= #
 # ------------------------------------------------------------------------------------------------------- #

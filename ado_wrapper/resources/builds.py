@@ -118,7 +118,8 @@ class Build(StateManagedResource):
 
     @classmethod
     def get_all_by_definition(cls, ado_client: AdoClient, definition_id: str) -> "list[Build]":
-        return super().get_all(ado_client,
+        return super().get_all(
+            ado_client,
             f"/{ado_client.ado_project}/_apis/build/builds?definitions={definition_id}&api-version=7.1",
         )  # type: ignore[return-value]
 

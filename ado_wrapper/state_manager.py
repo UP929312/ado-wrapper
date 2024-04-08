@@ -88,7 +88,9 @@ class StateManager:
         except DeletionFailed as exc:
             print(str(exc))
         except (NotImplementedError, TypeError):
-            print(f"[ADO_WRAPPER] Cannot {resource_type} {resource_id} from state or real space, please delete this manually or using code.")
+            print(
+                f"[ADO_WRAPPER] Cannot {resource_type} {resource_id} from state or real space, please delete this manually or using code."
+            )
         else:
             print(f"[ADO_WRAPPER] Deleted {resource_type} {resource_id} from ADO")
             self.remove_resource_from_state(resource_type, resource_id)

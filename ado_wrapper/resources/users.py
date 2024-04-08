@@ -82,6 +82,7 @@ class AdoUser(StateManagedResource):
     def get_by_name(cls, ado_client: AdoClient, member_name: str) -> "AdoUser | None":
         return cls.get_by_abstract_filter(ado_client, lambda user: user.display_name == member_name)  # type: ignore[return-value, attr-defined]
 
+
 # ======================================================================================================= #
 # ------------------------------------------------------------------------------------------------------- #
 # ======================================================================================================= #

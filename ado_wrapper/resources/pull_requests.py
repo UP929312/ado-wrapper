@@ -180,7 +180,8 @@ class PullRequest(StateManagedResource):
         payload = {"comments": [{"commentType": 1, "content": content}], "status": "1"}
         request = requests.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}/threads?api-version=7.1",
-            json=payload, auth=ado_client.auth,
+            json=payload,
+            auth=ado_client.auth,
         ).json()
         return PullRequestComment.from_request_payload(request["comments"][0])
 
@@ -189,6 +190,7 @@ class PullRequest(StateManagedResource):
 class PullRequestCommentThread(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-thread-comments/list?view=azure-devops-rest-7.1
     Represents a chain of comments on a pull request, with the status e.g. Resolved, Active, etc."""
+
     thread_id: str
     status: str | None
     comments: list["PullRequestComment"]
@@ -212,6 +214,7 @@ class PullRequestCommentThread(StateManagedResource):
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads?api-version=7.1",
             {"comments": [{"commentType": 1, "content": content}]},
         )  # type: ignore[return-value]
+
     def update(self, ado_client: AdoClient, attribute_name: PrCommentStatus, attribute_value: Any) -> None:  # type: ignore[override]
         raise NotImplementedError
 
@@ -219,7 +222,7 @@ class PullRequestCommentThread(StateManagedResource):
         return super().delete_by_id(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads/{thread_id}?api-version=7.1",
-            thread_id
+            thread_id,
         )
 
     @classmethod
@@ -229,10 +232,12 @@ class PullRequestCommentThread(StateManagedResource):
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads?api-version=7.1",
         )  # type: ignore[return-value]
 
+
 @dataclass
 class PullRequestComment:
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-thread-comments/list?view=azure-devops-rest-7.1
     Comments' content will be None if they've been deleted, or if they're system comments."""
+
     comment_id: str
     parent_comment_id: str = field(repr=False)
     content: str | None
@@ -243,7 +248,10 @@ class PullRequestComment:
     liked_users: list[Member] = field(repr=False)
 
     def __str__(self) -> str:
-        return f"PullRequestComment(id={self.comment_id}, author_email=`{self.author.email}`, content=`{self.content}`, creation_date={self.creation_date}, comment_type={self.comment_type}" + (", is_deleted=True" if self.is_deleted else "") + ")"
+        return (
+            f"PullRequestComment(id={self.comment_id}, author_email=`{self.author.email}`, content=`{self.content}`, "
+            f"creation_date={self.creation_date}, comment_type={self.comment_type}{', is_deleted=True' if self.is_deleted else ''})"
+        )
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "PullRequestComment":

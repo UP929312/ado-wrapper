@@ -58,7 +58,7 @@ class StateManagedResource:
         attribute_names = [field_obj.name for field_obj in fields(self)]
         attribute_values = [getattr(self, field_obj.name) for field_obj in fields(self)]
         combined = zip(attribute_names, attribute_values)
-        return dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in combined) ####
+        return dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in combined)  ####
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", url: str) -> "StateManagedResource":
@@ -74,7 +74,9 @@ class StateManagedResource:
         return cls.from_request_payload(request.json())
 
     @classmethod
-    def create(cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None) -> "StateManagedResource | PlannedStateManagedResource":
+    def create(
+        cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None
+    ) -> "StateManagedResource | PlannedStateManagedResource":
         if ado_client.plan_mode:
             return PlannedStateManagedResource.create(cls, ado_client, url, payload)
         if not url.startswith("https://"):
@@ -134,7 +136,9 @@ class StateManagedResource:
         return [cls.from_request_payload(resource) for resource in request.json()["value"]]
 
     @classmethod
-    def get_by_abstract_filter(cls, ado_client: "AdoClient", func: Callable[["StateManagedResource"], bool]) -> "StateManagedResource | None":
+    def get_by_abstract_filter(
+        cls, ado_client: "AdoClient", func: Callable[["StateManagedResource"], bool]
+    ) -> "StateManagedResource | None":
         """Used internally for getting resources by a filter function. The function should return True if the resource is the one you want."""
         resources = cls.get_all(ado_client)  # type: ignore[call-arg]
         for resource in resources:

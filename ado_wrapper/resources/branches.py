@@ -6,6 +6,7 @@ from ado_wrapper.state_managed_abc import StateManagedResource
 
 BranchEditableAttribute = Literal["name"]
 
+
 @dataclass
 class Branch(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/refs?view=azure-devops-rest-7.1

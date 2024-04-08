@@ -120,6 +120,7 @@ class InvalidPermissionsError(Exception):
 class UpdateFailed(Exception):
     pass
 
+
 class AuthenticationError(Exception):
     pass
 

@@ -4,10 +4,16 @@ from ado_wrapper.state_managed_abc import recursively_convert_to_json, recursive
 
 
 class TestStateManagedABCs:
-
     def test_recursively_convert_to_json(self) -> None:
         now = datetime.now()
-        raw_input = {"id": "123", "number": 456, "boolean": True, "dt_object": now, "dict": {"key": "value", "nested": {"key2": "value2"}}, "list": [1, 2, 3]}
+        raw_input = {
+            "id": "123",
+            "number": 456,
+            "boolean": True,
+            "dt_object": now,
+            "dict": {"key": "value", "nested": {"key2": "value2"}},
+            "list": [1, 2, 3],
+        }
         data = dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in raw_input.items())
         assert data == {
             "id": "123",

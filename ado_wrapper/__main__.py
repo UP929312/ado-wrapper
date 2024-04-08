@@ -37,7 +37,7 @@ def main() -> None:
     )
     action_group.add_argument("--apply", help="Applies the plan to the resources", action="store_true", default=False, dest="apply")
     parser.add_argument(
-        "--purge-state", "--wipe-state-", help="Deletes everything in the state file", action="store_true", default=False, dest="purge_state"
+        "--purge-state", "--wipe-state-", help="Deletes everything in the state file", action="store_true", default=False, dest="purge_state"  # fmt: skip
     )
     parser.add_argument("--state-file", help="The name of the state file to use", type=str, default="main.state", dest="state_file")
     args = parser.parse_args()
@@ -102,6 +102,7 @@ def main() -> None:
     if args.plan:
         print("[ADO_WRAPPER] Running plan for resources:")
         # Plan for resources
+
 
 if __name__ == "__main__":
     main()

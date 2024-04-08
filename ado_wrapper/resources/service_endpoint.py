@@ -14,9 +14,11 @@ ServiceEndpointEditableAttribute = Literal["name"]
 
 # ====================================================================
 
+
 @dataclass
 class ServiceEndpoint(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/serviceendpoint/endpoints?view=azure-devops-rest-7.1"""
+
     service_endpoint_id: str = field(metadata={"is_id_field": True})
     name: str = field(metadata={"editable": True})
     type: str  # = field(metadata={"editable": True})
@@ -35,9 +37,18 @@ class ServiceEndpoint(StateManagedResource):
     def from_request_payload(cls, data: dict[str, Any]) -> ServiceEndpoint:
         member = Member(data["createdBy"]["displayName"], data["createdBy"]["uniqueName"], data["createdBy"]["id"])
         return cls(
-            data["id"], data["name"], data["type"], data["url"], member, data.get("description", ""),
-            data["authorization"], data["isShared"], data["isOutdated"], data["isReady"],
-            data["owner"], data["serviceEndpointProjectReferences"], # data
+            data["id"],
+            data["name"],
+            data["type"],
+            data["url"],
+            member,
+            data.get("description", ""),
+            data["authorization"],
+            data["isShared"],
+            data["isOutdated"],
+            data["isReady"],
+            data["owner"],
+            data["serviceEndpointProjectReferences"],  # data
         )
 
     @classmethod
@@ -51,26 +62,26 @@ class ServiceEndpoint(StateManagedResource):
     def create(cls, ado_client: AdoClient, name: str, service_endpoint_type: str, url: str,  # type: ignore[override]
                username: str = "", password: str = "",  access_token: str = "") -> ServiceEndpoint:  # fmt: skip
         """Creates a service endpoint, pass in either username and password or access_token."""
-        assert ((username and password) and not access_token) or (access_token and not (username and password)), "Either username and password or access_token must be passed in."
+        assert ((username and password) and not access_token) or (access_token and not (username and password)), "Either username and password or access_token must be passed in."  # fmt: skip
         payload = {
             "name": name,
             "type": service_endpoint_type,
             "url": url,
             "isShared": True,
             "isReady": True,
-            "serviceEndpointProjectReferences": [{
-                "projectReference": {"id": ado_client.ado_project_id},  # fmt: skip
-                "name": name,
-            }]
+            "serviceEndpointProjectReferences": [
+                {
+                    "projectReference": {"id": ado_client.ado_project_id},  # fmt: skip
+                    "name": name,
+                }
+            ],
         }
         if username and password:
             payload["authorization"] = {"scheme": "UsernamePassword", "parameters": {"Username": username, "Password": password}}
         elif access_token:
             payload["authorization"] = {"parameters": {"AccessToken": access_token}, "scheme": "Token"}
         return super().create(
-            ado_client,
-            "/_apis/serviceendpoint/endpoints?api-version=7.1",
-            payload,
+            ado_client, "/_apis/serviceendpoint/endpoints?api-version=7.1", payload,  # fmt: skip
         )  # type: ignore[return-value]
 
     def update(self, ado_client: AdoClient, attribute_name: ServiceEndpointEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
@@ -114,13 +125,14 @@ class ServiceEndpoint(StateManagedResource):
     def update_pipeline_perms(self, ado_client: AdoClient, pipeline_id: str | Literal["all"]) -> dict[str, Any]:
         """Updates the permissions of a service endpoint in a pipeline.
         UNTESTED
-        https://learn.microsoft.com/en-us/rest/api/azure/devops/approvalsandchecks/pipeline-permissions/update-pipeline-permisions-for-resources?view=azure-devops-rest-7.1"""
+        https://learn.microsoft.com/en-us/rest/api/azure/devops/approvalsandchecks/pipeline-permissions/update-pipeline-permisions-for-resources?view=azure-devops-rest-7.1
+        """
         PAYLOAD = {
-            "resource":{"id": self.service_endpoint_id, "type": "endpoint", "name": ""},
+            "resource": {"id": self.service_endpoint_id, "type": "endpoint", "name": ""},
             "pipelines": [] if pipeline_id == "all" else [{"id": pipeline_id}],
             "allPipelines": {"authorized": True, "authorizedBy": "null", "authorizedOn": "null"},
         }
         return requests.patch(  # type: ignore[no-any-return]
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/pipelines/pipelinePermissions/endpoint/{self.service_endpoint_id}?api-version=7.1",
-            json=PAYLOAD, auth=ado_client.auth,
+            json=PAYLOAD, auth=ado_client.auth,  # fmt: skip
         ).json()

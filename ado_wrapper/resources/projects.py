@@ -1,9 +1,11 @@
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from datetime import datetime
 from dataclasses import dataclass, field
 
-from ado_wrapper.client import AdoClient
 from ado_wrapper.state_managed_abc import StateManagedResource
+
+if TYPE_CHECKING:
+    from ado_wrapper.client import AdoClient
 
 
 @dataclass

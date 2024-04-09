@@ -10,3 +10,5 @@ ACTIONS = {
     "update": BRIGHT_BLUE+"~"+RESET,
     "delete": BRIGHT_RED+"-"+RESET,
 }
+
+# https://talyian.github.io/ansicolors/

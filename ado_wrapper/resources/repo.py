@@ -3,15 +3,17 @@ from __future__ import annotations
 import io
 import zipfile
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, TYPE_CHECKING
 
 import requests
 
-from ado_wrapper.client import AdoClient
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.pull_requests import PullRequest, PullRequestStatus
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.utils import ResourceNotFound, UnknownError
+
+if TYPE_CHECKING:
+    from ado_wrapper.client import AdoClient
 
 # from plan_resources.singletons import plannable_resource
 RepoEditableAttribute = Literal["name", "default_branch", "is_disabled"]
@@ -87,7 +89,7 @@ class Repo(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, repo_name: str) -> "Repo | None":
+    def get_by_name(cls, ado_client: AdoClient, repo_name: str) -> "Repo | None":  # type: ignore[return]
         """Warning, this function must fetch `all` repos to work, be cautious when calling it in a loop."""
         for repo in cls.get_all(ado_client):
             if repo.name == repo_name:

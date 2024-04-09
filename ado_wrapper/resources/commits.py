@@ -1,13 +1,15 @@
-from typing import Literal, Any
 from datetime import datetime
 from dataclasses import dataclass, field
+from typing import Literal, Any, TYPE_CHECKING
 
 import requests
 
-from ado_wrapper.client import AdoClient
 from ado_wrapper.utils import from_ado_date_string, InvalidPermissionsError
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member
+
+if TYPE_CHECKING:
+    from ado_wrapper.client import AdoClient
 
 ChangeType = Literal["edit", "add", "delete"]
 FIRST_COMMIT_ID = "0000000000000000000000000000000000000000"  # I don't know why this works, but it does, please leave it.
@@ -63,7 +65,7 @@ class Commit(StateManagedResource):
         return cls(data["commitId"], member, from_ado_date_string(data["author"]["date"]), data["comment"])
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, repo_id: str, commit_id: str) -> "Commit":  # type: ignore[override]
+    def get_by_id(cls, ado_client: "AdoClient", repo_id: str, commit_id: str) -> "Commit":  # type: ignore[override]
         return super().get_by_id(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits/{commit_id}?api-version=7.1",
@@ -71,7 +73,7 @@ class Commit(StateManagedResource):
 
     @classmethod
     def create(  # type: ignore[override]
-        cls, ado_client: AdoClient, repo_id: str, from_branch_name: str, to_branch_name: str, updates: dict[str, str], change_type: ChangeType, commit_message: str,  # fmt: skip
+        cls, ado_client: "AdoClient", repo_id: str, from_branch_name: str, to_branch_name: str, updates: dict[str, str], change_type: ChangeType, commit_message: str,  # fmt: skip
     ) -> "Commit":
         """Creates a commit in the given repository with the given updates and returns the commit object.
         Takes a branch to get the latest commit from (and to update), and a to_branch to fork to."""
@@ -93,7 +95,7 @@ class Commit(StateManagedResource):
         return cls.from_request_payload(request.json()["commits"][-1])
 
     @staticmethod
-    def delete_by_id(ado_client: AdoClient, commit_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(ado_client: "AdoClient", commit_id: str) -> None:  # type: ignore[override]
         raise NotImplementedError
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -101,11 +103,11 @@ class Commit(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_latest_by_repo(cls, ado_client: AdoClient, repo_id: str, branch_name: str | None = None) -> "Commit":
+    def get_latest_by_repo(cls, ado_client: "AdoClient", repo_id: str, branch_name: str | None = None) -> "Commit":
         return max(cls.get_all_by_repo(ado_client, repo_id, branch_name), key=lambda commit: commit.date)
 
     @classmethod
-    def get_all_by_repo(cls, ado_client: AdoClient, repo_id: str, branch_name: str | None = None) -> "list[Commit]":
+    def get_all_by_repo(cls, ado_client: "AdoClient", repo_id: str, branch_name: str | None = None) -> "list[Commit]":
         """Returns a list of all commits in the given repository."""
         extra_query = (f"searchCriteria.itemVersion.version={branch_name}&searchCriteria.itemVersion.versionType={'branch'}&"
                        if branch_name is not None else "")  # fmt: skip
@@ -115,7 +117,7 @@ class Commit(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod
-    def add_initial_readme(cls, ado_client: AdoClient, repo_id: str) -> "Commit":
+    def add_initial_readme(cls, ado_client: "AdoClient", repo_id: str) -> "Commit":
         default_commit_body = get_commit_body_template(None, {}, "main", "add", "")
         default_commit_body["commits"] = [{
             "comment": "Add README.md",

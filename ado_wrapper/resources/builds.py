@@ -1,15 +1,17 @@
 from datetime import datetime
-from typing import Any, Literal
 from dataclasses import dataclass, field
+from typing import Any, Literal, TYPE_CHECKING
 import time
 
 import requests
 
-from ado_wrapper.client import AdoClient
 from ado_wrapper.utils import from_ado_date_string
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member
 from ado_wrapper.resources.repo import BuildRepository
+
+if TYPE_CHECKING:
+    from ado_wrapper.client import AdoClient
 
 BuildDefinitionEditableAttribute = Literal["name", "description"]
 BuildStatus = Literal["notStarted", "inProgress", "completed", "cancelling", "postponed", "notSet", "none"]
@@ -73,7 +75,7 @@ class Build(StateManagedResource):
                    from_ado_date_string(data.get("queueTime")), data["reason"], data["priority"])  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, build_id: str) -> "Build":
+    def get_by_id(cls, ado_client: "AdoClient", build_id: str) -> "Build":
         return super().get_by_id(
             ado_client,
             f"/{ado_client.ado_project}/_apis/build/builds/{build_id}?api-version=7.1",
@@ -81,7 +83,7 @@ class Build(StateManagedResource):
 
     @classmethod
     def create(  # type: ignore[override]
-        cls, ado_client: AdoClient, definition_id: str, source_branch: str = "refs/heads/main", permit_use_of_var_groups: bool = False,  # fmt: skip
+        cls, ado_client: "AdoClient", definition_id: str, source_branch: str = "refs/heads/main", permit_use_of_var_groups: bool = False,  # fmt: skip
     ) -> "Build":
         """`permit_var_groups` defines whether the variable group will be automatically allowed for the build or need manual approval."""
         # if permit_use_of_var_groups:
@@ -97,7 +99,7 @@ class Build(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, build_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(cls, ado_client: "AdoClient", build_id: str) -> None:  # type: ignore[override]
         cls.delete_all_leases(ado_client, build_id)
         return super().delete_by_id(
             ado_client,
@@ -105,7 +107,7 @@ class Build(StateManagedResource):
             build_id,
         )
 
-    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
+    def update(self, ado_client: "AdoClient", attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
         return super().update(
             ado_client, "patch",
             f"/{ado_client.ado_project}/_apis/build/builds/{self.build_id}?api-version=7.1",
@@ -117,17 +119,17 @@ class Build(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all_by_definition(cls, ado_client: AdoClient, definition_id: str) -> "list[Build]":
+    def get_all_by_definition(cls, ado_client: "AdoClient", definition_id: str) -> "list[Build]":
         return super().get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/build/builds?definitions={definition_id}&api-version=7.1",
         )  # type: ignore[return-value]
 
-    # def delete(self, ado_client: AdoClient) -> None:
+    # def delete(self, ado_client: "AdoClient") -> None:
     #     return self.delete_by_id(ado_client, self.build_id)
 
     @classmethod
-    def create_and_wait_until_completion(cls, ado_client: AdoClient, definition_id: str, branch_name: str = "main",
+    def create_and_wait_until_completion(cls, ado_client: "AdoClient", definition_id: str, branch_name: str = "main",
                                          max_timeout_seconds: int = 300) -> "Build":  # fmt: skip
         """Creates a build and waits until it is completed, or raises a TimeoutError if it takes too long.
         WARNING: This is a blocking operation, it will not return until the build is completed or the timeout is reached."""
@@ -143,7 +145,7 @@ class Build(StateManagedResource):
         return build
 
     @staticmethod
-    def delete_all_leases(ado_client: AdoClient, build_id: str) -> None:
+    def delete_all_leases(ado_client: "AdoClient", build_id: str) -> None:
         leases_request = requests.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}/leases?api-version=7.1",
             auth=ado_client.auth,
@@ -194,7 +196,7 @@ class BuildDefinition(StateManagedResource):
                 from_ado_date_string(data.get("createdDate")), build_repository, str(data["revision"]), data.get("process"), data.get("variables", {}), data.get("variableGroups", []))  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, build_definition_id: str) -> "BuildDefinition":
+    def get_by_id(cls, ado_client: "AdoClient", build_definition_id: str) -> "BuildDefinition":
         return super().get_by_id(
             ado_client,
             f"/{ado_client.ado_project}/_apis/build/definitions/{build_definition_id}?api-version=7.1",
@@ -202,7 +204,7 @@ class BuildDefinition(StateManagedResource):
 
     @classmethod
     def create(  # type: ignore[override]
-        cls, ado_client: AdoClient, name: str, repo_id: str, repo_name: str, path_to_pipeline: str,
+        cls, ado_client: "AdoClient", name: str, repo_id: str, repo_name: str, path_to_pipeline: str,
         description: str, agent_pool_id: str, variable_groups: list[str], branch_name: str = "main",  # fmt: skip
     ) -> "BuildDefinition":
         return super().create(
@@ -213,7 +215,7 @@ class BuildDefinition(StateManagedResource):
         )  # type: ignore[return-value]
         #  | {"variableGroups": [{"id": x for x in variable_groups}]},
 
-    def update(self, ado_client: AdoClient, attribute_name: BuildDefinitionEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
+    def update(self, ado_client: "AdoClient", attribute_name: BuildDefinitionEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
         if self.build_repo is None or self.process is None:
             raise ValueError("This build definition does not have a (repository or process) in its data, it cannot be updated")
         payload = (
@@ -230,7 +232,7 @@ class BuildDefinition(StateManagedResource):
         self.revision = str(int(self.revision) + 1)
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, resource_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(cls, ado_client: "AdoClient", resource_id: str) -> None:  # type: ignore[override]
         builds = Build.get_all_by_definition(ado_client, resource_id)
         for build in builds:
             build.delete(ado_client)
@@ -245,23 +247,23 @@ class BuildDefinition(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> "list[BuildDefinition]":  # type: ignore[override]
+    def get_all(cls, ado_client: "AdoClient") -> "list[BuildDefinition]":  # type: ignore[override]
         return super().get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/build/definitions?api-version=7.1",
         )  # type: ignore[return-value]
 
-    def get_all_builds_by_definition(self, ado_client: AdoClient) -> "list[Build]":
+    def get_all_builds_by_definition(self, ado_client: "AdoClient") -> "list[Build]":
         return Build.get_all_by_definition(ado_client, self.build_definition_id)
 
     @classmethod
-    def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str) -> "list[BuildDefinition]":
+    def get_all_by_repo_id(cls, ado_client: "AdoClient", repo_id: str) -> "list[BuildDefinition]":
         return super().get_all(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?repositoryId={repo_id}&repositoryType={'TfsGit'}&api-version=7.1",
         )  # type: ignore[return-value]
 
-    # def delete(self, ado_client: AdoClient) -> None:
+    # def delete(self, ado_client: "AdoClient") -> None:
     #     return self.delete_by_id(ado_client, self.build_definition_id)
 
 

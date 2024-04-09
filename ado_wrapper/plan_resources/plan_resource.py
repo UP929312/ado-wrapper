@@ -1,9 +1,9 @@
 from typing import Any, TYPE_CHECKING
 
-from ado_wrapper.client import AdoClient
 from ado_wrapper.utils import extract_id
 
 if TYPE_CHECKING:
+    from ado_wrapper.client import AdoClient
     from ado_wrapper.state_managed_abc import StateManagedResource
 
 UNKNOWN_UNTIL_APPLY = "Unknown until apply"

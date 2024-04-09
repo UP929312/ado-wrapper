@@ -1,8 +1,12 @@
-from dataclasses import dataclass, field
-from typing import Literal
+from __future__ import annotations
 
-from ado_wrapper.client import AdoClient
+from dataclasses import dataclass, field
+from typing import Literal, TYPE_CHECKING
+
 from ado_wrapper.state_managed_abc import StateManagedResource
+
+if TYPE_CHECKING:
+    from ado_wrapper.client import AdoClient
 
 BranchEditableAttribute = Literal["name"]
 

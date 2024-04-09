@@ -17,6 +17,12 @@ class StateFileType(TypedDict):
     resources: dict[ResourceType, dict[str, Any]]
 
 
+EMPTY_STATE: StateFileType = {
+    "state_file_version": STATE_FILE_VERSION,
+    "resources": {resource: {} for resource in get_resource_variables().keys()},  # type: ignore[misc]
+}
+
+
 class StateManager:
     def __init__(self, ado_client: "AdoClient", state_file_name: str | None = "main.state") -> None:
         self.ado_client = ado_client
@@ -27,8 +33,11 @@ class StateManager:
         if self.state_file_name is not None and not Path(self.state_file_name).exists():
             self.wipe_state()  # Will automatically create the file
 
+        self.state: StateFileType = self.load_state() if self.state_file_name is not None else EMPTY_STATE
+
     def load_state(self) -> StateFileType:
-        assert self.state_file_name is not None
+        if self.state_file_name is None:
+            return self.state
         with open(self.state_file_name, "r", encoding="utf-8") as state_file:
             try:
                 return json.load(state_file)  # type: ignore[no-any-return]
@@ -36,16 +45,15 @@ class StateManager:
                 raise json.JSONDecodeError("State file is not valid JSON, it might have been corrupted?", exc.doc, exc.pos)
 
     def write_state_file(self, state_data: StateFileType) -> None:
-        assert self.state_file_name is not None
+        if self.state_file_name is None:
+            self.state = state_data
+            return
         with open(self.state_file_name, "w", encoding="utf-8") as state_file:
             json.dump(state_data, state_file, indent=4)
 
     # =======================================================================================================
 
     def add_resource_to_state(self, resource_type: ResourceType, resource_id: str, resource_data: dict[str, Any]) -> None:
-        if self.state_file_name is None:
-            print("[ADO_WRAPPER] Not storing state, so not adding resource to state")
-            return None
         all_states = self.load_state()
         if resource_id in all_states["resources"][resource_type]:
             self.remove_resource_from_state(resource_type, resource_id)
@@ -55,17 +63,11 @@ class StateManager:
         return self.write_state_file(all_states)
 
     def remove_resource_from_state(self, resource_type: ResourceType, resource_id: str) -> None:
-        if self.state_file_name is None:
-            print("[ADO_WRAPPER] Not storing state, so not removing resource to state")
-            return None
         all_states = self.load_state()
         all_states["resources"][resource_type] = {k: v for k, v in all_states["resources"][resource_type].items() if k != resource_id}
         return self.write_state_file(all_states)
 
     def update_resource_in_state(self, resource_type: ResourceType, resource_id: str, updated_data: dict[str, Any]) -> None:
-        if self.state_file_name is None:
-            print("[ADO_WRAPPER] Not storing state, so not updating resource in state")
-            return None
         all_states = self.load_state()
         all_states["resources"][resource_type][resource_id]["data"] = updated_data
         all_states["resources"][resource_type][resource_id]["metadata"]["updated_datetime"] = datetime.now().isoformat()
@@ -73,8 +75,6 @@ class StateManager:
 
     def update_lifecycle_policy(self, resource_type: ResourceType, resource_id: str,
                                 policy: Literal["prevent_destroy", "ignore_changes"]) -> None:  # fmt: skip
-        if self.state_file_name is None:
-            return print("[ADO_WRAPPER] Not storing state, so not updating lifecycle policy")
         all_states = self.load_state()
         all_states["resources"][resource_type][resource_id]["lifecycle-policy"] = policy
         return self.write_state_file(all_states)
@@ -115,20 +115,14 @@ class StateManager:
 
     def wipe_state(self) -> None:
         if self.state_file_name is None:
+            self.state = EMPTY_STATE
             return
         with open(self.state_file_name, "w", encoding="utf-8") as state_file:
-            json.dump(
-                {
-                    "state_file_version": STATE_FILE_VERSION,
-                    "resources": {resource: {} for resource in get_resource_variables().keys()},
-                },
-                state_file,
-                indent=4,
-            )
+            json.dump(EMPTY_STATE, state_file, indent=4)
 
     def generate_in_memory_state(self) -> StateFileType:
+        """This method goes through every resource in state and updates it to the latest version in real world space"""
         ALL_RESOURCES = get_resource_variables()
-        # """This method goes through every resource in state and updates it to the latest version in real world space"""
         all_states = self.load_state()
         for resource_type in all_states["resources"]:
             for resource_id in all_states["resources"][resource_type]:
@@ -138,10 +132,7 @@ class StateManager:
         return all_states
 
     def load_all_resources_with_prefix_into_state(self, prefix: str) -> None:
-        from ado_wrapper.resources.variable_groups import VariableGroup
-        from ado_wrapper.resources.repo import Repo
-        from ado_wrapper.resources.releases import ReleaseDefinition
-        from ado_wrapper.resources.builds import BuildDefinition
+        from ado_wrapper.resources import VariableGroup, Repo, ReleaseDefinition, BuildDefinition, ServiceEndpoint  # type: ignore[attr-defined]
 
         for repo in Repo.get_all(self.ado_client):
             if repo.name.startswith(prefix):
@@ -158,6 +149,10 @@ class StateManager:
         for build_definition in BuildDefinition.get_all(self.ado_client):
             if build_definition.name.startswith(prefix):
                 self.ado_client.state_manager.import_into_state("BuildDefinition", build_definition.build_definition_id)
+
+        for service_endpoint in ServiceEndpoint.get_all(self.ado_client):
+            if service_endpoint.name.startswith(prefix):
+                self.ado_client.state_manager.import_into_state("ServiceEndpoint", service_endpoint.service_endpoint_id)
 
     # Unused
     # def all_resources(self) -> Generator[tuple[ResourceType, str], None, None]:

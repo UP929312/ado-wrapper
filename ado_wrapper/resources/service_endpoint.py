@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, TYPE_CHECKING
 
 import requests
 
-from ado_wrapper.client import AdoClient
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member
+
+if TYPE_CHECKING:
+    from ado_wrapper.client import AdoClient
 
 ServiceEndpointEditableAttribute = Literal["name"]
 

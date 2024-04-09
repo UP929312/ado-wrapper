@@ -1,6 +1,7 @@
+from typing import Literal
+
 import requests
 from requests.auth import HTTPBasicAuth
-from typing import Literal
 
 from ado_wrapper.state_manager import StateManager
 from ado_wrapper.plan_resources.plan_state_manager import PlanStateManager

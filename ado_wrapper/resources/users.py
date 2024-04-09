@@ -3,8 +3,6 @@ from __future__ import annotations
 from typing import Literal, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
 
-import requests
-
 from ado_wrapper.state_managed_abc import StateManagedResource
 
 if TYPE_CHECKING:

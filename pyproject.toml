@@ -49,6 +49,7 @@ disable = [
     "too-many-instance-attributes",
     "too-many-arguments",
 
+    "fixme",
     "arguments-differ",
     "arguments-renamed",
     "invalid-name",
@@ -60,7 +61,8 @@ disable = [
     "cyclic-import",
     "redefined-outer-name",
     "abstract-method",
-    "pointless-statement"
+    "pointless-statement",
+    "inconsistent-return-statements",
 ]
 
 [tool.pytest.ini_options]

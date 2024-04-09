@@ -66,12 +66,14 @@ class TestRepo:
     def test_get_by_name(self) -> None:
         repo_created = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-get-repo-by-name")
         repo = Repo.get_by_name(self.ado_client, "ado_wrapper-test-repo-for-get-repo-by-name")
+        assert repo is not None
         assert repo.name == repo_created.name
         assert repo.repo_id == repo_created.repo_id
         repo_created.delete(self.ado_client)
 
     def test_get_file(self) -> None:
         repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-get-file")
+        assert repo is not None
         Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"read-this.txt": "Delete me!"}, "add", "Test commit")
         file = repo.get_file(self.ado_client, "README.md", "test-branch")
         assert len(file) > 5

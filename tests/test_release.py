@@ -14,7 +14,7 @@ with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
 
 class TestRelease:
     def setup_method(self) -> None:
-        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, state_file_name="tests/test_state.state")
+        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, "tests/test_state.state", bypass_initialisation=False)
 
     @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:
@@ -37,13 +37,15 @@ class TestRelease:
     @pytest.mark.create_delete
     def test_create_delete_release(self) -> None:
         release_definition = ReleaseDefinition.create(
-            self.ado_client, "ado_wrapper-test-releasefor-create-delete-release", [], existing_agent_pool_id
+            self.ado_client, "ado_wrapper-test-release-for-create-delete-release", [], existing_agent_pool_id
         )
         release = Release.create(self.ado_client, release_definition.release_definition_id)
         assert release.release_id == Release.get_by_id(self.ado_client, release.release_id).release_id
         assert len(Release.get_all(self.ado_client, release_definition.release_definition_id)) == 1
-        release.delete(self.ado_client)
-        release_definition.delete(self.ado_client)
+
+        release_definition.delete(self.ado_client)  # Should also delete the release
+        with pytest.raises(Exception):
+            Release.get_by_id(self.ado_client, release.release_id)
 
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
@@ -76,7 +78,7 @@ class TestRelease:
 
 class TestReleaseDefinition:
     def setup_method(self) -> None:
-        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, state_file_name="tests/test_state.state")
+        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, "tests/test_state.state", bypass_initialisation=False)
 
     @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:

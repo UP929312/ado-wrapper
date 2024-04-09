@@ -29,10 +29,16 @@ Maybe add the alternative way? I.E. if it's changed in real resources
 
 Script plan mode?
 
+Previous test time: 219.78s (0:03:39)
+Improved test time: 144.02s (0:02:24) ~33% Faster
+Repo test test (no module level fixtures): 17.07s
+
+Look into session level fixtures: <https://docs.pytest.org/en/7.1.x/how-to/fixtures.html>
+
 Teams.get_members(recursive=True)  Not sure that Teams are the right thing, maybe Groups? Idk
 
 <https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict>
-This might allow us to remove "as_json"
+This might allow us to remove "as_json"? Problem is the other way, it won't know to convert things back
 
 For state, have metadata, and lifecycle policies, split each id into id -> {data, lifecyclepolicy, metadata: {created_timestamp, run_id}}
 We can maybe use run id to delete all by run id? "prevent_destroy", "ignore_changes"
@@ -46,12 +52,10 @@ Look into tags for resources?
 This?
 <https://www.reddit.com/r/ado_wrapper/comments/xj56gs/complete_pull_request_with_bypass_policy_via_api/>
 
-Re-run on "connection error"
+Re-run on "connection error"?
 
 Dataclass "init=False" part of a field, but this won't work for type hinting I guess, also, while things like
 normally take 1 input (id), things like create can take more complicated stuff
-
-State manager has get_by_id, but it's really get by url path? Look into this?
 
 Service connections perms on pipelines (done, not tested)
 

@@ -31,7 +31,7 @@ class Team(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, team_id: str) -> "Team":
-        resource: Team = super().get_by_id(
+        resource: Team = super().get_by_url(
             ado_client,
             f"/_apis/projects/{ado_client.ado_project}/teams/{team_id}?$expandIdentity={True}&api-version=7.1-preview.1",
         )  # type: ignore[assignment]

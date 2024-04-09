@@ -76,7 +76,7 @@ class Build(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", build_id: str) -> "Build":
-        return super().get_by_id(
+        return super().get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/build/builds/{build_id}?api-version=7.1",
         )  # type: ignore[return-value]
@@ -124,9 +124,6 @@ class Build(StateManagedResource):
             ado_client,
             f"/{ado_client.ado_project}/_apis/build/builds?definitions={definition_id}&api-version=7.1",
         )  # type: ignore[return-value]
-
-    # def delete(self, ado_client: "AdoClient") -> None:
-    #     return self.delete_by_id(ado_client, self.build_id)
 
     @classmethod
     def create_and_wait_until_completion(cls, ado_client: "AdoClient", definition_id: str, branch_name: str = "main",
@@ -194,7 +191,7 @@ class BuildDefinition(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", build_definition_id: str) -> "BuildDefinition":
-        return super().get_by_id(
+        return super().get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/build/definitions/{build_definition_id}?api-version=7.1",
         )  # type: ignore[return-value]
@@ -230,9 +227,8 @@ class BuildDefinition(StateManagedResource):
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", resource_id: str) -> None:  # type: ignore[override]
-        builds = Build.get_all_by_definition(ado_client, resource_id)
-        for build in builds:
-            build.delete(ado_client)
+        for build in Build.get_all_by_definition(ado_client, resource_id):
+            build.delete(ado_client)  # Can't remove from state because retention policies etc.
         return super().delete_by_id(
             ado_client,
             f"/{ado_client.ado_project}/_apis/build/definitions/{resource_id}?forceDelete=true&api-version=7.1",
@@ -259,9 +255,6 @@ class BuildDefinition(StateManagedResource):
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?repositoryId={repo_id}&repositoryType={'TfsGit'}&api-version=7.1",
         )  # type: ignore[return-value]
-
-    # def delete(self, ado_client: "AdoClient") -> None:
-    #     return self.delete_by_id(ado_client, self.build_definition_id)
 
 
 # ========================================================================================================

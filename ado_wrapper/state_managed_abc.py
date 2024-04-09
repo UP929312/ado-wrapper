@@ -61,7 +61,11 @@ class StateManagedResource:
         return dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in combined)  ####
 
     @classmethod
-    def get_by_id(cls, ado_client: "AdoClient", url: str) -> "StateManagedResource":
+    def get_by_id(cls, ado_client: "AdoClient", resource_id: str) -> "StateManagedResource":
+        raise NotImplementedError
+
+    @classmethod
+    def get_by_url(cls, ado_client: "AdoClient", url: str) -> "StateManagedResource":
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
         request = requests.get(url, auth=ado_client.auth)

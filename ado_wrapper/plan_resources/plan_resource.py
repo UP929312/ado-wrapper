@@ -26,10 +26,11 @@ class PlannedStateManagedResource:
         return plan_resource.create(ado_client, url, payload)  # type: ignore[return-value]
 
     @staticmethod
-    def update(class_: "StateManagedResource", ado_client: "AdoClient", url: str, attribute_name: str, attribute_value: Any, params: dict[str, Any]) -> None:
+    def update(
+        class_: "StateManagedResource", ado_client: "AdoClient", url: str, attribute_name: str, attribute_value: Any, params: dict[str, Any]
+    ) -> None:
         plan_resource = PlannedStateManagedResource.get_plan_resource(class_.__name__)  # type: ignore[attr-defined]
         # resource_object = plan_resource.get_by_id(ado_client, extract_id(url))
         # resource_object.update(ado_client, url, attribute_name, attribute_value, params)
-
 
         # ado_client.state_manager.add_resource_to_state("Plan" + class_.__name__, extract_id(resource_object), resource_object.to_json())

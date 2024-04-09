@@ -106,12 +106,12 @@ class Release(StateManagedResource):
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Release":
         created_by = Member.from_request_payload(data["createdBy"])
-        return cls(data["id"], data["name"], data["status"], from_ado_date_string(data["createdOn"]), created_by, data["description"],
+        return cls(str(data["id"]), data["name"], data["status"], from_ado_date_string(data["createdOn"]), created_by, data["description"],
                    data.get("variables", None), data.get("variableGroups", None), data["keepForever"])  # fmt: skip
 
     @classmethod  # TO-DO: Test
     def get_by_id(cls, ado_client: "AdoClient", release_id: str) -> "Release":
-        return super().get_by_id(
+        return super().get_by_url(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1",
         )  # type: ignore[return-value]
@@ -188,7 +188,7 @@ class ReleaseDefinition(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", release_definition_id: str) -> "ReleaseDefinition":
-        return super().get_by_id(
+        return super().get_by_url(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_definition_id}?api-version=7.0",
         )  # type: ignore[return-value]
@@ -205,7 +205,7 @@ class ReleaseDefinition(StateManagedResource):
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", release_definition_id: str) -> None:  # type: ignore[override]
         for release in ReleaseDefinition.get_all_releases_for_definition(ado_client, release_definition_id):
-            release.delete(ado_client)
+            ado_client.state_manager.remove_resource_from_state("Release", release.release_id)
         return super().delete_by_id(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_definition_id}?forceDelete=True&api-version=7.1",
@@ -223,9 +223,6 @@ class ReleaseDefinition(StateManagedResource):
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
-
-    # def delete(self, ado_client: "AdoClient") -> None:
-    #     return self.delete_by_id(ado_client, self.release_definition_id)
 
     @classmethod
     def get_all_releases_for_definition(cls, ado_client: "AdoClient", definition_id: str) -> "list[Release]":

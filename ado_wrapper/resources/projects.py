@@ -24,7 +24,7 @@ class Project(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, project_id: str) -> "Project":
-        return super().get_by_id(
+        return super().get_by_url(
             ado_client,
             f"/_apis/projects/{project_id}?api-version=7.1",
         )  # type: ignore[return-value]

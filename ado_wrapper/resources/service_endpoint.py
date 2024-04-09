@@ -54,7 +54,7 @@ class ServiceEndpoint(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> "ServiceEndpoint":
-        return super().get_by_id(
+        return super().get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/serviceendpoint/endpoints/{repo_id}",
         )  # type: ignore[return-value]
@@ -113,12 +113,9 @@ class ServiceEndpoint(StateManagedResource):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
 
-    # def delete(self, ado_client: AdoClient) -> None:
-    #     return self.delete_by_id(ado_client, self.service_endpoint_id)
-
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, name: str) -> ServiceEndpoint:
-        return super().get_by_id(
+        return super().get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/serviceendpoint/endpoints?endpointNames={name}&api-version=7.1",
         )  # type: ignore[return-value]

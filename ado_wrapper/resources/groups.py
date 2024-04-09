@@ -34,7 +34,7 @@ class Group(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, group_descriptor: str) -> "Group":
-        return super().get_by_id(
+        return super().get_by_url(
             ado_client,  # Preview required
             f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/groups/{group_descriptor}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]

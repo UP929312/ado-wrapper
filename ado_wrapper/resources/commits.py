@@ -66,7 +66,7 @@ class Commit(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", repo_id: str, commit_id: str) -> "Commit":  # type: ignore[override]
-        return super().get_by_id(
+        return super().get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits/{commit_id}?api-version=7.1",
         )  # type: ignore[return-value]

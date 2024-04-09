@@ -19,11 +19,11 @@ class StateFileType(TypedDict):
 
 
 class PlanStateManager(StateManager):
-    def __init__(self, ado_client: "AdoClient") -> None:
-        self.ado_client = ado_client
-        self.state: StateFileType = {"state_file_version": STATE_FILE_VERSION, "resources": {x: {} for x in get_resource_variables_plans().keys()}}  # type: ignore[misc]
-        self.state_file_name = None
-        self.run_id = "BLANK"
+    # def __init__(self, ado_client: "AdoClient") -> None:
+    #     self.ado_client = ado_client
+    #     self.state: StateFileType = {"state_file_version": STATE_FILE_VERSION, "resources": {x: {} for x in get_resource_variables_plans().keys()}}  # type: ignore[misc]
+    #     self.state_file_name = None
+    #     self.run_id = "BLANK"
 
     def output_changes(self) -> None:
         for resource_type, resources in self.state["resources"].items():

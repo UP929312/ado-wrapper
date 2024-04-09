@@ -10,7 +10,7 @@ with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
 
 class TestTeam:
     def setup_method(self) -> None:
-        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, state_file_name="tests/test_state.state")
+        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, "tests/test_state.state", bypass_initialisation=True)
 
     @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:

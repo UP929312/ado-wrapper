@@ -54,7 +54,7 @@ class PullRequest(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> "PullRequest":
-        return super().get_by_id(
+        return super().get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/pullrequests/{pull_request_id}?api-version=7.1",
         )  # type: ignore[return-value]
@@ -116,9 +116,6 @@ class PullRequest(StateManagedResource):
 
     def close(self, ado_client: AdoClient) -> None:
         self.update(ado_client, "merge_status", "abandoned")
-
-    def delete(self, ado_client: AdoClient) -> None:
-        self.delete_by_id(ado_client, self.pull_request_id)
 
     def mark_as_draft(self, ado_client: AdoClient) -> None:
         return self.update(ado_client, "is_draft", True)
@@ -202,7 +199,7 @@ class PullRequestCommentThread(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str, thread_id: str) -> PullRequestCommentThread:  # type: ignore[override]
-        return super().get_by_id(
+        return super().get_by_url(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads/{thread_id}?api-version=7.1",
         )  # type: ignore[return-value]

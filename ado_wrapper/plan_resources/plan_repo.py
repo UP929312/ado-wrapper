@@ -8,7 +8,6 @@ BYPASS_CHECK = True
 
 
 class PlanRepo:
-
     def get_by_id(self, ado_client: AdoClient, repo_id: str) -> Repo:
         state_copy = ado_client.state_manager.load_state()["resources"][self.__class__.__name__].get(repo_id)  # type: ignore
         if state_copy:

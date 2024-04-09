@@ -40,7 +40,7 @@ class VariableGroup(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> "VariableGroup":
-        return super().get_by_id(
+        return super().get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/distributedtask/variablegroups/{variable_group_id}?api-version=7.1",
         )  # type: ignore[return-value]

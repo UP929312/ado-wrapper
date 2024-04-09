@@ -45,7 +45,6 @@ class TestPullRequest:
         assert pull_request.title == "Test PR for create-delete"
         assert pull_request.description == "Test PR description"
         assert pull_request.is_draft
-        # assert [x.member_id for x in pull_request.reviewers] == [existing_user_id]
         pull_request.close(self.ado_client)
         repo.delete(self.ado_client)
 

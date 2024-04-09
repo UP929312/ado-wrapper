@@ -32,8 +32,8 @@ class VariableGroup(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "VariableGroup":
-        created_by = Member(data["createdBy"]["displayName"], "UNKNOWN", data["createdBy"]["id"])
-        modified_by = Member(data["modifiedBy"]["displayName"], "UNKNOWN", data["modifiedBy"]["id"])
+        created_by = Member.from_request_payload(data["createdBy"])
+        modified_by = Member.from_request_payload(data["modifiedBy"])
         return cls(str(data["id"]), data["name"], data.get("description", ""),
                    {key: value["value"] if isinstance(value, dict) else value for key, value in data["variables"].items()},
                    from_ado_date_string(data["createdOn"]), created_by, modified_by, from_ado_date_string(data.get("modifiedOn")))  # fmt: skip

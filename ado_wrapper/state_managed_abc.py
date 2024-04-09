@@ -114,11 +114,12 @@ class StateManagedResource:
             raise ValueError(f"The attribute `{attribute_name}` is not editable!  Editable attributes are: {list(interal_names.keys())}")
         params |= {interal_names[attribute_name]: attribute_value}
 
-        func = requests.put if update_action == "put" else requests.patch
-        # request = requests.request(update_action, url, json=params, auth=ado_client.auth)
+        if ado_client.plan_mode:
+            return PlannedStateManagedResource.update(self, ado_client, url, attribute_name, attribute_value, params)
+
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
-        request = func(url, json=params, auth=ado_client.auth)
+        request = requests.request(update_action, url, json=params, auth=ado_client.auth)
         if request.status_code != 200:
             raise UpdateFailed(
                 f"Failed to update {self.__class__.__name__} with id {extract_id(self)} and attribute {attribute_name} to {attribute_value}. \nReason:\n{request.text}"

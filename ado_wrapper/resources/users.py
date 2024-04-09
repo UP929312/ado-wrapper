@@ -99,7 +99,10 @@ class Member(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Member":
-        return cls(data["displayName"], data["mailAddress"], data["originId"])
+        # displayName, uniqueName/mailAddress, id/originId
+        # This gets returned slightly differently from different APIs
+        return cls(data["displayName"], data.get("uniqueName") or data.get("mailAddress", "UNKNOWN"),  # type: ignore[arg-type]
+                   data.get("id") or data["originId"])  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, member_id: str) -> "Member":

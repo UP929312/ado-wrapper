@@ -105,7 +105,7 @@ class Release(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Release":
-        created_by = Member(data["createdBy"]["displayName"], data["createdBy"]["uniqueName"], data["createdBy"]["id"])
+        created_by = Member.from_request_payload(data["createdBy"])
         return cls(data["id"], data["name"], data["status"], from_ado_date_string(data["createdOn"]), created_by, data["description"],
                    data.get("variables", None), data.get("variableGroups", None), data["keepForever"])  # fmt: skip
 
@@ -132,19 +132,16 @@ class Release(StateManagedResource):
             release_id,
         )
 
-    # ============ End of requirement set by all state managed resources ================== #
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-    # =============== Start of additional methods included with class ===================== #
-
-    def delete(self, ado_client: "AdoClient") -> None:
-        self.delete_by_id(ado_client, self.release_id)
-
     @classmethod
     def get_all(cls, ado_client: "AdoClient", definition_id: str) -> "list[Release]":  # type: ignore[override]
         return super().get_all(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1&definitionId={definition_id}",
         )  # type: ignore[return-value]
+
+    # ============ End of requirement set by all state managed resources ================== #
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+    # =============== Start of additional methods included with class ===================== #
 
 
 # ========================================================================================================
@@ -183,7 +180,7 @@ class ReleaseDefinition(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "ReleaseDefinition":
-        created_by = Member(data["createdBy"]["displayName"], data["createdBy"]["uniqueName"], data["createdBy"]["id"])
+        created_by = Member.from_request_payload(data["createdBy"])
         return cls(str(data["id"]), data["name"], data.get("description") or "", created_by, from_ado_date_string(data["createdOn"]),
                    data["releaseNameFormat"], data["variableGroups"], data.get("isDeleted", False), data.get("variables", None),
                    data.get("environments", []), data.get("environments", [{"deployPhases": [{"deploymentInput": {"queueId": "1"}}]}]
@@ -227,8 +224,8 @@ class ReleaseDefinition(StateManagedResource):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
 
-    def delete(self, ado_client: "AdoClient") -> None:
-        return self.delete_by_id(ado_client, self.release_definition_id)
+    # def delete(self, ado_client: "AdoClient") -> None:
+    #     return self.delete_by_id(ado_client, self.release_definition_id)
 
     @classmethod
     def get_all_releases_for_definition(cls, ado_client: "AdoClient", definition_id: str) -> "list[Release]":

@@ -37,13 +37,12 @@ class ServiceEndpoint(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> ServiceEndpoint:
-        member = Member(data["createdBy"]["displayName"], data["createdBy"]["uniqueName"], data["createdBy"]["id"])
         return cls(
             data["id"],
             data["name"],
             data["type"],
             data["url"],
-            member,
+            Member.from_request_payload(data["createdBy"]),
             data.get("description", ""),
             data["authorization"],
             data["isShared"],

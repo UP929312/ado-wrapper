@@ -45,7 +45,7 @@ class PullRequest(StateManagedResource):
     def from_request_payload(cls, data: dict[str, Any]) -> "PullRequest":
         from ado_wrapper.resources.repo import Repo  # Circular import
 
-        author = Member(data["createdBy"]["displayName"], data["createdBy"]["uniqueName"], data["createdBy"]["id"])
+        author = Member.from_request_payload(data["createdBy"])
         reviewers = [Reviewer.from_request_payload(reviewer) for reviewer in data["reviewers"]]
         repository = Repo(data["repository"]["id"], data["repository"]["name"])
         return cls(str(data["pullRequestId"]), data["title"], data.get("description", ""), data["sourceRefName"],
@@ -131,7 +131,7 @@ class PullRequest(StateManagedResource):
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}/reviewers?api-version=7.1",
             auth=ado_client.auth,
         ).json()
-        return [Member(reviewer["displayName"], reviewer["uniqueName"], reviewer["id"]) for reviewer in request["value"]]
+        return [Member.from_request_payload(reviewer) for reviewer in request["value"]]
 
     @classmethod
     def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str, status: PullRequestStatus = "all") -> list[PullRequest]:
@@ -255,7 +255,7 @@ class PullRequestComment:
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "PullRequestComment":
-        author = Member(data["author"]["displayName"], data["author"]["uniqueName"], data["author"]["id"])
-        liked_users = [Member(user["displayName"], user["uniqueName"], user["id"]) for user in data.get("usersLiked", [])]
+        author = Member.from_request_payload(data["author"])
+        liked_users = [Member.from_request_payload(user) for user in data.get("usersLiked", [])]
         return cls(str(data["id"]), str(data["parentCommentId"]), data.get("content"), author, from_ado_date_string(data["publishedDate"]),
                    data.get("commentType", "regular"), data.get("isDeleted", False), liked_users)  # fmt: skip

@@ -6,9 +6,9 @@ DARK_BLUE = "\u001b[34m"
 RESET = "\u001b[0m"
 
 ACTIONS = {
-    "create": BRIGHT_GREEN+"+"+RESET,
-    "update": BRIGHT_BLUE+"~"+RESET,
-    "delete": BRIGHT_RED+"-"+RESET,
+    "create": BRIGHT_GREEN + "+" + RESET,
+    "update": BRIGHT_BLUE + "~" + RESET,
+    "delete": BRIGHT_RED + "-" + RESET,
 }
 
 # https://talyian.github.io/ansicolors/

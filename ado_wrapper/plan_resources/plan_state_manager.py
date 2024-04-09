@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 STATE_FILE_VERSION = "1.4"
 
+
 class StateFileType(TypedDict):
     state_file_version: str
     resources: dict[ResourceType, dict[str, Any]]
@@ -31,6 +32,6 @@ class PlanStateManager(StateManager):
                 action = "create"
                 symbol = ACTIONS[action]
                 # https://stackoverflow.com/a/41757049
-                json_data = json.dumps(resource['data'], indent=4)
-                formatted_string = re.sub(r'(?<!: )"(\S*?)"', '\\1', json_data).replace("\n", f"\n{symbol} ")
-                print(f"{symbol} resource \"{resource_type}\" {formatted_string}")
+                json_data = json.dumps(resource["data"], indent=4)
+                formatted_string = re.sub(r'(?<!: )"(\S*?)"', "\\1", json_data).replace("\n", f"\n{symbol} ")
+                print(f'{symbol} resource "{resource_type}" {formatted_string}')

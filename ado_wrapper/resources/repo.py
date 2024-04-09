@@ -15,7 +15,6 @@ from ado_wrapper.utils import ResourceNotFound, UnknownError
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 
-# from plan_resources.singletons import plannable_resource
 RepoEditableAttribute = Literal["name", "default_branch", "is_disabled"]
 
 # ====================================================================
@@ -48,7 +47,6 @@ class Repo(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod
-    # @plannable_resource
     def create(cls, ado_client: AdoClient, name: str, include_readme: bool = True) -> "Repo":  # type: ignore[override]
         repo: Repo = super().create(
             ado_client,

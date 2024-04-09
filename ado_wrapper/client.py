@@ -21,7 +21,7 @@ class AdoClient:
         self.auth = HTTPBasicAuth(ado_email, ado_pat)
         self.ado_org = ado_org
         self.ado_project = ado_project
-        self.plan_mode = action=="plan"
+        self.plan_mode = action == "plan"
 
         if not bypass_initialisation:
             # Verify Token is working (helps with setup for first time users):
@@ -40,4 +40,4 @@ class AdoClient:
                     f"[ADO_WRAPPER] WARNING: User {ado_email} not found in ADO, nothing critical, but stops releases from being made, and plans from being accurate."
                 )
 
-        self.state_manager = StateManager(self, state_file_name) if action=="apply" else PlanStateManager(self)  # Has to be last
+        self.state_manager = StateManager(self, state_file_name) if action == "apply" else PlanStateManager(self)  # Has to be last

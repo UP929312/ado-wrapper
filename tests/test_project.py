@@ -1,18 +1,12 @@
 import pytest
 
-from ado_wrapper.client import AdoClient
 from ado_wrapper.resources.projects import Project
-
-with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
-    (
-        ado_org, ado_project, email, pat_token, _, _, _, _, _, _,
-        existing_project_name, existing_project_id, *_,  # fmt: skip
-    ) = test_data.read().splitlines()  # type: ignore[assignment]
+from tests.setup_client import setup_client, existing_project_name, existing_project_id
 
 
 class TestProject:
     def setup_method(self) -> None:
-        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, "tests/test_state.state", bypass_initialisation=True)
+        self.ado_client = setup_client()
 
     @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:

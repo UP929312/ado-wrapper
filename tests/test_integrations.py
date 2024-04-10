@@ -1,16 +1,11 @@
 import pytest
 
-from ado_wrapper.client import AdoClient
 from ado_wrapper.resources.variable_groups import VariableGroup
 from ado_wrapper.resources.repo import Repo
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.builds import Build, BuildDefinition
+from tests.setup_client import setup_client, existing_agent_pool_id
 
-
-with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
-    (
-        ado_org, ado_project, email, pat_token, _, _, _, _, _, existing_agent_pool_id, *_  # fmt: skip
-    ) = test_data.read().splitlines()  # type: ignore[assignment]
 
 BUILD_YAML_FILE = """---
 trigger:
@@ -29,7 +24,7 @@ steps:
 
 class TestIntegrations:
     def setup_method(self) -> None:
-        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, "tests/test_state.state", bypass_initialisation=True)
+        self.ado_client = setup_client()
 
     @pytest.mark.integrations
     @pytest.mark.skip("This test is not meant to be run in CI/CD, just manually")

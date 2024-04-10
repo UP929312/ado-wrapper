@@ -1,18 +1,12 @@
 import pytest
 
-from ado_wrapper.client import AdoClient
 from ado_wrapper.resources.users import AdoUser
-
-with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
-    (
-        ado_org, ado_project, email, pat_token, _, _, existing_user_name, existing_user_email, existing_user_id,
-        *_  # fmt: skip
-    ) = test_data.read().splitlines()  # type: ignore[assignment]
+from tests.setup_client import setup_client,  existing_user_name, existing_user_email, existing_user_id
 
 
 class TestAdoUser:
     def setup_method(self) -> None:
-        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, "tests/test_state.state", bypass_initialisation=True)
+        self.ado_client = setup_client()
 
     @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:

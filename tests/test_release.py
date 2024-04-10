@@ -2,19 +2,14 @@ from datetime import datetime
 
 import pytest
 
-from ado_wrapper.client import AdoClient
 from ado_wrapper.resources.releases import Release, ReleaseDefinition
 from ado_wrapper.resources.users import Member
-
-with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
-    (
-        ado_org, ado_project, email, pat_token, _, _, _, _, _, existing_agent_pool_id, *_  # fmt: skip
-    ) = test_data.read().splitlines()  # type: ignore[assignment]
+from tests.setup_client import setup_client, existing_agent_pool_id
 
 
 class TestRelease:
     def setup_method(self) -> None:
-        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, "tests/test_state.state", bypass_initialisation=False)
+        self.ado_client = setup_client()
 
     @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:
@@ -78,7 +73,7 @@ class TestRelease:
 
 class TestReleaseDefinition:
     def setup_method(self) -> None:
-        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, "tests/test_state.state", bypass_initialisation=False)
+        self.ado_client = setup_client()
 
     @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:

@@ -1,17 +1,14 @@
 import pytest
 
-from ado_wrapper.client import AdoClient
 from ado_wrapper.resources.repo import Repo
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.pull_requests import PullRequest, PullRequestCommentThread
-
-with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
-    ado_org, ado_project, email, pat_token, *_ = test_data.read().splitlines()  # fmt: skip
+from tests.setup_client import setup_client
 
 
 class TestPullRequest:
     def setup_method(self) -> None:
-        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, "tests/test_state.state", bypass_initialisation=True)
+        self.ado_client = setup_client()
 
     @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:

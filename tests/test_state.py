@@ -2,14 +2,13 @@ import os
 
 from ado_wrapper.client import AdoClient
 from ado_wrapper.resources.repo import Repo
-
-with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
-    ado_org, ado_project, email, pat_token, *_ = test_data.read().splitlines()
+from tests.setup_client import ado_org, ado_project, email, pat_token
 
 
 class TestState:
     def setup_method(self) -> None:
         self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, state_file_name="tests/test_actual_state.state")
+
 
     def test_adding_deleting(self) -> None:
         fake_repo = Repo("123", "test-repo", "master", False)

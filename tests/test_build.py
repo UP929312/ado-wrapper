@@ -2,16 +2,11 @@ from datetime import datetime
 
 import pytest
 
-from ado_wrapper.client import AdoClient
 from ado_wrapper.resources.repo import Repo
 from ado_wrapper.resources.builds import Build, BuildDefinition
 from ado_wrapper.resources.users import Member
 from ado_wrapper.resources.commits import Commit
-
-with open("tests/test_data.txt", "r", encoding="utf-8") as test_data:
-    (
-        ado_org, ado_project, email, pat_token, _, _, _, _, _, existing_agent_pool_id, *_  # fmt: skip
-    ) = test_data.read().splitlines()  # type: ignore[assignment]
+from tests.setup_client import setup_client, email, existing_agent_pool_id
 
 BUILD_YAML_FILE = """---
 trigger:
@@ -27,7 +22,7 @@ steps:
 
 class TestBuild:
     def setup_method(self) -> None:
-        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, "tests/test_state.state", bypass_initialisation=True)
+        self.ado_client = setup_client()
 
     @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:
@@ -119,7 +114,7 @@ class TestBuild:
 
 class TestBuildDefinition:
     def setup_method(self) -> None:
-        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, "tests/test_state.state", bypass_initialisation=True)
+        self.ado_client = setup_client()
 
     @pytest.mark.from_request_payload
     def test_from_request_payload(self) -> None:

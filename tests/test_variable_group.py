@@ -3,6 +3,7 @@ import pytest
 from ado_wrapper.resources.variable_groups import VariableGroup
 from tests.setup_client import setup_client
 
+
 class TestVariableGroup:
     def setup_method(self) -> None:
         self.ado_client = setup_client()

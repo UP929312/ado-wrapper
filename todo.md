@@ -6,15 +6,13 @@ BuildDefinition -*
 ReleaseDefinition
 Release
 Repo -*
-ServiceEndpoints
+ServiceEndpoints -*
 VariableGroup -*
 
 Soon:
-Pull Request, Commit, ServiceEndpoints
+Pull Request, Commit
 
 -* = Supports edits/updates too
-
-Add "Update" to more stuff
 
 -----
 
@@ -28,12 +26,6 @@ Update the state file on startup, and have an option to disable it - DONE
 Maybe add the alternative way? I.E. if it's changed in real resources
 
 Script plan mode?
-
-Previous test time: 219.78s (0:03:39)
-Improved test time: 144.02s (0:02:24) ~33% Faster
-Repo test test (no module level fixtures): 17.07s
-
-Look into session level fixtures: <https://docs.pytest.org/en/7.1.x/how-to/fixtures.html>
 
 Teams.get_members(recursive=True)  Not sure that Teams are the right thing, maybe Groups? Idk
 
@@ -58,6 +50,8 @@ Dataclass "init=False" part of a field, but this won't work for type hinting I g
 normally take 1 input (id), things like create can take more complicated stuff
 
 Service connections perms on pipelines (done, not tested)
+
+NEXT THING: Repo merge perms - not possible ):
 
 -----
 

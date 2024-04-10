@@ -3,6 +3,7 @@ import pytest
 from ado_wrapper.resources.service_endpoint import ServiceEndpoint
 from tests.setup_client import setup_client
 
+
 class TestServiceEndpoints:
     def setup_method(self) -> None:
         self.ado_client = setup_client()

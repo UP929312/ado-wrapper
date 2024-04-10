@@ -185,3 +185,18 @@ class BuildRepository:
             "id": self.build_repository_id, "name": self.name, "type": self.type,
             "clean": self.clean, "checkoutSubmodules": self.checkout_submodules,  # fmt: skip
         }
+
+
+# @dataclass
+# class RepoPolicies(StateManagedResource):
+#     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/policy-configurations?view=azure-devops-rest-7.1"""
+#     @classmethod
+#     def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> "RepoPolicies":
+#         import requests
+#         a = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/policy/configurations?repositoryId={repo_id}&api-version=5.0-preview.1", auth=ado_client.auth)
+#         print(a.text)
+#         return None
+#         return super().get_by_url(
+#             ado_client,
+#             f"/{ado_client.ado_project}/_apis/git/policy/configurations?repositoryId={repo_id}&api-version=7.1"
+#         )  # type: ignore[return-value]

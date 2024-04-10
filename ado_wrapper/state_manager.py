@@ -114,11 +114,7 @@ class StateManager:
         self.add_resource_to_state(resource_type, resource_id, data)
 
     def wipe_state(self) -> None:
-        if self.state_file_name is None:
-            self.state = EMPTY_STATE
-            return
-        with open(self.state_file_name, "w", encoding="utf-8") as state_file:
-            json.dump(EMPTY_STATE, state_file, indent=4)
+        self.write_state_file(EMPTY_STATE)
 
     def generate_in_memory_state(self) -> StateFileType:
         """This method goes through every resource in state and updates it to the latest version in real world space"""

@@ -1,14 +1,10 @@
-from typing import Any, TypedDict, TYPE_CHECKING
+from typing import Any, TypedDict
 import json
 import re
 
 from ado_wrapper.utils import ResourceType
 from ado_wrapper.state_manager import StateManager
-from ado_wrapper.plan_resources.mapping import get_resource_variables_plans
 from ado_wrapper.plan_resources.colours import ACTIONS
-
-if TYPE_CHECKING:
-    from ado_wrapper.client import AdoClient
 
 STATE_FILE_VERSION = "1.4"
 

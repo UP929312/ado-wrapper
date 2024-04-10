@@ -13,9 +13,14 @@ from ado_wrapper.resources import *
 
 ado_client = AdoClient(email, ado_access_token, ado_org, ado_project, bypass_initialisation=True, action="plan")
 # ado_client.state_manager.load_all_resources_with_prefix_into_state("ado_wrapper-")
-repo = Repo.create(ado_client, "ado_wrapper-plan-test", include_readme=False)
+# repo = Repo.create(ado_client, "ado_wrapper-plan-test", include_readme=False)
 
-print(ado_client.state_manager.state)
+# from ado_wrapper.resources.repo import RepoPolicies
+
+# a = RepoPolicies.get_by_id(ado_client, "1aa43e9c-ffca-4388-98b5-59b272a497b8")
+# print(a)
+
+# print(ado_client.state_manager.state)
 # ado_client.state_manager.output_changes()  # type: ignore[attr-defined]
 
 # for pr in PullRequest.get_all(ado_client, status="active"):

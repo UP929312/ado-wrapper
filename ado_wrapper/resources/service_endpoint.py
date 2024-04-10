@@ -38,18 +38,11 @@ class ServiceEndpoint(StateManagedResource):
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> ServiceEndpoint:
         return cls(
-            data["id"],
-            data["name"],
-            data["type"],
-            data["url"],
+            data["id"], data["name"], data["type"], data["url"],
             Member.from_request_payload(data["createdBy"]),
-            data.get("description", ""),
-            data["authorization"],
-            data["isShared"],
-            data["isOutdated"],
-            data["isReady"],
-            data["owner"],
-            data["serviceEndpointProjectReferences"],  # data
+            data.get("description", ""), data["authorization"], data["isShared"],
+            data["isOutdated"], data["isReady"], data["owner"],
+            data["serviceEndpointProjectReferences"],  # fmt: skip
         )
 
     @classmethod

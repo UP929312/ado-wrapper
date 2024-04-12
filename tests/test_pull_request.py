@@ -131,7 +131,7 @@ class TestPullRequest:
         pull_request.close(self.ado_client)
         repo.delete(self.ado_client)
 
-    @pytest.mark.wip
+    # @pytest.mark.wip
     def test_comment_thread(self) -> None:
         repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-comment-thread")
         Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "Change"}, "add", "Test commit")

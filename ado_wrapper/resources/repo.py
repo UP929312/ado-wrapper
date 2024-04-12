@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 
 RepoEditableAttribute = Literal["name", "default_branch", "is_disabled"]
+WhenChangesArePushed = Literal["require_revote_on_each_iteration", "require_revote_on_last_iteration", "reset_votes_on_source_push", "reset_rejections_on_source_push", "do_nothing"]
 
 # ====================================================================
 
@@ -160,6 +161,17 @@ class Repo(StateManagedResource):
         repo = Repo.get_by_id(ado_client, repo_id)
         return repo.get_contents(ado_client, file_types, branch_name)
 
+    @staticmethod
+    def get_branch_policy(ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> "RepoBranchPolicies | None":
+        return RepoBranchPolicies.get_by_repo_id(ado_client, repo_id, branch_name)
+
+    @staticmethod
+    def set_branch_policy(ado_client: AdoClient, policy_id: str | None, repo_id: str, minimum_approver_count: int,
+                          creator_vote_counts: bool, prohibit_last_pushers_vote: bool, allow_completion_with_rejects: bool,
+                          when_new_changes_are_pushed: WhenChangesArePushed, branch_name: str = "main") -> "RepoBranchPolicies | None":
+        return RepoBranchPolicies.set_branch_policy(ado_client, policy_id, repo_id, minimum_approver_count, creator_vote_counts,
+                                                    prohibit_last_pushers_vote, allow_completion_with_rejects, when_new_changes_are_pushed,
+                                                    branch_name)
 
 # ====================================================================
 
@@ -187,16 +199,81 @@ class BuildRepository:
         }
 
 
-# @dataclass
-# class RepoPolicies(StateManagedResource):
-#     """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/policy-configurations?view=azure-devops-rest-7.1"""
-#     @classmethod
-#     def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> "RepoPolicies":
-#         import requests
-#         a = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/policy/configurations?repositoryId={repo_id}&api-version=5.0-preview.1", auth=ado_client.auth)
-#         print(a.text)
-#         return None
-#         return super().get_by_url(
-#             ado_client,
-#             f"/{ado_client.ado_project}/_apis/git/policy/configurations?repositoryId={repo_id}&api-version=7.1"
-#         )  # type: ignore[return-value]
+name_mapping = {
+    "requireVoteOnEachIteration": "require_revote_on_each_iteration",
+    "requireVoteOnLastIteration": "require_revote_on_last_iteration",
+    "resetOnSourcePush": "reset_votes_on_source_push",
+    "resetRejectionsOnSourcePush": "reset_rejections_on_source_push",
+    "do_nothing": "do_nothing"
+}
+
+@dataclass
+class RepoBranchPolicies(StateManagedResource):
+    policy_id: str = field(metadata={"is_id_field": True})
+    policy_group_uuid: str
+    repo_id: str
+    branch_name: str
+    minimum_approver_count: int
+    creator_vote_counts: bool
+    prohibit_last_pushers_vote: bool
+    allow_completion_with_rejects: bool
+    when_new_changes_are_pushed: WhenChangesArePushed
+
+    @classmethod
+    def from_request_payload(cls, data: dict[str, Any]) -> "RepoBranchPolicies | None":  # type: ignore[override]
+        policy_groups = data["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["policyGroups"]
+        if not policy_groups:
+            return None
+        first_policy_group = list(policy_groups.values())[0]
+        if first_policy_group is None or first_policy_group["currentScopePolicies"] is None:
+            return None
+        settings = first_policy_group["currentScopePolicies"][0]["settings"]
+        policy_group_id = list(policy_groups.keys())[0]
+        when_new_changes_are_pushed = name_mapping[([x for x in ("requireVoteOnEachIteration", "requireVoteOnLastIteration", "resetOnSourcePush", "resetRejectionsOnSourcePush") if settings.get(x, False)] or ["do_nothing"])[0]]  # Any or "do_nothing"
+        return cls(
+            first_policy_group["currentScopePolicies"][0]["id"], policy_group_id, settings["scope"][0]["refName"].removeprefix("refs/heads/"), settings["scope"][0]["repositoryId"],
+            settings["minimumApproverCount"], settings["creatorVoteCounts"], settings["blockLastPusherVote"], settings["allowDownvotes"],
+            when_new_changes_are_pushed  # type: ignore[arg-type]
+        )
+
+    @classmethod
+    def get_by_repo_id(cls, ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> "RepoBranchPolicies | None":
+        """Unofficial API, may break at any time."""
+        headers = {"Accept": "application/json;api-version=7.0-preview.1;excludeUrls=true;enumsAsNumbers=true;msDateFormat=true;noArrayWrap=true"}
+        payload = {"contributionIds": ["ms.vss-code-web.branch-policies-data-provider"], "dataProviderContext": {"properties": {"repositoryId": repo_id, "refName": f"refs/heads/{branch_name}", "sourcePage": {"routeValues": {"project": ado_client.ado_project, "adminPivot": "repositories", "controller": "ContributedPage"," action": "Execute"}}}}}
+        request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery", headers=headers, json=payload, auth=ado_client.auth).json()
+        return cls.from_request_payload(request)
+
+    @staticmethod
+    def _get_type_id(ado_client: AdoClient) -> str:
+        request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/policy/types?api-version=6.0", auth=ado_client.auth)
+        return [x for x in request.json()["value"] if x["displayName"] == "Minimum number of reviewers"][0]["id"]  # type: ignore[no-any-return]
+
+    @classmethod
+    def set_branch_policy(cls, ado_client: AdoClient, policy_id: str | None, repo_id: str, minimum_approver_count: int,
+                          creator_vote_counts: bool, prohibit_last_pushers_vote: bool, allow_completion_with_rejects: bool,
+                          when_new_changes_are_pushed: WhenChangesArePushed, branch_name: str = "main") -> None:
+        """Unofficial API, may break at any time. Sets the perms for a branch, can also be used as a "create" function."""
+        payload = {
+            "settings": {
+                "minimumApproverCount": minimum_approver_count,
+                "creatorVoteCounts":    creator_vote_counts,
+                "blockLastPusherVote":  prohibit_last_pushers_vote,
+                "allowDownvotes":       allow_completion_with_rejects,
+                "requireVoteOnEachIteration":  when_new_changes_are_pushed == "require_revote_on_each_iteration",
+                "requireVoteOnLastIteration":  when_new_changes_are_pushed == "require_revote_on_last_iteration",
+                "resetOnSourcePush":           when_new_changes_are_pushed == "reset_votes_on_source_push",
+                "resetRejectionsOnSourcePush": when_new_changes_are_pushed == "reset_rejections_on_source_push",
+                "scope": [{"refName": f"refs/heads/{branch_name}", "matchKind": "Exact", "repositoryId": repo_id}],
+            },
+            "isEnabled": True, "isBlocking": True,
+            "type": {"id": cls._get_type_id(ado_client)},
+        }
+        request_method = "POST" if policy_id is None else "PUT"
+        request = requests.request(request_method, f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/policy/Configurations/{policy_id or ''}".rstrip("/"),
+                                   json=payload, headers={"Accept": "application/json;api-version=7.1"}, auth=ado_client.auth)
+        assert request.status_code == 200, f"Error setting branch policy: {request.text}"
+        # return cls.from_request_payload(request.json())
+
+
+RepoBranchPolicies.create = RepoBranchPolicies.set_branch_policy  # type: ignore[assignment]

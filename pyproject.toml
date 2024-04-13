@@ -2,7 +2,7 @@
 name = "ado_wrapper"
 description = "A high level wrapper around the AzureDevops API including OOP principals and state management"
 authors = ["Ben Skerritt"]
-version = "0.0.6"
+version = "0.0.7"
 license = "Proprietary"
 readme = "README.md"
 packages = [{include = "ado_wrapper"}]
@@ -30,11 +30,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]
-exclude = ['.venv', '.vscode', '.pytest_cache', '.mypy_cache', '.git', '__pycache__', 'script.py']
+exclude = ['.vscode', '.pytest_cache', '.mypy_cache', '.git', '__pycache__', 'script.py']
 strict = true
 
 [tool.pylint.main]
-ignore = [".venv"]
+ignore = [".venv", ".vscode", ".pytest_cache", ".mypy_cache", ".git", "__pycache__", "script.py"]
 recursive = true
 
 [tool.pylint.messages_control]
@@ -49,6 +49,7 @@ disable = [
     "too-many-instance-attributes",
     "too-many-arguments",
 
+    "unused-argument",
     "fixme",
     "arguments-differ",
     "arguments-renamed",

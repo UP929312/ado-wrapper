@@ -162,8 +162,8 @@ class Reviewer(Member):
 
     def __init__(self, name: str, email: str, reviewer_id: str, vote: VoteOptions, is_required: bool) -> None:
         super().__init__(name, email, reviewer_id)
-        self.vote = vote  # Static
-        self.is_required = is_required  # Static
+        self.vote = vote
+        self.is_required = is_required
 
     def __str__(self) -> str:
         return f'{self.name} ({self.email}) voted {VOTE_ID_TO_TYPE[self.vote]}, and was {"required" if self.is_required else "optional"}'

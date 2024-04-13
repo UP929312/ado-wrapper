@@ -108,7 +108,7 @@ class StateManagedResource:
         ado_client.state_manager.remove_resource_from_state(cls.__name__, resource_id)  # type: ignore[arg-type]
 
     def delete(self, ado_client: "AdoClient") -> None:
-        return self.delete_by_id(ado_client, extract_id(self))  # type: ignore[call-arg]
+        return self.delete_by_id(ado_client, extract_id(self))  # type: ignore[call-arg]  # pylint: disable=no-value-for-parameter
 
     def update(self, ado_client: "AdoClient", update_action: Literal["put", "patch"], url: str,  # pylint: disable=too-many-arguments
                attribute_name: str, attribute_value: Any, params: dict[str, Any]) -> None:  # fmt: skip
@@ -145,7 +145,7 @@ class StateManagedResource:
         cls, ado_client: "AdoClient", func: Callable[["StateManagedResource"], bool]
     ) -> "StateManagedResource | None":
         """Used internally for getting resources by a filter function. The function should return True if the resource is the one you want."""
-        resources = cls.get_all(ado_client)  # type: ignore[call-arg]
+        resources = cls.get_all(ado_client)  # type: ignore[call-arg]  # pylint: disable=no-value-for-parameter
         for resource in resources:
             if func(resource):
                 return resource

@@ -1,7 +1,7 @@
 import pytest
 
 from ado_wrapper.resources.users import AdoUser
-from tests.setup_client import setup_client, existing_user_name, existing_user_email, existing_user_id
+from tests.setup_client import setup_client, existing_user_name, existing_user_email, existing_user_descriptor
 
 
 class TestAdoUser:
@@ -28,8 +28,8 @@ class TestAdoUser:
 
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
-        user = AdoUser.get_by_id(self.ado_client, existing_user_id)
-        assert user.descriptor_id == existing_user_id
+        user = AdoUser.get_by_id(self.ado_client, existing_user_descriptor)
+        assert user.descriptor_id == existing_user_descriptor
 
     def test_get_all(self) -> None:
         users = AdoUser.get_all(self.ado_client)
@@ -39,9 +39,9 @@ class TestAdoUser:
     def test_get_by_name(self) -> None:
         user = AdoUser.get_by_name(self.ado_client, existing_user_name)
         assert user is not None
-        assert user.descriptor_id == existing_user_id
+        assert user.descriptor_id == existing_user_descriptor
 
     def test_get_by_email(self) -> None:
         user = AdoUser.get_by_email(self.ado_client, existing_user_email)
         assert user is not None
-        assert user.descriptor_id == existing_user_id
+        assert user.descriptor_id == existing_user_descriptor

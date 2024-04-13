@@ -18,6 +18,7 @@ Pull Request, Commit
 
 Also, Releases need vigerous testing - kinda wip, ReleaseDef - Update
 
+A push is when someone has multiple commits and they do a git push (to a branch), it can be multiple sub-commits
 TODO: Look into Pushes vs Commits <https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes/get?view=azure-devops-rest-7.1&tabs=HTTP#gitpush>
 
 Rollback a commit? Tricky...
@@ -64,9 +65,11 @@ pylint *
 mypy . --strict
 black . --line-length 140
 pytest tests/ -vvvv -s
-python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt"
+python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt" --state-file "main.state"
 python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt" --state-file "tests/test_state.state"
 python3.11 -m ado_wrapper --refresh-resources-on-startup --creds_file "credentials.txt"
 coverage run -m pytest
+
+Upgrade our tests by adding "with Repo()", which will have repo.delete in the finally bit of the exit
 
 python3.11 -m pip install ado_wrapper --upgrade

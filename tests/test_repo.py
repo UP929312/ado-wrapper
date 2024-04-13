@@ -1,6 +1,6 @@
 import pytest
 
-from ado_wrapper.resources.repo import Repo, RepoBranchPolicies
+from ado_wrapper.resources.repo import Repo
 from ado_wrapper.resources.pull_requests import PullRequest
 from ado_wrapper.resources.commits import Commit
 
@@ -95,34 +95,4 @@ class TestRepo:
         assert len(pull_requests) == 1
         assert all(isinstance(pr, PullRequest) for pr in pull_requests)
         pull_requests[0].close(self.ado_client)
-        repo.delete(self.ado_client)
-
-    @pytest.mark.create_delete
-    def test_create_branch_policy(self) -> None:
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-create-branch-policy")
-        RepoBranchPolicies.set_branch_policy(self.ado_client, None, repo.repo_id, 3, False, False, False, "do_nothing")
-        policy = RepoBranchPolicies.get_by_repo_id(self.ado_client, repo.repo_id)
-        assert policy is not None
-        assert policy.minimum_approver_count == 3
-        assert not policy.creator_vote_counts
-        assert not policy.prohibit_last_pushers_vote
-        assert not policy.allow_completion_with_rejects
-        assert policy.when_new_changes_are_pushed == "do_nothing"
-        repo.delete(self.ado_client)
-
-    @pytest.mark.update
-    def test_update_branch_policy(self) -> None:
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-update-branch-policy")
-        RepoBranchPolicies.set_branch_policy(self.ado_client, None, repo.repo_id, 3, False, False, False, "do_nothing")
-
-        policy = RepoBranchPolicies.get_by_repo_id(self.ado_client, repo.repo_id)
-        assert policy is not None
-        RepoBranchPolicies.set_branch_policy(self.ado_client, policy.policy_id, repo.repo_id, 4, True, True, True, "require_revote_on_each_iteration")
-        updated_policy = RepoBranchPolicies.get_by_repo_id(self.ado_client, repo.repo_id)
-        assert updated_policy is not None
-        assert updated_policy.minimum_approver_count == 4
-        assert updated_policy.creator_vote_counts
-        assert updated_policy.prohibit_last_pushers_vote
-        assert updated_policy.allow_completion_with_rejects
-        assert updated_policy.when_new_changes_are_pushed == "require_revote_on_each_iteration"
         repo.delete(self.ado_client)

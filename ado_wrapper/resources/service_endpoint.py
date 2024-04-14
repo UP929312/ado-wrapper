@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal, TYPE_CHECKING
 
-import requests
-
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member
 
@@ -123,7 +121,7 @@ class ServiceEndpoint(StateManagedResource):
             "pipelines": [] if pipeline_id == "all" else [{"id": pipeline_id}],
             "allPipelines": {"authorized": True, "authorizedBy": "null", "authorizedOn": "null"},
         }
-        return requests.patch(  # type: ignore[no-any-return]
+        return ado_client.session.patch(  # type: ignore[no-any-return]
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/pipelines/pipelinePermissions/endpoint/{self.service_endpoint_id}?api-version=7.1",
-            json=PAYLOAD, auth=ado_client.auth,  # fmt: skip
+            json=PAYLOAD,
         ).json()

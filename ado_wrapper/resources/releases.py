@@ -2,8 +2,6 @@ from datetime import datetime
 from dataclasses import dataclass, field
 from typing import Any, Literal, TYPE_CHECKING
 
-import requests
-
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import from_ado_date_string
 from ado_wrapper.resources.users import Member
@@ -226,9 +224,8 @@ class ReleaseDefinition(StateManagedResource):
 
     @classmethod
     def get_all_releases_for_definition(cls, ado_client: "AdoClient", definition_id: str) -> "list[Release]":
-        response = requests.get(
+        response = ado_client.session.get(
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1&definitionId={definition_id}",
-            auth=ado_client.auth,
         ).json()
         return [Release.from_request_payload(release) for release in response["value"]]
 

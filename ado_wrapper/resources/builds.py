@@ -3,8 +3,6 @@ from dataclasses import dataclass, field
 from typing import Any, Literal, TYPE_CHECKING
 import time
 
-import requests
-
 from ado_wrapper.utils import from_ado_date_string
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member
@@ -89,7 +87,7 @@ class Build(StateManagedResource):
         # if permit_use_of_var_groups:
         #     rint(f"Variable Groups: {BuildDefinition.get_by_id(ado_client, definition_id).variable_groups}")
         #     for var_group_id in BuildDefinition.get_by_id(ado_client, definition_id).variable_groups:
-        #         request = requests.patch(f"https://dev.azure.com/{ado_client.ado_org}/{definition_id}/_apis/pipelines/pipelinePermissions/variablegroup/{var_group_id}")  # fmt: skip
+        #         request = ado_client.session.patch(f"https://dev.azure.com/{ado_client.ado_org}/{definition_id}/_apis/pipelines/pipelinePermissions/variablegroup/{var_group_id}")  # fmt: skip
         #         rint(request.text, request.status_code)
         #         assert request.status_code <= 204
         return super().create(
@@ -143,18 +141,16 @@ class Build(StateManagedResource):
 
     @staticmethod
     def delete_all_leases(ado_client: "AdoClient", build_id: str) -> None:
-        leases_request = requests.get(
+        leases_request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}/leases?api-version=7.1",
-            auth=ado_client.auth,
         )
         if leases_request.status_code != 200:
             print(f"Could not delete leases, {leases_request.status_code}")
             return
         leases = leases_request.json()["value"]
         for lease in leases:
-            lease_response = requests.delete(
+            lease_response = ado_client.session.delete(
                 f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/retention/leases?ids={lease['leaseId']}&api-version=6.1",
-                auth=ado_client.auth,
             )
             assert lease_response.status_code <= 204
 

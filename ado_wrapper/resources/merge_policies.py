@@ -4,8 +4,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Literal, TYPE_CHECKING
 
-import requests
-
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Reviewer
 from ado_wrapper.utils import from_ado_date_string
@@ -24,7 +22,7 @@ name_mapping = {
 
 def _get_type_id(ado_client: AdoClient, action_type: str) -> str:
     """Used internally to get a specific update request ID"""
-    request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/policy/types?api-version=6.0", auth=ado_client.auth)
+    request = ado_client.session.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/policy/types?api-version=6.0")
     # rint([(x["displayName"], x["id"]) for x in request.json()["value"]])
     return [x for x in request.json()["value"] if x["displayName"] == action_type][0]["id"]  # type: ignore[no-any-return]
 
@@ -43,8 +41,8 @@ class MergePolicyDefaultReviewer(StateManagedResource):
     def get_default_reviewers(ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list[Reviewer]:
         payload = {"contributionIds": ["ms.vss-code-web.branch-policies-data-provider"],
                    "dataProviderContext": {"properties": {"projectId": ado_client.ado_project_id, "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}"}}}
-        request = requests.post("https://dev.azure.com/VFCloudEngineering/_apis/Contribution/HierarchyQuery?api-version=7.1-preview.1",
-                               json=payload, auth=ado_client.auth).json()
+        request = ado_client.session.post("https://dev.azure.com/VFCloudEngineering/_apis/Contribution/HierarchyQuery?api-version=7.1-preview.1",
+                                          json=payload).json()
         if request is None:
             return []
         all_reviewers = [Reviewer(x["displayName"], x["uniqueName"], x["id"], 0, False) for x in request["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["identities"]]
@@ -68,8 +66,8 @@ class MergePolicyDefaultReviewer(StateManagedResource):
                 "requiredReviewerIds": [reviewer_id],
                 "scope": [{"repositoryId": repo_id, "refName": f"refs/heads/{branch_name}", "matchKind": "Exact"}]
             }}
-        request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/policy/configurations?api-version=7.1",
-                                json=payload, headers={"Accept": "application/json;api-version=7.1"}, auth=ado_client.auth)
+        request = ado_client.session.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/policy/configurations?api-version=7.1",
+                                json=payload, headers={"Accept": "application/json;api-version=7.1"})
         assert request.status_code == 200, f"Error setting branch policy: {request.text}"
 
     @staticmethod
@@ -78,7 +76,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
         policy_id = [x for x in policies if x.required_reviewer_id == reviewer_id][0].policy_id if policies is not None else None  # type: ignore[comparison-overlap]
         if not policy_id:
             return
-        request = requests.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/policy/configurations/{policy_id}?api-version=7.1", auth=ado_client.auth)
+        request = ado_client.session.delete(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/policy/configurations/{policy_id}?api-version=7.1")
         assert request.status_code == 204, "Error removing required reviewer"
 
 
@@ -118,7 +116,7 @@ class MergeBranchPolicy(StateManagedResource):
                           when_new_changes_are_pushed: WhenChangesArePushed, branch_name: str = "main") -> None:  # fmt: skip
         """Sets the perms for a pull request, can also be used as a "update" function."""
         existing_policy = MergePolicies.get_all_by_repo_id(ado_client, repo_id, branch_name)
-        latest_policy_id = existing_policy[0].policy_id if existing_policy is not None else None
+        latest_policy_id = existing_policy[0].policy_id if existing_policy is not None else None  # pylint: disable=unsubscriptable-object
         payload = {
             "settings": {
                 "minimumApproverCount": minimum_approver_count,
@@ -135,8 +133,8 @@ class MergeBranchPolicy(StateManagedResource):
             "isEnabled": True, "isBlocking": True,
         }
         request_method = "POST" if latest_policy_id is None else "PUT"
-        request = requests.request(request_method, f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/policy/Configurations/{latest_policy_id or ''}".rstrip("/"),
-                                   json=payload, headers={"Accept": "application/json;api-version=7.1"}, auth=ado_client.auth)
+        request = ado_client.session.request(request_method, f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/policy/Configurations/{latest_policy_id or ''}".rstrip("/"),
+                                   json=payload, headers={"Accept": "application/json;api-version=7.1"})
         assert request.status_code == 200, f"Error setting branch policy: {request.text}"
 
 
@@ -151,7 +149,7 @@ class MergePolicies(StateManagedResource):
             for policy in policy_group["currentScopePolicies"] or []:  # If it's None, don't loop
                 settings = policy["settings"]
                 # Limit merge types
-                if any([x in settings for x in ("allowSquash", "allowNoFastForward", "allowRebase", "allowRebaseMerge")]):
+                if any(x in settings for x in ("allowSquash", "allowNoFastForward", "allowRebase", "allowRebaseMerge")):
                     continue
                 # Build Validation {'buildDefinitionId': 4, 'queueOnSourceUpdateOnly': True, 'manualQueueOnly': False, 'displayName': None, 'validDuration': 720.0
                 if "buildDefinitionId" in settings:
@@ -176,22 +174,22 @@ class MergePolicies(StateManagedResource):
     def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list["MergePolicyDefaultReviewer | MergeBranchPolicy"] | None:  # fmt: skip
         payload = {"contributionIds": ["ms.vss-code-web.branch-policies-data-provider"], "dataProviderContext": {"properties": {
             "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}", "sourcePage": {"routeValues": {"project": ado_client.ado_project}}}}}  # fmt: skip
-        request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview.1",
-                                json=payload, auth=ado_client.auth).json()  # fmt: skip
+        request = ado_client.session.post(f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview.1",
+                                json=payload).json()
         return cls.from_request_payload(request)
 
     @classmethod
     def get_all_branch_policies_by_repo_id(cls, ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list[MergeBranchPolicy] | None:  # fmt: skip
         policies = cls.get_all_by_repo_id(ado_client, repo_id, branch_name)
         return (
-            sorted([x for x in policies if isinstance(x, MergeBranchPolicy)], key=lambda x: x.created_date, reverse=True)
+            sorted([x for x in policies if isinstance(x, MergeBranchPolicy)], key=lambda x: x.created_date, reverse=True)  # pylint: disable=not-an-iterable
             if policies is not None else None
         )  # fmt: skip
 
     @classmethod
     def get_default_reviewers_by_repo_id(cls, ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list[MergePolicyDefaultReviewer] | None:  # fmt: skip
         policies = cls.get_all_by_repo_id(ado_client, repo_id, branch_name)
-        return [x for x in policies if isinstance(x, MergePolicyDefaultReviewer)] if policies is not None else None
+        return [x for x in policies if isinstance(x, MergePolicyDefaultReviewer)] if policies is not None else None  # pylint: disable=not-an-iterable
 
     # ================== Default Reviewers ================== #
     @staticmethod

@@ -2,7 +2,7 @@
 name = "ado_wrapper"
 description = "A high level wrapper around the AzureDevops API including OOP principals and state management"
 authors = ["Ben Skerritt"]
-version = "0.0.7"
+version = "0.0.8"
 license = "Proprietary"
 readme = "README.md"
 packages = [{include = "ado_wrapper"}]
@@ -49,6 +49,7 @@ disable = [
     "too-many-instance-attributes",
     "too-many-arguments",
 
+    "duplicate-code",
     "unused-argument",
     "fixme",
     "arguments-differ",

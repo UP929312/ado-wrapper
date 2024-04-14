@@ -10,11 +10,12 @@ import requests
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.pull_requests import PullRequest, PullRequestStatus
 from ado_wrapper.resources.commits import Commit
-from ado_wrapper.resources.merge_policies import MergePolicies, MergeBranchPolicy
+from ado_wrapper.resources.merge_policies import MergePolicies
 from ado_wrapper.utils import ResourceNotFound, UnknownError
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
+    from ado_wrapper.resources.merge_policies import MergeBranchPolicy
 
 RepoEditableAttribute = Literal["name", "default_branch", "is_disabled"]
 WhenChangesArePushed = Literal["require_revote_on_each_iteration", "require_revote_on_last_iteration", "reset_votes_on_source_push", "reset_rejections_on_source_push", "do_nothing"]
@@ -95,9 +96,8 @@ class Repo(StateManagedResource):
                 return repo
 
     def get_file(self, ado_client: AdoClient, file_path: str, branch_name: str = "main") -> str:
-        request = requests.get(
+        request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?path={file_path}&versionType={'Branch'}&version={branch_name}&api-version=7.1",
-            auth=ado_client.auth,
         )
         if request.status_code == 404:
             raise ResourceNotFound(f"File {file_path} not found in repo {self.repo_id}")
@@ -110,9 +110,8 @@ class Repo(StateManagedResource):
         This function downloads the contents of a repo, and returns a dictionary of the files and their contents
         The file_types parameter is a list of file types to filter for, e.g. ["json", "yaml"]"""
         try:
-            request = requests.get(
+            request = ado_client.session.get(
                 f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?recursionLevel={'Full'}&download={True}&$format={'Zip'}&versionDescriptor.version={branch_name}&api-version=7.1",
-                auth=ado_client.auth,
             )
         except requests.exceptions.ConnectionError:
             print(f"=== Connection error, failed to download {self.repo_id}")

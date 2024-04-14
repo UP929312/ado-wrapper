@@ -27,9 +27,6 @@ class VariableGroup(StateManagedResource):
     modified_by: Member
     modified_on: datetime | None = None
 
-    def __str__(self) -> str:
-        return repr(self)
-
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "VariableGroup":
         created_by = Member.from_request_payload(data["createdBy"])

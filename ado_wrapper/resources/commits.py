@@ -2,8 +2,6 @@ from datetime import datetime
 from dataclasses import dataclass, field
 from typing import Literal, Any, TYPE_CHECKING
 
-import requests
-
 from ado_wrapper.utils import from_ado_date_string, InvalidPermissionsError
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member
@@ -85,7 +83,7 @@ class Commit(StateManagedResource):
         latest_commit = cls.get_latest_by_repo(ado_client, repo_id, from_branch_name)
         latest_commit_id = None if latest_commit is None else latest_commit.commit_id
         data = get_commit_body_template(latest_commit_id, updates, to_branch_name, change_type, commit_message)
-        request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=7.1", json=data, auth=ado_client.auth)  # fmt: skip
+        request = ado_client.session.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=7.1", json=data)  # fmt: skip
         if request.status_code == 400:
             raise ValueError("The commit was not created successfully, the file(s) you're trying to add might already exist there.")
         if request.status_code == 403:
@@ -126,8 +124,8 @@ class Commit(StateManagedResource):
                 "newContentTemplate": {"name": "README.md", "type": "readme"}
             }],
         }]  # fmt: skip
-        request = requests.post(
+        request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=7.1",
-            json=default_commit_body, auth=ado_client.auth,  # fmt: skip
+            json=default_commit_body,
         )
         return cls.from_request_payload(request.json()["commits"][0])

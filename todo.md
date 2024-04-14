@@ -52,12 +52,10 @@ normally take 1 input (id), things like create can take more complicated stuff
 
 Service connections perms on pipelines (done, not tested)
 
-Sessions with the ado_client, so swap out requests.get with session.get, it'll help with latency
-
 -----
 
 Pylint command:
-pylint *
+pylint .
 mypy . --strict
 black . --line-length 140
 pytest tests/ -vvvv -s

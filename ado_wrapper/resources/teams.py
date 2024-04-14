@@ -3,8 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from dataclasses import dataclass, field
 
-import requests
-
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import TeamMember
 
@@ -41,7 +39,7 @@ class Team(StateManagedResource):
     @classmethod
     def create(cls, ado_client: AdoClient, name: str, description: str) -> "Team":  # type: ignore[override]
         raise NotImplementedError
-        # request = requests.post(f"/_apis/teams?api-version=7.1", json={"name": name, "description": description}, auth=ado_client.auth).json()
+        # request = ado_client.session.post(f"/_apis/teams?api-version=7.1", json={"name": name, "description": description}).json()
         # return cls.from_request_payload(request)
 
     def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: str) -> None:  # type: ignore[override]
@@ -67,9 +65,8 @@ class Team(StateManagedResource):
         return cls.get_by_abstract_filter(ado_client, lambda team: team.name == team_name)  # type: ignore[return-value, attr-defined]
 
     def get_members(self, ado_client: AdoClient) -> list["TeamMember"]:
-        request = requests.get(
+        request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{ado_client.ado_project}/teams/{self.team_id}/members?api-version=7.1-preview.2",
-            auth=ado_client.auth,
         ).json()
         if "value" not in request and request.get("message", "").startswith("The team with id "):  # If the team doesn't exist anymore.
             return []

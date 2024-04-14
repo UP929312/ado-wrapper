@@ -2,8 +2,6 @@ from typing import Any, TYPE_CHECKING, Literal, Callable
 from dataclasses import dataclass, fields
 from datetime import datetime
 
-import requests
-
 from ado_wrapper.utils import (
     get_resource_variables, extract_id, get_internal_field_names,
     ResourceAlreadyExists, DeletionFailed, ResourceNotFound, UpdateFailed,  # fmt: skip
@@ -68,7 +66,7 @@ class StateManagedResource:
     def get_by_url(cls, ado_client: "AdoClient", url: str) -> "StateManagedResource":
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
-        request = requests.get(url, auth=ado_client.auth)
+        request = ado_client.session.get(url)
         if request.status_code == 404:
             raise ResourceNotFound(f"No {cls.__name__} found with that identifier!")
         if request.status_code >= 300:
@@ -85,7 +83,7 @@ class StateManagedResource:
             return PlannedStateManagedResource.create(cls, ado_client, url, payload)
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org}" + url
-        request = requests.post(url, json=payload or {}, auth=ado_client.auth)  # Create a brand new dict
+        request = ado_client.session.post(url, json=payload or {})  # Create a brand new dict
         if request.status_code == 401:
             raise PermissionError(f"You do not have permission to create this {cls.__name__}!")
         if request.status_code == 409:
@@ -99,7 +97,7 @@ class StateManagedResource:
         """Deletes an object by its id. The id is passed so it can be removed from state"""
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
-        request = requests.delete(url, auth=ado_client.auth)
+        request = ado_client.session.delete(url)
         if request.status_code != 204:
             if request.status_code == 404:
                 print("[ADO_WRAPPER] Resource not found, probably already deleted, removing from state")
@@ -123,7 +121,7 @@ class StateManagedResource:
 
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
-        request = requests.request(update_action, url, json=params, auth=ado_client.auth)
+        request = ado_client.session.request(update_action, url, json=params)
         if request.status_code != 200:
             raise UpdateFailed(
                 f"Failed to update {self.__class__.__name__} with id {extract_id(self)} and attribute {attribute_name} to {attribute_value}. \nReason:\n{request.text}"
@@ -135,7 +133,7 @@ class StateManagedResource:
     def get_all(cls, ado_client: "AdoClient", url: str) -> list["StateManagedResource"]:
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
-        request = requests.get(url, auth=ado_client.auth)
+        request = ado_client.session.get(url)
         if request.status_code >= 300:
             raise ValueError(f"Error getting all {cls.__name__}: {request.text}")
         return [cls.from_request_payload(resource) for resource in request.json()["value"]]

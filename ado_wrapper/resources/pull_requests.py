@@ -4,8 +4,6 @@ from datetime import datetime
 from typing import Any, Literal, TYPE_CHECKING
 from dataclasses import dataclass, field
 
-import requests
-
 from ado_wrapper.utils import from_ado_date_string, ResourceNotFound
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member, Reviewer
@@ -69,9 +67,9 @@ class PullRequest(StateManagedResource):
         # , "reviewers": [{"id": reviewer_id for reviewer_id in reviewer_ids}]
         payload = {"sourceRefName": f"refs/heads/{from_branch_name}", "targetRefName": "refs/heads/main", "title": pull_request_title,
                    "description": pull_request_description, "isDraft": is_draft}  # fmt: skip
-        request = requests.post(
+        request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?api-version=7.1",
-            json=payload, auth=ado_client.auth,  # fmt: skip
+            json=payload,
         ).json()
         if request.get("message", "").startswith("TF401398"):
             raise ValueError("The branch you are trying to create a pull request from does not exist.")
@@ -110,8 +108,8 @@ class PullRequest(StateManagedResource):
     @staticmethod
     def add_reviewer_static(ado_client: AdoClient, repo_id: str, pull_request_id: str, reviewer_id: str) -> None:
         """Copy of the add_reviewer method, but static, i.e. if you have the repo id and pr id, you don't need to fetch them again"""
-        request = requests.put(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/reviewers/{reviewer_id}?api-version=7.1",
-                                json={"vote": "0", "isRequired": "true"}, auth=ado_client.auth)  # fmt: skip
+        request = ado_client.session.put(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/reviewers/{reviewer_id}?api-version=7.1",
+                                json={"vote": "0", "isRequired": "true"},)
         assert request.status_code < 300
 
     def close(self, ado_client: AdoClient) -> None:
@@ -124,17 +122,15 @@ class PullRequest(StateManagedResource):
         return self.update(ado_client, "is_draft", True)
 
     def get_reviewers(self, ado_client: AdoClient) -> list[Member]:
-        request = requests.get(
+        request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}/reviewers?api-version=7.1",
-            auth=ado_client.auth,
         ).json()
         return [Member.from_request_payload(reviewer) for reviewer in request["value"]]
 
     @classmethod
     def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str, status: PullRequestStatus = "all") -> list[PullRequest]:
-        pull_requests = requests.get(
+        pull_requests = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
-            auth=ado_client.auth,
         ).json()
         try:
             return [PullRequest.from_request_payload(pr) for pr in pull_requests["value"]]
@@ -153,16 +149,15 @@ class PullRequest(StateManagedResource):
         """This is super tempremental, I have to do a bunch of splits, it's not official so might not work, the statuses are also numerical."""
         import json
 
-        request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/_pulls", auth=ado_client.auth)
+        request = ado_client.session.get(f"https://dev.azure.com/{ado_client.ado_org}/_pulls")
         raw_data = (
             request.text.split("application/json")[1].split('pullRequests"')[1].split("queries")[0].removeprefix(":").removesuffix(',"')
         )
         return [cls.from_request_payload(pr) for pr in json.loads(raw_data).values()]
 
     def get_comment_threads(self, ado_client: AdoClient, ignore_system_messages: bool = True) -> list[PullRequestCommentThread]:
-        request = requests.get(
+        request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}/threads?api-version=7.1",
-            auth=ado_client.auth,
         ).json()["value"]
         comments = [PullRequestCommentThread.from_request_payload(data) for data in request]
         if ignore_system_messages:
@@ -174,11 +169,9 @@ class PullRequest(StateManagedResource):
         return [comment for thread in self.get_comment_threads(ado_client, ignore_system_messages) for comment in thread.comments]
 
     def post_comment(self, ado_client: AdoClient, content: str) -> PullRequestComment:
-        payload = {"comments": [{"commentType": 1, "content": content}], "status": "1"}
-        request = requests.post(
+        request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}/threads?api-version=7.1",
-            json=payload,
-            auth=ado_client.auth,
+            json={"comments": [{"commentType": 1, "content": content}], "status": "1"},
         ).json()
         return PullRequestComment.from_request_payload(request["comments"][0])
 

@@ -23,13 +23,12 @@ class AdoClient:
 
         self.plan_mode = action == "plan"
 
-        self.auth = HTTPBasicAuth(ado_email, ado_pat)
         self.session = requests.Session()
-        self.session.auth = self.auth
+        self.session.auth = HTTPBasicAuth(ado_email, ado_pat)
 
         if not bypass_initialisation:
             # Verify Token is working (helps with setup for first time users):
-            request = requests.get(f"https://dev.azure.com/{self.ado_org}/_apis/projects?api-version=7.1", auth=self.auth)
+            request = self.session.get(f"https://dev.azure.com/{self.ado_org}/_apis/projects?api-version=7.1")
             if request.status_code != 200:
                 raise AuthenticationError(f"Failed to authenticate with ADO: {request.text}")
 

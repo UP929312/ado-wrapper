@@ -3,8 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from dataclasses import dataclass, field
 
-# import requests
-
 from ado_wrapper.state_managed_abc import StateManagedResource
 
 # from ado_wrapper.resources.users import GroupMember
@@ -63,9 +61,8 @@ class Group(StateManagedResource):
         return cls.get_by_abstract_filter(ado_client, lambda group: group.name == group_name)  # type: ignore[return-value, attr-defined]
 
     # def get_members(self, ado_client: AdoClient) -> list["GroupMember"]:
-    #     request = requests.get(
+    #     request = ado_client.session.get(
     #         f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{ado_client.ado_project}/groups/{self.group_id}/members?api-version=7.1-preview.2",
-    #         auth=ado_client.auth,
     #     ).json()
     #     rint(request)
     #     # return [GroupMember.from_request_payload(member) for member in request]

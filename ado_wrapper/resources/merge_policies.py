@@ -25,7 +25,7 @@ name_mapping = {
 def _get_type_id(ado_client: AdoClient, action_type: str) -> str:
     """Used internally to get a specific update request ID"""
     request = requests.get(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/policy/types?api-version=6.0", auth=ado_client.auth)
-    # print([(x["displayName"], x["id"]) for x in request.json()["value"]])
+    # rint([(x["displayName"], x["id"]) for x in request.json()["value"]])
     return [x for x in request.json()["value"] if x["displayName"] == action_type][0]["id"]  # type: ignore[no-any-return]
 
 
@@ -66,7 +66,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
             "type": {"id": _get_type_id(ado_client, "Required reviewers")}, "isBlocking": is_required, "isEnabled": True,
             "settings": {
                 "requiredReviewerIds": [reviewer_id],
-                "scope":[{"repositoryId": repo_id, "refName": f"refs/heads/{branch_name}", "matchKind": "Exact"}]
+                "scope": [{"repositoryId": repo_id, "refName": f"refs/heads/{branch_name}", "matchKind": "Exact"}]
             }}
         request = requests.post(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/policy/configurations?api-version=7.1",
                                 json=payload, headers={"Accept": "application/json;api-version=7.1"}, auth=ado_client.auth)
@@ -85,36 +85,38 @@ class MergePolicyDefaultReviewer(StateManagedResource):
 @dataclass
 class MergeBranchPolicy(StateManagedResource):
     policy_id: str = field(metadata={"is_id_field": True})
-    policy_group_uuid: str = field(repr=False)
     repo_id: str = field(repr=False)
-    branch_name: str = field(repr=False)
+    branch_name: str | None = field(repr=False)
     minimum_approver_count: int
     creator_vote_counts: bool
     prohibit_last_pushers_vote: bool
     allow_completion_with_rejects: bool
     when_new_changes_are_pushed: WhenChangesArePushed
     created_date: datetime = field(repr=False)
+    is_inherited: bool = field(default=False, repr=False)
 
     @classmethod
-    def from_request_payload(cls, policy_group_id: str, policy: dict[str, Any]) -> "MergeBranchPolicy":  # type: ignore[override]
-        settings = policy["settings"]
+    def from_request_payload(cls, data: dict[str, Any], is_inherited: bool) -> "MergeBranchPolicy":  # type: ignore[override]
+        settings = data["settings"]
         when_new_changes_are_pushed = name_mapping[([x for x in ("requireVoteOnEachIteration", "requireVoteOnLastIteration", "resetOnSourcePush", "resetRejectionsOnSourcePush") if settings.get(x, False)] or ["do_nothing"])[0]]  # Any or "do_nothing"  # fmt: skip
+        branch_name: str | None = settings["scope"][0]["refName"]
         return cls(
-            policy["id"], policy_group_id, settings["scope"][0]["refName"].removeprefix("refs/heads/"), settings["scope"][0]["repositoryId"],
+            data["id"], settings["scope"][0]["repositoryId"], (branch_name.removeprefix("refs/heads/") if branch_name else None),
             settings["minimumApproverCount"], settings["creatorVoteCounts"], settings["blockLastPusherVote"], settings["allowDownvotes"],
-            when_new_changes_are_pushed, from_ado_date_string(policy["createdDate"])   # type: ignore[arg-type]  # fmt: skip
+            when_new_changes_are_pushed, from_ado_date_string(data["createdDate"]),  # type: ignore[arg-type]
+            is_inherited     # fmt: skip
         )
 
     @classmethod
     def get_branch_policy(cls, ado_client: AdoClient, repo_id: str, branch_name: str) -> "MergeBranchPolicy":
-        """Unofficial API, may break at any time. Gets the latest merge requirements for a pull request."""
-        return MergePolicies.get_all_branch_policies_by_repo_id(ado_client, repo_id)[0]  # type: ignore[index]
+        """Gets the latest merge requirements for a pull request."""
+        return MergePolicies.get_all_branch_policies_by_repo_id(ado_client, repo_id, branch_name)[0]  # type: ignore[index]
 
     @staticmethod
     def set_branch_policy(ado_client: AdoClient, repo_id: str, minimum_approver_count: int,
                           creator_vote_counts: bool, prohibit_last_pushers_vote: bool, allow_completion_with_rejects: bool,
                           when_new_changes_are_pushed: WhenChangesArePushed, branch_name: str = "main") -> None:  # fmt: skip
-        """Unofficial API, may break at any time. Sets the perms for a pull request, can also be used as a "update" function."""
+        """Sets the perms for a pull request, can also be used as a "update" function."""
         existing_policy = MergePolicies.get_all_by_repo_id(ado_client, repo_id, branch_name)
         latest_policy_id = existing_policy[0].policy_id if existing_policy is not None else None
         payload = {
@@ -129,8 +131,8 @@ class MergeBranchPolicy(StateManagedResource):
                 "resetRejectionsOnSourcePush": when_new_changes_are_pushed == "reset_rejections_on_source_push",
                 "scope": [{"refName": f"refs/heads/{branch_name}", "repositoryId": repo_id, "matchKind": "Exact"}],
             },
-            "isEnabled": True, "isBlocking": True,
             "type": {"id": _get_type_id(ado_client, "Minimum number of reviewers")},
+            "isEnabled": True, "isBlocking": True,
         }
         request_method = "POST" if latest_policy_id is None else "PUT"
         request = requests.request(request_method, f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/policy/Configurations/{latest_policy_id or ''}".rstrip("/"),
@@ -145,17 +147,29 @@ class MergePolicies(StateManagedResource):
         """Used internally to get a list of all policies."""
         policy_groups: dict[str, Any] = data["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["policyGroups"] or {}  # fmt: skip
         all_policies = []
-        for policy_group_id, policy_group in policy_groups.items():
-            if policy_group["currentScopePolicies"] is None:
-                continue
-            for policy in policy_group["currentScopePolicies"]:
+        for policy_group in policy_groups.values():
+            for policy in policy_group["currentScopePolicies"] or []:  # If it's None, don't loop
                 settings = policy["settings"]
-                if "cep-account-main" in settings:
+                # Limit merge types
+                if any([x in settings for x in ("allowSquash", "allowNoFastForward", "allowRebase", "allowRebaseMerge")]):
                     continue
+                # Build Validation {'buildDefinitionId': 4, 'queueOnSourceUpdateOnly': True, 'manualQueueOnly': False, 'displayName': None, 'validDuration': 720.0
+                if "buildDefinitionId" in settings:
+                    continue
+                # Automatically included reviewers
                 if "requiredReviewerIds" in settings:
                     all_policies.append(MergePolicyDefaultReviewer.from_request_payload(policy))
+                elif "minimumApproverCount" in settings:
+                    new_policy = MergeBranchPolicy.from_request_payload(policy, False)
+                    # if "inheritedPolicies" in policy_group:
+                    #     new_policy.inherited_policies = [MergeBranchPolicy.from_request_payload(x) for x in policy_group["inheritedPolicies"]]
+                    all_policies.append(new_policy)
                 else:
-                    all_policies.append(MergeBranchPolicy.from_request_payload(policy_group_id, policy))
+                    print("Unknown policy type: ", policy)
+
+            # for inherited_policy in policy_group["inheritedPolicies"] or []:
+            #     all_policies.append(MergeBranchPolicy.from_request_payload(inherited_policy, True))
+
         return all_policies or None  # type: ignore[return-value]
 
     @classmethod

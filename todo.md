@@ -52,10 +52,6 @@ normally take 1 input (id), things like create can take more complicated stuff
 
 Service connections perms on pipelines (done, not tested)
 
-NEXT THING: Repo merge perms - Get is working
-We do "None" for quite a few, check into inherits, not entirely sure how that works, some have no base perms only inherit
-All working (apart from inherits), just need to test
-
 Sessions with the ado_client, so swap out requests.get with session.get, it'll help with latency
 
 -----

@@ -18,10 +18,14 @@ class AdoClient:
         state will not be stored in "main.state" """
         self.ado_email = ado_email
         self.ado_pat = ado_pat
-        self.auth = HTTPBasicAuth(ado_email, ado_pat)
         self.ado_org = ado_org
         self.ado_project = ado_project
+
         self.plan_mode = action == "plan"
+
+        self.auth = HTTPBasicAuth(ado_email, ado_pat)
+        self.session = requests.Session()
+        self.session.auth = self.auth
 
         if not bypass_initialisation:
             # Verify Token is working (helps with setup for first time users):

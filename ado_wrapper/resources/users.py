@@ -72,7 +72,7 @@ class AdoUser(StateManagedResource):
     @classmethod
     def get_by_email(cls, ado_client: AdoClient, member_email: str) -> "AdoUser":
         user: AdoUser = cls.get_by_abstract_filter(ado_client, lambda user: user.email == member_email)  # type: ignore[attr-defined, assignment]
-        if not user:
+        if user is None:
             raise ValueError(f"Member with email {member_email} not found")
         return user
 
@@ -90,12 +90,9 @@ class AdoUser(StateManagedResource):
 class Member(StateManagedResource):
     """A stripped down member class which is often returned by the API, for example in build requests."""
 
-    name: str  # Static
-    email: str  # Static
-    member_id: str  # Static
-
-    def __str__(self) -> str:
-        return f"{self.name} ({self.email})"
+    name: str
+    email: str
+    member_id: str = field(metadata={"is_id_field": True}, repr=False)
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Member":
@@ -133,7 +130,7 @@ class TeamMember(Member):
         return f"{super().__str__()}" + (" (Team Admin)" if self.is_team_admin else "")
 
     def __repr__(self) -> str:
-        return f"{super().__str__()[:-1]}, team_admin={self.is_team_admin})"
+        return f"{super().__str__().removesuffix(')')}, team_admin={self.is_team_admin})"
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "TeamMember":

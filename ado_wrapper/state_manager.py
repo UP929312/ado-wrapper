@@ -9,7 +9,7 @@ from ado_wrapper.utils import DeletionFailed, get_resource_variables, ResourceTy
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 
-STATE_FILE_VERSION = "1.4"
+STATE_FILE_VERSION = "1.5"
 
 
 class StateFileType(TypedDict):

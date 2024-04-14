@@ -45,8 +45,6 @@ Look into tags for resources?
 This?
 <https://www.reddit.com/r/ado_wrapper/comments/xj56gs/complete_pull_request_with_bypass_policy_via_api/>
 
-Re-run on "connection error"?
-
 Dataclass "init=False" part of a field, but this won't work for type hinting I guess, also, while things like
 normally take 1 input (id), things like create can take more complicated stuff
 
@@ -63,7 +61,5 @@ python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt" --s
 python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt" --state-file "tests/test_state.state"
 python3.11 -m ado_wrapper --refresh-resources-on-startup --creds_file "credentials.txt"
 coverage run -m pytest
-
-Upgrade our tests by adding "with Repo()", which will have repo.delete in the finally bit of the exit
 
 python3.11 -m pip install ado_wrapper --upgrade

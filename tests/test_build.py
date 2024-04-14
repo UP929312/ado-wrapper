@@ -2,11 +2,10 @@ from datetime import datetime
 
 import pytest
 
-from ado_wrapper.resources.repo import Repo
 from ado_wrapper.resources.builds import Build, BuildDefinition
 from ado_wrapper.resources.users import Member
 from ado_wrapper.resources.commits import Commit
-from tests.setup_client import setup_client, email, existing_agent_pool_id
+from tests.setup_client import setup_client, email, existing_agent_pool_id, RepoContextManager
 
 BUILD_YAML_FILE = """---
 trigger:
@@ -48,66 +47,61 @@ class TestBuild:
 
     @pytest.mark.create_delete
     def test_create_delete_build(self) -> None:
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-create-delete-builds")
-        Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
-        build_definition = BuildDefinition.create(
-            self.ado_client, "ado_wrapper-test-buildfor-create-delete-build", repo.repo_id, repo.name, "build.yaml",
-            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
-        )
-        build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
-        assert build.build_id == Build.get_by_id(self.ado_client, build.build_id).build_id
-        assert len(Build.get_all_by_definition(self.ado_client, build_definition.build_definition_id)) == 1
-        repo.delete(self.ado_client)
-        build_definition.delete(self.ado_client)
-        build.delete(self.ado_client)
+        with RepoContextManager(self.ado_client, "create-delete-builds") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
+            build_definition = BuildDefinition.create(
+                self.ado_client, "ado_wrapper-test-buildfor-create-delete-build", repo.repo_id, repo.name, "build.yaml",
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
+            )
+            build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
+            assert build.build_id == Build.get_by_id(self.ado_client, build.build_id).build_id
+            assert len(Build.get_all_by_definition(self.ado_client, build_definition.build_definition_id)) == 1
+            build_definition.delete(self.ado_client)
+            build.delete(self.ado_client)
 
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-get-builds-by-id")
-        Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
-        build_definition = BuildDefinition.create(
-            self.ado_client, "ado_wrapper-test-build-for-get-by-id", repo.repo_id, repo.name, "build.yaml",
-            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
-        )
-        build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
-        fetched_build = Build.get_by_id(self.ado_client, build.build_id)
-        assert fetched_build.build_id == build.build_id
-        build_definition.delete(self.ado_client)
-        repo.delete(self.ado_client)
+        with RepoContextManager(self.ado_client, "get-builds-by-id") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
+            build_definition = BuildDefinition.create(
+                self.ado_client, "ado_wrapper-test-build-for-get-by-id", repo.repo_id, repo.name, "build.yaml",
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
+            )
+            build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
+            fetched_build = Build.get_by_id(self.ado_client, build.build_id)
+            assert fetched_build.build_id == build.build_id
+            build_definition.delete(self.ado_client)
 
     @pytest.mark.update
     def test_update(self) -> None:
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-update-builds")
-        Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
-        build_definition = BuildDefinition.create(
-            self.ado_client, "ado_wrapper-test-build-for-update", repo.repo_id, repo.name, "build.yaml",
-            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
-        )
-        build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
-        # ======
-        build.update(self.ado_client, "status", "completed")
-        assert build.status == "completed"
-        # ======
-        fetched_build = Build.get_by_id(self.ado_client, build.build_id)
-        assert fetched_build.status == "completed"
-        # ======
-        build_definition.delete(self.ado_client)
-        repo.delete(self.ado_client)
+        with RepoContextManager(self.ado_client, "update-builds") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
+            build_definition = BuildDefinition.create(
+                self.ado_client, "ado_wrapper-test-build-for-update", repo.repo_id, repo.name, "build.yaml",
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
+            )
+            build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
+            # ======
+            build.update(self.ado_client, "status", "completed")
+            assert build.status == "completed"
+            # ======
+            fetched_build = Build.get_by_id(self.ado_client, build.build_id)
+            assert fetched_build.status == "completed"
+            # ======
+            build_definition.delete(self.ado_client)
 
     @pytest.mark.skip(reason="This requires waiting for build agents, and running a whole build")
     def test_create_and_wait_until_completion(self) -> None:
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-create-and-wait-builds")
-        Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
-        build_definition = BuildDefinition.create(
-            self.ado_client, "ado_wrapper-test-build-for-wait-until-completion", repo.repo_id, repo.name, "build.yaml",
-            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
-        )
-        build = Build.create_and_wait_until_completion(self.ado_client, build_definition.build_definition_id, "my-branch")
-        assert build.status == "completed"
-        build_definition.delete(self.ado_client)  # Can't delete build_definitions without deleting builds first
-        build.delete(self.ado_client)
-        repo.delete(self.ado_client)
-
+        with RepoContextManager(self.ado_client, "create-and-wait-builds") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
+            build_definition = BuildDefinition.create(
+                self.ado_client, "ado_wrapper-test-build-for-wait-until-completion", repo.repo_id, repo.name, "build.yaml",
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
+            )
+            build = Build.create_and_wait_until_completion(self.ado_client, build_definition.build_definition_id, "my-branch")
+            assert build.status == "completed"
+            build_definition.delete(self.ado_client)  # Can't delete build_definitions without deleting builds first
+            build.delete(self.ado_client)
 
 # ======================================================================================================================
 
@@ -140,60 +134,56 @@ class TestBuildDefinition:
 
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-create-delete-build-defs")
-        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
-        build_definition = BuildDefinition.create(
-            self.ado_client, "ado_wrapper-test-build-for-create-delete", repo.repo_id, "ado_wrapper-test-repo", "build.yaml",
-            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
-        )
-        assert build_definition.description == f"Please contact {email} if you see this build definition!"
-        build_definition.delete(self.ado_client)
-        repo.delete(self.ado_client)
+        with RepoContextManager(self.ado_client, "create-delete-build-defs") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
+            build_definition = BuildDefinition.create(
+                self.ado_client, "ado_wrapper-test-build-for-create-delete", repo.repo_id, "ado_wrapper-test-repo", "build.yaml",
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
+            )
+            assert build_definition.description == f"Please contact {email} if you see this build definition!"
+            build_definition.delete(self.ado_client)
 
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-get-build-defs-by-id")
-        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
-        build_definition = BuildDefinition.create(
-            self.ado_client, "ado_wrapper-test-build-for-get-by-id", repo.repo_id, "ado_wrapper-test-repo", "build.yaml",
-            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
-        )
-        fetched_build_definition = BuildDefinition.get_by_id(self.ado_client, build_definition.build_definition_id)
-        assert fetched_build_definition.build_definition_id == build_definition.build_definition_id
-        build_definition.delete(self.ado_client)
-        repo.delete(self.ado_client)
+        with RepoContextManager(self.ado_client, "get-build-defs-by-id") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
+            build_definition = BuildDefinition.create(
+                self.ado_client, "ado_wrapper-test-build-for-get-by-id", repo.repo_id, "ado_wrapper-test-repo", "build.yaml",
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
+            )
+            fetched_build_definition = BuildDefinition.get_by_id(self.ado_client, build_definition.build_definition_id)
+            assert fetched_build_definition.build_definition_id == build_definition.build_definition_id
+            build_definition.delete(self.ado_client)
 
     @pytest.mark.get_by_id
     def test_get_all_by_repo_id(self) -> None:
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-get-all-by-repo-id")
-        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
-        build_definition = BuildDefinition.create(
-            self.ado_client, "ado_wrapper-test-build-for-get-all-by-repo", repo.repo_id, "ado_wrapper-test-repo", "build.yaml",
-            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
-        )
-        build_definitions = BuildDefinition.get_all_by_repo_id(self.ado_client, repo.repo_id)
-        assert len(build_definitions) == 1
-        assert all(isinstance(x, BuildDefinition) for x in build_definitions)
-        build_definition.delete(self.ado_client)
-        repo.delete(self.ado_client)
+        with RepoContextManager(self.ado_client, "get-all-build-defs-by-repo-id") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
+            build_definition = BuildDefinition.create(
+                self.ado_client, "ado_wrapper-test-build-for-get-all-by-repo", repo.repo_id, "ado_wrapper-test-repo", "build.yaml",
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
+            )
+            build_definitions = BuildDefinition.get_all_by_repo_id(self.ado_client, repo.repo_id)
+            assert len(build_definitions) == 1
+            assert all(isinstance(x, BuildDefinition) for x in build_definitions)
+            build_definition.delete(self.ado_client)
 
     @pytest.mark.update
     def test_update(self) -> None:
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-update-build-defs")
-        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
-        build_definition = BuildDefinition.create(
-            self.ado_client, "ado_wrapper-test-build-for-update", repo.repo_id, "ado_wrapper-test-repo", "build.yaml",
-            f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
-        )
-        # ======
-        build_definition.update(self.ado_client, "name", "ado_wrapper-test-build-for-update-rename")
-        assert build_definition.name == "ado_wrapper-test-build-for-update-rename"  # Test instance attribute is updated
-        build_definition.update(self.ado_client, "description", "new-description")
-        assert build_definition.description == "new-description"  # Test instance attribute is updated
-        # ======
-        fetched_build_definition = BuildDefinition.get_by_id(self.ado_client, build_definition.build_definition_id)
-        assert fetched_build_definition.name == "ado_wrapper-test-build-for-update-rename"
-        assert fetched_build_definition.description == "new-description"
-        # ======
-        build_definition.delete(self.ado_client)
-        repo.delete(self.ado_client)
+        with RepoContextManager(self.ado_client, "update-build-defs") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
+            build_definition = BuildDefinition.create(
+                self.ado_client, "ado_wrapper-test-build-for-update", repo.repo_id, "ado_wrapper-test-repo", "build.yaml",
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
+            )
+            # ======
+            build_definition.update(self.ado_client, "name", "ado_wrapper-test-build-for-update-rename")
+            assert build_definition.name == "ado_wrapper-test-build-for-update-rename"  # Test instance attribute is updated
+            build_definition.update(self.ado_client, "description", "new-description")
+            assert build_definition.description == "new-description"  # Test instance attribute is updated
+            # ======
+            fetched_build_definition = BuildDefinition.get_by_id(self.ado_client, build_definition.build_definition_id)
+            assert fetched_build_definition.name == "ado_wrapper-test-build-for-update-rename"
+            assert fetched_build_definition.description == "new-description"
+            # ======
+            build_definition.delete(self.ado_client)

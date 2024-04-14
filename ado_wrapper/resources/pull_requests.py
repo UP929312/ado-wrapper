@@ -108,8 +108,10 @@ class PullRequest(StateManagedResource):
     @staticmethod
     def add_reviewer_static(ado_client: AdoClient, repo_id: str, pull_request_id: str, reviewer_id: str) -> None:
         """Copy of the add_reviewer method, but static, i.e. if you have the repo id and pr id, you don't need to fetch them again"""
-        request = ado_client.session.put(f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/reviewers/{reviewer_id}?api-version=7.1",
-                                json={"vote": "0", "isRequired": "true"},)
+        request = ado_client.session.put(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/reviewers/{reviewer_id}?api-version=7.1",
+            json={"vote": "0", "isRequired": "true"},
+        )
         assert request.status_code < 300
 
     def close(self, ado_client: AdoClient) -> None:

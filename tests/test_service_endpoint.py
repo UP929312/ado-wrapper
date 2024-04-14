@@ -50,7 +50,6 @@ class TestServiceEndpoints:
         service_endpoint.delete(self.ado_client)
 
     @pytest.mark.update
-    # @pytest.mark.wip
     def test_update(self) -> None:
         pass
         # service_endpoint = ServiceEndpoint.create(

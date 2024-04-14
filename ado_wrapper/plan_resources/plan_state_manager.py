@@ -1,17 +1,11 @@
-from typing import Any, TypedDict
+# from typing import Any
 import json
 import re
 
-from ado_wrapper.utils import ResourceType
-from ado_wrapper.state_manager import StateManager
+from ado_wrapper.state_manager import StateManager  # , StateFileType
 from ado_wrapper.plan_resources.colours import ACTIONS
 
 STATE_FILE_VERSION = "1.4"
-
-
-class StateFileType(TypedDict):
-    state_file_version: str
-    resources: dict[ResourceType, dict[str, Any]]
 
 
 class PlanStateManager(StateManager):

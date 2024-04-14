@@ -15,10 +15,10 @@ from ado_wrapper.utils import ResourceNotFound, UnknownError
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
-    from ado_wrapper.resources.merge_policies import MergeBranchPolicy
+    from ado_wrapper.resources.merge_policies import MergeBranchPolicy, WhenChangesArePushed
 
 RepoEditableAttribute = Literal["name", "default_branch", "is_disabled"]
-WhenChangesArePushed = Literal["require_revote_on_each_iteration", "require_revote_on_last_iteration", "reset_votes_on_source_push", "reset_rejections_on_source_push", "do_nothing"]
+
 # ====================================================================
 
 
@@ -167,10 +167,11 @@ class Repo(StateManagedResource):
     @staticmethod
     def set_branch_merge_policy(ado_client: AdoClient, repo_id: str, minimum_approver_count: int,
                           creator_vote_counts: bool, prohibit_last_pushers_vote: bool, allow_completion_with_rejects: bool,
-                          when_new_changes_are_pushed: WhenChangesArePushed, branch_name: str = "main") -> "MergePolicies | None":
+                          when_new_changes_are_pushed: WhenChangesArePushed, branch_name: str = "main") -> "MergePolicies | None":  # fmt: skip
         return MergePolicies.set_branch_policy(ado_client, repo_id, minimum_approver_count, creator_vote_counts,
                                                prohibit_last_pushers_vote, allow_completion_with_rejects, when_new_changes_are_pushed,
-                                               branch_name)
+                                               branch_name)  # fmt: skip
+
 
 # ====================================================================
 

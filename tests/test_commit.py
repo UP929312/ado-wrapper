@@ -1,9 +1,8 @@
 import pytest
 
-from ado_wrapper.resources.repo import Repo
 from ado_wrapper.resources.commits import Commit
 
-from tests.setup_client import setup_client
+from tests.setup_client import setup_client, RepoContextManager
 
 
 class TestCommit:
@@ -26,38 +25,35 @@ class TestCommit:
 
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-create-delete-commit")
-        commit = Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
-        assert commit.message == "Test commit"
-        repo.delete(self.ado_client)
+        with RepoContextManager(self.ado_client, "create-delete-commit") as repo:
+            commit = Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
+            assert commit.message == "Test commit"
 
     def test_get_latest_by_repo(self) -> None:
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-get-latest-commit")
-        commit = Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
-        lastest_commit = Commit.get_latest_by_repo(self.ado_client, repo.repo_id, "test-branch")
-        assert lastest_commit is not None
-        assert commit.commit_id == lastest_commit.commit_id
-        assert commit.author.member_id == lastest_commit.author.member_id
-        assert commit.message == lastest_commit.message
-        repo.delete(self.ado_client)
+        with RepoContextManager(self.ado_client, "get-latest-commit") as repo:
+            commit = Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
+            lastest_commit = Commit.get_latest_by_repo(self.ado_client, repo.repo_id, "test-branch")
+            assert lastest_commit is not None
+            assert commit.commit_id == lastest_commit.commit_id
+            assert commit.author.member_id == lastest_commit.author.member_id
+            assert commit.message == lastest_commit.message
+
 
     def test_get_all(self) -> None:
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-get-all-commits")
-        Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")
-        Commit.create(
-            self.ado_client, repo.repo_id, "new-branch", "new-branch2", {"test2.txt": "This is something else"}, "add", "Test commit 2"
-        )
-        all_commits = Commit.get_all_by_repo(self.ado_client, repo.repo_id)
-        assert len(all_commits) == 2 + 1  # 1 For the initial README commit
-        assert all(isinstance(commit, Commit) for commit in all_commits)
-        repo.delete(self.ado_client)
+        with RepoContextManager(self.ado_client, "get-all-commits") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")
+            Commit.create(
+                self.ado_client, repo.repo_id, "new-branch", "new-branch2", {"test2.txt": "This is something else"}, "add", "Test commit 2"
+            )
+            all_commits = Commit.get_all_by_repo(self.ado_client, repo.repo_id)
+            assert len(all_commits) == 2 + 1  # 1 For the initial README commit
+            assert all(isinstance(commit, Commit) for commit in all_commits)
 
     def test_get_all_with_branch(self) -> None:
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-get-all-commits-with-branch")
-        Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")  # fmt: skip
-        Commit.create(self.ado_client, repo.repo_id, "new-branch", "new-branch", {"test2.txt": "This is something else"}, "add", "Test commit 2")  # fmt: skip
-        Commit.create(self.ado_client, repo.repo_id, "main", "other-branch", {"test3.txt": "Even more something else"}, "add", "Test commit 3")  # fmt: skip
-        all_commits = Commit.get_all_by_repo(self.ado_client, repo.repo_id, "new-branch")
-        assert len(all_commits) == 2 + 1  # 1 For the initial README commit
-        assert all(isinstance(commit, Commit) for commit in all_commits)
-        repo.delete(self.ado_client)
+        with RepoContextManager(self.ado_client, "get-all-commits-with-branch") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")  # fmt: skip
+            Commit.create(self.ado_client, repo.repo_id, "new-branch", "new-branch", {"test2.txt": "This is something else"}, "add", "Test commit 2")  # fmt: skip
+            Commit.create(self.ado_client, repo.repo_id, "main", "other-branch", {"test3.txt": "Even more something else"}, "add", "Test commit 3")  # fmt: skip
+            all_commits = Commit.get_all_by_repo(self.ado_client, repo.repo_id, "new-branch")
+            assert len(all_commits) == 2 + 1  # 1 For the initial README commit
+            assert all(isinstance(commit, Commit) for commit in all_commits)

@@ -88,7 +88,7 @@ class AdoUser(StateManagedResource):
 
 @dataclass
 class Member(StateManagedResource):
-    """A stripped down member class which is often returned by the API, for example in build requests."""
+    """A stripped down member class which is often returned by the API, for example in build requests or PRs."""
 
     name: str
     email: str

@@ -5,8 +5,6 @@ from dataclasses import dataclass, field
 
 from ado_wrapper.state_managed_abc import StateManagedResource
 
-# from ado_wrapper.resources.users import GroupMember
-
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 

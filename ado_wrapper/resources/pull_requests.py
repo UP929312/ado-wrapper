@@ -131,16 +131,16 @@ class PullRequest(StateManagedResource):
 
     @classmethod
     def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str, status: PullRequestStatus = "all") -> list[PullRequest]:
-        pull_requests = ado_client.session.get(
+        request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
         ).json()
         try:
-            return [PullRequest.from_request_payload(pr) for pr in pull_requests["value"]]
+            return [PullRequest.from_request_payload(pr) for pr in request["value"]]
         except KeyError:
-            if pull_requests.get("message", "").startswith("TF401019"):
-                print(f"Repo `{pull_requests['message'].split('identifier')[1].split(' ')[0]}` was disabled, or you had no access.")
+            if request.get("message", "").startswith("TF401019"):
+                print(f"Repo `{request['message'].split('identifier')[1].split(' ')[0]}` was disabled, or you had no access.")
                 return []
-            raise ResourceNotFound(pull_requests)  # pylint: disable=raise-missing-from
+            raise ResourceNotFound(request)  # pylint: disable=raise-missing-from
 
     @classmethod
     def get_all_by_author(cls, ado_client: AdoClient, author_email: str, status: PullRequestStatus = "all") -> list[PullRequest]:
@@ -158,10 +158,7 @@ class PullRequest(StateManagedResource):
         return [cls.from_request_payload(pr) for pr in json.loads(raw_data).values()]
 
     def get_comment_threads(self, ado_client: AdoClient, ignore_system_messages: bool = True) -> list[PullRequestCommentThread]:
-        request = ado_client.session.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}/threads?api-version=7.1",
-        ).json()["value"]
-        comments = [PullRequestCommentThread.from_request_payload(data) for data in request]
+        comments = PullRequestCommentThread.get_all(ado_client, self.repo.repo_id, self.pull_request_id)
         if ignore_system_messages:
             comments = [comment for comment in comments if comment.comments[0].comment_type != "system"]
         return comments

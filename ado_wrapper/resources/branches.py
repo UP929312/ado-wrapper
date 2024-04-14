@@ -94,5 +94,5 @@ class Branch(StateManagedResource):
     def get_active_branches(cls, ado_client: AdoClient, repo_id: str) -> list["Branch"]:
         return [branch for branch in cls.get_all_by_repo(ado_client, repo_id) if not branch.is_deleted]
 
-    def delete(self, ado_client: AdoClient) -> None:
+    def delete(self, ado_client: AdoClient) -> None:  # Has to exist for multi-ids
         self.delete_by_id(ado_client, self.repo_id, self.branch_id)

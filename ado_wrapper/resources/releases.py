@@ -13,7 +13,7 @@ ReleaseDefinitionEditableAttribute = Literal["name", "description", "release_nam
 ReleaseStatus = Literal["active", "abandoned", "draft", "undefined"]
 
 # ========================================================================================================
-# WARNING: THIS FILE IS MAINLY UNTESTED, AND MAY NOT WORK AS EXPECTED
+# WARNING: THIS FILE IS NOT MASSIVELY UNTESTED, AND MAY NOT WORK AS EXPECTED
 # FEEL FREE TO MAKE A PR TO FIX/IMPROVE THIS FILE
 # ========================================================================================================
 
@@ -91,15 +91,12 @@ class Release(StateManagedResource):
     release_id: str = field(metadata={"is_id_field": True})
     name: str
     status: ReleaseStatus
-    created_on: datetime
-    created_by: Member
-    description: str
+    created_on: datetime = field(repr=False)
+    created_by: Member = field(repr=False)
+    description: str = field(repr=False)
     variables: list[dict[str, Any]] | None = field(default_factory=list, repr=False)  # type: ignore[assignment]
     variable_groups: list[int] | None = field(default_factory=list, repr=False)  # type: ignore[assignment]
     keep_forever: bool = field(default=False, repr=False)
-
-    def __str__(self) -> str:
-        return f"{self.name} ({self.release_id}), {self.status}"
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Release":
@@ -224,10 +221,7 @@ class ReleaseDefinition(StateManagedResource):
 
     @classmethod
     def get_all_releases_for_definition(cls, ado_client: "AdoClient", definition_id: str) -> "list[Release]":
-        response = ado_client.session.get(
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1&definitionId={definition_id}",
-        ).json()
-        return [Release.from_request_payload(release) for release in response["value"]]
+        return Release.get_all(ado_client, definition_id)
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient") -> "list[ReleaseDefinition]":  # type: ignore[override]

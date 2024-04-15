@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any, Literal, TYPE_CHECKING
 from dataclasses import dataclass, field
 
-from ado_wrapper.utils import from_ado_date_string, ResourceNotFound
+from ado_wrapper.utils import from_ado_date_string
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member, Reviewer
 
@@ -25,7 +25,7 @@ class PullRequest(StateManagedResource):
 
     pull_request_id: str = field(metadata={"is_id_field": True})
     title: str = field(metadata={"editable": True})
-    description: str = field(metadata={"editable": True})
+    description: str = field(repr=False, metadata={"editable": True})
     source_branch: str = field(repr=False)
     target_branch: str = field(repr=False)
     author: Member
@@ -79,7 +79,6 @@ class PullRequest(StateManagedResource):
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> None:  # type: ignore[override]
-        # raise NotImplementedError("You can't delete pull requests, only close them.")
         pr = cls.get_by_id(ado_client, pull_request_id)
         pr.update(ado_client, "merge_status", "abandoned")
         ado_client.state_manager.remove_resource_from_state("PullRequest", pull_request_id)
@@ -131,16 +130,14 @@ class PullRequest(StateManagedResource):
 
     @classmethod
     def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str, status: PullRequestStatus = "all") -> list[PullRequest]:
-        request = ado_client.session.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
-        ).json()
         try:
-            return [PullRequest.from_request_payload(pr) for pr in request["value"]]
+            return super().get_all(
+                ado_client,
+                f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
+            )  # type: ignore[return-value]
         except KeyError:
-            if request.get("message", "").startswith("TF401019"):
-                print(f"Repo `{request['message'].split('identifier')[1].split(' ')[0]}` was disabled, or you had no access.")
-                return []
-            raise ResourceNotFound(request)  # pylint: disable=raise-missing-from
+            print(f"Repo with id `{repo_id}` was disabled, or you had no access.")
+            return []
 
     @classmethod
     def get_all_by_author(cls, ado_client: AdoClient, author_email: str, status: PullRequestStatus = "all") -> list[PullRequest]:

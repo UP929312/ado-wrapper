@@ -19,9 +19,10 @@ def setup_client() -> AdoClient:
 
 class RepoContextManager:
     """A context manager which creates and (always) deletes a repo within tests"""
+
     def __init__(self, ado_client: AdoClient, repo_name: str):
         self.ado_client = ado_client
-        self.repo_name = "ado_wrapper-test-repo-for-"+repo_name
+        self.repo_name = "ado_wrapper-test-repo-for-" + repo_name
 
     def __enter__(self) -> Repo:
         self.repo = Repo.create(ado_client, self.repo_name, include_readme=True)

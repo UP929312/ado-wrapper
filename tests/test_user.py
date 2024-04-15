@@ -31,6 +31,7 @@ class TestAdoUser:
         user = AdoUser.get_by_id(self.ado_client, existing_user_descriptor)
         assert user.descriptor_id == existing_user_descriptor
 
+    @pytest.mark.get_all
     def test_get_all(self) -> None:
         users = AdoUser.get_all(self.ado_client)
         assert len(users) > 1

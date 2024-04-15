@@ -6,6 +6,7 @@ prototype/
 .coverage
 dist/
 htmlcov/
+.DS_STORE
 
 *.state
 tests/test_data.txt

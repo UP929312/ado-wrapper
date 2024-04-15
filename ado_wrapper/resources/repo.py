@@ -32,9 +32,6 @@ class Repo(StateManagedResource):
     is_disabled: bool = field(default=False, repr=False, metadata={"editable": True, "internal_name": "isDisabled"})
     # WARNING, disabling a repo means it's not able to be deleted, proceed with caution.
 
-    def __str__(self) -> str:
-        return f"Repo(name={self.name}, id={self.repo_id})"
-
     @classmethod
     def from_request_payload(cls, data: dict[str, str]) -> "Repo":
         return cls(
@@ -108,7 +105,7 @@ class Repo(StateManagedResource):
     def get_contents(self, ado_client: AdoClient, file_types: list[str] | None = None, branch_name: str = "main") -> dict[str, str]:
         """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/items/get?view=azure-devops-rest-7.1&tabs=HTTP
         This function downloads the contents of a repo, and returns a dictionary of the files and their contents
-        The file_types parameter is a list of file types to filter for, e.g. ["json", "yaml"]"""
+        The file_types parameter is a list of file types to filter for, e.g. ["json", "yaml"] etc."""
         try:
             request = ado_client.session.get(
                 f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?recursionLevel={'Full'}&download={True}&$format={'Zip'}&versionDescriptor.version={branch_name}&api-version=7.1",

@@ -74,7 +74,9 @@ class TestPullRequest:
     def test_mark_as_draft(self) -> None:
         with RepoContextManager(self.ado_client, "repo-for-mark-as-draft") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
-            pull_request = PullRequest.create(self.ado_client, repo.repo_id, "test-branch", "Test PR for mark as drafk", "Test PR description")
+            pull_request = PullRequest.create(
+                self.ado_client, repo.repo_id, "test-branch", "Test PR for mark as drafk", "Test PR description"
+            )
             # ----
             pull_request.mark_as_draft(self.ado_client)
             assert pull_request.is_draft

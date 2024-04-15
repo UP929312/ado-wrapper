@@ -15,7 +15,7 @@ class AdoClient:
         action: Literal["plan", "apply"] = "apply"  # fmt: skip
     ) -> None:
         """Takes an email, PAT, org, project, and state file name. The state file name is optional, and if not provided,
-        state will not be stored in "main.state" """
+        state will be stored in "main.state" (can be disabled using None)"""
         self.ado_email = ado_email
         self.ado_pat = ado_pat
         self.ado_org = ado_org

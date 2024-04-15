@@ -38,7 +38,6 @@ class TestCommit:
             assert commit.author.member_id == lastest_commit.author.member_id
             assert commit.message == lastest_commit.message
 
-
     def test_get_all(self) -> None:
         with RepoContextManager(self.ado_client, "get-all-commits") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")

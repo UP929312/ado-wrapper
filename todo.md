@@ -50,6 +50,11 @@ normally take 1 input (id), things like create can take more complicated stuff
 
 Service connections perms on pipelines (done, not tested)
 
+Commits/Branches are the only things that don't have a generic `get_all`
+
+Test state_manager.py more?
+Test __main__.py
+
 -----
 
 Pylint command:
@@ -57,9 +62,10 @@ pylint .
 mypy . --strict
 black . --line-length 140
 pytest tests/ -vvvv -s
-python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt" --state-file "main.state"
+python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt"
 python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt" --state-file "tests/test_state.state"
 python3.11 -m ado_wrapper --refresh-resources-on-startup --creds_file "credentials.txt"
 coverage run -m pytest
+coverage html
 
 python3.11 -m pip install ado_wrapper --upgrade

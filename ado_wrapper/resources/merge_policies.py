@@ -13,12 +13,18 @@ if TYPE_CHECKING:
 
 WhenChangesArePushed = Literal["require_revote_on_each_iteration", "require_revote_on_last_iteration",
                                "reset_votes_on_source_push", "reset_rejections_on_source_push", "do_nothing"]  # fmt: skip
-name_mapping = {
+merge_complete_name_mapping = {
     "requireVoteOnEachIteration": "require_revote_on_each_iteration",
     "requireVoteOnLastIteration": "require_revote_on_last_iteration",
     "resetOnSourcePush": "reset_votes_on_source_push",
     "resetRejectionsOnSourcePush": "reset_rejections_on_source_push",
     "do_nothing": "do_nothing",
+}
+limit_merge_type_mapping = {
+    "allowSquash": "allow_squash",
+    "allowNoFastForward": "allow_no_fast_forward",
+    "allowRebase": "allow_rebase",
+    "allowRebaseMerge": "allow_rebase_merge",
 }
 
 
@@ -109,8 +115,8 @@ class MergeBranchPolicy(StateManagedResource):
     @classmethod
     def from_request_payload(cls, data: dict[str, Any], is_inherited: bool) -> "MergeBranchPolicy":  # type: ignore[override]
         settings = data["settings"]
-        when_new_changes_are_pushed = name_mapping[
-            ([x for x in name_mapping if settings.get(x, False)] or ["do_nothing"])[0]
+        when_new_changes_are_pushed = merge_complete_name_mapping[
+            ([x for x in merge_complete_name_mapping if settings.get(x, False)] or ["do_nothing"])[0]
         ]  # Any or "do_nothing"  # fmt: skip
         branch_name: str | None = settings["scope"][0]["refName"]
         return cls(
@@ -171,7 +177,7 @@ class MergePolicies(StateManagedResource):
             for policy in policy_group["currentScopePolicies"] or []:  # If it's None, don't loop
                 settings = policy["settings"]
                 # Limit merge types
-                if any(x in settings for x in ("allowSquash", "allowNoFastForward", "allowRebase", "allowRebaseMerge")):
+                if any(x in settings for x in limit_merge_type_mapping):
                     continue
                 # Build Validation {'buildDefinitionId': 4, 'queueOnSourceUpdateOnly': True, 'manualQueueOnly': False, 'displayName': None, 'validDuration': 720.0
                 if "buildDefinitionId" in settings:
@@ -214,7 +220,9 @@ class MergePolicies(StateManagedResource):
     def get_default_reviewers_by_repo_id(cls, ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list[MergePolicyDefaultReviewer] | None:  # fmt: skip
         policies = cls.get_all_by_repo_id(ado_client, repo_id, branch_name)
         return (
-            [x for x in policies if isinstance(x, MergePolicyDefaultReviewer)] if policies is not None else None  # pylint: disable=not-an-iterable
+            [x for x in policies if isinstance(x, MergePolicyDefaultReviewer)]  # pylint: disable=not-an-iterable
+            if policies is not None
+            else None
         )
 
     # ================== Default Reviewers ================== #

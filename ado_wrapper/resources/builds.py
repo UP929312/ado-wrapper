@@ -50,18 +50,15 @@ class Build(StateManagedResource):
     build_id: str = field(metadata={"is_id_field": True})
     build_number: str
     status: BuildStatus = field(metadata={"editable": True})  # Only this is editable ):
-    requested_by: Member
-    build_repo: BuildRepository
-    parameters: dict[str, str]
+    requested_by: Member = field(repr=False)
+    build_repo: BuildRepository = field(repr=False)
+    parameters: dict[str, str] = field(repr=False)
     definition: "BuildDefinition | None" = field(repr=False)
-    start_time: datetime | None = None
-    finish_time: datetime | None = None
+    start_time: datetime | None = field(repr=False)
+    finish_time: datetime | None = field(repr=False)
     queue_time: datetime | None = field(repr=False, default=None)
-    reason: str = "An automated build created with the ado_wrapper Python library"
-    priority: QueuePriority = "normal"
-
-    def __str__(self) -> str:
-        return f"{self.build_number} ({self.build_id}), {self.status}"
+    reason: str = field(default="An automated build created with the ado_wrapper Python library", repr=False)
+    priority: QueuePriority = field(default="normal", repr=False)
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Build":
@@ -112,16 +109,16 @@ class Build(StateManagedResource):
             attribute_name, attribute_value, {attribute_name: attribute_value}  # fmt: skip
         )
 
+    @classmethod
+    def get_all(cls, ado_client: "AdoClient") -> "list[Build]":  # type: ignore[override]
+        return super().get_all(
+            ado_client,
+            f"/{ado_client.ado_project}/_apis/build/builds?api-version=7.1",
+        )  # type: ignore[return-value]
+
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
-
-    @classmethod
-    def get_all_by_definition(cls, ado_client: "AdoClient", definition_id: str) -> "list[Build]":
-        return super().get_all(
-            ado_client,
-            f"/{ado_client.ado_project}/_apis/build/builds?definitions={definition_id}&api-version=7.1",
-        )  # type: ignore[return-value]
 
     @classmethod
     def create_and_wait_until_completion(cls, ado_client: "AdoClient", definition_id: str, branch_name: str = "main",
@@ -153,6 +150,13 @@ class Build(StateManagedResource):
                 f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/retention/leases?ids={lease['leaseId']}&api-version=6.1",
             )
             assert lease_response.status_code <= 204
+
+    @classmethod
+    def get_all_by_definition(cls, ado_client: "AdoClient", definition_id: str) -> "list[Build]":
+        return super().get_all(
+            ado_client,
+            f"/{ado_client.ado_project}/_apis/build/builds?definitions={definition_id}&api-version=7.1",
+        )  # type: ignore[return-value]
 
 
 # ========================================================================================================
@@ -197,11 +201,12 @@ class BuildDefinition(StateManagedResource):
         cls, ado_client: "AdoClient", name: str, repo_id: str, repo_name: str, path_to_pipeline: str,
         description: str, agent_pool_id: str, variable_groups: list[str], branch_name: str = "main",  # fmt: skip
     ) -> "BuildDefinition":
+        payload = get_build_definition(name, repo_id, repo_name, path_to_pipeline, description,
+                                       ado_client.ado_project, agent_pool_id, branch_name)  # fmt: skip
         return super().create(
             ado_client,
             f"/{ado_client.ado_project}/_apis/build/definitions?api-version=7.0",
-            payload=get_build_definition(name, repo_id, repo_name, path_to_pipeline, description, ado_client.ado_project,
-                                         agent_pool_id, branch_name)  # fmt: skip
+            payload=payload,
         )  # type: ignore[return-value]
         #  | {"variableGroups": [{"id": x for x in variable_groups}]},
 
@@ -231,16 +236,16 @@ class BuildDefinition(StateManagedResource):
             resource_id,
         )
 
-    # ============ End of requirement set by all state managed resources ================== #
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-    # =============== Start of additional methods included with class ===================== #
-
     @classmethod
     def get_all(cls, ado_client: "AdoClient") -> "list[BuildDefinition]":  # type: ignore[override]
         return super().get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/build/definitions?api-version=7.1",
         )  # type: ignore[return-value]
+
+    # ============ End of requirement set by all state managed resources ================== #
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+    # =============== Start of additional methods included with class ===================== #
 
     def get_all_builds_by_definition(self, ado_client: "AdoClient") -> "list[Build]":
         return Build.get_all_by_definition(ado_client, self.build_definition_id)

@@ -44,10 +44,25 @@ class TestServiceEndpoints:
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
         service_endpoint = ServiceEndpoint.create(
-            self.ado_client, "ado_wrapper-test-service-endpoint", "github", "https://github.com", "test-user", "test-password"
+            self.ado_client,
+            "ado_wrapper-test-service-endpoint",
+            "github",
+            "https://github.com",
+            username="test-user",
+            password="test-password",
         )
         assert isinstance(service_endpoint, ServiceEndpoint)
         service_endpoint.delete(self.ado_client)
+
+        service_endpoint_token = ServiceEndpoint.create(
+            self.ado_client,
+            "ado_wrapper-test-service-endpoint-token",
+            "github",
+            "https://github.com",
+            access_token="this-is-the-token",
+        )
+        assert isinstance(service_endpoint_token, ServiceEndpoint)
+        service_endpoint_token.delete(self.ado_client)
 
     @pytest.mark.update
     def test_update(self) -> None:

@@ -84,10 +84,12 @@ class StateManagedResource:
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org}" + url
         request = ado_client.session.post(url, json=payload or {})  # Create a brand new dict
-        if request.status_code == 401:
-            raise PermissionError(f"You do not have permission to create this {cls.__name__}!")
-        if request.status_code == 409:
-            raise ResourceAlreadyExists(f"The {cls.__name__} with that identifier already exist!")
+        if request.status_code >= 300:
+            if request.status_code == 401:
+                raise PermissionError(f"You do not have permission to create this {cls.__name__}!")
+            if request.status_code == 409:
+                raise ResourceAlreadyExists(f"The {cls.__name__} with that identifier already exist!")
+            raise ValueError(f"Error creating {cls.__name__}: {request.status_code} - {request.text}")
         resource = cls.from_request_payload(request.json())
         ado_client.state_manager.add_resource_to_state(cls.__name__, extract_id(resource), resource.to_json())  # type: ignore[arg-type]
         return resource
@@ -102,7 +104,9 @@ class StateManagedResource:
             if request.status_code == 404:
                 print("[ADO_WRAPPER] Resource not found, probably already deleted, removing from state")
             else:
-                raise DeletionFailed(f"[ADO_WRAPPER] Error deleting {cls.__name__} ({resource_id}): {request.json()['message']}")
+                if "message" in request.json():
+                    raise DeletionFailed(f"[ADO_WRAPPER] Error deleting {cls.__name__} ({resource_id}): {request.json()['message']}")
+                raise DeletionFailed(f"[ADO_WRAPPER] Error deleting {cls.__name__} ({resource_id}): {request.text}")
         ado_client.state_manager.remove_resource_from_state(cls.__name__, resource_id)  # type: ignore[arg-type]
 
     def delete(self, ado_client: "AdoClient") -> None:

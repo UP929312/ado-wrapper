@@ -1,3 +1,4 @@
+from ado_wrapper.resources.annotated_tags import AnnotatedTag
 from ado_wrapper.resources.branches import Branch
 from ado_wrapper.resources.builds import Build, BuildDefinition
 from ado_wrapper.resources.commits import Commit

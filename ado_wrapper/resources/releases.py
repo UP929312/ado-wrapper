@@ -200,7 +200,8 @@ class ReleaseDefinition(StateManagedResource):
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", release_definition_id: str) -> None:  # type: ignore[override]
         for release in ReleaseDefinition.get_all_releases_for_definition(ado_client, release_definition_id):
-            ado_client.state_manager.remove_resource_from_state("Release", release.release_id)
+            # ado_client.state_manager.remove_resource_from_state("Release", release.release_id)
+            release.delete(ado_client)
         return super().delete_by_id(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_definition_id}?forceDelete=True&api-version=7.1",
@@ -215,6 +216,13 @@ class ReleaseDefinition(StateManagedResource):
             attribute_name, attribute_value, self._raw_data,  # fmt: skip
         )
 
+    @classmethod
+    def get_all(cls, ado_client: "AdoClient") -> "list[ReleaseDefinition]":  # type: ignore[override]
+        return super().get_all(
+            ado_client,
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions?api-version=7.1",
+        )  # type: ignore[return-value]
+
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
@@ -222,13 +230,6 @@ class ReleaseDefinition(StateManagedResource):
     @classmethod
     def get_all_releases_for_definition(cls, ado_client: "AdoClient", definition_id: str) -> "list[Release]":
         return Release.get_all(ado_client, definition_id)
-
-    @classmethod
-    def get_all(cls, ado_client: "AdoClient") -> "list[ReleaseDefinition]":  # type: ignore[override]
-        return super().get_all(
-            ado_client,
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions?api-version=7.1",
-        )  # type: ignore[return-value]
 
 
 # ========================================================================================================

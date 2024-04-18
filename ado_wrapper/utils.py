@@ -130,6 +130,7 @@ def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We d
 
     return locals()
 
+
 ResourceType = Literal[
     "AnnotatedTag", "Branch", "Build", "BuildDefinition", "Commit", "Environment", "Group", "MergePolicies", "MergeBranchPolicy",
     "MergePolicyDefaultReviewer", "Project", "PullRequest", "Release", "ReleaseDefinition",

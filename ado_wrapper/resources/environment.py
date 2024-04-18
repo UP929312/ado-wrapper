@@ -20,6 +20,7 @@ EnvironmentEditableAttribute = Literal["name", "description"]
 @dataclass
 class Environment(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/distributedtask/environments?view=azure-devops-rest-7.1"""
+
     environment_id: str = field(metadata={"is_id_field": True})
     name: str = field(metadata={"editable": True})
     description: str = field(metadata={"editable": True})
@@ -32,11 +33,14 @@ class Environment(StateManagedResource):
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> Environment:
         return cls(
-            str(data["id"]), data["name"], data["description"], data.get("resources", []),
+            str(data["id"]),
+            data["name"],
+            data["description"],
+            data.get("resources", []),
             Member.from_request_payload(data["createdBy"]),
             from_ado_date_string(data["createdOn"]),
-            Member.from_request_payload(data["modifiedOn"]) if data.get("modifiedBy") else None,  # fmt: skip
-            from_ado_date_string(data.get("modifiedOn")), # fmt: skip
+            Member.from_request_payload(data["modifiedOn"]) if data.get("modifiedBy") else None,
+            from_ado_date_string(data.get("modifiedOn")),
         )
 
     @classmethod
@@ -72,8 +76,7 @@ class Environment(StateManagedResource):
     @classmethod
     def get_all(cls, ado_client: AdoClient) -> list[Environment]:  # type: ignore[override]
         return super().get_all(
-            ado_client,
-            f"/{ado_client.ado_project}/_apis/distributedtask/environments?api-version=7.1-preview.1&$top=10000"
+            ado_client, f"/{ado_client.ado_project}/_apis/distributedtask/environments?api-version=7.1-preview.1&$top=10000"
         )  # type: ignore[return-value]
 
     # # ============ End of requirement set by all state managed resources ================== #

@@ -30,11 +30,13 @@ class TestTeam:
         team = Team.get_by_id(self.ado_client, existing_team_id)
         assert team.team_id == existing_team_id
 
+    @pytest.mark.get_all
     def test_get_all(self) -> None:
         teams = Team.get_all(self.ado_client)
         assert len(teams) > 1
         assert all(isinstance(team, Team) for team in teams)
 
+    @pytest.mark.get_all_by_name
     def test_get_by_name(self) -> None:
         team = Team.get_by_name(self.ado_client, existing_team_name)
         assert team is not None

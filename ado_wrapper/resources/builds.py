@@ -158,7 +158,14 @@ class Build(StateManagedResource):
             f"/{ado_client.ado_project}/_apis/build/builds?definitions={definition_id}&api-version=7.1",
         )  # type: ignore[return-value]
 
-
+    @classmethod
+    def allow_approvers(cls, ado_client: "AdoClient", build_definition_id: str, approvers_ids: str) -> None:
+        """This is a PATCH request, so it doesn't return anything."""
+        return NotImplementedError("This method is not implemented yet!")  # type: ignore[return-value]
+        # ado_client.session.patch(
+        #     f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/pipelines/pipelinePermissions/approvers?api-version=7.1",
+        #     json={"approvers": [{"id": approvers_ids}]},
+        # )
 # ========================================================================================================
 
 

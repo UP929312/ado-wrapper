@@ -6,7 +6,7 @@ from ado_wrapper.resources.commits import Commit
 from tests.setup_client import setup_client, RepoContextManager
 
 
-class Test:
+class TestAnnotatedTags:
     def setup_method(self) -> None:
         self.ado_client = setup_client()
 

@@ -94,6 +94,7 @@ class TestServiceEndpoints:
         assert len(service_endpoints) > 10
         assert all(isinstance(service_endpoint, ServiceEndpoint) for service_endpoint in service_endpoints)
 
+    @pytest.mark.get_all_by_name
     def test_get_by_name(self) -> None:
         service_endpoint_created = ServiceEndpoint.create(
             self.ado_client, "ado_wrapper-test-service-endpoint-get-by-name", "github", "https://github.com", "test-user", "test-password"

@@ -55,6 +55,17 @@ Commits/Branches are the only things that don't have a generic `get_all`
 Test state_manager.py more?
 Test __main__.py
 
+<https://stackoverflow.com/questions/77522387/approving-pipeline-stage-azure-devops-via-api>
+Auto approve via token ^
+
+<https://dev.azure.com/VFCloudEngineering/Platform/_environments>
+<https://learn.microsoft.com/en-us/azure/devops/pipelines/process/approvals?view=azure-devops&tabs=check-pass>
+<https://stackoverflow.com/a/61519132>
+Pipeline perms, currently our pipelines are approval-able by almost anyone, we should be able to set the perms
+
+Annotated Tags Get all - Not tested
+AdoUser - Get all, doesn't work with pagination
+
 -----
 
 Pylint command:

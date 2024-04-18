@@ -35,11 +35,13 @@ class TestProject:
         project = Project.get_by_id(self.ado_client, existing_project_id)
         assert project.project_id == existing_project_id
 
+    @pytest.mark.get_all
     def test_get_all(self) -> None:
         projects = Project.get_all(self.ado_client)
         assert len(projects) >= 1
         assert all(isinstance(project, Project) for project in projects)
 
+    @pytest.mark.get_all_by_name
     def test_get_by_name(self) -> None:
         project = Project.get_by_name(self.ado_client, existing_project_name)
         assert project is not None

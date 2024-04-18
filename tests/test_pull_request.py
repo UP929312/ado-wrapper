@@ -34,7 +34,6 @@ class TestPullRequest:
         assert pull_request.to_json() == PullRequest.from_json(pull_request.to_json()).to_json()
 
     @pytest.mark.create_delete
-    @pytest.mark.wip
     def test_create_delete(self) -> None:
         with RepoContextManager(self.ado_client, "create-delete-pull-request") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
@@ -56,6 +55,7 @@ class TestPullRequest:
             assert pull_request.pull_request_id == pull_request_created.pull_request_id
             pull_request_created.close(self.ado_client)
 
+    @pytest.mark.get_all
     def test_get_all(self) -> None:
         with RepoContextManager(self.ado_client, "repo-for-get-pull-requests") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")
@@ -106,6 +106,7 @@ class TestPullRequest:
             # =====
             pull_request.close(self.ado_client)
 
+    @pytest.mark.get_all
     def test_get_all_by_repo_id(self) -> None:
         with RepoContextManager(self.ado_client, "repo-for-get-all-by-repo-id") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")

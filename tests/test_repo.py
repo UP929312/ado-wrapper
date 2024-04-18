@@ -56,11 +56,13 @@ class TestRepo:
         assert repo.repo_id == repo_created.repo_id
         repo_created.delete(self.ado_client)
 
+    @pytest.mark.get_all
     def test_get_all(self) -> None:
         repos = Repo.get_all(self.ado_client)
         assert len(repos) > 10
         assert all(isinstance(repo, Repo) for repo in repos)
 
+    @pytest.mark.get_all_by_name
     def test_get_by_name(self) -> None:
         repo_created = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-get-repo-by-name")
         repo = Repo.get_by_name(self.ado_client, "ado_wrapper-test-repo-for-get-repo-by-name")

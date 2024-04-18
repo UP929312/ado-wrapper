@@ -235,7 +235,7 @@ class PullRequestComment:
 
     def __str__(self) -> str:
         return (
-            f"PullRequestComment(id={self.comment_id}, author_email=`{self.author.email}`, content=`{self.content}`, "
+            f"PullRequestComment(comment_id={self.comment_id}, author_email=`{self.author.email}`, content=`{self.content}`, "
             f"creation_date={self.creation_date}, comment_type={self.comment_type}{', is_deleted=True' if self.is_deleted else ''})"
         )
 

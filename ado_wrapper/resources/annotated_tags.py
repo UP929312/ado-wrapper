@@ -78,4 +78,4 @@ class AnnotatedTag(StateManagedResource):
         for tag in cls.get_all_by_repo(ado_client, repo_id):
             if tag.name == tag_name:
                 return tag
-        raise ValueError(f"tag {tag_name} not found")
+        raise ValueError(f"Tag {tag_name} not found")

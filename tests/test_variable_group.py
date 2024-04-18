@@ -58,6 +58,7 @@ class TestVariableGroup:
         variable_group_created.delete(self.ado_client)
         assert variable_group.variable_group_id == variable_group_created.variable_group_id
 
+    @pytest.mark.get_all
     def test_get_all(self) -> None:
         variable_group_created = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-get-all", "my_description", {"a": "b"})
         variable_groups = VariableGroup.get_all(self.ado_client)
@@ -65,6 +66,7 @@ class TestVariableGroup:
         assert len(variable_groups) >= 1
         assert all(isinstance(user, VariableGroup) for user in variable_groups)
 
+    @pytest.mark.get_all_by_name
     def test_get_by_name(self) -> None:
         variable_group_created = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-get-by-name", "my_description", {"a": "b"})
         variable_group = VariableGroup.get_by_name(self.ado_client, "ado_wrapper-test-for-get-by-name")

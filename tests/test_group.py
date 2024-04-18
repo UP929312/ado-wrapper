@@ -37,6 +37,7 @@ class TestGroup:
         group = Group.get_by_id(self.ado_client, existing_group_descriptor)
         assert group.group_descriptor == existing_group_descriptor
 
+    @pytest.mark.get_all
     def test_get_all(self) -> None:
         groups = Group.get_all(self.ado_client)
         assert len(groups) > 1

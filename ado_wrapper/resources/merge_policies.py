@@ -127,9 +127,10 @@ class MergeBranchPolicy(StateManagedResource):
         )
 
     @classmethod
-    def get_branch_policy(cls, ado_client: AdoClient, repo_id: str, branch_name: str) -> "MergeBranchPolicy":
+    def get_branch_policy(cls, ado_client: AdoClient, repo_id: str, branch_name: str) -> "MergeBranchPolicy | None":
         """Gets the latest merge requirements for a pull request."""
-        return MergePolicies.get_all_branch_policies_by_repo_id(ado_client, repo_id, branch_name)[0]  # type: ignore[index]
+        policy = MergePolicies.get_all_branch_policies_by_repo_id(ado_client, repo_id, branch_name)
+        return policy[0] if policy else None
 
     @staticmethod
     def set_branch_policy(ado_client: AdoClient, repo_id: str, minimum_approver_count: int,
@@ -251,5 +252,5 @@ class MergePolicies(StateManagedResource):
                                                    when_new_changes_are_pushed, branch_name)  # fmt: skip
 
     @staticmethod
-    def get_branch_policy(ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> MergeBranchPolicy:
+    def get_branch_policy(ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> MergeBranchPolicy | None:
         return MergeBranchPolicy.get_branch_policy(ado_client, repo_id, branch_name)

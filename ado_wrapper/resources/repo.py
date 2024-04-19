@@ -113,6 +113,8 @@ class Repo(StateManagedResource):
         except requests.exceptions.ConnectionError:
             print(f"=== Connection error, failed to download {self.repo_id}")
             return {}
+        if request.status_code == 404:
+            raise ResourceNotFound(f"Repo {self.repo_id} does not have any branches or content!")
         if request.status_code != 200:
             print(f"Error getting repo contents for {self.name} ({self.repo_id}):", request.text)
             return {}

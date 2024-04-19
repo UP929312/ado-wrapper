@@ -66,6 +66,15 @@ Pipeline perms, currently our pipelines are approval-able by almost anyone, we s
 Annotated Tags Get all - Not tested
 AdoUser - Get all, doesn't work with pagination
 
+Maybe rather than RepoContextManager, we have it work for all resources? Maybe takes any StateManaged Resource and deletes it after?
+
+TestStateManager needs some work
+
+Hmmmmm, it appears that when creating a variable group, it doesn't return the created by or modified by with enough data.
+This is different from the get_by_id, because the get_by_id gets the creator, but the creation return doesn't...
+
+Next bit: <https://dev.azure.com/VFCloudEngineering/Platform/_environments/170/security>
+
 -----
 
 Pylint command:
@@ -77,6 +86,8 @@ python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt"
 python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt" --state-file "tests/test_state.state"
 python3.11 -m ado_wrapper --refresh-resources-on-startup --creds_file "credentials.txt"
 coverage run -m pytest
-coverage html
+coverage html && open htmlcov/index.html
+
+coverage run -m pytest && coverage html && open htmlcov/index.html
 
 python3.11 -m pip install ado_wrapper --upgrade

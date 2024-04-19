@@ -29,6 +29,7 @@ class VariableGroup(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "VariableGroup":
+        # print("\n", data)
         created_by = Member.from_request_payload(data["createdBy"])
         modified_by = Member.from_request_payload(data["modifiedBy"])
         return cls(str(data["id"]), data["name"], data.get("description", ""),

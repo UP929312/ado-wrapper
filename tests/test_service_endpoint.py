@@ -52,8 +52,9 @@ class TestServiceEndpoints:
             password="test-password",
         )
         assert isinstance(service_endpoint, ServiceEndpoint)
+        assert service_endpoint.to_json() == ServiceEndpoint.from_json(service_endpoint.to_json()).to_json()
         service_endpoint.delete(self.ado_client)
-
+        # ---
         service_endpoint_token = ServiceEndpoint.create(
             self.ado_client,
             "ado_wrapper-test-service-endpoint-token",
@@ -62,6 +63,7 @@ class TestServiceEndpoints:
             access_token="this-is-the-token",
         )
         assert isinstance(service_endpoint_token, ServiceEndpoint)
+        assert service_endpoint_token.to_json() == ServiceEndpoint.from_json(service_endpoint_token.to_json()).to_json()
         service_endpoint_token.delete(self.ado_client)
 
     @pytest.mark.update

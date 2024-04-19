@@ -77,8 +77,9 @@ class StateManagedResource:
 
     @classmethod
     def create(
-        cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None
+        cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None, refetch: bool = False
     ) -> "StateManagedResource | PlannedStateManagedResource":
+        """When creating, often the response doesn't contain all the data, refetching does a .get_by_id() after creation."""
         if ado_client.plan_mode:
             return PlannedStateManagedResource.create(cls, ado_client, url, payload)
         if not url.startswith("https://"):
@@ -91,6 +92,8 @@ class StateManagedResource:
                 raise ResourceAlreadyExists(f"The {cls.__name__} with that identifier already exist!")
             raise ValueError(f"Error creating {cls.__name__}: {request.status_code} - {request.text}")
         resource = cls.from_request_payload(request.json())
+        if refetch:
+            resource = cls.get_by_id(ado_client, extract_id(resource))
         ado_client.state_manager.add_resource_to_state(cls.__name__, extract_id(resource), resource.to_json())  # type: ignore[arg-type]
         return resource
 

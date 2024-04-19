@@ -182,6 +182,9 @@ class MergePolicies(StateManagedResource):
                 # Build Validation {'buildDefinitionId': 4, 'queueOnSourceUpdateOnly': True, 'manualQueueOnly': False, 'displayName': None, 'validDuration': 720.0
                 if "buildDefinitionId" in settings:
                     continue
+                # Comments Required
+                if policy.get("type", {"displayName": ""})["displayName"] == "Comment requirements":
+                    continue
                 # Automatically included reviewers
                 if "requiredReviewerIds" in settings:
                     all_policies.append(MergePolicyDefaultReviewer.from_request_payload(policy))

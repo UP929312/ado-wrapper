@@ -5,8 +5,9 @@ import time
 
 from ado_wrapper.utils import from_ado_date_string
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.resources.users import Member
+from ado_wrapper.resources.environment import Environment, PipelineAuthorisation
 from ado_wrapper.resources.repo import BuildRepository
+from ado_wrapper.resources.users import Member
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -159,14 +160,9 @@ class Build(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod
-    def allow_approvers(cls, ado_client: "AdoClient", build_definition_id: str, approvers_ids: str) -> None:
-        return NotImplementedError("This method is not implemented yet!")  # type: ignore[return-value]
-        # https://dev.azure.com/VFCloudEngineering/Platform/_environments/170/security
-        # https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/pipelines/pipelinePermissions/environment/170
-        # ado_client.session.patch(
-        #     f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/pipelines/pipelinePermissions/approvers?api-version=7.1",
-        #     json={"approvers": [{"id": approvers_ids}]},
-        # )
+    def allow_on_environment(cls, ado_client: "AdoClient", definition_id: str, environment_id: str) -> PipelineAuthorisation:
+        environment = Environment.get_by_id(ado_client, environment_id)
+        return environment.add_pipeline_permission(ado_client, definition_id)
 
 # ========================================================================================================
 

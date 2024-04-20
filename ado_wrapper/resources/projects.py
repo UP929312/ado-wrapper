@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
-from datetime import datetime
 from dataclasses import dataclass, field
+from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 from ado_wrapper.state_managed_abc import StateManagedResource
 
@@ -19,18 +19,18 @@ class Project(StateManagedResource):
     last_update_time: datetime | None = None
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "Project":
+    def from_request_payload(cls, data: dict[str, Any]) -> Project:
         return cls(data["id"], data["name"], data.get("description", ""), data.get("lastUpdateTime"))
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, project_id: str) -> "Project":
+    def get_by_id(cls, ado_client: AdoClient, project_id: str) -> Project:
         return super().get_by_url(
             ado_client,
             f"/_apis/projects/{project_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, project_name: str, project_description: str) -> "Project":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, project_name: str, project_description: str) -> Project:  # type: ignore[override]
         raise NotImplementedError
 
     @staticmethod
@@ -38,7 +38,7 @@ class Project(StateManagedResource):
         raise NotImplementedError
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list["Project"]:  # type: ignore[override]
+    def get_all(cls, ado_client: AdoClient) -> list[Project]:  # type: ignore[override]
         return super().get_all(
             ado_client,
             "/_apis/projects?api-version=7.1",
@@ -49,5 +49,5 @@ class Project(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, project_name: str) -> "Project | None":
+    def get_by_name(cls, ado_client: AdoClient, project_name: str) -> Project | None:
         return cls.get_by_abstract_filter(ado_client, lambda project: project.name == project_name)  # type: ignore[return-value, attr-defined]

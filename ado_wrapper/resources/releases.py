@@ -1,10 +1,10 @@
-from datetime import datetime
 from dataclasses import dataclass, field
-from typing import Any, Literal, TYPE_CHECKING
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, Literal
 
+from ado_wrapper.resources.users import Member
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import from_ado_date_string
-from ado_wrapper.resources.users import Member
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -102,7 +102,7 @@ class Release(StateManagedResource):
     def from_request_payload(cls, data: dict[str, Any]) -> "Release":
         created_by = Member.from_request_payload(data["createdBy"])
         return cls(str(data["id"]), data["name"], data["status"], from_ado_date_string(data["createdOn"]), created_by, data["description"],
-                   data.get("variables", None), data.get("variableGroups", None), data["keepForever"])  # fmt: skip
+                   data.get("variables"), data.get("variableGroups"), data["keepForever"])  # fmt: skip
 
     @classmethod  # TO-DO: Test
     def get_by_id(cls, ado_client: "AdoClient", release_id: str) -> "Release":
@@ -177,7 +177,7 @@ class ReleaseDefinition(StateManagedResource):
     def from_request_payload(cls, data: dict[str, Any]) -> "ReleaseDefinition":
         created_by = Member.from_request_payload(data["createdBy"])
         return cls(str(data["id"]), data["name"], data.get("description") or "", created_by, from_ado_date_string(data["createdOn"]),
-                   data["releaseNameFormat"], data["variableGroups"], data.get("isDeleted", False), data.get("variables", None),
+                   data["releaseNameFormat"], data["variableGroups"], data.get("isDeleted", False), data.get("variables"),
                    data.get("environments", []), data.get("environments", [{"deployPhases": [{"deploymentInput": {"queueId": "1"}}]}]
                             )[0]["deployPhases"][0]["deploymentInput"]["queueId"], data.get("revision", "1"), data)  # fmt: skip
 

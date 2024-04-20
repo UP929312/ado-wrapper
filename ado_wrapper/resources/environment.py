@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Literal, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Literal
 
-from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member
+from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import from_ado_date_string
 
 if TYPE_CHECKING:
@@ -88,11 +88,16 @@ class Environment(StateManagedResource):
     def get_by_name(cls, ado_client: AdoClient, name: str) -> Environment:
         return cls.get_by_abstract_filter(ado_client, lambda x: x.name == name)  # type: ignore[return-value, attr-defined]
 
+    # # =============== Pipeline Permissions ===================== #
+
     def get_pipeline_permissions(self, ado_client: AdoClient) -> dict[str, Any]:
         return PipelineAuthorisation.get_all_for_environment(ado_client, self.environment_id)  # type: ignore[return-value]
 
     def add_pipeline_permission(self, ado_client: AdoClient, pipeline_id: str) -> PipelineAuthorisation:
         return PipelineAuthorisation.create(ado_client, self.environment_id, pipeline_id)
+
+    def remove_pipeline_permissions(self, ado_client: AdoClient, pipeline_id: str) -> None:
+        PipelineAuthorisation.delete_by_id(ado_client, self.environment_id, pipeline_id)
 
 @dataclass
 class PipelineAuthorisation:
@@ -113,16 +118,16 @@ class PipelineAuthorisation:
         )
 
     @classmethod
-    def get_all_for_environment(cls, ado_client: AdoClient, environment_id: str) -> list[PipelineAuthorisation]:  # type: ignore[override]
+    def get_all_for_environment(cls, ado_client: AdoClient, environment_id: str) -> list[PipelineAuthorisation]:
         request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/pipelines/pipelinePermissions/environment/{environment_id}",
         ).json()
         return [cls.from_request_payload(x, request["resource"]["id"]) for x in request["pipelines"]]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, environment_id: str, pipeline_id: str, authorized: bool=True) -> PipelineAuthorisation:
+    def create(cls, ado_client: AdoClient, environment_id: str, pipeline_id: str, authorized: bool = True) -> PipelineAuthorisation:
         all_existing = cls.get_all_for_environment(ado_client, environment_id)
-        payload = {"pipelines": [{"id": x.pipeline_authorisation_id, "authorized": True} for x in all_existing]}
+        payload: dict[str, Any] = {"pipelines": [{"id": x.pipeline_authorisation_id, "authorized": True} for x in all_existing]}
         payload["pipelines"] = [x for x in payload["pipelines"] if x["id"] != pipeline_id]  # Remove existing entry if it exists
         payload["pipelines"].append({"id": pipeline_id, "authorized": authorized})
         payload |= {"resource": {"type": "environment", "id": environment_id}}
@@ -133,14 +138,19 @@ class PipelineAuthorisation:
         )
         if request.status_code == 404:
             raise ValueError(f"Pipeline {pipeline_id} not found.")
+        if not request.json()["pipelines"]:
+            raise ValueError(f"Pipeline {pipeline_id} not found.")
         created_pipeline_dict = max(request.json()["pipelines"], key=lambda x: x["authorizedOn"])
         return cls.from_request_payload(created_pipeline_dict, environment_id)
 
-    def update(self, ado_client: AdoClient, authorized: bool) -> None:  # type: ignore[override]
+    def update(self, ado_client: AdoClient, authorized: bool) -> None:
         self.delete_by_id(ado_client, self.environment_id, self.pipeline_authorisation_id)
         new = self.create(ado_client, self.environment_id, self.pipeline_authorisation_id, authorized)
         self.__dict__.update(new.__dict__)
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, environment_id: str, pipeline_authorisation_id: str) -> None:
-        cls.create(ado_client, environment_id, pipeline_authorisation_id, False)
+        try:
+            cls.create(ado_client, environment_id, pipeline_authorisation_id, False)
+        except ValueError:
+            pass

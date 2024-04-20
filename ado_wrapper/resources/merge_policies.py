@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Literal, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Literal
 
-from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Reviewer
+from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import from_ado_date_string
 
 if TYPE_CHECKING:
@@ -113,7 +113,7 @@ class MergeBranchPolicy(StateManagedResource):
     is_inherited: bool = field(default=False, repr=False)
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any], is_inherited: bool) -> "MergeBranchPolicy":  # type: ignore[override]
+    def from_request_payload(cls, data: dict[str, Any], is_inherited: bool) -> MergeBranchPolicy:  # type: ignore[override]
         settings = data["settings"]
         when_new_changes_are_pushed = merge_complete_name_mapping[
             ([x for x in merge_complete_name_mapping if settings.get(x, False)] or ["do_nothing"])[0]
@@ -127,7 +127,7 @@ class MergeBranchPolicy(StateManagedResource):
         )
 
     @classmethod
-    def get_branch_policy(cls, ado_client: AdoClient, repo_id: str, branch_name: str) -> "MergeBranchPolicy | None":
+    def get_branch_policy(cls, ado_client: AdoClient, repo_id: str, branch_name: str) -> MergeBranchPolicy | None:
         """Gets the latest merge requirements for a pull request."""
         policy = MergePolicies.get_all_branch_policies_by_repo_id(ado_client, repo_id, branch_name)
         return policy[0] if policy else None
@@ -170,7 +170,7 @@ class MergeBranchPolicy(StateManagedResource):
 @dataclass
 class MergePolicies(StateManagedResource):
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> list["MergePolicyDefaultReviewer | MergeBranchPolicy"] | None:  # type: ignore[override]
+    def from_request_payload(cls, data: dict[str, Any]) -> list[MergePolicyDefaultReviewer | MergeBranchPolicy] | None:  # type: ignore[override]
         """Used internally to get a list of all policies."""
         policy_groups: dict[str, Any] = data["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["policyGroups"] or {}  # fmt: skip
         all_policies = []
@@ -203,7 +203,7 @@ class MergePolicies(StateManagedResource):
         return all_policies or None  # type: ignore[return-value]
 
     @classmethod
-    def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list["MergePolicyDefaultReviewer | MergeBranchPolicy"] | None:  # fmt: skip
+    def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list[MergePolicyDefaultReviewer | MergeBranchPolicy] | None:  # fmt: skip
         payload = {"contributionIds": ["ms.vss-code-web.branch-policies-data-provider"], "dataProviderContext": {"properties": {
             "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}", "sourcePage": {"routeValues": {"project": ado_client.ado_project}}}}}  # fmt: skip
         request = ado_client.session.post(

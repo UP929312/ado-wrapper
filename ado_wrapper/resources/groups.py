@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from ado_wrapper.state_managed_abc import StateManagedResource
 
@@ -21,19 +21,19 @@ class Group(StateManagedResource):
     # group_members: list[GroupMember] = field(default_factory=list)
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, str]) -> "Group":
+    def from_request_payload(cls, data: dict[str, str]) -> Group:
         return cls(data["url"].split("/_apis/Graph/Groups/", maxsplit=1)[1], data["displayName"], data.get("description", ""),
                    data["domain"].removeprefix("vstfs:///Classification/TeamProject/"), data["originId"])  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, group_descriptor: str) -> "Group":
+    def get_by_id(cls, ado_client: AdoClient, group_descriptor: str) -> Group:
         return super().get_by_url(
             ado_client,  # Preview required
             f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/groups/{group_descriptor}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, name: str) -> "Group":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, name: str) -> Group:  # type: ignore[override]
         raise NotImplementedError
 
     @classmethod
@@ -41,7 +41,7 @@ class Group(StateManagedResource):
         raise NotImplementedError
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list["Group"]:  # type: ignore[override]
+    def get_all(cls, ado_client: AdoClient) -> list[Group]:  # type: ignore[override]
         return super().get_all(
             ado_client,  # Preview required
             f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/groups?api-version=7.1-preview.1",
@@ -52,7 +52,7 @@ class Group(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, group_name: str) -> "Group | None":
+    def get_by_name(cls, ado_client: AdoClient, group_name: str) -> Group | None:
         return cls.get_by_abstract_filter(ado_client, lambda group: group.name == group_name)  # type: ignore[return-value, attr-defined]
 
     # @classmethod

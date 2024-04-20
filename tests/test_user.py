@@ -1,7 +1,12 @@
 import pytest
 
 from ado_wrapper.resources.users import AdoUser
-from tests.setup_client import setup_client, existing_user_name, existing_user_email, existing_user_descriptor
+from tests.setup_client import (
+    existing_user_descriptor,
+    existing_user_email,
+    existing_user_name,
+    setup_client,
+)
 
 
 class TestAdoUser:

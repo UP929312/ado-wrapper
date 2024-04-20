@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Literal, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Literal
 
-from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member
+from ado_wrapper.state_managed_abc import StateManagedResource
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -44,7 +44,7 @@ class ServiceEndpoint(StateManagedResource):
         )
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> "ServiceEndpoint":
+    def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> ServiceEndpoint:
         return super().get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/serviceendpoint/endpoints/{repo_id}",
@@ -94,7 +94,7 @@ class ServiceEndpoint(StateManagedResource):
         )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list["ServiceEndpoint"]:  # type: ignore[override]
+    def get_all(cls, ado_client: AdoClient) -> list[ServiceEndpoint]:  # type: ignore[override]
         return super().get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/serviceendpoint/endpoints?api-version=7.1",

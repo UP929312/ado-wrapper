@@ -1,9 +1,9 @@
 import pytest
 
-from ado_wrapper.resources.repo import Repo
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.pull_requests import PullRequest, PullRequestCommentThread
-from tests.setup_client import setup_client, RepoContextManager
+from ado_wrapper.resources.repo import Repo
+from tests.setup_client import RepoContextManager, setup_client
 
 
 class TestPullRequest:

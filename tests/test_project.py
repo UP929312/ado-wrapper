@@ -1,7 +1,7 @@
 import pytest
 
 from ado_wrapper.resources.projects import Project
-from tests.setup_client import setup_client, existing_project_name, existing_project_id
+from tests.setup_client import existing_project_id, existing_project_name, setup_client
 
 
 class TestProject:

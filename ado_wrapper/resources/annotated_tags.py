@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-import json
-
-from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member
+from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import from_ado_date_string
 
 if TYPE_CHECKING:
@@ -25,20 +24,20 @@ class AnnotatedTag(StateManagedResource):
     created_at: datetime
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "AnnotatedTag":
+    def from_request_payload(cls, data: dict[str, Any]) -> AnnotatedTag:
         member = Member(data["taggedBy"]["name"], data["taggedBy"]["email"], "UNKNOWN")
         created_at = datetime.fromisoformat(data["taggedBy"]["date"])
         return cls(data["objectId"], data["name"], data["message"], member, created_at)
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, repo_id: str, branch_id: str) -> "AnnotatedTag":  # type: ignore[override]
+    def get_by_id(cls, ado_client: AdoClient, repo_id: str, branch_id: str) -> AnnotatedTag:  # type: ignore[override]
         return super().get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/annotatedtags/{branch_id}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, repo_id: str, name: str, message: str, object_id: str) -> "AnnotatedTag":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, repo_id: str, name: str, message: str, object_id: str) -> AnnotatedTag:  # type: ignore[override]
         return super().create(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/annotatedTags?api-version=7.1-preview.1",
@@ -55,7 +54,7 @@ class AnnotatedTag(StateManagedResource):
     # # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all_by_repo(cls, ado_client: AdoClient, repo_name: str) -> list["AnnotatedTag"]:
+    def get_all_by_repo(cls, ado_client: AdoClient, repo_name: str) -> list[AnnotatedTag]:
         """Unofficial API."""
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_git/{repo_name}/tags/?api-version=7.1-preview.1"
@@ -74,7 +73,7 @@ class AnnotatedTag(StateManagedResource):
         ]
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, repo_id: str, tag_name: str) -> "AnnotatedTag | None":
+    def get_by_name(cls, ado_client: AdoClient, repo_id: str, tag_name: str) -> AnnotatedTag | None:
         for tag in cls.get_all_by_repo(ado_client, repo_id):
             if tag.name == tag_name:
                 return tag

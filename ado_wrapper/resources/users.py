@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Literal, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.state_managed_abc import StateManagedResource
 
@@ -39,19 +39,19 @@ class AdoUser(StateManagedResource):
         return f"{self.display_name} ({self.email})"
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, str]) -> "AdoUser":
+    def from_request_payload(cls, data: dict[str, str]) -> AdoUser:
         return cls(data["descriptor"], data["displayName"], data["mailAddress"].removeprefix("vstfs:///Classification/TeamProject/"),
                    data["origin"], data["originId"])  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, descriptor_id: str) -> "AdoUser":
+    def get_by_id(cls, ado_client: AdoClient, descriptor_id: str) -> AdoUser:
         return super().get_by_url(
             ado_client,  # Preview required
             f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users/{descriptor_id}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, member_name: str, member_email: str) -> "AdoUser":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, member_name: str, member_email: str) -> AdoUser:  # type: ignore[override]
         raise NotImplementedError("Creating a new user is not supported")
 
     @classmethod
@@ -59,7 +59,7 @@ class AdoUser(StateManagedResource):
         raise NotImplementedError("Deleting a user is not supported")
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list["AdoUser"]:  # type: ignore[override]
+    def get_all(cls, ado_client: AdoClient) -> list[AdoUser]:  # type: ignore[override]
         return super().get_all(
             ado_client,  # Preview required
             f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users?api-version=7.1-preview.1",
@@ -70,14 +70,14 @@ class AdoUser(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_email(cls, ado_client: AdoClient, member_email: str) -> "AdoUser":
+    def get_by_email(cls, ado_client: AdoClient, member_email: str) -> AdoUser:
         user: AdoUser = cls.get_by_abstract_filter(ado_client, lambda user: user.email == member_email)  # type: ignore[attr-defined, assignment]
         if user is None:
             raise ValueError(f"Member with email {member_email} not found")
         return user
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, member_name: str) -> "AdoUser | None":
+    def get_by_name(cls, ado_client: AdoClient, member_name: str) -> AdoUser | None:
         return cls.get_by_abstract_filter(ado_client, lambda user: user.display_name == member_name)  # type: ignore[return-value, attr-defined]
 
 
@@ -95,18 +95,18 @@ class Member(StateManagedResource):
     member_id: str = field(metadata={"is_id_field": True}, repr=False)
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "Member":
+    def from_request_payload(cls, data: dict[str, Any]) -> Member:
         # displayName, uniqueName/mailAddress, id/originId
         # This gets returned slightly differently from different APIs
         return cls(data["displayName"], data.get("uniqueName") or data.get("mailAddress", "UNKNOWN"),  # type: ignore[arg-type]
                    data.get("id") or data["originId"])  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, member_id: str) -> "Member":
+    def get_by_id(cls, ado_client: AdoClient, member_id: str) -> Member:
         raise NotImplementedError("Getting a member by ID is not supported")
 
     @classmethod
-    def create(cls, ado_client: AdoClient, member_name: str, member_email: str) -> "Member":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, member_name: str, member_email: str) -> Member:  # type: ignore[override]
         raise NotImplementedError("Creating a new member is not supported")
 
     @classmethod
@@ -133,7 +133,7 @@ class TeamMember(Member):
         return f"{super().__str__().removesuffix(')')}, team_admin={self.is_team_admin})"
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "TeamMember":
+    def from_json(cls, data: dict[str, Any]) -> TeamMember:
         return cls(data["name"], data["email"], data["id"], data["is_team_admin"])
 
     def to_json(self) -> dict[str, Any]:
@@ -145,7 +145,7 @@ class TeamMember(Member):
         }
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "TeamMember":
+    def from_request_payload(cls, data: dict[str, Any]) -> TeamMember:
         return cls(data["identity"]["displayName"], data["identity"]["uniqueName"], data["identity"]["id"], data.get("isTeamAdmin", False))
 
 
@@ -178,11 +178,11 @@ class Reviewer(Member):
         }
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "Reviewer":
+    def from_json(cls, data: dict[str, Any]) -> Reviewer:
         return cls(data["name"], data["email"], data["id"], data["vote"], data["isRequired"])
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "Reviewer":
+    def from_request_payload(cls, data: dict[str, Any]) -> Reviewer:
         return cls(data["displayName"], data["uniqueName"], data["id"], data["vote"], data.get("isRequired", False))
 
 

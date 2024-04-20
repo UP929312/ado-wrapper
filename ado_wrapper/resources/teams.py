@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import TeamMember
+from ado_wrapper.state_managed_abc import StateManagedResource
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -24,11 +24,11 @@ class Team(StateManagedResource):
         return f"{self.name} ({self.team_id}" + (", ".join([str(member) for member in self.team_members])) + ")"
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, str]) -> "Team":
+    def from_request_payload(cls, data: dict[str, str]) -> Team:
         return cls(data["id"], data["name"], data.get("description", ""), [])
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, team_id: str) -> "Team":
+    def get_by_id(cls, ado_client: AdoClient, team_id: str) -> Team:
         resource: Team = super().get_by_url(
             ado_client,
             f"/_apis/projects/{ado_client.ado_project}/teams/{team_id}?$expandIdentity={True}&api-version=7.1-preview.1",
@@ -37,7 +37,7 @@ class Team(StateManagedResource):
         return resource
 
     @classmethod
-    def create(cls, ado_client: AdoClient, name: str, description: str) -> "Team":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, name: str, description: str) -> Team:  # type: ignore[override]
         raise NotImplementedError
         # request = ado_client.session.post(f"/_apis/teams?api-version=7.1", json={"name": name, "description": description}).json()
         # return cls.from_request_payload(request)
@@ -50,7 +50,7 @@ class Team(StateManagedResource):
         raise NotImplementedError
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list["Team"]:  # type: ignore[override]
+    def get_all(cls, ado_client: AdoClient) -> list[Team]:  # type: ignore[override]
         return super().get_all(
             ado_client,
             "/_apis/teams?api-version=7.1-preview.2",
@@ -61,10 +61,10 @@ class Team(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, team_name: str) -> "Team | None":
+    def get_by_name(cls, ado_client: AdoClient, team_name: str) -> Team | None:
         return cls.get_by_abstract_filter(ado_client, lambda team: team.name == team_name)  # type: ignore[return-value, attr-defined]
 
-    def get_members(self, ado_client: AdoClient) -> list["TeamMember"]:
+    def get_members(self, ado_client: AdoClient) -> list[TeamMember]:
         request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{ado_client.ado_project}/teams/{self.team_id}/members?api-version=7.1-preview.2",
         ).json()

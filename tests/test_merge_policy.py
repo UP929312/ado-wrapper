@@ -1,8 +1,7 @@
 import pytest
 
 from ado_wrapper.resources.merge_policies import MergePolicies
-
-from tests.setup_client import setup_client, existing_user_id, RepoContextManager
+from tests.setup_client import RepoContextManager, existing_user_id, setup_client
 
 
 class TestMergePolicy:

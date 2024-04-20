@@ -2,8 +2,7 @@ import pytest
 
 from ado_wrapper.resources.branches import Branch
 from ado_wrapper.resources.commits import Commit
-
-from tests.setup_client import setup_client, RepoContextManager
+from tests.setup_client import RepoContextManager, setup_client
 
 
 class TestBranch:

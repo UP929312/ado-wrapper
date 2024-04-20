@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any, Literal, TYPE_CHECKING
 from dataclasses import dataclass, field
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, Literal
 
-from ado_wrapper.utils import from_ado_date_string
-from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member, Reviewer
+from ado_wrapper.state_managed_abc import StateManagedResource
+from ado_wrapper.utils import from_ado_date_string
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -40,7 +40,7 @@ class PullRequest(StateManagedResource):
         return f"PullRequest(id={self.pull_request_id}, title={self.title}, repo_name={self.repo.name}, author={self.author!s}, status={self.merge_status})"
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "PullRequest":
+    def from_request_payload(cls, data: dict[str, Any]) -> PullRequest:
         from ado_wrapper.resources.repo import Repo  # Circular import
 
         author = Member.from_request_payload(data["createdBy"])
@@ -51,7 +51,7 @@ class PullRequest(StateManagedResource):
                    from_ado_date_string(data.get("closedDate")), data["isDraft"], data.get("mergeStatus", "notSet"), reviewers)  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> "PullRequest":
+    def get_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> PullRequest:
         return super().get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/pullrequests/{pull_request_id}?api-version=7.1",
@@ -61,7 +61,7 @@ class PullRequest(StateManagedResource):
     def create(  # type: ignore[override]
         cls, ado_client: AdoClient, repo_id: str, from_branch_name: str, pull_request_title: str,
         pull_request_description: str, is_draft: bool = False
-    ) -> "PullRequest":  # fmt: skip
+    ) -> PullRequest:  # fmt: skip
         """Takes a list of reviewer ids, a branch to pull into main, and an option to start as draft"""
         # https://stackoverflow.com/questions/64655138/add-reviewers-to-azure-devops-pull-request-in-api-call   <- Why we can't allow reviewers from the get go
         # , "reviewers": [{"id": reviewer_id for reviewer_id in reviewer_ids}]
@@ -179,10 +179,10 @@ class PullRequestCommentThread(StateManagedResource):
 
     thread_id: str
     status: str | None
-    comments: list["PullRequestComment"]
+    comments: list[PullRequestComment]
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "PullRequestCommentThread":
+    def from_request_payload(cls, data: dict[str, Any]) -> PullRequestCommentThread:
         comments = [PullRequestComment.from_request_payload(comment) for comment in data["comments"]]
         return cls(data["id"], data.get("status"), comments)
 
@@ -194,7 +194,7 @@ class PullRequestCommentThread(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str, content: str) -> "PullRequest":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str, content: str) -> PullRequest:  # type: ignore[override]
         return super().create(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads?api-version=7.1",
@@ -240,7 +240,7 @@ class PullRequestComment:
         )
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "PullRequestComment":
+    def from_request_payload(cls, data: dict[str, Any]) -> PullRequestComment:
         author = Member.from_request_payload(data["author"])
         liked_users = [Member.from_request_payload(user) for user in data.get("usersLiked", [])]
         return cls(str(data["id"]), str(data["parentCommentId"]), data.get("content"), author, from_ado_date_string(data["publishedDate"]),

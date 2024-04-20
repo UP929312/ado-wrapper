@@ -3,9 +3,14 @@ from datetime import datetime
 import pytest
 
 from ado_wrapper.resources.builds import Build, BuildDefinition
-from ado_wrapper.resources.users import Member
 from ado_wrapper.resources.commits import Commit
-from tests.setup_client import setup_client, email, existing_agent_pool_id, RepoContextManager
+from ado_wrapper.resources.users import Member
+from tests.setup_client import (
+    RepoContextManager,
+    email,
+    existing_agent_pool_id,
+    setup_client,
+)
 
 BUILD_YAML_FILE = """---
 trigger:

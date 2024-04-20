@@ -4,7 +4,8 @@ import pytest
 
 from ado_wrapper.resources.releases import Release, ReleaseDefinition
 from ado_wrapper.resources.users import Member
-from tests.setup_client import setup_client, existing_agent_pool_id
+from ado_wrapper.utils import ResourceNotFound
+from tests.setup_client import existing_agent_pool_id, setup_client
 
 
 class TestRelease:
@@ -39,7 +40,7 @@ class TestRelease:
         assert len(Release.get_all(self.ado_client, release_definition.release_definition_id)) == 1
 
         release_definition.delete(self.ado_client)  # Should also delete the release
-        with pytest.raises(Exception):
+        with pytest.raises(ResourceNotFound):
             Release.get_by_id(self.ado_client, release.release_id)
 
     @pytest.mark.get_by_id

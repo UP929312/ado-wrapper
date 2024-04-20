@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any, TYPE_CHECKING, Literal
 from dataclasses import dataclass, field
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, Literal
 
-from ado_wrapper.utils import from_ado_date_string
-from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member
+from ado_wrapper.state_managed_abc import StateManagedResource
+from ado_wrapper.utils import from_ado_date_string
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -28,7 +28,7 @@ class VariableGroup(StateManagedResource):
     modified_on: datetime | None = None
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "VariableGroup":
+    def from_request_payload(cls, data: dict[str, Any]) -> VariableGroup:
         # print("\n", data)
         created_by = Member.from_request_payload(data["createdBy"])
         modified_by = Member.from_request_payload(data["modifiedBy"])
@@ -37,7 +37,7 @@ class VariableGroup(StateManagedResource):
                    from_ado_date_string(data["createdOn"]), created_by, modified_by, from_ado_date_string(data.get("modifiedOn")))  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> "VariableGroup":
+    def get_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> VariableGroup:
         return super().get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/distributedtask/variablegroups/{variable_group_id}?api-version=7.1",
@@ -46,7 +46,7 @@ class VariableGroup(StateManagedResource):
     @classmethod
     def create(  # type: ignore[override]
         cls, ado_client: AdoClient, variable_group_name: str, variable_group_description: str, variables: dict[str, str]  # fmt: skip
-    ) -> "VariableGroup":
+    ) -> VariableGroup:
         payload = {
             "name": variable_group_name,
             "description": variable_group_description,
@@ -87,7 +87,7 @@ class VariableGroup(StateManagedResource):
         )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list["VariableGroup"]:  # type: ignore[override]
+    def get_all(cls, ado_client: AdoClient) -> list[VariableGroup]:  # type: ignore[override]
         return super().get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/distributedtask/variablegroups?api-version=7.1",
@@ -98,5 +98,5 @@ class VariableGroup(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, name: str) -> "VariableGroup | None":
+    def get_by_name(cls, ado_client: AdoClient, name: str) -> VariableGroup | None:
         return cls.get_by_abstract_filter(ado_client, lambda variable_group: variable_group.name == name)  # type: ignore[return-value, attr-defined]

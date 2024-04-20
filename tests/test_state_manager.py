@@ -1,8 +1,9 @@
 # from ado_wrapper.resources.variable_groups import VariableGroup
 # from ado_wrapper.resources.service_endpoint import ServiceEndpoint
-from tests.setup_client import setup_client, RepoContextManager
+from tests.setup_client import RepoContextManager, setup_client
 
 # import pytest
+
 
 class TestStateManager:
     def setup_method(self) -> None:

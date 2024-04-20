@@ -30,11 +30,8 @@ Script plan mode?
 
 Teams.get_members(recursive=True)  Not sure that Teams are the right thing, maybe Groups? Idk
 
-<https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict>
-This might allow us to remove "as_json"? Problem is the other way, it won't know to convert things back
-
-For state, have metadata, and lifecycle policies, split each id into id -> {data, lifecyclepolicy, metadata: {created_timestamp, run_id}}
 We can maybe use run id to delete all by run id? "prevent_destroy", "ignore_changes"
+MORE WORK ON LIFECYCLE!
 
 We need to do something differently with creating stuff, currently if you run the same script twice, it'll just error because the
 object already exists, so the creator in SMR should check try, and if it fails, update the already existing one?
@@ -58,25 +55,25 @@ Test __main__.py
 <https://stackoverflow.com/questions/77522387/approving-pipeline-stage-azure-devops-via-api>
 Auto approve via token ^
 
-<https://dev.azure.com/VFCloudEngineering/Platform/_environments>
 <https://learn.microsoft.com/en-us/azure/devops/pipelines/process/approvals?view=azure-devops&tabs=check-pass>
 <https://stackoverflow.com/a/61519132>
 Pipeline perms, currently our pipelines are approval-able by almost anyone, we should be able to set the perms
 
-Annotated Tags Get all - Not tested
 AdoUser - Get all, doesn't work with pagination
 
 Maybe rather than RepoContextManager, we have it work for all resources? Maybe takes any StateManaged Resource and deletes it after?
 
 TestStateManager needs some work
-
 Hmmmmm, it appears that when creating a variable group, it doesn't return the created by or modified by with enough data.
 This is different from the get_by_id, because the get_by_id gets the creator, but the creation return doesn't...
 
-Next bit: <https://dev.azure.com/VFCloudEngineering/Platform/_environments/170/security>
+build_defs/allow_on_environment Needs testing
 
-PipelineAuthorisation Needs testing
-build_defs/allow_on_environment too
+The problem we have with the whole "create twice" instead of update can be fixed.
+The state stores the repo id, but it also stores the repo *name*, which is coincidentally also unique.
+Most resources have names, or some definining values which has to be unique, e.g. name (in repos, variable groups, etc).
+Tags are a problem, branches a bit too, build definitions too, the problem is that we want to be able to change things and
+have the create update, rather than create, but if the data is different, how do we link them?
 
 -----
 

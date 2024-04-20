@@ -1,10 +1,10 @@
 import json
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 from uuid import uuid4
-from typing import Any, TypedDict, TYPE_CHECKING, Literal
 
-from ado_wrapper.utils import DeletionFailed, get_resource_variables, ResourceType
+from ado_wrapper.utils import DeletionFailed, ResourceType, get_resource_variables
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -19,7 +19,7 @@ class StateFileType(TypedDict):
 
 EMPTY_STATE: StateFileType = {
     "state_file_version": STATE_FILE_VERSION,
-    "resources": {resource: {} for resource in get_resource_variables().keys()},  # type: ignore[misc]
+    "resources": {resource: {} for resource in get_resource_variables()},  # type: ignore[misc]
 }
 
 
@@ -38,7 +38,7 @@ class StateManager:
     def load_state(self) -> StateFileType:
         if self.state_file_name is None:
             return self.state
-        with open(self.state_file_name, "r", encoding="utf-8") as state_file:
+        with open(self.state_file_name, encoding="utf-8") as state_file:
             try:
                 return json.load(state_file)  # type: ignore[no-any-return]
             except json.JSONDecodeError as exc:
@@ -128,7 +128,9 @@ class StateManager:
         return all_states
 
     def load_all_resources_with_prefix_into_state(self, prefix: str) -> None:
-        from ado_wrapper.resources import VariableGroup, Repo, ReleaseDefinition, BuildDefinition, ServiceEndpoint  # type: ignore[attr-defined]
+        from ado_wrapper.resources import (  # type: ignore[attr-defined]
+            BuildDefinition, ReleaseDefinition, Repo, ServiceEndpoint, VariableGroup,
+        )
 
         for repo in Repo.get_all(self.ado_client):
             if repo.name.startswith(prefix):
@@ -149,9 +151,3 @@ class StateManager:
         for service_endpoint in ServiceEndpoint.get_all(self.ado_client):
             if service_endpoint.name.startswith(prefix):
                 self.ado_client.state_manager.import_into_state("ServiceEndpoint", service_endpoint.service_endpoint_id)
-
-    # Unused
-    # def all_resources(self) -> Generator[tuple[ResourceType, str], None, None]:
-    #     for resource_type in self.load_state()["resources"]:
-    #         for resource_id in self.load_state()["resources"][resource_type]:
-    #             yield resource_type, resource_id

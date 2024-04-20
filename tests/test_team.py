@@ -2,7 +2,7 @@ import pytest
 
 from ado_wrapper.resources.teams import Team
 from ado_wrapper.resources.users import TeamMember
-from tests.setup_client import setup_client, existing_team_name, existing_team_id
+from tests.setup_client import existing_team_id, existing_team_name, setup_client
 
 
 class TestTeam:

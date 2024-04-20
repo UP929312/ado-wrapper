@@ -1,10 +1,13 @@
 from datetime import datetime
+
 import pytest
 
+from ado_wrapper.resources.builds import BuildDefinition
+from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.environment import Environment
 from ado_wrapper.resources.users import Member
-
-from tests.setup_client import setup_client
+from tests.setup_client import RepoContextManager, existing_agent_pool_id, setup_client
+from tests.test_build import BUILD_YAML_FILE
 
 
 class TestEnvironment:
@@ -70,4 +73,23 @@ class TestEnvironment:
         assert fetched_environment.name == "ado_wrapper-test-environment-get-by-name"
         assert fetched_environment.description == "test environment"
         # ---
+        environment.delete(self.ado_client)
+
+    def test_pipeline_perms(self) -> None:
+        with RepoContextManager(self.ado_client, "pipeline_perms") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "test commit")
+            build_def = BuildDefinition.create(self.ado_client, repo.name, repo.repo_id, repo.name, "build.yaml", "", existing_agent_pool_id, [])
+
+        environment = Environment.create(self.ado_client, "ado_wrapper-test-environment-pipeline-perms", "test environment")
+        # ---
+        perms = environment.get_pipeline_permissions(self.ado_client)
+        assert perms is not None
+        environment.add_pipeline_permission(self.ado_client, build_def.build_definition_id)
+        new_perms = environment.get_pipeline_permissions(self.ado_client)
+        assert len(new_perms) == 1
+        environment.remove_pipeline_permissions(self.ado_client, build_def.build_definition_id)
+        final_perms = environment.get_pipeline_permissions(self.ado_client)
+        assert len(final_perms) == 0
+        # ---
+        build_def.delete(self.ado_client)
         environment.delete(self.ado_client)

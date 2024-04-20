@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal, TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from ado_wrapper.state_managed_abc import StateManagedResource
 
@@ -23,7 +23,7 @@ class Branch(StateManagedResource):
     repo_id: str = field(repr=False)
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, str | dict[str, str]]) -> "Branch":
+    def from_request_payload(cls, data: dict[str, str | dict[str, str]]) -> Branch:
         return cls(
             data["objectId"],  # type: ignore[arg-type]
             data["name"].removeprefix("refs/heads/"),  # type: ignore[union-attr]
@@ -31,14 +31,14 @@ class Branch(StateManagedResource):
         )
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, repo_id: str, branch_id: str) -> "Branch":  # type: ignore[override]
+    def get_by_id(cls, ado_client: AdoClient, repo_id: str, branch_id: str) -> Branch:  # type: ignore[override]
         for branch in cls.get_all_by_repo(ado_client, repo_id):
             if branch.branch_id == branch_id:
                 return branch
         raise ValueError(f"Branch {branch_id} not found")
 
     @classmethod
-    def create(cls, ado_client: AdoClient, repo_id: str, branch_name: str, source_branch: str = "main") -> "Branch":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, repo_id: str, branch_name: str, source_branch: str = "main") -> Branch:  # type: ignore[override]
         raise NotImplementedError("You can't create a branch without a commit, use Commit.create instead")
 
     @classmethod
@@ -55,21 +55,21 @@ class Branch(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all_by_repo(cls, ado_client: AdoClient, repo_id: str) -> list["Branch"]:
+    def get_all_by_repo(cls, ado_client: AdoClient, repo_id: str) -> list[Branch]:
         return super().get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs?filter=heads&api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, repo_id: str, branch_name: str) -> "Branch | None":
+    def get_by_name(cls, ado_client: AdoClient, repo_id: str, branch_name: str) -> Branch | None:
         for branch in cls.get_all_by_repo(ado_client, repo_id):
             if branch.name == branch_name:
                 return branch
         raise ValueError(f"Branch {branch_name} not found")
 
     @classmethod
-    def get_main_branch(cls, ado_client: AdoClient, repo_id: str) -> "Branch":
+    def get_main_branch(cls, ado_client: AdoClient, repo_id: str) -> Branch:
         return [x for x in cls.get_all_by_repo(ado_client, repo_id) if x.name in ("main", "master")][0]
 
     def delete(self, ado_client: AdoClient) -> None:  # Has to exist for multi-ids

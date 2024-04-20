@@ -2,8 +2,7 @@ import pytest
 
 from ado_wrapper.resources.annotated_tags import AnnotatedTag
 from ado_wrapper.resources.commits import Commit
-
-from tests.setup_client import setup_client, RepoContextManager
+from tests.setup_client import RepoContextManager, setup_client
 
 
 class TestAnnotatedTags:
@@ -42,5 +41,17 @@ class TestAnnotatedTags:
             assert tag is not None
             assert tag.name == "test-tag-1"
             for tag in AnnotatedTag.get_all_by_repo(self.ado_client, repo.repo_id):
+                with pytest.raises(NotImplementedError):
+                    tag.delete(self.ado_client)
+
+    def test_get_all_annonated_tags(self) -> None:
+        with RepoContextManager(self.ado_client, "get-all-annotated-tags") as repo:
+            commit1 = Commit.create(self.ado_client, repo.repo_id, "main", "test-tag-1", {"text.txt": "Contents"}, "add", "Commmit 1")
+            commit2 = Commit.create(self.ado_client, repo.repo_id, "main", "test-tag-2", {"text2.txt": "Contents"}, "add", "Commmit 2")
+            AnnotatedTag.create(self.ado_client, repo.repo_id, "test-tag-1", "Test tag message 1", commit1.commit_id)
+            AnnotatedTag.create(self.ado_client, repo.repo_id, "test-tag-2", "Test tag message 2", commit2.commit_id)
+            tags = AnnotatedTag.get_all_by_repo(self.ado_client, repo.repo_id)
+            assert len(tags) == 2
+            for tag in tags:
                 with pytest.raises(NotImplementedError):
                     tag.delete(self.ado_client)

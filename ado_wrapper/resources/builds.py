@@ -1,13 +1,13 @@
-from datetime import datetime
-from dataclasses import dataclass, field
-from typing import Any, Literal, TYPE_CHECKING
 import time
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, Literal
 
-from ado_wrapper.utils import from_ado_date_string
-from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.environment import Environment, PipelineAuthorisation
 from ado_wrapper.resources.repo import BuildRepository
 from ado_wrapper.resources.users import Member
+from ado_wrapper.state_managed_abc import StateManagedResource
+from ado_wrapper.utils import from_ado_date_string
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -164,6 +164,7 @@ class Build(StateManagedResource):
         environment = Environment.get_by_id(ado_client, environment_id)
         return environment.add_pipeline_permission(ado_client, definition_id)
 
+
 # ========================================================================================================
 
 
@@ -251,6 +252,10 @@ class BuildDefinition(StateManagedResource):
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
+
+    @classmethod
+    def get_all_by_name(cls, ado_client: "AdoClient", name: str) -> "list[BuildDefinition]":
+        return cls.get_by_abstract_filter(ado_client, lambda x: x.name == name)  # type: ignore[return-value, attr-defined]
 
     def get_all_builds_by_definition(self, ado_client: "AdoClient") -> "list[Build]":
         return Build.get_all_by_definition(ado_client, self.build_definition_id)

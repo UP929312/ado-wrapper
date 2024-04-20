@@ -1,7 +1,11 @@
 import pytest
 
 from ado_wrapper.resources.groups import Group
-from tests.setup_client import setup_client, existing_group_descriptor, existing_group_name
+from tests.setup_client import (
+    existing_group_descriptor,
+    existing_group_name,
+    setup_client,
+)
 
 
 class TestGroup:

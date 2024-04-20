@@ -3,19 +3,22 @@ from __future__ import annotations
 import io
 import zipfile
 from dataclasses import dataclass, field
-from typing import Any, Literal, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Literal
 
 import requests
 
-from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.resources.pull_requests import PullRequest, PullRequestStatus
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.merge_policies import MergePolicies
+from ado_wrapper.resources.pull_requests import PullRequest, PullRequestStatus
+from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import ResourceNotFound, UnknownError
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
-    from ado_wrapper.resources.merge_policies import MergeBranchPolicy, WhenChangesArePushed
+    from ado_wrapper.resources.merge_policies import (
+        MergeBranchPolicy,
+        WhenChangesArePushed,
+    )
 
 RepoEditableAttribute = Literal["name", "default_branch", "is_disabled"]
 
@@ -33,20 +36,20 @@ class Repo(StateManagedResource):
     # WARNING, disabling a repo means it's not able to be deleted, proceed with caution.
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, str]) -> "Repo":
+    def from_request_payload(cls, data: dict[str, str]) -> Repo:
         return cls(
             data["id"], data["name"], data.get("defaultBranch", "main").removeprefix("refs/heads/"), bool(data.get("isDisabled", False))
         )
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> "Repo":
+    def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> Repo:
         return super().get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, name: str, include_readme: bool = True) -> "Repo":  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, name: str, include_readme: bool = True) -> Repo:  # type: ignore[override]
         repo: Repo = super().create(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
@@ -75,7 +78,7 @@ class Repo(StateManagedResource):
         )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list["Repo"]:  # type: ignore[override]
+    def get_all(cls, ado_client: AdoClient) -> list[Repo]:  # type: ignore[override]
         return super().get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
@@ -86,7 +89,7 @@ class Repo(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, repo_name: str) -> "Repo | None":  # type: ignore[return]
+    def get_by_name(cls, ado_client: AdoClient, repo_name: str) -> Repo | None:  # type: ignore[return]
         """Warning, this function must fetch `all` repos to work, be cautious when calling it in a loop."""
         for repo in cls.get_all(ado_client):
             if repo.name == repo_name:
@@ -139,12 +142,12 @@ class Repo(StateManagedResource):
         # =========== That's all I have to say ==================
         return files
 
-    def create_pull_request(self, ado_client: AdoClient, branch_name: str, pull_request_title: str, pull_request_description: str) -> "PullRequest":  # fmt: skip
+    def create_pull_request(self, ado_client: AdoClient, branch_name: str, pull_request_title: str, pull_request_description: str) -> PullRequest:  # fmt: skip
         """Helper function which redirects to the PullRequest class to make a PR"""
         return PullRequest.create(ado_client, self.repo_id, branch_name, pull_request_title, pull_request_description)
 
     @staticmethod
-    def get_all_pull_requests(ado_client: AdoClient, repo_id: str, status: PullRequestStatus = "all") -> list["PullRequest"]:
+    def get_all_pull_requests(ado_client: AdoClient, repo_id: str, status: PullRequestStatus = "all") -> list[PullRequest]:
         return PullRequest.get_all_by_repo_id(ado_client, repo_id, status)
 
     def delete(self, ado_client: AdoClient) -> None:
@@ -160,13 +163,13 @@ class Repo(StateManagedResource):
         return repo.get_contents(ado_client, file_types, branch_name)
 
     @staticmethod
-    def get_branch_merge_policy(ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> "MergeBranchPolicy | None":
+    def get_branch_merge_policy(ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> MergeBranchPolicy | None:
         return MergePolicies.get_branch_policy(ado_client, repo_id, branch_name)
 
     @staticmethod
     def set_branch_merge_policy(ado_client: AdoClient, repo_id: str, minimum_approver_count: int,
                           creator_vote_counts: bool, prohibit_last_pushers_vote: bool, allow_completion_with_rejects: bool,
-                          when_new_changes_are_pushed: WhenChangesArePushed, branch_name: str = "main") -> "MergePolicies | None":  # fmt: skip
+                          when_new_changes_are_pushed: WhenChangesArePushed, branch_name: str = "main") -> MergePolicies | None:  # fmt: skip
         return MergePolicies.set_branch_policy(ado_client, repo_id, minimum_approver_count, creator_vote_counts,
                                                prohibit_last_pushers_vote, allow_completion_with_rejects, when_new_changes_are_pushed,
                                                branch_name)  # fmt: skip
@@ -184,11 +187,11 @@ class BuildRepository:
     checkout_submodules: bool = field(default=False, metadata={"internal_name": "checkoutSubmodules"})
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, str | bool]) -> "BuildRepository":
+    def from_request_payload(cls, data: dict[str, str | bool]) -> BuildRepository:
         return cls(data["id"], data.get("name"), data.get("type", "TfsGit"), data.get("clean"), data.get("checkoutSubmodules", False))  # type: ignore[arg-type]
 
     @classmethod
-    def from_json(cls, data: dict[str, str | bool]) -> "BuildRepository":
+    def from_json(cls, data: dict[str, str | bool]) -> BuildRepository:
         return cls(data["id"], data.get("name"), data.get("type", "TfsGit"), data.get("clean"), data.get("checkoutSubmodules", False))  # type: ignore[arg-type]
 
     def to_json(self) -> dict[str, str | bool | None]:

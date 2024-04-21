@@ -120,7 +120,7 @@ class PipelineAuthorisation:
     @classmethod
     def get_all_for_environment(cls, ado_client: AdoClient, environment_id: str) -> list[PipelineAuthorisation]:
         request = ado_client.session.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/pipelines/pipelinePermissions/environment/{environment_id}",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/pipelines/pipelinePermissions/environment/{environment_id}",
         ).json()
         return [cls.from_request_payload(x, request["resource"]["id"]) for x in request["pipelines"]]
 
@@ -133,7 +133,7 @@ class PipelineAuthorisation:
         payload |= {"resource": {"type": "environment", "id": environment_id}}
 
         request = ado_client.session.patch(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/pipelines/pipelinePermissions/environment/{environment_id}?api-version=7.1-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/pipelines/pipelinePermissions/environment/{environment_id}?api-version=7.1-preview.1",
             json=payload,
         )
         if request.status_code == 404:

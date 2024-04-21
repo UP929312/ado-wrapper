@@ -33,7 +33,7 @@ class AdoUser(StateManagedResource):
     # "metaType": "member",
     # "directoryAlias": "MiryabblliS",
     # "domain": "68283f3b-8487-4c86-adb3-a5228f18b893",
-    # "url": "https://vssps.dev.azure.com/vfuk-digital/_apis/Graph/Users/aad.M2Q5NDlkZTgtZDI2Yi03MGQ3LWEyYjItMDAwYTQzYTdlNzFi",
+    # "url": "https://vssps.dev.azure.com/{ado_client.}/_apis/Graph/Users/aad.M2Q5NDlkZTgtZDI2Yi03MGQ3LWEyYjItMDAwYTQzYTdlNzFi",
 
     def __str__(self) -> str:
         return f"{self.display_name} ({self.email})"

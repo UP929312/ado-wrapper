@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Reviewer
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import from_ado_date_string
+from ado_wrapper.utils import from_ado_date_string, requires_initialisation
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -49,10 +49,11 @@ class MergePolicyDefaultReviewer(StateManagedResource):
 
     @staticmethod
     def get_default_reviewers(ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list[Reviewer]:
+        requires_initialisation(ado_client)
         payload = {"contributionIds": ["ms.vss-code-web.branch-policies-data-provider"],
                    "dataProviderContext": {"properties": {"projectId": ado_client.ado_project_id, "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}"}}}  # fmt: skip
         request = ado_client.session.post(
-            "https://dev.azure.com/VFCloudEngineering/_apis/Contribution/HierarchyQuery?api-version=7.1-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery?api-version=7.1-preview.1",
             json=payload,
         ).json()
         if request is None:
@@ -82,7 +83,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
             },
         }
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/policy/configurations?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/policy/configurations?api-version=7.1",
             json=payload,
         )
         assert request.status_code == 200, f"Error setting branch policy: {request.text}"
@@ -94,7 +95,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
         if not policy_id:
             return
         request = ado_client.session.delete(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/policy/configurations/{policy_id}?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/policy/configurations/{policy_id}?api-version=7.1",
         )
         assert request.status_code == 204, "Error removing required reviewer"
 
@@ -158,7 +159,7 @@ class MergeBranchPolicy(StateManagedResource):
         request_method = "POST" if latest_policy_id is None else "PUT"
         request = ado_client.session.request(
             request_method,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project_id}/_apis/policy/Configurations/{latest_policy_id or ''}".rstrip(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/policy/Configurations/{latest_policy_id or ''}".rstrip(
                 "/"
             ),  # fmt: skip
             json=payload,

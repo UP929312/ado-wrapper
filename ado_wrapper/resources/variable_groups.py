@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Member
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import from_ado_date_string
+from ado_wrapper.utils import from_ado_date_string, requires_initialisation
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -49,14 +49,13 @@ class VariableGroup(StateManagedResource):
     ) -> VariableGroup:
         payload = {
             "name": variable_group_name,
-            "description": variable_group_description,
             "variables": variables,
             "type": "Vsts",
             "variableGroupProjectReferences": [
                 {
                     "description": variable_group_description,
                     "name": variable_group_name,
-                    "projectReference": {"id": ado_client.ado_project_id, "name": ado_client.ado_project},
+                    "projectReference": {"name": ado_client.ado_project},
                 }
             ],
         }
@@ -68,6 +67,7 @@ class VariableGroup(StateManagedResource):
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> None:  # type: ignore[override]
+        requires_initialisation(ado_client)
         return super().delete_by_id(
             ado_client,
             f"/_apis/distributedtask/variablegroups/{variable_group_id}?projectIds={ado_client.ado_project_id}&api-version=7.1",
@@ -77,8 +77,8 @@ class VariableGroup(StateManagedResource):
     def update(self, ado_client: AdoClient, attribute_name: VariableGroupEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
         # WARNING: This method works 80-90% of the time, for some reason, it fails randomly, ADO API is at fault.
         params = {
-            "variableGroupProjectReferences": [{"name": self.name, "projectReference": {"id": ado_client.ado_project_id}}],
-             "id": self.variable_group_id, "name": self.name, "type": "Vsts", "variables": self.variables  # fmt: skip
+            "variableGroupProjectReferences": [{"name": self.name, "projectReference": {"name": ado_client.ado_project}}],
+            "name": self.name, "variables": self.variables  # fmt: skip
         }
         super().update(
             ado_client, "put",

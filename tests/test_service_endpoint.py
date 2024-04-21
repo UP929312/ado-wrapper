@@ -41,6 +41,7 @@ class TestServiceEndpoints:
         assert not service_endpoint.is_shared
         assert service_endpoint.to_json() == ServiceEndpoint.from_json(service_endpoint.to_json()).to_json()
 
+    @pytest.mark.wip
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
         service_endpoint = ServiceEndpoint.create(

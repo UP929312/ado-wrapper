@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Member
 from ado_wrapper.state_managed_abc import StateManagedResource
+from ado_wrapper.utils import requires_initialisation
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -55,18 +56,10 @@ class ServiceEndpoint(StateManagedResource):
                username: str = "", password: str = "",  access_token: str = "") -> ServiceEndpoint:  # fmt: skip
         """Creates a service endpoint, pass in either username and password or access_token."""
         assert ((username and password) and not access_token) or (access_token and not (username and password)), "Either username and password or access_token must be passed in."  # fmt: skip
+        requires_initialisation(ado_client)
         payload = {
-            "name": name,
-            "type": service_endpoint_type,
-            "url": url,
-            "isShared": True,
-            "isReady": True,
-            "serviceEndpointProjectReferences": [
-                {
-                    "projectReference": {"id": ado_client.ado_project_id},  # fmt: skip
-                    "name": name,
-                }
-            ],
+            "name": name, "type": service_endpoint_type, "url": url, "isShared": True, "isReady": True,
+            "serviceEndpointProjectReferences": [{"projectReference": {"id": ado_client.ado_project_id}}],  # fmt: skip
         }
         if username and password:
             payload["authorization"] = {"scheme": "UsernamePassword", "parameters": {"Username": username, "Password": password}}
@@ -87,6 +80,7 @@ class ServiceEndpoint(StateManagedResource):
 
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, service_endpoint_id: str) -> None:  # type: ignore[override]
+        requires_initialisation(ado_client)
         return super().delete_by_id(
             ado_client,
             f"/_apis/serviceendpoint/endpoints/{service_endpoint_id}?projectIds={ado_client.ado_project_id}&api-version=7.1",

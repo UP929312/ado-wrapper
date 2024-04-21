@@ -129,7 +129,7 @@ class StateManager:
 
     def load_all_resources_with_prefix_into_state(self, prefix: str) -> None:
         from ado_wrapper.resources import (  # type: ignore[attr-defined]
-            BuildDefinition, ReleaseDefinition, Repo, ServiceEndpoint, VariableGroup,
+            BuildDefinition, ReleaseDefinition, Repo, ServiceEndpoint, VariableGroup,  # fmt: skip
         )
 
         for repo in Repo.get_all(self.ado_client):

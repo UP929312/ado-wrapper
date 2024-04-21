@@ -56,7 +56,7 @@ class StateManagedResource:
         attribute_names = [field_obj.name for field_obj in fields(self)]
         attribute_values = [getattr(self, field_obj.name) for field_obj in fields(self)]
         combined = zip(attribute_names, attribute_values)
-        return dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in combined)  ####
+        return dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in combined)
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", resource_id: str) -> "StateManagedResource":
@@ -80,6 +80,10 @@ class StateManagedResource:
         cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None, refetch: bool = False
     ) -> "StateManagedResource | PlannedStateManagedResource":
         """When creating, often the response doesn't contain all the data, refetching does a .get_by_id() after creation."""
+        # If it already exists:
+        # if cls.get_by_id(ado_client, extract_unique_name(payload)):
+        #     raise ResourceAlreadyExists(f"The {cls.__name__} with that identifier already exist!")
+        #     <update the resource>
         if ado_client.plan_mode:
             return PlannedStateManagedResource.create(cls, ado_client, url, payload)
         if not url.startswith("https://"):

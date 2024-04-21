@@ -61,6 +61,8 @@ Pipeline perms, currently our pipelines are approval-able by almost anyone, we s
 
 AdoUser - Get all, doesn't work with pagination
 
+Try remove ado_project_id from more places
+
 Maybe rather than RepoContextManager, we have it work for all resources? Maybe takes any StateManaged Resource and deletes it after?
 
 TestStateManager needs some work

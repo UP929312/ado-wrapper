@@ -1,22 +1,6 @@
 # To-do
 
-Resources that are entirely state managed:
-Build -*
-BuildDefinition -*
-ReleaseDefinition
-Release
-Repo -*
-ServiceEndpoints -*
-VariableGroup -*
-
-Soon:
-Pull Request, Commit
-
--* = Supports edits/updates too
-
------
-
-Also, Releases need vigerous testing - kinda wip, ReleaseDef - Update
+Releases need vigerous testing - kinda wip, ReleaseDef - Update
 
 A push is when someone has multiple commits and they do a git push (to a branch), it can be multiple sub-commits
 TODO: Look into Pushes vs Commits <https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes/get?view=azure-devops-rest-7.1&tabs=HTTP#gitpush>
@@ -61,9 +45,9 @@ Pipeline perms, currently our pipelines are approval-able by almost anyone, we s
 
 AdoUser - Get all, doesn't work with pagination
 
-Try remove ado_project_id from more places
-
 Maybe rather than RepoContextManager, we have it work for all resources? Maybe takes any StateManaged Resource and deletes it after?
+Make all resources be able to be context managers?
+This would work great (I think), but the objects need to store the ado_client, because exiting requires it...
 
 TestStateManager needs some work
 Hmmmmm, it appears that when creating a variable group, it doesn't return the created by or modified by with enough data.

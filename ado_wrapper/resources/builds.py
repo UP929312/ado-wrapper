@@ -164,7 +164,10 @@ class Build(StateManagedResource):
         environment = Environment.get_by_id(ado_client, environment_id)
         return environment.add_pipeline_permission(ado_client, definition_id)
 
-
+    @classmethod
+    def get_latest(cls, ado_client: "AdoClient", definition_id: str) -> "Build | None":
+        all_builds = cls.get_all_by_definition(ado_client, definition_id)
+        return all_builds[0] if all_builds else None
 # ========================================================================================================
 
 

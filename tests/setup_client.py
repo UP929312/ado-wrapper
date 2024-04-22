@@ -3,8 +3,6 @@ from typing import Any
 from ado_wrapper.client import AdoClient
 from ado_wrapper.resources.repo import Repo
 
-# from ado_wrapper.state_managed_abc import StateManagedResource
-
 with open("tests/test_data.txt", encoding="utf-8") as test_data:
     (
         ado_org, ado_project, email, pat_token, existing_team_name, existing_team_id, existing_user_name,
@@ -32,17 +30,3 @@ class RepoContextManager:
 
     def __exit__(self, *_: Any) -> None:
         self.repo.delete(self.ado_client)
-
-
-# class ResourceContextManager:
-#     """A context manager which creates and (always) deletes a resource within tests"""
-
-#     def __init__(self, ado_client: AdoClient, resource: StateManagedResource):
-#         self.ado_client = ado_client
-#         self.resource = resource
-
-#     def __enter__(self) -> StateManagedResource:
-#         return self.resource
-
-#     def __exit__(self, *_: Any) -> None:
-#         self.resource.delete(self.ado_client)

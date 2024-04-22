@@ -163,3 +163,9 @@ class StateManagedResource:
     def set_lifecycle_policy(self, ado_client: "AdoClient", policy: Literal["prevent_destroy", "ignore_changes"]) -> None:
         self.life_cycle_policy = policy  # TODO
         ado_client.state_manager.update_lifecycle_policy(self.__class__.__name__, extract_id(self), policy)  # type: ignore[arg-type]
+
+    # def __enter__(self) -> "StateManagedResource":
+    #     return self
+
+    # def __exit__(self, *_: Any) -> None:
+    #     self.delete(self.ado_client)

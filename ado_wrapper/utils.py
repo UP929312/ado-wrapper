@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Literal, overload
 
 if TYPE_CHECKING:
-    from ado_wrapper.state_managed_abc import StateManagedResource
     from ado_wrapper.client import AdoClient
+    from ado_wrapper.state_managed_abc import StateManagedResource
 
 
 @overload
@@ -125,9 +125,9 @@ class ConfigurationError(Exception):
     pass
 
 
-def requires_initialisation(ado_client: "AdoClient"):
+def requires_initialisation(ado_client: "AdoClient") -> None:
     if not ado_client.ado_project_id:
-        raise ConfigurationError("The client has not been initialised. Please disable `bypass_initialisation` method before using this function.")
+        raise ConfigurationError("The client has not been initialised. Please disable `bypass_initialisation` in AdoClient before using this function.")
 
 
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports

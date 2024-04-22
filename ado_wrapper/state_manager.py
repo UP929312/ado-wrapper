@@ -41,8 +41,8 @@ class StateManager:
         with open(self.state_file_name, encoding="utf-8") as state_file:
             try:
                 return json.load(state_file)  # type: ignore[no-any-return]
-            except json.JSONDecodeError as exc:
-                raise json.JSONDecodeError("State file is not valid JSON, it might have been corrupted?", exc.doc, exc.pos)
+            except json.JSONDecodeError:
+                raise TypeError("State file is not valid JSON, it might have been corrupted?")
 
     def write_state_file(self, state_data: StateFileType) -> None:
         if self.state_file_name is None:

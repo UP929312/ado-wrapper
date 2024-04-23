@@ -89,7 +89,7 @@ class StateManager:
             print(str(exc))
         except (NotImplementedError, TypeError):
             print(
-                f"[ADO_WRAPPER] Cannot {resource_type} {resource_id} from state or real space, please delete this manually or using code."
+                f"[ADO_WRAPPER] Cannot delete {resource_type} {resource_id} from state or real space, please delete this manually or using code."
             )
         else:
             print(f"[ADO_WRAPPER] Deleted {resource_type} {resource_id} from ADO")

@@ -17,6 +17,7 @@ class TestAnnotatedTags:
                 "name": "tag_name",
                 "message": "tag_message",
                 "taggedBy": {"name": "TestUser", "email": "test@company.com", "date": "2021-10-01T00:00:00Z"},
+                "url": "https://dev.azure.com/organization/project/_apis/git/repositories/repo_id/annotatedtags/aaaa-aa-aaaa",
             }
         )
         assert tag.to_json() == AnnotatedTag.from_json(tag.to_json()).to_json()
@@ -28,8 +29,9 @@ class TestAnnotatedTags:
             AnnotatedTag.create(self.ado_client, repo.repo_id, "test-tag", "Test tag message", commit.commit_id)
             tags = AnnotatedTag.get_all_by_repo(self.ado_client, repo.repo_id)
             assert len(tags) == 1
-            with pytest.raises(NotImplementedError):
-                tags[0].delete(self.ado_client)
+            tags[0].delete(self.ado_client)
+            new_tags = AnnotatedTag.get_all_by_repo(self.ado_client, repo.repo_id)
+            assert len(new_tags) == 0
 
     def test_get_certain_tages(self) -> None:
         with RepoContextManager(self.ado_client, "get-certain-tags") as repo:
@@ -41,8 +43,7 @@ class TestAnnotatedTags:
             assert tag is not None
             assert tag.name == "test-tag-1"
             for tag in AnnotatedTag.get_all_by_repo(self.ado_client, repo.repo_id):
-                with pytest.raises(NotImplementedError):
-                    tag.delete(self.ado_client)
+                tag.delete(self.ado_client)
 
     def test_get_all_annonated_tags(self) -> None:
         with RepoContextManager(self.ado_client, "get-all-annotated-tags") as repo:
@@ -53,5 +54,4 @@ class TestAnnotatedTags:
             tags = AnnotatedTag.get_all_by_repo(self.ado_client, repo.repo_id)
             assert len(tags) == 2
             for tag in tags:
-                with pytest.raises(NotImplementedError):
-                    tag.delete(self.ado_client)
+                tag.delete(self.ado_client)

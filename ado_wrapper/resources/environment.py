@@ -90,8 +90,8 @@ class Environment(StateManagedResource):
 
     # # =============== Pipeline Permissions ===================== #
 
-    def get_pipeline_permissions(self, ado_client: AdoClient) -> dict[str, Any]:
-        return PipelineAuthorisation.get_all_for_environment(ado_client, self.environment_id)  # type: ignore[return-value]
+    def get_pipeline_permissions(self, ado_client: AdoClient) -> list[PipelineAuthorisation]:
+        return PipelineAuthorisation.get_all_for_environment(ado_client, self.environment_id)
 
     def add_pipeline_permission(self, ado_client: AdoClient, pipeline_id: str) -> PipelineAuthorisation:
         return PipelineAuthorisation.create(ado_client, self.environment_id, pipeline_id)
@@ -99,9 +99,12 @@ class Environment(StateManagedResource):
     def remove_pipeline_permissions(self, ado_client: AdoClient, pipeline_id: str) -> None:
         PipelineAuthorisation.delete_by_id(ado_client, self.environment_id, pipeline_id)
 
+
 @dataclass
 class PipelineAuthorisation:
-    pipeline_authorisation_id: str
+    """Stores the authorisation of a pipeline to an environment."""
+
+    pipeline_id: str
     environment_id: str
     authorized: bool
     authorized_by: Member
@@ -127,7 +130,7 @@ class PipelineAuthorisation:
     @classmethod
     def create(cls, ado_client: AdoClient, environment_id: str, pipeline_id: str, authorized: bool = True) -> PipelineAuthorisation:
         all_existing = cls.get_all_for_environment(ado_client, environment_id)
-        payload: dict[str, Any] = {"pipelines": [{"id": x.pipeline_authorisation_id, "authorized": True} for x in all_existing]}
+        payload: dict[str, Any] = {"pipelines": [{"id": x.pipeline_id, "authorized": True} for x in all_existing]}
         payload["pipelines"] = [x for x in payload["pipelines"] if x["id"] != pipeline_id]  # Remove existing entry if it exists
         payload["pipelines"].append({"id": pipeline_id, "authorized": authorized})
         payload |= {"resource": {"type": "environment", "id": environment_id}}
@@ -144,8 +147,8 @@ class PipelineAuthorisation:
         return cls.from_request_payload(created_pipeline_dict, environment_id)
 
     def update(self, ado_client: AdoClient, authorized: bool) -> None:
-        self.delete_by_id(ado_client, self.environment_id, self.pipeline_authorisation_id)
-        new = self.create(ado_client, self.environment_id, self.pipeline_authorisation_id, authorized)
+        self.delete_by_id(ado_client, self.environment_id, self.pipeline_id)
+        new = self.create(ado_client, self.environment_id, self.pipeline_id, authorized)
         self.__dict__.update(new.__dict__)
 
     @classmethod

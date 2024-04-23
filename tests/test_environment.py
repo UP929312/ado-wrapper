@@ -78,7 +78,9 @@ class TestEnvironment:
     def test_pipeline_perms(self) -> None:
         with RepoContextManager(self.ado_client, "pipeline_perms") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "test commit")
-            build_def = BuildDefinition.create(self.ado_client, repo.name, repo.repo_id, repo.name, "build.yaml", "", existing_agent_pool_id, [])
+            build_def = BuildDefinition.create(
+                self.ado_client, repo.name, repo.repo_id, repo.name, "build.yaml", "", existing_agent_pool_id, []
+            )
 
         environment = Environment.create(self.ado_client, "ado_wrapper-test-environment-pipeline-perms", "test environment")
         # ---

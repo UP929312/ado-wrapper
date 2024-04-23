@@ -167,7 +167,10 @@ class Build(StateManagedResource):
     @classmethod
     def get_latest(cls, ado_client: "AdoClient", definition_id: str) -> "Build | None":
         all_builds = cls.get_all_by_definition(ado_client, definition_id)
-        return all_builds[0] if all_builds else None
+        builds_with_start = [x for x in all_builds if x.start_time is not None]
+        return max(builds_with_start, key=lambda build: build.start_time) if builds_with_start else None  # type: ignore[return-value, arg-type]
+
+
 # ========================================================================================================
 
 

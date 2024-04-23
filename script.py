@@ -11,24 +11,20 @@ from ado_wrapper.resources import *
 
 ado_client = AdoClient(email, ado_access_token, ado_org, ado_project, bypass_initialisation=False)  #, action="plan")
 
+# environment = Environment.get_by_id(ado_client, "170")
+# 1797, 1800
+
 # ado_client.state_manager.load_all_resources_with_prefix_into_state("ado_wrapper-")
 # repo = Repo.create(ado_client, "ado_wrapper-plan-test", include_readme=False)
 
-# tags = AnnotatedTag.get_all_by_repo(ado_client, "cep-terraform-modules")
-# print(tags)
-
-# from ado_wrapper.state_managed_abc import StateManagedResource
-
 # repo = Repo.create(ado_client, "perms-test-repo", include_readme=True)
-# repo = Repo.get_by_name(ado_client, "perms-test-repo")
-# "cep-secret-rotation" is a good one to check inherits (no non-none inherited policies)
-# repo = Repo.get_by_name(ado_client, "cep-secret-rotation")
+# repo = Repo.get_by_name(ado_client, "")
 # repo = Repo.get_by_name(ado_client, "perms-test-repo")
 # assert repo is not None
 # repo_branch_policies = MergePolicies.get_all_by_repo_id(ado_client, repo.repo_id)
-# print(repo_branch_policies)
+# rint(repo_branch_policies)
 # assert repo_branch_policies is not None
-# print("\n".join([repr(x) for x in repo_branch_policies]))
+# rint("\n".join([repr(x) for x in repo_branch_policies]))
 
 # rint(ado_client.state_manager.state)
 # ado_client.state_manager.output_changes()  # type: ignore[attr-defined]

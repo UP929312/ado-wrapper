@@ -2,7 +2,7 @@
 name = "ado_wrapper"
 description = "A high level wrapper around the AzureDevops API including OOP principals and state management"
 authors = ["Ben Skerritt"]
-version = "1.2.6"
+version = "1.2.9"
 license = "Proprietary"
 readme = "README.md"
 packages = [{include = "ado_wrapper"}]
@@ -34,7 +34,7 @@ exclude = ['.vscode', '.pytest_cache', '.mypy_cache', '.git', '__pycache__', 'sc
 strict = true
 
 [tool.pylint.main]
-ignore = [".venv", ".vscode", ".pytest_cache", ".mypy_cache", ".git", "__pycache__", "script.py"]
+ignore = [".vscode", ".pytest_cache", ".mypy_cache", ".git", "__pycache__", "script.py"]
 recursive = true
 
 [tool.pylint.messages_control]
@@ -88,13 +88,14 @@ profile = "black"
 
 [tool.coverage.run]
 omit = [
-    "tests/*",
-    "dist/*",
     "__pycache__/*",
     ".mypy_cache/*",
     ".pytest_cache/*",
+    ".ruff_cache/*",
     ".vscode/*",
-    "/opt/*",
+    "tests/*",
+    "dist/*",
+    "htmlcov/*",
 ]
 
 [tool.ruff]
@@ -112,4 +113,4 @@ select = [
     "SIM",  # flake8-simplify
     "I",  # isort
 ]
-ignore = ["F401", "F403", "E501", "SIM105"]
+ignore = ["F401", "F403", "E501", "SIM105", "I001"]

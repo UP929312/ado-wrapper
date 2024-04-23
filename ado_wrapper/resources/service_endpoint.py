@@ -59,7 +59,7 @@ class ServiceEndpoint(StateManagedResource):
         requires_initialisation(ado_client)
         payload = {
             "name": name, "type": service_endpoint_type, "url": url, "isShared": True, "isReady": True,
-            "serviceEndpointProjectReferences": [{"projectReference": {"id": ado_client.ado_project_id}}],  # fmt: skip
+            "serviceEndpointProjectReferences": [{"projectReference": {"id": ado_client.ado_project_id}, "name": name}],  # fmt: skip
         }
         if username and password:
             payload["authorization"] = {"scheme": "UsernamePassword", "parameters": {"Username": username, "Password": password}}

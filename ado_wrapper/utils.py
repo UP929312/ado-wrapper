@@ -127,7 +127,9 @@ class ConfigurationError(Exception):
 
 def requires_initialisation(ado_client: "AdoClient") -> None:
     if not ado_client.ado_project_id:
-        raise ConfigurationError("The client has not been initialised. Please disable `bypass_initialisation` in AdoClient before using this function.")
+        raise ConfigurationError(
+            "The client has not been initialised. Please disable `bypass_initialisation` in AdoClient before using this function."
+        )
 
 
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports

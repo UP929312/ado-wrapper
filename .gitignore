@@ -7,6 +7,7 @@ prototype/
 dist/
 htmlcov/
 .DS_STORE
+.ruff_cache
 
 *.state
 tests/test_data.txt

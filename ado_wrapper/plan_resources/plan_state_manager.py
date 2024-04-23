@@ -7,7 +7,6 @@ from ado_wrapper.state_manager import StateManager
 
 
 class PlanStateManager(StateManager):
-
     def output_changes(self) -> None:
         for resource_type, resources in self.state["resources"].items():
             for resource in resources.values():

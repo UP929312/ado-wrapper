@@ -71,10 +71,10 @@ class AnnotatedTag(StateManagedResource):
     # # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all_by_repo(cls, ado_client: AdoClient, repo_name_or_id: str) -> list[AnnotatedTag]:
+    def get_all_by_repo(cls, ado_client: AdoClient, repo_id: str) -> list[AnnotatedTag]:
         """Unofficial API. Also doesn't return a repo_id"""
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_git/{repo_name_or_id}/tags/?api-version=7.1-preview.1"
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_git/{repo_id}/tags/?api-version=7.1-preview.1"
         )
         assert request.status_code == 200
         second_half = request.text.split("ms.vss-code-web.git-tags-data-provider")[1].removeprefix('":')
@@ -82,7 +82,7 @@ class AnnotatedTag(StateManagedResource):
         json_data = json.loads(trimmed_second_half)["tags"]
         # ===
         return [
-            cls(x["objectId"], repo_name_or_id, x["name"], x["comment"],
+            cls(x["objectId"], repo_id, x["name"], x["comment"],
                 Member(x["tagger"]["name"], x["tagger"]["email"], "UNKNOWN"),
                 from_ado_date_string(x["tagger"]["date"]))
             for x in json_data if "comment" in x  # fmt: skip

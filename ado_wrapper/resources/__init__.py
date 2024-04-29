@@ -13,6 +13,7 @@ from ado_wrapper.resources.projects import Project
 from ado_wrapper.resources.pull_requests import PullRequest
 from ado_wrapper.resources.releases import Release, ReleaseDefinition
 from ado_wrapper.resources.repo import BuildRepository, Repo
+from ado_wrapper.resources.searches import Search
 from ado_wrapper.resources.service_endpoint import ServiceEndpoint
 from ado_wrapper.resources.teams import Team
 from ado_wrapper.resources.users import AdoUser, Member, Reviewer, TeamMember

@@ -58,6 +58,10 @@ class MergePolicyDefaultReviewer(StateManagedResource):
         ).json()
         if request is None:
             return []
+        if "ms.vss-code-web.branch-policies-data-provider" not in request["dataProviders"]:
+            print(f"No default reviewers found for repo {repo_id}! Most likely it's disabled.")
+            return []
+        # ===
         all_reviewers = [Reviewer(x["displayName"], x["uniqueName"], x["id"], 0, False) for x in request["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["identities"]]  # fmt: skip
         for policy_group in request["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["policyGroups"].values():
             if policy_group["currentScopePolicies"] is None:
@@ -128,7 +132,7 @@ class MergeBranchPolicy(StateManagedResource):
         )
 
     @classmethod
-    def get_branch_policy(cls, ado_client: AdoClient, repo_id: str, branch_name: str) -> MergeBranchPolicy | None:
+    def get_branch_policy(cls, ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> MergeBranchPolicy | None:
         """Gets the latest merge requirements for a pull request."""
         policy = MergePolicies.get_all_branch_policies_by_repo_id(ado_client, repo_id, branch_name)
         return policy[0] if policy else None

@@ -61,6 +61,8 @@ Most resources have names, or some definining values which has to be unique, e.g
 Tags are a problem, branches a bit too, build definitions too, the problem is that we want to be able to change things and
 have the create update, rather than create, but if the data is different, how do we link them?
 
+Searches tests
+
 -----
 
 Pylint command:
@@ -73,6 +75,8 @@ python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt" --s
 python3.11 -m ado_wrapper --refresh-resources-on-startup --creds_file "credentials.txt"
 coverage run -m pytest
 coverage html && open htmlcov/index.html
+
+Make all of the StateManagedResources use _ and call them that way, so they don't appear normally, and also in the docs
 
 coverage run -m pytest && coverage html && open htmlcov/index.html
 

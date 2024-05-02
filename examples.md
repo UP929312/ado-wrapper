@@ -38,11 +38,6 @@ ado_user = AdoUser.get_by_id(ado_client, <descriptor_id>)
 
 # Get By Name
 ado_user = AdoUser.get_by_name(ado_client, <member_name>)
-
-# Update
-ado_user.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_value>, <params>)
-
-
 ```
 </details>
 
@@ -68,11 +63,6 @@ annotated_tag = AnnotatedTag.get_by_id(ado_client, <repo_id>, <branch_id>)
 
 # Get By Name
 annotated_tag = AnnotatedTag.get_by_name(ado_client, <repo_id>, <tag_name>)
-
-# Update
-annotated_tag.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_value>, <params>)
-
-
 ```
 </details>
 
@@ -101,11 +91,6 @@ branch = Branch.get_by_name(ado_client, <repo_id>, <branch_name>)
 
 # Get Main Branch
 branch = Branch.get_main_branch(ado_client, <repo_id>)
-
-# Update
-branch.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_value>, <params>)
-
-
 ```
 </details>
 
@@ -115,7 +100,7 @@ branch.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_v
 
 ```py
 # Allow On Environment
-<class ado_wrapper.resources.environment._pipeline_authorisation> = Build.allow_on_environment(ado_client, <definition_id>, <environment_id>)
+pipeline_authorisation = Build.allow_on_environment(ado_client, <definition_id>, <environment_id>)
 
 # Create
 build = Build.create(ado_client, <definition_id>, <source_branch>, <permit_use_of_var_groups>)
@@ -144,19 +129,8 @@ build = Build.get_by_id(ado_client, <build_id>)
 # Get Latest
 build = Build.get_latest(ado_client, <definition_id>)
 
-# Priority
-build = Build.priority(ado_client, <definition_id>)
-
-# Queue Time
-build = Build.queue_time(ado_client, <definition_id>)
-
-# Reason
-build = Build.reason(ado_client, <definition_id>)
-
 # Update
 build.update(ado_client, <attribute_name>, <attribute_value>)
-
-
 ```
 </details>
 
@@ -189,37 +163,8 @@ build_definitions = BuildDefinition.get_all_by_repo_id(ado_client, <repo_id>)
 # Get By Id
 build_definition = BuildDefinition.get_by_id(ado_client, <build_definition_id>)
 
-# Process
-build_definition = BuildDefinition.process(ado_client, <build_definition_id>)
-
-# Revision
-build_definition = BuildDefinition.revision(ado_client, <build_definition_id>)
-
 # Update
 build_definition.update(ado_client, <attribute_name>, <attribute_value>)
-
-
-```
-</details>
-
------
-# BuildRepository
-<details>
-
-```py
-# Checkout Submodules
-build_repository.checkout_submodules(ado_client, <attribute_name>, <attribute_value>)
-
-# Clean
-build_repository.clean(ado_client, <attribute_name>, <attribute_value>)
-
-# Name
-build_repository.name(ado_client, <attribute_name>, <attribute_value>)
-
-# Type
-build_repository.type(ado_client, <attribute_name>, <attribute_value>)
-
-
 ```
 </details>
 
@@ -248,11 +193,6 @@ commit = Commit.get_by_id(ado_client, <repo_id>, <commit_id>)
 
 # Get Latest By Repo
 commit = Commit.get_latest_by_repo(ado_client, <repo_id>, <branch_name>)
-
-# Update
-commit.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_value>, <params>)
-
-
 ```
 </details>
 
@@ -290,8 +230,6 @@ environment.remove_pipeline_permissions(ado_client, <pipeline_id>)
 
 # Update
 environment.update(ado_client, <attribute_name>, <attribute_value>)
-
-
 ```
 </details>
 
@@ -317,11 +255,6 @@ group = Group.get_by_id(ado_client, <group_descriptor>)
 
 # Get By Name
 group = Group.get_by_name(ado_client, <group_name>)
-
-# Update
-group.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_value>, <params>)
-
-
 ```
 </details>
 
@@ -341,11 +274,6 @@ member.delete_by_id(ado_client, <member_id>)
 
 # Get By Id
 member = Member.get_by_id(ado_client, <member_id>)
-
-# Update
-member.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_value>, <params>)
-
-
 ```
 </details>
 
@@ -365,11 +293,6 @@ merge_branch_policy = MergeBranchPolicy.get_branch_policy(ado_client, <repo_id>,
 
 # Set Branch Policy
 merge_branch_policy.set_branch_policy(ado_client, <repo_id>, <minimum_approver_count>, <creator_vote_counts>, <prohibit_last_pushers_vote>, <allow_completion_with_rejects>, <when_new_changes_are_pushed>, <branch_name>)
-
-# Update
-merge_branch_policy.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_value>, <params>)
-
-
 ```
 </details>
 
@@ -407,11 +330,6 @@ merge_policies.remove_default_reviewer(ado_client, <repo_id>, <reviewer_id>, <br
 
 # Set Branch Policy
 merge_policies.set_branch_policy(ado_client, <repo_id>, <minimum_approver_count>, <creator_vote_counts>, <prohibit_last_pushers_vote>, <allow_completion_with_rejects>, <when_new_changes_are_pushed>, <branch_name>)
-
-# Update
-merge_policies.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_value>, <params>)
-
-
 ```
 </details>
 
@@ -434,11 +352,6 @@ reviewers = MergePolicyDefaultReviewer.get_default_reviewers(ado_client, <repo_i
 
 # Remove Default Reviewer
 merge_policy_default_reviewer.remove_default_reviewer(ado_client, <repo_id>, <reviewer_id>, <branch_name>)
-
-# Update
-merge_policy_default_reviewer.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_value>, <params>)
-
-
 ```
 </details>
 
@@ -458,8 +371,6 @@ pipeline_authorisations = PipelineAuthorisation.get_all_for_environment(ado_clie
 
 # Update
 pipeline_authorisation.update(ado_client, <authorized>)
-
-
 ```
 </details>
 
@@ -485,14 +396,6 @@ project = Project.get_by_id(ado_client, <project_id>)
 
 # Get By Name
 project = Project.get_by_name(ado_client, <project_name>)
-
-# Last Update Time
-project = Project.last_update_time(ado_client, <project_name>)
-
-# Update
-project.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_value>, <params>)
-
-
 ```
 </details>
 
@@ -509,9 +412,6 @@ pull_request.add_reviewer_static(ado_client, <repo_id>, <pull_request_id>, <revi
 
 # Close
 pull_request.close(ado_client)
-
-# Close Date
-pull_request.close_date(ado_client)
 
 # Create
 pull_request = PullRequest.create(ado_client, <repo_id>, <from_branch_name>, <pull_request_title>, <pull_request_description>, <is_draft>)
@@ -546,14 +446,8 @@ pull_requests = PullRequest.get_my_pull_requests(ado_client)
 # Get Reviewers
 members = PullRequest.get_reviewers(ado_client)
 
-# Is Draft
-members = PullRequest.is_draft(ado_client)
-
 # Mark As Draft
 pull_request.mark_as_draft(ado_client)
-
-# Merge Status
-pull_request.merge_status(ado_client)
 
 # Post Comment
 pull_request_comment = PullRequest.post_comment(ado_client, <content>)
@@ -563,8 +457,6 @@ pull_request.unmark_as_draft(ado_client)
 
 # Update
 pull_request.update(ado_client, <attribute_name>, <attribute_value>)
-
-
 ```
 </details>
 
@@ -587,14 +479,6 @@ releases = Release.get_all(ado_client, <definition_id>)
 
 # Get By Id
 release = Release.get_by_id(ado_client, <release_id>)
-
-# Keep Forever
-release = Release.keep_forever(ado_client, <release_id>)
-
-# Update
-release.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_value>, <params>)
-
-
 ```
 </details>
 
@@ -603,9 +487,6 @@ release.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_
 <details>
 
 ```py
-# Agent Pool Id
-release_definition.agent_pool_id(ado_client, <update_action>, <url>, <attribute_name>, <attribute_value>, <params>)
-
 # Create
 release_definition = ReleaseDefinition.create(ado_client, <name>, <variable_group_ids>, <agent_pool_id>)
 
@@ -624,16 +505,8 @@ releases = ReleaseDefinition.get_all_releases_for_definition(ado_client, <defini
 # Get By Id
 release_definition = ReleaseDefinition.get_by_id(ado_client, <release_definition_id>)
 
-# Is Disabled
-release_definition = ReleaseDefinition.is_disabled(ado_client, <release_definition_id>)
-
-# Revision
-release_definition = ReleaseDefinition.revision(ado_client, <release_definition_id>)
-
 # Update
 release_definition.update(ado_client, <attribute_name>, <attribute_value>)
-
-
 ```
 </details>
 
@@ -647,9 +520,6 @@ repo = Repo.create(ado_client, <name>, <include_readme>)
 
 # Create Pull Request
 pull_request = Repo.create_pull_request(ado_client, <branch_name>, <pull_request_title>, <pull_request_description>)
-
-# Default Branch
-pull_request = Repo.default_branch(ado_client, <branch_name>, <pull_request_title>, <pull_request_description>)
 
 # Delete
 repo.delete(ado_client)
@@ -681,16 +551,11 @@ dictionary = Repo.get_contents(ado_client, <file_types>, <branch_name>)
 # Get File
 string_var = Repo.get_file(ado_client, <file_path>, <branch_name>)
 
-# Is Disabled
-string_var = Repo.is_disabled(ado_client, <file_path>, <branch_name>)
-
 # Set Branch Merge Policy
 merge_policies = Repo.set_branch_merge_policy(ado_client, <repo_id>, <minimum_approver_count>, <creator_vote_counts>, <prohibit_last_pushers_vote>, <allow_completion_with_rejects>, <when_new_changes_are_pushed>, <branch_name>)
 
 # Update
 repo.update(ado_client, <attribute_name>, <attribute_value>)
-
-
 ```
 </details>
 
@@ -710,11 +575,6 @@ reviewer.delete_by_id(ado_client, <member_id>)
 
 # Get By Id
 member = Reviewer.get_by_id(ado_client, <member_id>)
-
-# Update
-reviewer.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_value>, <params>)
-
-
 ```
 </details>
 
@@ -746,8 +606,6 @@ service_endpoint.update(ado_client, <attribute_name>, <attribute_value>)
 
 # Update Pipeline Perms
 dictionary = ServiceEndpoint.update_pipeline_perms(ado_client, <pipeline_id>)
-
-
 ```
 </details>
 
@@ -779,8 +637,6 @@ team_members = Team.get_members(ado_client)
 
 # Update
 team.update(ado_client, <attribute_name>, <attribute_value>)
-
-
 ```
 </details>
 
@@ -800,11 +656,6 @@ team_member.delete_by_id(ado_client, <member_id>)
 
 # Get By Id
 member = TeamMember.get_by_id(ado_client, <member_id>)
-
-# Update
-team_member.update(ado_client, <update_action>, <url>, <attribute_name>, <attribute_value>, <params>)
-
-
 ```
 </details>
 
@@ -831,13 +682,8 @@ variable_group = VariableGroup.get_by_id(ado_client, <variable_group_id>)
 # Get By Name
 variable_group = VariableGroup.get_by_name(ado_client, <name>)
 
-# Modified On
-variable_group = VariableGroup.modified_on(ado_client, <name>)
-
 # Update
 variable_group.update(ado_client, <attribute_name>, <attribute_value>)
-
-
 ```
 </details>
 

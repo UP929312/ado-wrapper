@@ -11,8 +11,8 @@ from ado_wrapper.utils import AuthenticationError
 class AdoClient:
     def __init__(  # pylint: disable=too-many-arguments
         self, ado_email: str, ado_pat: str, ado_org: str, ado_project: str,
-        state_file_name: str | None = "main.state", bypass_initialisation: bool = False,
-        action: Literal["plan", "apply"] = "apply"  # fmt: skip
+        state_file_name: str | None = "main.state", suppress_warnings: bool = False,
+        bypass_initialisation: bool = False, action: Literal["plan", "apply"] = "apply"  # fmt: skip
     ) -> None:
         """Takes an email, PAT, org, project, and state file name. The state file name is optional, and if not provided,
         state will be stored in "main.state" (can be disabled using None)"""
@@ -21,6 +21,7 @@ class AdoClient:
         self.ado_org = ado_org
         self.ado_project = ado_project
 
+        self.suppress_warnings = suppress_warnings
         self.plan_mode = action == "plan"
 
         self.session = requests.Session()
@@ -39,8 +40,9 @@ class AdoClient:
             try:
                 self.pat_author: AdoUser = AdoUser.get_by_email(self, ado_email)
             except ValueError:
-                print(
-                    f"[ADO_WRAPPER] WARNING: User {ado_email} not found in ADO, nothing critical, but stops releases from being made, and plans from being accurate."
-                )
+                if not suppress_warnings:
+                    print(
+                        f"[ADO_WRAPPER] WARNING: User {ado_email} not found in ADO, nothing critical, but stops releases from being made, and plans from being accurate."
+                    )
 
         self.state_manager = StateManager(self, state_file_name) if action == "apply" else PlanStateManager(self)  # Has to be last

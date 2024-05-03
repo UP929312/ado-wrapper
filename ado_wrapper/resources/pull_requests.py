@@ -136,7 +136,8 @@ class PullRequest(StateManagedResource):
                 f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
             )  # type: ignore[return-value]
         except KeyError:
-            print(f"Repo with id `{repo_id}` was disabled, or you had no access.")
+            if not ado_client.suppress_warnings:
+                print(f"Repo with id `{repo_id}` was disabled, or you had no access.")
             return []
 
     @classmethod

@@ -114,12 +114,14 @@ class Repo(StateManagedResource):
                 f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?recursionLevel={'Full'}&download={True}&$format={'Zip'}&versionDescriptor.version={branch_name}&api-version=7.1",
             )
         except requests.exceptions.ConnectionError:
-            print(f"=== Connection error, failed to download {self.repo_id}")
+            if not ado_client.suppress_warnings:
+                print(f"=== Connection error, failed to download {self.repo_id}")
             return {}
         if request.status_code == 404:
             raise ResourceNotFound(f"Repo {self.repo_id} does not have any branches or content!")
         if request.status_code != 200:
-            print(f"Error getting repo contents for {self.name} ({self.repo_id}):", request.text)
+            if not ado_client.suppress_warnings:
+                print(f"Error getting repo contents for {self.name} ({self.repo_id}):", request.text)
             return {}
         # ============ We do this because ADO ===================
         bytes_io = io.BytesIO()
@@ -134,9 +136,11 @@ class Repo(StateManagedResource):
                     try:
                         files[file_name] = zip_ref.read(file_name).decode()  # fmt: skip
                     except UnicodeDecodeError:
-                        print(f"Error decoding file: {file_name} in {self.name}")
+                        if not ado_client.suppress_warnings:
+                            print(f"Error decoding file: {file_name} in {self.name}")
         except zipfile.BadZipFile as e:
-            print(f"{self.name} ({self.repo_id}) couldn't be unzipped:", e)
+            if not ado_client.suppress_warnings:
+                print(f"{self.name} ({self.repo_id}) couldn't be unzipped:", e)
 
         bytes_io.close()
         # =========== That's all I have to say ==================

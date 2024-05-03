@@ -86,13 +86,16 @@ class StateManager:
         try:
             class_reference.delete_by_id(self.ado_client, resource_id)  # type: ignore[call-arg]
         except DeletionFailed as exc:
-            print(str(exc))
+            if not self.ado_client.suppress_warnings:
+                print(str(exc))
         except (NotImplementedError, TypeError):
-            print(
-                f"[ADO_WRAPPER] Cannot delete {resource_type} {resource_id} from state or real space, please delete this manually or using code."
-            )
+            if not self.ado_client.suppress_warnings:
+                print(
+                    f"[ADO_WRAPPER] Cannot delete {resource_type} {resource_id} from state or real space, please delete this manually or using code."
+                )
         else:
-            print(f"[ADO_WRAPPER] Deleted {resource_type} {resource_id} from ADO")
+            if not self.ado_client.suppress_warnings:
+                print(f"[ADO_WRAPPER] Deleted {resource_type} {resource_id} from ADO")
             self.remove_resource_from_state(resource_type, resource_id)
 
     def delete_all_resources(self, resource_type_filter: ResourceType | None = None) -> None:
@@ -106,7 +109,8 @@ class StateManager:
                 try:
                     self.delete_resource(resource_type, resource_id)  # pyright: ignore[reportArgumentType]
                 except DeletionFailed as e:
-                    print(f"[ADO_WRAPPER] Error deleting {resource_type} {resource_id}: {e}")
+                    if not self.ado_client.suppress_warnings:
+                        print(f"[ADO_WRAPPER] Error deleting {resource_type} {resource_id}: {e}")
 
     def import_into_state(self, resource_type: ResourceType, resource_id: str) -> None:
         class_reference = get_resource_variables()[resource_type]

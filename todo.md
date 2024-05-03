@@ -67,15 +67,15 @@ AgentPools create/delete and testing
 -----
 
 Pylint command:
-pylint .
-mypy . --strict
-black . --line-length 140
-pytest tests/ -vvvv -s
-python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt"
-python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt" --state-file "tests/test_state.state"
-python3.11 -m ado_wrapper --refresh-resources-on-startup --creds_file "credentials.txt"
-coverage run -m pytest
-coverage html && open htmlcov/index.html
+pylint .  
+mypy . --strict  
+black . --line-length 140  
+pytest tests/ -vvvv -s  
+python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt"  
+python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt" --state-file "tests/test_state.state"  
+python3.11 -m ado_wrapper --refresh-resources-on-startup --creds_file "credentials.txt"  
+coverage run -m pytest  
+coverage html && open htmlcov/index.html  
 
 Make all of the StateManagedResources use _ and call them that way, so they don't appear normally, and also in the docs
 

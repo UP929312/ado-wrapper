@@ -143,7 +143,8 @@ class Build(StateManagedResource):
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}/leases?api-version=7.1",
         )
         if leases_request.status_code != 200:
-            print(f"Could not delete leases, {leases_request.status_code}")
+            if not ado_client.suppress_warnings:
+                print(f"Could not delete leases, {leases_request.status_code}")
             return
         leases = leases_request.json()["value"]
         for lease in leases:

@@ -109,7 +109,8 @@ class StateManagedResource:
         request = ado_client.session.delete(url)
         if request.status_code != 204:
             if request.status_code == 404:
-                print("[ADO_WRAPPER] Resource not found, probably already deleted, removing from state")
+                if not ado_client.suppress_warnings:
+                    print("[ADO_WRAPPER] Resource not found, probably already deleted, removing from state")
             else:
                 if "message" in request.json():
                     raise DeletionFailed(f"[ADO_WRAPPER] Error deleting {cls.__name__} ({resource_id}): {request.json()['message']}")

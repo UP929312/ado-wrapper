@@ -59,7 +59,8 @@ class MergePolicyDefaultReviewer(StateManagedResource):
         if request is None:
             return []
         if "ms.vss-code-web.branch-policies-data-provider" not in request["dataProviders"]:
-            print(f"No default reviewers found for repo {repo_id}! Most likely it's disabled.")
+            if not ado_client.suppress_warnings:
+                print(f"No default reviewers found for repo {repo_id}! Most likely it's disabled.")
             return []
         # ===
         all_reviewers = [Reviewer(x["displayName"], x["uniqueName"], x["id"], 0, False) for x in request["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["identities"]]  # fmt: skip

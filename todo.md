@@ -62,6 +62,7 @@ Tags are a problem, branches a bit too, build definitions too, the problem is th
 have the create update, rather than create, but if the data is different, how do we link them?
 
 Searches tests
+AgentPools create/delete and testing
 
 -----
 

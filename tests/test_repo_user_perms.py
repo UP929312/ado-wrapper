@@ -108,3 +108,12 @@ class TestRepoUserPerms:
             RepoUserPermissions.remove_perm(self.ado_client, repo.repo_id, email)
             updated_perms = RepoUserPermissions.get_all_by_repo_id(self.ado_client, repo.repo_id)
             assert email not in updated_perms
+
+    def test_with_filters(self) -> None:
+        with RepoContextManager(self.ado_client, "user-perms-with_filters") as repo:
+            RepoUserPermissions.set_by_subject_email(self.ado_client, repo.repo_id, email, "Allow", "contribute")
+            all_perms = RepoUserPermissions.get_all_by_repo_id(self.ado_client, repo.repo_id, users_only=False, ignore_inherits=False)
+            only_users = RepoUserPermissions.get_all_by_repo_id(self.ado_client, repo.repo_id, users_only=True, ignore_inherits=False)
+            only_overrides = RepoUserPermissions.get_all_by_repo_id(self.ado_client, repo.repo_id, users_only=True, ignore_inherits=True)
+            assert len(only_users) < len(all_perms)
+            assert len(only_overrides) == 1 

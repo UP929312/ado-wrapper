@@ -64,8 +64,6 @@ have the create update, rather than create, but if the data is different, how do
 Searches tests
 AgentPools create/delete and testing
 
-Repo user permissions <https://dev.azure.com/VFCloudEngineering/Platform/_settings/repositories?repo=89024bcf-7a82-449e-bd7f-43d40296fde8&_a=permissionsMid>
-
 -----
 
 Commands:  

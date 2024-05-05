@@ -29,10 +29,10 @@ class AdoUser(StateManagedResource):
     email: str
     origin: str
     origin_id: str  # DON'T USE THIS, USE `descriptor_id` INSTEAD
+    domain_container_id: str  # Ignore this
     # "subjectKind": "user",
     # "metaType": "member",
     # "directoryAlias": "MiryabblliS",
-    # "domain": "68283f3b-8487-4c86-adb3-a5228f18b893",
     # "url": "https://vssps.dev.azure.com/{ado_client.}/_apis/Graph/Users/aad.M2Q5NDlkZTgtZDI2Yi03MGQ3LWEyYjItMDAwYTQzYTdlNzFi",
 
     def __str__(self) -> str:
@@ -41,7 +41,7 @@ class AdoUser(StateManagedResource):
     @classmethod
     def from_request_payload(cls, data: dict[str, str]) -> AdoUser:
         return cls(data["descriptor"], data["displayName"], data["mailAddress"].removeprefix("vstfs:///Classification/TeamProject/"),
-                   data["origin"], data["originId"])  # fmt: skip
+                   data["origin"], data["originId"], data.get("domain", "UNKNOWN"))  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, descriptor_id: str) -> AdoUser:

@@ -8,7 +8,7 @@ from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import requires_initialisation, ResourceNotFound
 
 PERMISSION_SET_ID = "2e9eb7ed-3c0a-47d4-87c1-0ffdd275fd87"  # This is global and hardcoded
-ActionType = Literal["Allow", "Deny", "Not Set"]
+ActionType = Literal["Allow", "Deny", "Not set"]
 PermissionType = Literal[
     "bypass_policies_when_completing_pull_requests", "bypass_policies_when_pushing", "contribute",
     "contribute_to_pull_requests", "create_branch", "create_tag", "delete_or_disable_repository",
@@ -117,7 +117,9 @@ class UserPermission:
 @dataclass
 class RepoUserPermissions(StateManagedResource):
     @classmethod
-    def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str) -> dict[str, list[UserPermission]]:  # fmt: skip
+    def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str, users_only: bool=True,
+                           ignore_inherits: bool=True, remove_not_set: bool=False) -> dict[str, list[UserPermission]]:  # fmt: skip
+        """Gets all user permissions for a repo, user_only removes groups"""
         requires_initialisation(ado_client)
         PAYLOAD =  {"contributionIds":["ms.vss-admin-web.security-view-members-data-provider"], "dataProviderContext": {"properties": {
             "permissionSetId": PERMISSION_SET_ID,
@@ -129,13 +131,26 @@ class RepoUserPermissions(StateManagedResource):
         ).json()["dataProviders"]["ms.vss-admin-web.security-view-members-data-provider"]
         if request is None:
             raise ResourceNotFound("Could not find any permissions for this repo! Does it exist?")
+        # We now make descriptor -> display_name mapping
         groups_and_users = {
             identity["descriptor"]: identity["principalName"] if identity["subjectKind"]=="group" else identity["displayName"]
             for identity in request["identities"]
+            if not users_only or (identity["subjectKind"] != "group")  # If we're doing users only, don't include if it's a group
         }
-        return {
+        # We then make user_name -> list[UserPermissions]
+        perms_mapping = {
             name: UserPermission.get_by_subject_descriptor(ado_client, descriptor, repo_id)
             for descriptor, name in groups_and_users.items()  # fmt: skip
+        }
+        # Then, if they want to remove inherited perms, we do that.
+        filtered_perms = {
+            user: perms for user, perms in perms_mapping.items() if not ignore_inherits or
+            any(x.permission_display_string in ["Allow", "Deny"] for x in perms)
+        }
+        # Finally, if they want to remove perms which are left as "Not set", we do that now
+        return {  # Filters Not set
+            user: [x for x in perms if not remove_not_set or x.permission_display_string != ("Not set")]
+            for user, perms in filtered_perms.items()
         }
 
     @staticmethod
@@ -163,7 +178,7 @@ class RepoUserPermissions(StateManagedResource):
 
     @classmethod
     def set_all_permissions_for_repo(cls, ado_client: AdoClient, repo_id: str, mapping: dict[str, dict[PermissionType, ActionType]]) -> None:
-        """Takes a mapping of <user_email>: {permission_name: Allow | Deny | Not Set}}"""
+        """Takes a mapping of <user_email>: {permission_name: Allow | Deny | Not set}}"""
         domain_container_id = AdoUser.get_by_email(ado_client, list(mapping.keys())[0]).domain_container_id
         for email, permission_pairs in mapping.items():
             cls.set_by_subject_email_batch(ado_client, repo_id, email, permission_pairs, domain_container_id)

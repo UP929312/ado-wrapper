@@ -57,6 +57,7 @@ flag_mapping = {  # Where is 1 & 256?
 class UserPermission:
     namespace_id: str = field(repr=False)
     display_name: str
+    programmatic_name: str
     token: str = field(repr=False)
     bit: int = field(repr=False)
     can_edit: bool = field(repr=False)
@@ -65,8 +66,8 @@ class UserPermission:
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> UserPermission:
         return cls(
-            data["namespaceId"], external_to_internal_mapping.get(data["displayName"], data["displayName"]), data["token"], data["bit"],
-            data.get("canEdit", False), data["permissionDisplayString"]  # fmt: skip
+            data["namespaceId"], data["displayName"], external_to_internal_mapping.get(data["displayName"], data["displayName"]),
+            data["token"], data["bit"], data.get("canEdit", False), data["permissionDisplayString"]  # fmt: skip
         )
 
     @classmethod

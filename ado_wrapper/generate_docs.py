@@ -31,9 +31,9 @@ def format_return_type(return_type: str) -> str | None:
     if "." in return_type:
         return_type = return_type.split(".")[-1].removesuffix(">").removeprefix("_")
     if return_type == "str":
-        return f"string_var = "
+        return "string_var = "
     if return_type.startswith("dict"):
-        return f"dictionary = "
+        return "dictionary = "
     if return_type.startswith("none"):
         return ""
     if "state_managed_resource" in return_type:
@@ -42,7 +42,7 @@ def format_return_type(return_type: str) -> str | None:
         return_type = return_type.removeprefix("list[_").removesuffix("]")+"s"
     return f"{return_type} = "
 
-def dataclass_attributes(cls) -> list[str]:
+def dataclass_attributes(cls) -> list[str]:  # type: ignore[no-untyped-def]
     return [x for x in dir(cls) if x in cls.__dataclass_fields__.keys()]
 
 sorted_pairs = dict(sorted({string: value for string, value in globals().items() if string[0].isupper()}.items()))
@@ -77,7 +77,7 @@ for class_name, value in sorted_pairs.items():
 
     string += "\n```\n</details>\n\n"
 
-with open("examples.md", "w") as file:
+with open("examples.md", "w", encoding="utf-8") as file:
     file.write(string.replace("\n\n\n", "\n"))
 
 # All the functions which have NotImplementedError

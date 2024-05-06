@@ -12,14 +12,14 @@ class TestRepoUserPerms:
     def test_from_request_payload(self) -> None:
         repo_user_perms = UserPermission.from_request_payload(
             {
-                'displayName': 'Bypass policies when completing pull requests',
-                'namespaceId': '2e9eb7ed-3c0a-47d4-87c1-0ffdd275fd87',
-                'token': 'repoV2/project_id/repo_id/',
-                'bit': 32768,
-                'canEdit': True,
-                'effectivePermissionValue': 1,
-                'explicitPermissionValue': 1,
-                'permissionDisplayString': 'Allow'
+                "displayName": "Bypass policies when completing pull requests",
+                "namespaceId": "2e9eb7ed-3c0a-47d4-87c1-0ffdd275fd87",
+                "token": "repoV2/project_id/repo_id/",
+                "bit": 32768,
+                "canEdit": True,
+                "effectivePermissionValue": 1,
+                "explicitPermissionValue": 1,
+                "permissionDisplayString": "Allow",
             }
         )
         assert isinstance(repo_user_perms, UserPermission)
@@ -94,8 +94,9 @@ class TestRepoUserPerms:
             }
             RepoUserPermissions.set_all_permissions_for_repo(self.ado_client, repo.repo_id, input_perms)
             all_perms = RepoUserPermissions.get_all_by_repo_id(self.ado_client, repo.repo_id)
-            perms_formatted: dict[PermissionType, ActionType] = {perm.programmatic_name: perm.permission_display_string  # type: ignore[misc]
-                                                                 for perm in all_perms[existing_user_name]}
+            perms_formatted: dict[PermissionType, ActionType] = {
+                perm.programmatic_name: perm.permission_display_string for perm in all_perms[existing_user_name]  # type: ignore[misc]
+            }
             assert perms_formatted == input_perms[email]
 
     def test_remove_perms(self) -> None:

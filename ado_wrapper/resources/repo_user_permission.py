@@ -13,7 +13,7 @@ PermissionType = Literal[
     "bypass_policies_when_completing_pull_requests", "bypass_policies_when_pushing", "contribute",
     "contribute_to_pull_requests", "create_branch", "create_tag", "delete_or_disable_repository",
     "edit_policies", "force_push", "manage_notes", "manage_permissions", "read", "remove_others_locks",
-    "rename_repository",
+    "rename_repository",  # fmt: skip
 ]
 
 if TYPE_CHECKING:
@@ -32,8 +32,8 @@ external_to_internal_mapping = {
     "Manage notes": "manage_notes",
     "Manage permissions": "manage_permissions",
     "Read": "read",
-    "Remove others\' locks": "remove_others_locks",
-    "Rename repository": "rename_repository"
+    "Remove others' locks": "remove_others_locks",
+    "Rename repository": "rename_repository",
 }
 
 flag_mapping = {  # Where is 1 & 256?
@@ -52,6 +52,7 @@ flag_mapping = {  # Where is 1 & 256?
     "remove_others_locks": 4096,
     "rename_repository": 1024,
 }
+
 
 @dataclass
 class UserPermission:
@@ -73,11 +74,13 @@ class UserPermission:
     @classmethod
     def get_by_subject_descriptor(cls, ado_client: AdoClient, subject_descriptor: str, repo_id: str) -> list[UserPermission]:
         requires_initialisation(ado_client)
-        PAYLOAD = {"contributionIds": ["ms.vss-admin-web.security-view-permissions-data-provider"], "dataProviderContext": {"properties": {
-            "subjectDescriptor": subject_descriptor,
-            "permissionSetId": PERMISSION_SET_ID,
-            "permissionSetToken": f"repoV2/{ado_client.ado_project_id}/{repo_id}",
-        }}}
+        PAYLOAD = {
+            "contributionIds": ["ms.vss-admin-web.security-view-permissions-data-provider"], "dataProviderContext": { "properties": {
+                "subjectDescriptor": subject_descriptor,
+                "permissionSetId": PERMISSION_SET_ID,
+                "permissionSetToken": f"repoV2/{ado_client.ado_project_id}/{repo_id}",
+            }},
+        }  # fmt: skip
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery?api-version=5.0-preview.1",
             json=PAYLOAD,
@@ -88,14 +91,14 @@ class UserPermission:
 
     @classmethod
     def set_by_subject_email(cls, ado_client: AdoClient, repo_id: str, subject_email: str, action: ActionType,
-                             permission: PermissionType, domain_container_id: str = "") -> None:
+                             permission: PermissionType, domain_container_id: str = "") -> None:  # fmt: skip
         requires_initialisation(ado_client)
         if not domain_container_id:
             domain_container_id = AdoUser.get_by_email(ado_client, subject_email).domain_container_id
         PAYLOAD = {"token": f"repoV2/{ado_client.ado_project_id}/{repo_id}", "merge": True, "accessControlEntries":[
             {"descriptor": f"Microsoft.IdentityModel.Claims.ClaimsIdentity;{domain_container_id}\\{subject_email}",
              "allow": flag_mapping[permission] if action == "Allow" else 0, "deny": flag_mapping[permission] if action == "Deny" else 0,
-        }]}
+        }]}  # fmt: skip
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/AccessControlEntries/{PERMISSION_SET_ID}",
             json=PAYLOAD,
@@ -125,7 +128,7 @@ class RepoUserPermissions(StateManagedResource):
         PAYLOAD =  {"contributionIds":["ms.vss-admin-web.security-view-members-data-provider"], "dataProviderContext": {"properties": {
             "permissionSetId": PERMISSION_SET_ID,
             "permissionSetToken":f"repoV2/{ado_client.ado_project_id}/{repo_id}"
-        }}}
+        }}}  # fmt: skip
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview.1",
             json=PAYLOAD,
@@ -137,7 +140,7 @@ class RepoUserPermissions(StateManagedResource):
             identity["descriptor"]: identity["principalName"] if identity["subjectKind"] == "group" else identity["displayName"]
             for identity in request["identities"]
             if not users_only or (identity["subjectKind"] != "group")  # If we're doing users only, don't include if it's a group
-        }
+        }  # fmt: skip
         # We then make user_name -> list[UserPermissions]
         perms_mapping = {
             name: UserPermission.get_by_subject_descriptor(ado_client, descriptor, repo_id)
@@ -146,7 +149,7 @@ class RepoUserPermissions(StateManagedResource):
         # Then, if they want to remove inherited perms, we do that.
         filtered_perms = {
             user: perms for user, perms in perms_mapping.items() if not ignore_inherits or
-            any(x.permission_display_string in ["Allow", "Deny"] for x in perms)
+            any(x.permission_display_string in ["Allow", "Deny"] for x in perms)  # fmt: skip
         }
         # Finally, if they want to remove perms which are left as "Not set", we do that now
         return {  # Filters Not set
@@ -165,12 +168,12 @@ class RepoUserPermissions(StateManagedResource):
 
     @staticmethod
     def set_by_subject_email(ado_client: AdoClient, repo_id: str, subject_email: str, action: ActionType,
-                             permission: PermissionType, domain_container_id: str = "") -> None:
+                             permission: PermissionType, domain_container_id: str = "") -> None:  # fmt: skip
         return UserPermission.set_by_subject_email(ado_client, repo_id, subject_email, action, permission, domain_container_id)
 
     @classmethod
     def set_by_subject_email_batch(cls, ado_client: AdoClient, repo_id: str, subject_email: str,
-                                   mapping: dict[PermissionType, ActionType], domain_container_id: str = "") -> None:
+                                   mapping: dict[PermissionType, ActionType], domain_container_id: str = "") -> None:  # fmt: skip
         """Does a batch job of updating permissions, updating all permissions for one subject (user or group)"""
         if not domain_container_id:
             domain_container_id = AdoUser.get_by_email(ado_client, subject_email).domain_container_id
@@ -178,7 +181,7 @@ class RepoUserPermissions(StateManagedResource):
             cls.set_by_subject_email(ado_client, repo_id, subject_email, action, permission, domain_container_id)
 
     @classmethod
-    def set_all_permissions_for_repo(cls, ado_client: AdoClient, repo_id: str, mapping: dict[str, dict[PermissionType, ActionType]]) -> None:
+    def set_all_permissions_for_repo(cls, ado_client: AdoClient, repo_id: str, mapping: dict[str, dict[PermissionType, ActionType]]) -> None:  # fmt: skip
         """Takes a mapping of <user_email>: {permission_name: Allow | Deny | Not set}}"""
         domain_container_id = AdoUser.get_by_email(ado_client, list(mapping.keys())[0]).domain_container_id
         for email, permission_pairs in mapping.items():
@@ -190,8 +193,8 @@ class RepoUserPermissions(StateManagedResource):
 
     @staticmethod
     def display_output(permissions: list[UserPermission]) -> str:
-        return "    "+"\n    ".join([str(x) for x in permissions])
+        return "    " + "\n    ".join([str(x) for x in permissions])
 
     @staticmethod
     def display_output_for_repo(mapping: dict[str, list[UserPermission]]) -> str:
-        return "\n".join([user_name+"\n"+RepoUserPermissions.display_output(values) for user_name, values in mapping.items()])
+        return "\n".join([user_name + "\n" + RepoUserPermissions.display_output(values) for user_name, values in mapping.items()])

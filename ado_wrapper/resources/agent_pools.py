@@ -45,8 +45,10 @@ class AgentPool(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, name: str, agent_cloud_id: str | None, auto_provision: bool, auto_size: bool,  # type: ignore[override]
-               auto_update: bool, is_hosted: bool, size: int, target_size: int | None) -> AgentPool:
+    def create(
+        cls, ado_client: AdoClient, name: str, agent_cloud_id: str | None, auto_provision: bool, auto_size: bool,  # type: ignore[override]
+        auto_update: bool, is_hosted: bool, size: int, target_size: int | None  # fmt: skip
+    ) -> AgentPool:
         raise NotImplementedError
         # PAYLOAD = {
         #     "name": name, "agentCloudId": agent_cloud_id, "autoProvision": auto_provision, "autoSize": auto_size,
@@ -65,11 +67,11 @@ class AgentPool(StateManagedResource):
     @classmethod
     def delete_by_id(cls, ado_client: AdoClient, agent_pool_id: str) -> None:  # type: ignore[override]
         raise NotImplementedError
-        return super().delete_by_id(
-            ado_client,
-            f"/_apis/distributedtask/pools/{agent_pool_id}?api-version=7.1-preview.1",
-            agent_pool_id
-        )
+        # return super().delete_by_id(
+        #     ado_client,
+        #     f"/_apis/distributedtask/pools/{agent_pool_id}?api-version=7.1-preview.1",
+        #     agent_pool_id
+        # )
 
     @classmethod
     def get_all(cls, ado_client: AdoClient) -> list[AgentPool]:  # type: ignore[override]
@@ -84,4 +86,4 @@ class AgentPool(StateManagedResource):
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, agent_pool_id: str) -> AgentPool | None:
-        return cls.get_by_abstract_filter(ado_client, lambda agent_pool: agent_pool.agent_pool_id==agent_pool_id)  # type: ignore[return-value, attr-defined]
+        return cls.get_by_abstract_filter(ado_client, lambda agent_pool: agent_pool.agent_pool_id == agent_pool_id)  # type: ignore[return-value, attr-defined]

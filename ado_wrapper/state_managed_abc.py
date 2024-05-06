@@ -90,8 +90,8 @@ class StateManagedResource:
             url = f"https://dev.azure.com/{ado_client.ado_org}" + url
         request = ado_client.session.post(url, json=payload or {})  # Create a brand new dict
         if request.status_code >= 300:
-            if request.status_code == 401:
-                raise PermissionError(f"You do not have permission to create this {cls.__name__}!")
+            if request.status_code in [401, 403]:
+                raise PermissionError(f"You do not have permission to create this {cls.__name__}! {request.text}")
             if request.status_code == 409:
                 raise ResourceAlreadyExists(f"The {cls.__name__} with that identifier already exist!")
             raise ValueError(f"Error creating {cls.__name__}: {request.status_code} - {request.text}")

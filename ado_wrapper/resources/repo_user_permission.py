@@ -134,7 +134,7 @@ class RepoUserPermissions(StateManagedResource):
             raise ResourceNotFound("Could not find any permissions for this repo! Does it exist?")
         # We now make descriptor -> display_name mapping
         groups_and_users = {
-            identity["descriptor"]: identity["principalName"] if identity["subjectKind"]=="group" else identity["displayName"]
+            identity["descriptor"]: identity["principalName"] if identity["subjectKind"] == "group" else identity["displayName"]
             for identity in request["identities"]
             if not users_only or (identity["subjectKind"] != "group")  # If we're doing users only, don't include if it's a group
         }

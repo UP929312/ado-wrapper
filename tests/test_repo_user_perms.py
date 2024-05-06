@@ -96,7 +96,7 @@ class TestRepoUserPerms:
             all_perms = RepoUserPermissions.get_all_by_repo_id(self.ado_client, repo.repo_id)
             perms_formatted: dict[PermissionType, ActionType] = {perm.programmatic_name: perm.permission_display_string  # type: ignore[misc]
                                                                  for perm in all_perms[existing_user_name]}
-            assert perms_formatted == input_perms[email]  # type: ignore[comparison-overlap]
+            assert perms_formatted == input_perms[email]
 
     def test_remove_perms(self) -> None:
         with RepoContextManager(self.ado_client, "remove-perms") as repo:
@@ -117,4 +117,4 @@ class TestRepoUserPerms:
             only_users = RepoUserPermissions.get_all_by_repo_id(self.ado_client, repo.repo_id, users_only=True, ignore_inherits=False)
             only_overrides = RepoUserPermissions.get_all_by_repo_id(self.ado_client, repo.repo_id, users_only=True, ignore_inherits=True)
             assert len(only_users) < len(all_perms)
-            assert len(only_overrides) == 1 
+            assert len(only_overrides) == 1

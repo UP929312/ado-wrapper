@@ -64,6 +64,8 @@ have the create update, rather than create, but if the data is different, how do
 Searches tests
 AgentPools create/delete and testing
 
+Perm description for RepoUserPerms? Just a static dict.
+
 -----
 
 Commands:  

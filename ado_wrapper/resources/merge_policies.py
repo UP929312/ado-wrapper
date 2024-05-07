@@ -39,13 +39,14 @@ def _get_type_id(ado_client: AdoClient, action_type: str) -> str:
 
 @dataclass
 class MergePolicyDefaultReviewer(StateManagedResource):
+    """Represents 1 required reviewer and if they're required."""
     policy_id: str = field(metadata={"is_id_field": True})
-    required_reviewer_id: list[str]
+    required_reviewer_id: str
     is_required: bool
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> StateManagedResource:
-        return cls(data["id"], data["settings"]["requiredReviewerIds"], data["isBlocking"])
+        return cls(data["id"], data["settings"]["requiredReviewerIds"][0], data["isBlocking"])
 
     @staticmethod
     def get_default_reviewers(ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list[Reviewer]:
@@ -62,8 +63,9 @@ class MergePolicyDefaultReviewer(StateManagedResource):
             if not ado_client.suppress_warnings:
                 print(f"No default reviewers found for repo {repo_id}! Most likely it's disabled.")
             return []
-        # ===
-        all_reviewers = [Reviewer(x["displayName"], x["uniqueName"], x["id"], 0, False) for x in request["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["identities"]]  # fmt: skip
+        identities = request["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["identities"]
+        # === # Maybe switch ["id"] to ["descriptor"]?
+        all_reviewers = [Reviewer(x["displayName"], x["uniqueName"], x["id"]) for x in identities]  # fmt: skip
         for policy_group in request["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["policyGroups"].values():
             if policy_group["currentScopePolicies"] is None:
                 continue
@@ -76,6 +78,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
 
     @classmethod
     def add_default_reviewer(cls, ado_client: AdoClient, repo_id: str, reviewer_id: str, is_required: bool, branch_name: str = "main") -> None:  # fmt: skip
+        """If the reviewer is a group, use the Group.origin_id attribute, for users, use their regular user id"""
         if reviewer_id in [x.member_id for x in cls.get_default_reviewers(ado_client, repo_id, branch_name)]:
             raise ValueError("Reviewer already exists! To update, please remove the reviewer first.")
         payload = {
@@ -238,7 +241,7 @@ class MergePolicies(StateManagedResource):
     # ================== Default Reviewers ================== #
     @staticmethod
     def add_default_reviewer(ado_client: AdoClient, repo_id: str, reviewer_id: str, is_required: bool, branch_name: str = "main") -> None:
-        """If the reviewer is a group, use the Group.origin_id attribute."""
+        """If the reviewer is a group, use the Group.origin_id attribute, for users, use their regular user id"""
         return MergePolicyDefaultReviewer.add_default_reviewer(ado_client, repo_id, reviewer_id, is_required, branch_name)
 
     @staticmethod

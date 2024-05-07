@@ -157,7 +157,7 @@ class TeamMember(Member):
 class Reviewer(Member):
     """Identical to Member, but with additional attributes `vote` and `is_required` for PR reviews."""
 
-    def __init__(self, name: str, email: str, reviewer_id: str, vote: VoteOptions, is_required: bool) -> None:
+    def __init__(self, name: str, email: str, reviewer_id: str, vote: VoteOptions = 0, is_required: bool = False) -> None:
         super().__init__(name, email, reviewer_id)
         self.vote = vote
         self.is_required = is_required

@@ -181,15 +181,15 @@ class BuildDefinition(StateManagedResource):
 
     build_definition_id: str = field(metadata={"is_id_field": True})
     name: str = field(metadata={"editable": True})
-    description: str = field(metadata={"editable": True})
-    path: str
-    created_by: Member | None
-    created_date: datetime | None
+    description: str = field(metadata={"editable": True}, repr=False)
+    path: str = field(repr=False)
+    created_by: Member | None = field(repr=False)
+    created_date: datetime | None  = field(repr=False)
     build_repo: BuildRepository | None = field(repr=False)
-    revision: str = "1"
+    revision: str = field(default="1", repr=False)
     process: dict[str, str | int] | None = field(repr=False, default=None)  # Used internally, mostly ignore
     variables: dict[str, str] = field(default_factory=dict, repr=False)
-    variable_groups: list[int] = field(default_factory=list, repr=False)
+    # variable_groups: list[int] = field(default_factory=list, repr=False)
 
     def __str__(self) -> str:
         return f"{self.name}, {self.build_definition_id}, created by {self.created_by}, created on {self.created_date!s}"
@@ -199,8 +199,11 @@ class BuildDefinition(StateManagedResource):
         """Repo is not always present, Member is sometimes present, sometimes None"""
         created_by = Member.from_request_payload(data["authoredBy"]) if "authoredBy" in data else None  # fmt: skip
         build_repository = BuildRepository.from_request_payload(data["repository"]) if "repository" in data else None
-        return cls(str(data["id"]), data["name"], data.get("description", ""), data.get("process", {"yamlFilename": "UNKNOWN"})["yamlFilename"], created_by,
-                from_ado_date_string(data.get("createdDate")), build_repository, str(data["revision"]), data.get("process"), data.get("variables", {}), data.get("variableGroups", []))  # fmt: skip
+        return cls(
+            str(data["id"]), data["name"], data.get("description", ""), data.get("process", {"yamlFilename": "UNKNOWN"})["yamlFilename"],
+            created_by, from_ado_date_string(data.get("createdDate")), build_repository, str(data["revision"]), data.get("process"),
+            data.get("variables", {})  # fmt: skip
+        )
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", build_definition_id: str) -> "BuildDefinition":
@@ -212,7 +215,7 @@ class BuildDefinition(StateManagedResource):
     @classmethod
     def create(  # type: ignore[override]
         cls, ado_client: "AdoClient", name: str, repo_id: str, repo_name: str, path_to_pipeline: str,
-        description: str, agent_pool_id: str, variable_groups: list[str], branch_name: str = "main",  # fmt: skip
+        description: str, agent_pool_id: str, branch_name: str = "main",  # fmt: skip
     ) -> "BuildDefinition":
         payload = get_build_definition(name, repo_id, repo_name, path_to_pipeline, description,
                                        ado_client.ado_project, agent_pool_id, branch_name)  # fmt: skip
@@ -221,7 +224,7 @@ class BuildDefinition(StateManagedResource):
             f"/{ado_client.ado_project}/_apis/build/definitions?api-version=7.0",
             payload=payload,
         )  # type: ignore[return-value]
-        #  | {"variableGroups": [{"id": x for x in variable_groups}]},
+
 
     def update(self, ado_client: "AdoClient", attribute_name: BuildDefinitionEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
         if self.build_repo is None or self.process is None:
@@ -251,6 +254,7 @@ class BuildDefinition(StateManagedResource):
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient") -> "list[BuildDefinition]":  # type: ignore[override]
+        """WARNING: This returns a list of references, which don't have variable groups and more data included."""
         return super().get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/build/definitions?api-version=7.1",
@@ -266,6 +270,10 @@ class BuildDefinition(StateManagedResource):
 
     def get_all_builds_by_definition(self, ado_client: "AdoClient") -> "list[Build]":
         return Build.get_all_by_definition(ado_client, self.build_definition_id)
+
+    def get_latest_build_by_definition(self, ado_client: "AdoClient") -> "Build | None":
+        builds = self.get_all_builds_by_definition(ado_client)
+        return max(builds, key=lambda build: build.start_time if build.start_time else datetime(2000, 0, 0)) if builds else None
 
     @classmethod
     def get_all_by_repo_id(cls, ado_client: "AdoClient", repo_id: str) -> "list[BuildDefinition]":

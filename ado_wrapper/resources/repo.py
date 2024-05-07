@@ -90,10 +90,7 @@ class Repo(StateManagedResource):
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, repo_name: str) -> Repo | None:  # type: ignore[return]
-        """Warning, this function must fetch `all` repos to work, be cautious when calling it in a loop."""
-        for repo in cls.get_all(ado_client):
-            if repo.name == repo_name:
-                return repo
+        return cls.get_by_abstract_filter(ado_client, lambda repo: repo.name == repo_name)  # type: ignore[return-type]
 
     def get_file(self, ado_client: AdoClient, file_path: str, branch_name: str = "main") -> str:
         request = ado_client.session.get(
@@ -163,6 +160,7 @@ class Repo(StateManagedResource):
     def get_content_static(
         ado_client: AdoClient, repo_id: str, file_types: list[str] | None = None, branch_name: str = "main"
     ) -> dict[str, str]:
+        """Fetches the repo for you."""
         repo = Repo.get_by_id(ado_client, repo_id)
         return repo.get_contents(ado_client, file_types, branch_name)
 
@@ -191,8 +189,9 @@ class BuildRepository:
     checkout_submodules: bool = field(default=False, metadata={"internal_name": "checkoutSubmodules"})
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, str | bool]) -> BuildRepository:
-        return cls(data["id"], data.get("name"), data.get("type", "TfsGit"), data.get("clean"), data.get("checkoutSubmodules", False))  # type: ignore[arg-type]
+    def from_request_payload(cls, data: dict[str, Any]) -> BuildRepository:
+        return cls(data["id"], data.get("name"), data.get("type", "TfsGit"),
+                   data.get("clean"), data.get("checkoutSubmodules", False))  # fmt: skip
 
     @classmethod
     def from_json(cls, data: dict[str, str | bool]) -> BuildRepository:

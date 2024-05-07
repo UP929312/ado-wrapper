@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import requests
 
 from ado_wrapper.resources.commits import Commit
-from ado_wrapper.resources.merge_policies import MergePolicies
+from ado_wrapper.resources.merge_policies import MergePolicies, MergePolicyDefaultReviewer
 from ado_wrapper.resources.pull_requests import PullRequest, PullRequestStatus
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import ResourceNotFound, UnknownError
@@ -176,6 +176,12 @@ class Repo(StateManagedResource):
                                                prohibit_last_pushers_vote, allow_completion_with_rejects, when_new_changes_are_pushed,
                                                branch_name)  # fmt: skip
 
+    @classmethod
+    def get_all_repos_with_required_reviewer(cls, ado_client: AdoClient, reviewer_email: str) -> list[Repo]:
+        return [
+            repo for repo in Repo.get_all(ado_client)
+            if any(x.email.lower()==reviewer_email.lower() for x in MergePolicyDefaultReviewer.get_default_reviewers(ado_client, repo.repo_id))
+        ]
 
 # ====================================================================
 

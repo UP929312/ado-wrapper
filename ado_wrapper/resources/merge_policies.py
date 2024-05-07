@@ -45,7 +45,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> StateManagedResource:
-        return cls(data["id"], data["settings"]["requiredReviewerIds"][0], data["isBlocking"])
+        return cls(data["id"], data["settings"]["requiredReviewerIds"], data["isBlocking"])
 
     @staticmethod
     def get_default_reviewers(ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list[Reviewer]:
@@ -238,6 +238,7 @@ class MergePolicies(StateManagedResource):
     # ================== Default Reviewers ================== #
     @staticmethod
     def add_default_reviewer(ado_client: AdoClient, repo_id: str, reviewer_id: str, is_required: bool, branch_name: str = "main") -> None:
+        """If the reviewer is a group, use the Group.origin_id attribute."""
         return MergePolicyDefaultReviewer.add_default_reviewer(ado_client, repo_id, reviewer_id, is_required, branch_name)
 
     @staticmethod

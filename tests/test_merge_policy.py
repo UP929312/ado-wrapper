@@ -47,7 +47,7 @@ class TestMergePolicy:
             assert default_reviewers[0].member_id == existing_user_id
             assert not default_reviewers[0].is_required
 
-            with pytest.raises(ValueError):
+            with pytest.raises(ValueError):  # Can't add them twice
                 MergePolicies.add_default_reviewer(self.ado_client, repo.repo_id, existing_user_id, True)
 
             MergePolicies.remove_default_reviewer(self.ado_client, repo.repo_id, existing_user_id)

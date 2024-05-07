@@ -16,8 +16,8 @@ class Group(StateManagedResource):
     group_descriptor: str = field(metadata={"is_id_field": True})  # None are editable
     name: str = field(metadata={"internal_name": "displayName"})  # Not editable
     description: str
-    group_id: str  # Not editable, don't use
-    origin_id: str = field(metadata={"internal_name": "originId"})  # Not editable, don't use
+    domain: str
+    origin_id: str = field(metadata={"internal_name": "originId"})  # Not editable
     # group_members: list[GroupMember] = field(default_factory=list)
 
     @classmethod

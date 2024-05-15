@@ -1,14 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from re import I
 from typing import TYPE_CHECKING, Any, Literal
-
-from sympy import Id
 
 from ado_wrapper.resources.users import AdoUser
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import requires_initialisation, ResourceNotFound
+from ado_wrapper.utils import requires_initialisation, ResourceNotFound, InvalidPermissionsError
 
 PERMISSION_SET_ID = "2e9eb7ed-3c0a-47d4-87c1-0ffdd275fd87"  # This is global and hardcoded
 ActionType = Literal["Allow", "Deny", "Not set"]
@@ -113,6 +110,8 @@ class UserPermission:
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/AccessControlEntries/{PERMISSION_SET_ID}",
             json=PAYLOAD,
         )
+        if request.status_code == 403:
+            raise InvalidPermissionsError("Cannot change the group's perms on this repo!")
         assert request.status_code == 200
 
     @classmethod
@@ -129,6 +128,8 @@ class UserPermission:
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/AccessControlEntries/{PERMISSION_SET_ID}",
             json=PAYLOAD,
         )
+        if request.status_code == 403:
+            raise InvalidPermissionsError("Cannot change the user's perms on this repo!")
         assert request.status_code == 200
 
     @classmethod
@@ -204,7 +205,7 @@ class RepoUserPermissions(StateManagedResource):
     @classmethod
     def set_by_user_email_batch(cls, ado_client: AdoClient, repo_id: str, subject_email: str,
                                    mapping: dict[PermissionType, ActionType], domain_container_id: str = "") -> None:  # fmt: skip
-        """Does a batch job of updating permissions, updating all permissions for one user"""
+        """Does a batch job of updating permissions, updating all permissions for each user"""
         if not domain_container_id:
             domain_container_id = AdoUser.get_by_email(ado_client, subject_email).domain_container_id
         for permission, action in mapping.items():

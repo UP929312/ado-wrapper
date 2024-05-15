@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Reviewer
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import from_ado_date_string, requires_initialisation
+from ado_wrapper.utils import from_ado_date_string, requires_initialisation, ConfigurationError
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -94,6 +94,8 @@ class MergePolicyDefaultReviewer(StateManagedResource):
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/policy/configurations?api-version=7.1",
             json=payload,
         )
+        if request.status_code == 400:
+            raise ConfigurationError(f"Error adding default reviewer {request.text}")
         assert request.status_code == 200, f"Error setting branch policy: {request.text}"
 
     @staticmethod
@@ -173,6 +175,8 @@ class MergeBranchPolicy(StateManagedResource):
             json=payload,
             headers={"Accept": "application/json;api-version=7.1"},
         )
+        if request.status_code == 400:
+            raise ConfigurationError("Error setting branch policy, perhaps due to permissions.")
         assert request.status_code == 200, f"Error setting branch policy: {request.text}"
 
 

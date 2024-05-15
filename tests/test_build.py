@@ -56,7 +56,7 @@ class TestBuild:
             Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-buildfor-create-delete-build", repo.repo_id, repo.name, "build.yaml",
-                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "my-branch",  # fmt: skip
             )
             build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
             assert build.build_id == Build.get_by_id(self.ado_client, build.build_id).build_id
@@ -70,7 +70,7 @@ class TestBuild:
             Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-get-by-id", repo.repo_id, repo.name, "build.yaml",
-                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "my-branch",  # fmt: skip
             )
             build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
             fetched_build = Build.get_by_id(self.ado_client, build.build_id)
@@ -83,7 +83,7 @@ class TestBuild:
             Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-update", repo.repo_id, repo.name, "build.yaml",
-                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "my-branch",  # fmt: skip
             )
             build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
             # ======
@@ -101,7 +101,7 @@ class TestBuild:
             Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-wait-until-completion", repo.repo_id, repo.name, "build.yaml",
-                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "my-branch",  # fmt: skip
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "my-branch",  # fmt: skip
             )
             build = Build.create_and_wait_until_completion(self.ado_client, build_definition.build_definition_id, "my-branch")
             assert build.status == "completed"
@@ -144,7 +144,7 @@ class TestBuildDefinition:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-create-delete", repo.repo_id, "ado_wrapper-test-repo", "build.yaml",
-                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "test-branch"  # fmt: skip
             )
             assert build_definition.description == f"Please contact {email} if you see this build definition!"
             build_definition.delete(self.ado_client)
@@ -155,7 +155,7 @@ class TestBuildDefinition:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-get-by-id", repo.repo_id, "ado_wrapper-test-repo", "build.yaml",
-                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "test-branch"  # fmt: skip
             )
             fetched_build_definition = BuildDefinition.get_by_id(self.ado_client, build_definition.build_definition_id)
             assert fetched_build_definition.build_definition_id == build_definition.build_definition_id
@@ -167,7 +167,7 @@ class TestBuildDefinition:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-get-all-by-repo", repo.repo_id, "ado_wrapper-test-repo", "build.yaml",
-                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "test-branch"  # fmt: skip
             )
             build_definitions = BuildDefinition.get_all_by_repo_id(self.ado_client, repo.repo_id)
             assert len(build_definitions) == 1
@@ -180,7 +180,7 @@ class TestBuildDefinition:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-update", repo.repo_id, "ado_wrapper-test-repo", "build.yaml",
-                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, [], "test-branch"  # fmt: skip
+                f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "test-branch"  # fmt: skip
             )
             # ======
             build_definition.update(self.ado_client, "name", "ado_wrapper-test-build-for-update-rename")

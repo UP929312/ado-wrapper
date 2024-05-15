@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal
 
 from ado_wrapper.state_managed_abc import StateManagedResource
+from ado_wrapper.resources.users import Member 
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -19,15 +20,17 @@ class Branch(StateManagedResource):
     """
 
     branch_id: str = field(metadata={"is_id_field": True})
-    name: str = field(metadata={"editable": True})  # Maybe more?
+    name: str = field(metadata={"editable": True})
     repo_id: str = field(repr=False)
+    creator: Member = field(repr=False)
 
     @classmethod
     def from_request_payload(cls, data: dict[str, str | dict[str, str]]) -> Branch:
         return cls(
-            data["objectId"],  # type: ignore[arg-type]
+            data["objectId"],
             data["name"].removeprefix("refs/heads/"),  # type: ignore[union-attr]
             data["url"].split("/")[-2],  # type: ignore[union-attr]
+            Member.from_request_payload(data["creator"]),  # type: ignore[union-attr]
         )
 
     @classmethod

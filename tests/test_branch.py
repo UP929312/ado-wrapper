@@ -17,6 +17,7 @@ class TestBranch:
                 "objectId": "123",
                 "url": "https://dev.azure.com/...",
                 "repository": {"id": "123", "name": "test-repo"},
+                "creator": {"displayName": "test", "uniqueName": "test", "id": "123"}
             }
         )
         assert branch.to_json() == Branch.from_json(branch.to_json()).to_json()

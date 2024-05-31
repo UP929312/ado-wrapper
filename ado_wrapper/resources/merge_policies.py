@@ -148,8 +148,8 @@ class MergeBranchPolicy(StateManagedResource):
                           creator_vote_counts: bool, prohibit_last_pushers_vote: bool, allow_completion_with_rejects: bool,
                           when_new_changes_are_pushed: WhenChangesArePushed, branch_name: str = "main") -> None:  # fmt: skip
         """Sets the perms for a pull request, can also be used as a "update" function."""
-        existing_policy = MergePolicies.get_all_by_repo_id(ado_client, repo_id, branch_name)
-        latest_policy_id = (f"/{existing_policy[0].policy_id}") if existing_policy is not None else ""
+        existing_policy = MergePolicies.get_branch_policy(ado_client, repo_id, branch_name)
+        latest_policy_id = f"/{existing_policy.policy_id}" if existing_policy is not None else ""
         payload = {
             "settings": {
                 "minimumApproverCount": minimum_approver_count,
@@ -167,16 +167,10 @@ class MergeBranchPolicy(StateManagedResource):
             "isBlocking": True,
         }
         request = ado_client.session.request(
-            "POST" if not latest_policy_id else "PUT",
+            "PUT" if latest_policy_id else "POST",
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/policy/Configurations{latest_policy_id}?api-version=7.1",  # fmt: skip
             json=payload,
-            # headers={"Accept": "application/json;api-version=7.1"},
         )
-        if request.status_code == 400:
-            # {"$id":"1","innerException":null,"message":"A policy configuration's policy type cannot be changed once set.",
-            # "typeName":"Microsoft.TeamFoundation.Policy.Server.PolicyTypeCannotBeChangedException, Microsoft.TeamFoundation.Policy.Server",
-            # "typeKey":"PolicyTypeCannotBeChangedException","errorCode":0,"eventId":3000}
-            raise ConfigurationError("Error setting branch policy, perhaps due to permissions.")
         assert request.status_code == 200, f"Error setting branch policy: {request.text}"
 
 

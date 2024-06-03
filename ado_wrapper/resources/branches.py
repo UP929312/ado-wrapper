@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal
 
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.resources.users import Member 
+from ado_wrapper.resources.users import Member
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -27,10 +27,10 @@ class Branch(StateManagedResource):
     @classmethod
     def from_request_payload(cls, data: dict[str, str | dict[str, str]]) -> Branch:
         return cls(
-            data["objectId"],
+            str(data["objectId"]),
             data["name"].removeprefix("refs/heads/"),  # type: ignore[union-attr]
             data["url"].split("/")[-2],  # type: ignore[union-attr]
-            Member.from_request_payload(data["creator"]),  # type: ignore[union-attr]
+            Member.from_request_payload(data["creator"]),  # type: ignore[arg-type]
         )
 
     @classmethod

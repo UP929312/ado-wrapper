@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable, Literal
 
 from ado_wrapper.plan_resources.plan_resource import PlannedStateManagedResource
 from ado_wrapper.utils import (
-    DeletionFailed, ResourceAlreadyExists, ResourceNotFound, UpdateFailed,
+    DeletionFailed, ResourceAlreadyExists, ResourceNotFound, UpdateFailed, InvalidPermissionError,
     extract_id, get_internal_field_names, get_resource_variables,  # fmt: skip
 )
 
@@ -91,7 +91,7 @@ class StateManagedResource:
         request = ado_client.session.post(url, json=payload or {})  # Create a brand new dict
         if request.status_code >= 300:
             if request.status_code in [401, 403]:
-                raise PermissionError(f"You do not have permission to create this {cls.__name__}! {request.text}")
+                raise InvalidPermissionError(f"You do not have permission to create this {cls.__name__}! {request.text}")
             if request.status_code == 409:
                 raise ResourceAlreadyExists(f"The {cls.__name__} with that identifier already exist!")
             raise ValueError(f"Error creating {cls.__name__}: {request.status_code} - {request.text}")

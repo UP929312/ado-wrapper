@@ -125,6 +125,10 @@ class ConfigurationError(Exception):
     pass
 
 
+class InvalidPermissionError(Exception):
+    pass
+
+
 def requires_initialisation(ado_client: "AdoClient") -> None:
     """Certain services/endpoints require the ado_project_id, which isn't set if bypass_initialisation is set to False."""
     if not ado_client.ado_project_id:
@@ -136,16 +140,16 @@ def requires_initialisation(ado_client: "AdoClient") -> None:
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports
     """This returns a mapping of resource name (str) to the class type of the resource. This is used to dynamically create instances of resources."""
     from ado_wrapper.resources import (  # type: ignore[attr-defined]  # pylint: disable=possibly-unused-variable
-        AgentPool, AnnotatedTag, Branch, Build, BuildDefinition, Commit, Environment, Group, MergePolicies, MergeBranchPolicy,
-        MergePolicyDefaultReviewer, Project, PullRequest, Release, ReleaseDefinition, Repo, BuildRepository, Team,
-        AdoUser, Member, ServiceEndpoint, Reviewer, VariableGroup,  # fmt: skip
+        AgentPool, AnnotatedTag, AuditLog, Branch, Build, BuildDefinition, Commit, Environment, Group, MergePolicies,
+        MergeBranchPolicy, MergePolicyDefaultReviewer, Project, PullRequest, Release, ReleaseDefinition, Repo, BuildRepository,
+        Team, AdoUser, Member, ServiceEndpoint, Reviewer, VariableGroup,  # fmt: skip
     )
 
     return locals()
 
 
 ResourceType = Literal[
-    "AgentPool", "AnnotatedTag", "Branch", "Build", "BuildDefinition", "Commit", "Environment", "Group", "MergePolicies", "MergeBranchPolicy",
-    "MergePolicyDefaultReviewer", "Project", "PullRequest", "Release", "ReleaseDefinition",
+    "AgentPool", "AnnotatedTag", "AuditLog", "Branch", "Build", "BuildDefinition", "Commit", "Environment", "Group", "MergePolicies",
+    "MergeBranchPolicy", "MergePolicyDefaultReviewer", "Project", "PullRequest", "Release", "ReleaseDefinition",
     "Repo", "Team", "AdoUser", "Member", "ServiceEndpoint", "Reviewer", "VariableGroup"  # fmt: skip
 ]

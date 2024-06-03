@@ -45,8 +45,8 @@ class AgentPool(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(
-        cls, ado_client: AdoClient, name: str, agent_cloud_id: str | None, auto_provision: bool, auto_size: bool,  # type: ignore[override]
+    def create(  # type: ignore[override]
+        cls, ado_client: AdoClient, name: str, agent_cloud_id: str | None, auto_provision: bool, auto_size: bool,
         auto_update: bool, is_hosted: bool, size: int, target_size: int | None  # fmt: skip
     ) -> AgentPool:
         raise NotImplementedError

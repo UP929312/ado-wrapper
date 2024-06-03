@@ -56,7 +56,7 @@ for class_name, value in sorted_pairs.items():
     #     continue
     function_data = {
         key: value for key, value in dict(inspect.getmembers(value)).items()
-        if not key.startswith("_") and key not in ignored_functions and 
+        if not key.startswith("_") and key not in ignored_functions and
         key not in dataclass_attributes(globals()[class_name])  # fmt: skip
     }
     if not function_data:

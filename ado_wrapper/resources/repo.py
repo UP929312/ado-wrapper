@@ -89,8 +89,8 @@ class Repo(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, repo_name: str) -> Repo | None:  # type: ignore[return]
-        return cls.get_by_abstract_filter(ado_client, lambda repo: repo.name == repo_name)  # type: ignore[return-type]
+    def get_by_name(cls, ado_client: AdoClient, repo_name: str) -> Repo | None:
+        return cls.get_by_abstract_filter(ado_client, lambda repo: repo.name == repo_name)  # type: ignore[attr-defined, return-value]
 
     def get_file(self, ado_client: AdoClient, file_path: str, branch_name: str = "main") -> str:
         request = ado_client.session.get(

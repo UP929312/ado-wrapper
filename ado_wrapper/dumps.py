@@ -17,6 +17,33 @@ ADO_USER_DUMP = {
     "descriptor": "<user_descriptor>",
 }
 
+AUDIT_LOG_DUMP = {
+    'id': '999999999999999999;00000000-0000-0000-0000-000000000000;00000000-0000-0000-0000-000000000000',
+    'correlationId': '00000000-0000-0000-0000-000000000000',
+    'activityId': '00000000-0000-0000-0000-000000000000',
+    'actorCUID': '00000000-0000-0000-0000-000000000000',
+    'actorUserId': '00000000-0000-0000-0000-000000000000', # Same as above
+    'actorClientId': '00000000-0000-0000-0000-000000000000',
+    'actorUPN': 'first.last@example.com',
+    'authenticationMechanism': 'PAT_Unscoped authorizationId:<32_char_uuid>',
+    'timestamp': '2024-01-01T01:01:01.01Z',
+    'scopeType': 'organization',
+    'scopeDisplayName': '<org_name> (Organization)',
+    'scopeId': '00000000-0000-0000-0000-000000000000',
+    'projectId': '00000000-0000-0000-0000-000000000000',
+    'projectName': None,
+    'ipAddress': '128.128.128.128',
+    'userAgent': 'VSServices/128.128.123456.0 (NetStandard; Linux 5.10.215-203.850.amzn2.x86_64 #1 SMP Tue Apr 23 20:32:19 UTC 2024) VstsAgentCore-l',
+    'actionId': 'Library.AgentAdded', 'data': {...},
+    'details': 'Added agent <agent_name> to pool <pool_name>.',
+    'area': 'Library',
+    'category': 'modify',
+    'categoryDisplayName': 'Modify',
+    'actorDisplayName': 'First Last',
+    'actorImageUrl': 'https://dev.azure.com/vfuk-digital/_apis/GraphProfile/MemberAvatars/<User Descriptor>'
+}
+
+
 BRANCH_DUMP = {
     "name": "refs/heads/test-branch",
     "objectId": "<object_id>",

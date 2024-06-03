@@ -59,12 +59,13 @@ The problem we have with the whole "create twice" instead of update can be fixed
 The state stores the repo id, but it also stores the repo *name*, which is coincidentally also unique.
 Most resources have names, or some definining values which has to be unique, e.g. name (in repos, variable groups, etc).
 Tags are a problem, branches a bit too, build definitions too, the problem is that we want to be able to change things and
-have the create update, rather than create, but if the data is different, how do we link them?
+have the create update, rather than create, but if the data is different, how do we link them?  
 
-Searches tests
-AgentPools create/delete and testing
+Searches tests  
+AgentPools create/delete and testing  
+AuditLogs Tests  
 
-Perm description for RepoUserPerms? Just a static dict.
+Perm description for RepoUserPerms? Just a static dict.  
 
 -----
 

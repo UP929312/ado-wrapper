@@ -101,7 +101,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
     @staticmethod
     def remove_default_reviewer(ado_client: AdoClient, repo_id: str, reviewer_id: str, branch_name: str = "main") -> None:
         policies = MergePolicies.get_default_reviewers_by_repo_id(ado_client, repo_id, branch_name)
-        policy_id = [x for x in policies if x.required_reviewer_id == reviewer_id][0].policy_id if policies is not None else None  # type: ignore[comparison-overlap]  # fmt: skip
+        policy_id = [x for x in policies if x.required_reviewer_id == reviewer_id][0].policy_id if policies is not None else None  # fmt: skip
         if not policy_id:
             return
         request = ado_client.session.delete(

@@ -78,6 +78,7 @@ class Commit(StateManagedResource):
         assert not (
             from_branch_name.startswith("refs/heads/") or to_branch_name.startswith("refs/heads/")
         ), "Branch names should not start with 'refs/heads/'"
+
         if not updates:
             raise ValueError("No updates provided! It's not possible to create a commit without updates.")
         latest_commit = cls.get_latest_by_repo(ado_client, repo_id, from_branch_name)

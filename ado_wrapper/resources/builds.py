@@ -88,6 +88,9 @@ class Build(StateManagedResource):
         #         request = ado_client.session.patch(f"https://dev.azure.com/{ado_client.ado_org}/{definition_id}/_apis/pipelines/pipelinePermissions/variablegroup/{var_group_id}")  # fmt: skip
         #         rint(request.text, request.status_code)
         #         assert request.status_code <= 204
+        # Include more stuffs
+        # {"stagesToSkip":[],"resources":{"repositories":{"self":{"refName":"refs/heads/main"}}},"templateParameters":{"action":"plan","environment":"global","use_private_agents":"True","exclusions":"- tenant-env","fail_on_plan_change":"False"},"variables":{}}
+        # https://dev.azure.com/VFCloudEngineering/Platform/_git/cep-scheduler?path=/scripts/trigger_build.py
         return super().create(
             ado_client,
             f"/{ado_client.ado_project}/_apis/build/builds?definitionId={definition_id}&api-version=7.1",

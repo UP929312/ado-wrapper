@@ -80,7 +80,7 @@ class TestEnvironment:
             Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "test commit")
             build_def = BuildDefinition.create(
                 self.ado_client, repo.name, repo.repo_id, repo.name, "build.yaml", "", existing_agent_pool_id,
-            )
+            )  # fmt: skip
 
         environment = Environment.create(self.ado_client, "ado_wrapper-test-environment-pipeline-perms", "test environment")
         # ---

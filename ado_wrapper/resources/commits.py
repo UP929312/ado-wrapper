@@ -3,10 +3,11 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Member
-# from ado_wrapper.resources.branches import Branch
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.errors import InvalidPermissionsError
 from ado_wrapper.utils import from_ado_date_string
+
+# from ado_wrapper.resources.branches import Branch
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient

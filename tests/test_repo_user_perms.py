@@ -52,6 +52,9 @@ class TestRepoUserPerms:
     def test_set_by_user_email_batch(self) -> None:
         with RepoContextManager(self.ado_client, "set-by-user-email-batch") as repo:
             input_perms: dict[PermissionType, ActionType] = {
+                "manage_and_dismiss_alerts": "Allow",
+                "manage_settings": "Allow",
+                "view_alerts": "Allow",
                 "bypass_policies_when_completing_pull_requests": "Allow",
                 "bypass_policies_when_pushing": "Allow",
                 "contribute": "Allow",
@@ -76,6 +79,9 @@ class TestRepoUserPerms:
         with RepoContextManager(self.ado_client, "set-by-user-email-batch") as repo:
             input_perms: dict[str, dict[PermissionType, ActionType]] = {
                 email: {
+                    "manage_and_dismiss_alerts": "Allow",
+                    "manage_settings": "Allow",
+                    "view_alerts": "Allow",
                     "bypass_policies_when_completing_pull_requests": "Allow",
                     "bypass_policies_when_pushing": "Allow",
                     "contribute": "Allow",

@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Reviewer
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import from_ado_date_string, requires_initialisation, ConfigurationError
+from ado_wrapper.utils import from_ado_date_string, requires_initialisation
+from ado_wrapper.errors import ConfigurationError
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -40,6 +41,7 @@ def _get_type_id(ado_client: AdoClient, action_type: str) -> str:
 @dataclass
 class MergePolicyDefaultReviewer(StateManagedResource):
     """Represents 1 required reviewer and if they're required."""
+
     policy_id: str = field(metadata={"is_id_field": True})
     required_reviewer_id: str
     is_required: bool

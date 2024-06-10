@@ -4,7 +4,7 @@ import pytest
 
 from ado_wrapper.resources.releases import Release, ReleaseDefinition
 from ado_wrapper.resources.users import Member
-from ado_wrapper.utils import ResourceNotFound
+from ado_wrapper.errors import ResourceNotFound
 from tests.setup_client import existing_agent_pool_id, setup_client
 
 

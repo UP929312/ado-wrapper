@@ -50,8 +50,8 @@ class Branch(StateManagedResource):
         PAYLOAD = [
             {
                 "name": f"refs/heads/{branch_name}",
-                "oldObjectId": cls.get_by_name(ado_client, repo_id, branch_name).branch_id,  # type: ignore[abc]
-                "newObjectId": "0000000000000000000000000000000000000000"
+                "oldObjectId": cls.get_by_name(ado_client, repo_id, branch_name).branch_id,  # type: ignore[union-attr]
+                "newObjectId": "0000000000000000000000000000000000000000",
             }
         ]
         request = ado_client.session.post(
@@ -84,7 +84,7 @@ class Branch(StateManagedResource):
         return [x for x in cls.get_all_by_repo(ado_client, repo_id) if x.name in ("main", "master", "trunk")][0]
 
     def delete(self, ado_client: AdoClient) -> None:
-        self.delete_by_id(ado_client, self.repo_id, self.name)
+        self.delete_by_id(ado_client, self.name, self.repo_id)
 
     @classmethod
     def delete_by_name(cls, ado_client: AdoClient, branch_name: str, repo_id: str) -> None:

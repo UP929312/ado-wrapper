@@ -11,7 +11,8 @@ SortDirections = Literal["ASC", "DESC"]
 
 @dataclass
 class Search:
-    """ https://learn.microsoft.com/en-us/rest/api/azure/devops/search/code-search-results/fetch-code-search-results?view=azure-devops-rest-7.1&tabs=HTTP """
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/search/code-search-results/fetch-code-search-results?view=azure-devops-rest-7.1&tabs=HTTP"""
+
     repository_name: str
     path: str
     file_name: str = field(repr=False)

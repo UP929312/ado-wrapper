@@ -12,17 +12,18 @@ if TYPE_CHECKING:
 
 
 AuthenticationMechanismType = None | Literal["", "AAD", "AAD_Cookie", "SSH", "S2S_ServicePrincipal"
-                                             "SessionToken_Unscoped authorizationId: <id>", "PAT_Unscoped authorizationId: <id>"]
+                                             "SessionToken_Unscoped authorizationId: <id>", "PAT_Unscoped authorizationId: <id>"]  # fmt: skip
 AreaType = Literal['Auditing', 'Checks', 'Git', 'Group', 'Library', 'Licensing', 'Permissions',
-                   'Pipelines', 'Policy', 'Process', 'Project', 'Release']
+                   'Pipelines', 'Policy', 'Process', 'Project', 'Release']  # fmt: skip
 CategoryType = Literal["access", "create", "execute", "modify", "remove", "unknown"]
-CategoryDisplayNameType = Literal['Access', 'Create', 'Execute', 'Modify', "Remove", "Unknown"]
+CategoryDisplayNameType = Literal["Access", "Create", "Execute", "Modify", "Remove", "Unknown"]
 ScopeTypeType = Literal["deployment", "enterprise", "organization", "project", "unknown"]
 
 
 @dataclass
 class AuditLog:
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/audit/audit-log/query?view=azure-devops-rest-7.1&tabs=HTTP"""
+
     audit_log_id: str = field(repr=False)
     correlation_id: str = field(repr=False)  # For grouping logs, e.g. if one action creates 5 logs
     activity_id: str = field(repr=False)  # List of 32 char UUIDs
@@ -54,12 +55,12 @@ class AuditLog:
             from_ado_date_string(data["timestamp"]), data["scopeType"], data["scopeDisplayName"],
             data["scopeId"], data["projectId"], data["projectName"], data["ipAddress"], data["userAgent"],
             data["actionId"], data["details"], data["area"], data["category"], data["categoryDisplayName"],
-            data["actorDisplayName"], data["data"]
+            data["actorDisplayName"], data["data"],  # fmt: skip
         )
 
     @classmethod
     def get_all(cls, ado_client: AdoClient, start_time: datetime | None = None, end_time: datetime = datetime.now()) -> list[AuditLog]:
-        """ https://learn.microsoft.com/en-us/rest/api/azure/devops/audit/audit-log/query?view=azure-devops-rest-7.1&tabs=HTTP#auditlogqueryresult """
+        """https://learn.microsoft.com/en-us/rest/api/azure/devops/audit/audit-log/query?view=azure-devops-rest-7.1&tabs=HTTP#auditlogqueryresult"""
         if start_time is None:
             start_time = datetime.now() - timedelta(days=1)
         assert start_time <= end_time, "Start time must be before end time!"
@@ -79,13 +80,19 @@ class AuditLog:
         return [cls.from_request_payload(x) for x in combined_entries]
 
     @classmethod
-    def get_all_by_area(cls, ado_client: AdoClient, area_type: AreaType, start_time: datetime | None = None, end_time: datetime = datetime.now()) -> list[AuditLog]:
+    def get_all_by_area(
+        cls, ado_client: AdoClient, area_type: AreaType, start_time: datetime | None = None, end_time: datetime = datetime.now()
+    ) -> list[AuditLog]:
         return [x for x in cls.get_all(ado_client, start_time, end_time) if x.area == area_type]
 
     @classmethod
-    def get_all_by_category(cls, ado_client: AdoClient, category: CategoryType, start_time: datetime | None = None, end_time: datetime = datetime.now()) -> list[AuditLog]:
+    def get_all_by_category(
+        cls, ado_client: AdoClient, category: CategoryType, start_time: datetime | None = None, end_time: datetime = datetime.now()
+    ) -> list[AuditLog]:
         return [x for x in cls.get_all(ado_client, start_time, end_time) if x.category == category]
 
     @classmethod
-    def get_all_by_scope_type(cls, ado_client: AdoClient, scope_type: ScopeTypeType, start_time: datetime | None = None, end_time: datetime = datetime.now()) -> list[AuditLog]:
+    def get_all_by_scope_type(
+        cls, ado_client: AdoClient, scope_type: ScopeTypeType, start_time: datetime | None = None, end_time: datetime = datetime.now()
+    ) -> list[AuditLog]:
         return [x for x in cls.get_all(ado_client, start_time, end_time) if x.scope_type == scope_type]

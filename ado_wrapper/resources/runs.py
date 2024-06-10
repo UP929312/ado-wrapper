@@ -13,15 +13,19 @@ if TYPE_CHECKING:
 RunResult = Literal["canceled", "failed", "succeeded", "unknown"]
 RunState = Literal["canceling", "completed", "inProgress", "unknown"]
 
+
 class RunAllDictionary(TypedDict):
     template_variables: dict[str, Any]
     branch_name: str
 
+
 # ========================================================================================================
+
 
 @dataclass
 class Run(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/pipelines/runs?view=azure-devops-rest-6.1"""
+
     run_id: str = field(metadata={"is_id_field": True})
     run_name: str
     start_time: datetime = field(repr=False)
@@ -38,7 +42,7 @@ class Run(StateManagedResource):
                    data["state"], data.get("result", "unknown"), data["templateParameters"])  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: "AdoClient", pipeline_id: str, run_id: str) -> "Run":
+    def get_by_id(cls, ado_client: "AdoClient", pipeline_id: str, run_id: str) -> "Run":  # type: ignore[override]
         return super().get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/pipelines/{pipeline_id}/runs/{run_id}?api-version=6.1-preview.1",
@@ -55,7 +59,9 @@ class Run(StateManagedResource):
                 {"templateParameters": template_variables, "repositories": {"refName": f"refs/heads/{source_branch}"}},
             )  # type: ignore[return-value]
         except ValueError as e:
-            raise ValueError(f"A template variable inputted is not allowed! {str(e).split('message')[1][3:].removesuffix(':').split('.')[0]}") from e
+            raise ValueError(
+                f"A template variable inputted is not allowed! {str(e).split('message')[1][3:].removesuffix(':').split('.')[0]}"
+            ) from e
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", run_id: str) -> None:  # type: ignore[override]
@@ -65,10 +71,10 @@ class Run(StateManagedResource):
         raise NotImplementedError("Use Build's update instead!")
 
     @classmethod
-    def get_all_by_definition(cls, ado_client: "AdoClient", pipeline_id: str) -> "list[Run]":  # type: ignore[override]
+    def get_all_by_definition(cls, ado_client: "AdoClient", pipeline_id: str) -> "list[Run]":
         return super().get_all(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/pipelines/{pipeline_id}/runs?api-version=6.1-preview.1"
+            f"/{ado_client.ado_project}/_apis/pipelines/{pipeline_id}/runs?api-version=6.1-preview.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -84,7 +90,9 @@ class Run(StateManagedResource):
         return cls.run_all_and_capture_results_simultaneously(ado_client, data, max_timeout_seconds)[definition_id]
 
     @classmethod
-    def run_all_and_capture_results_sequentially(cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800) -> dict[str, "Run"]:
+    def run_all_and_capture_results_sequentially(
+        cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800
+    ) -> dict[str, "Run"]:
         """Takes a mapping of definition_id -> {template_variables, branch_name}
         Once done, returns a mapping of definition_id -> `Run` object"""
         return_values = {}
@@ -95,7 +103,9 @@ class Run(StateManagedResource):
         return return_values
 
     @classmethod
-    def run_all_and_capture_results_simultaneously(cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800) -> dict[str, "Run"]:
+    def run_all_and_capture_results_simultaneously(
+        cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800
+    ) -> dict[str, "Run"]:
         """Takes a mapping of definition_id -> {template_variables, branch_name}
         Once done, returns a mapping of definition_id -> `Run` object"""
         # Get a mapping of definition_id -> Run()
@@ -109,7 +119,7 @@ class Run(StateManagedResource):
         return_values: dict[str, Run] = {}
         while runs:
             for definition_id, run_obj in dict(runs.items()).items():
-                run = Run.get_by_id(ado_client, definition_id, run_obj.run_id)  # type: ignore
+                run = Run.get_by_id(ado_client, definition_id, run_obj.run_id)
                 if run.status == "completed":
                     return_values[definition_id] = run
                     del runs[definition_id]
@@ -123,4 +133,4 @@ class Run(StateManagedResource):
     def get_latest(cls, ado_client: "AdoClient", definition_id: str) -> "Run | None":
         all_runs = cls.get_all_by_definition(ado_client, definition_id)
         runs_with_start = [x for x in all_runs if x.start_time is not None]
-        return max(runs_with_start, key=lambda run: run.start_time) if runs_with_start else None  # type: ignore[return-value, arg-type]
+        return max(runs_with_start, key=lambda run: run.start_time) if runs_with_start else None

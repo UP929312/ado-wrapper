@@ -17,7 +17,7 @@ class TestBranch:
                 "objectId": "123",
                 "url": "https://dev.azure.com/...",
                 "repository": {"id": "123", "name": "test-repo"},
-                "creator": {"displayName": "test", "uniqueName": "test", "id": "123"}
+                "creator": {"displayName": "test", "uniqueName": "test", "id": "123"},
             }
         )
         assert branch.to_json() == Branch.from_json(branch.to_json()).to_json()
@@ -34,8 +34,8 @@ class TestBranch:
             branches = Branch.get_all_by_repo(self.ado_client, repo.repo_id)
             non_main_branch = [branch for branch in branches if branch.name != "main"][0]
             assert non_main_branch.name == "test-branch"
-            with pytest.raises(NotImplementedError):
-                Branch.delete_by_id(self.ado_client, repo.repo_id, non_main_branch.name)
+
+            Branch.delete_by_id(self.ado_client, non_main_branch.name, repo.repo_id)
 
     def test_get_certain_branches(self) -> None:
         with RepoContextManager(self.ado_client, "get-certain-branches") as repo:
@@ -44,7 +44,7 @@ class TestBranch:
             assert branch is not None
             assert branch.name == "test-branch-1"
 
-            id_branch = Branch.get_by_id(self.ado_client, branch.branch_id, repo.repo_id)
+            id_branch = Branch.get_by_id(self.ado_client, repo.repo_id, branch.branch_id)
             assert id_branch is not None
             assert id_branch.name == "test-branch-1"
 
@@ -59,5 +59,4 @@ class TestBranch:
             # active_branches = Branch.get_active_branches(self.ado_client, repo.repo_id)
             # assert len(active_branches) == 2
 
-            with pytest.raises(NotImplementedError):
-                branch.delete(self.ado_client)
+            branch.delete(self.ado_client)

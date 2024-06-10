@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import io
 import json
-import yaml
 import zipfile
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 
 import requests
+import yaml
 
 from ado_wrapper.resources.commits import Commit
+
 # from ado_wrapper.resources.branches import Branch
 from ado_wrapper.resources.merge_policies import MergePolicies, MergePolicyDefaultReviewer
 from ado_wrapper.resources.pull_requests import PullRequest, PullRequestStatus
@@ -108,12 +109,12 @@ class Repo(StateManagedResource):
             raise UnknownError(f"Error getting file {file_path} from repo {self.repo_id}: {request.text}")
         return request.text  # This is the file content
 
-    def get_and_decode_file(self, ado_client: AdoClient, file_path: str, branch_name: str = "main") -> dict[str, Any]:  # type: ignore
+    def get_and_decode_file(self, ado_client: AdoClient, file_path: str, branch_name: str = "main") -> dict[str, Any]:
         file_content = self.get_file(ado_client, file_path, branch_name)
         if file_path.endswith(".json"):
-            return json.loads(file_content)
+            return json.loads(file_content)  # type: ignore[no-any-return]
         if file_path.endswith(".yaml") or file_path.endswith(".yml"):
-            return yaml.safe_load(file_content)
+            return yaml.safe_load(file_content)  # type: ignore[no-any-return]
         raise TypeError("Can only decode .json, .yaml or .yml files!")
 
     def get_contents(self, ado_client: AdoClient, file_types: list[str] | None = None, branch_name: str = "main") -> dict[str, str]:
@@ -194,8 +195,10 @@ class Repo(StateManagedResource):
     def get_all_repos_with_required_reviewer(cls, ado_client: AdoClient, reviewer_email: str) -> list[Repo]:
         return [
             repo for repo in Repo.get_all(ado_client)
-            if any(x.email.lower()==reviewer_email.lower() for x in MergePolicyDefaultReviewer.get_default_reviewers(ado_client, repo.repo_id))
-        ]
+            if any(x.email.lower() == reviewer_email.lower() for x in MergePolicyDefaultReviewer.get_default_reviewers(ado_client, repo.repo_id)
+            )
+        ]  # fmt: skip
+
 
 # ====================================================================
 

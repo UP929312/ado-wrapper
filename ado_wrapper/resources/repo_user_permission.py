@@ -11,6 +11,7 @@ from ado_wrapper.utils import requires_initialisation
 PERMISSION_SET_ID = "2e9eb7ed-3c0a-47d4-87c1-0ffdd275fd87"  # This is global and hardcoded
 ActionType = Literal["Allow", "Deny", "Not set"]
 PermissionType = Literal[
+    "manage_and_dismiss_alerts", "manage_settings", "view_alerts",
     "bypass_policies_when_completing_pull_requests", "bypass_policies_when_pushing", "contribute",
     "contribute_to_pull_requests", "create_branch", "create_tag", "delete_or_disable_repository",
     "edit_policies", "force_push", "manage_notes", "manage_permissions", "read", "remove_others_locks",
@@ -21,6 +22,9 @@ if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 
 external_to_internal_mapping = {
+    "Advanced Security: manage and dismiss alerts": "manage_and_dismiss_alerts",
+    "Advanced Security: manage settings": "manage_settings",
+    "Advanced Security: view alerts": "view_alerts",
     "Bypass policies when completing pull requests": "bypass_policies_when_completing_pull_requests",
     "Bypass policies when pushing": "bypass_policies_when_pushing",
     "Contribute": "contribute",
@@ -38,6 +42,9 @@ external_to_internal_mapping = {
 }
 
 flag_mapping = {  # Where is 1 & 256?
+    "manage_and_dismiss_alerts": 131072,
+    "manage_settings": 262144,
+    "view_alerts": 65536,
     "bypass_policies_when_completing_pull_requests": 32768,
     "bypass_policies_when_pushing": 128,
     "contribute": 4,
@@ -96,7 +103,7 @@ class UserPermission:
         IDENTITY_PAYLOAD = {"contributionIds": ["ms.vss-admin-web.security-view-permissions-data-provider"], "dataProviderContext": {"properties": {
             "subjectDescriptor": group_descriptor, "permissionSetId": PERMISSION_SET_ID,
             "permissionSetToken": f"repoV2/{ado_client.ado_project_id}/{repo_id}",
-        }}}
+        }}}  # fmt: skip
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview.1",
             json=IDENTITY_PAYLOAD,

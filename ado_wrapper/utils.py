@@ -2,11 +2,12 @@ from dataclasses import fields
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Literal, overload, Any
 
+from ado_wrapper.errors import ConfigurationError
+
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
     from ado_wrapper.state_managed_abc import StateManagedResource
 
-from ado_wrapper.errors import ConfigurationError
 
 @overload
 def from_ado_date_string(date_string: str) -> datetime:

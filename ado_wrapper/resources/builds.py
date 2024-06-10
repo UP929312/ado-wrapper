@@ -184,7 +184,7 @@ class BuildDefinition(StateManagedResource):
     description: str = field(metadata={"editable": True}, repr=False)
     path: str = field(repr=False)
     created_by: Member | None = field(repr=False)
-    created_date: datetime | None  = field(repr=False)
+    created_date: datetime | None = field(repr=False)
     build_repo: BuildRepository | None = field(repr=False)
     revision: str = field(default="1", repr=False)
     process: dict[str, str | int] | None = field(repr=False, default=None)  # Used internally, mostly ignore

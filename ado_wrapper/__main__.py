@@ -1,11 +1,7 @@
 import argparse
 
 from ado_wrapper.client import AdoClient
-from ado_wrapper.utils import (
-    ResourceType,
-    get_internal_field_names,
-    get_resource_variables,
-)
+from ado_wrapper.utils import ResourceType, get_internal_field_names, get_resource_variables
 
 
 def main() -> None:  # pylint: disable=too-many-branches, too-many-statements

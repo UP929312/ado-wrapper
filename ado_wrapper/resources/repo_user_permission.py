@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import AdoUser
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import requires_initialisation, ResourceNotFound, InvalidPermissionsError
+from ado_wrapper.errors import ResourceNotFound, InvalidPermissionsError
+from ado_wrapper.utils import requires_initialisation
 
 PERMISSION_SET_ID = "2e9eb7ed-3c0a-47d4-87c1-0ffdd275fd87"  # This is global and hardcoded
 ActionType = Literal["Allow", "Deny", "Not set"]

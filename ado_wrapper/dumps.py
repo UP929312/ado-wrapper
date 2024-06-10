@@ -196,6 +196,18 @@ REPO_POLICY_DUMP = {
         }},
 }
 
+RUN_DUMP = {
+    '_links': {'self': {'href': 'https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/pipelines/<pipeline_id>/runs/<run_id>'}, 'web': {'href': 'https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_build/results?buildId=<run_id>'}, 'pipeline.web': {'href': 'https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_build/definition?definitionId=<pipeline_id>'}, 'pipeline': {'href': 'https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/pipelines/<pipeline_id>?revision=1'}},
+    'templateParameters': {},
+    'pipeline': {'url': 'https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/pipelines/<pipeline_id>?revision=1', 'id': "<pipeline_id>", 'revision': 1, 'name': 'ado_wrapper-test-run-for-create-delete-run', 'folder': '\\'},
+    'state': 'inProgress',
+    'createdDate': '2024-06-09T11:09:37.6538446Z',
+    'url': 'https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/pipelines/<pipeline_id>/runs/<run_id>',
+    'resources': {'repositories': {'self': {'repository': {'id': '<repo_id>', 'type': 'azureReposGit'}, 'refName': 'refs/heads/my-branch', 'version': 'bf9b3ae18fa2bd5c0f6c99f7ad67f5e58e0a6a8e'}}},
+    'id': "<run_id>",
+    'name': '20240609.1',
+}
+
 SERVICE_ENDPOINT_DUMP = {
     "data": {},
     "id": "{service_endpoint_id}",

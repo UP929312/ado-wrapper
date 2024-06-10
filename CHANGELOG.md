@@ -1,0 +1,16 @@
+# Changelog
+
+## v1.10.0
+
+### Added
+
+- `Runs`, these are similar to `Builds`, but are more modern, and support template variables
+  - These allow running pipelines with more data, e.g. dropdowns, radio button inputs, etc.
+  - They can also run any number in parallel, for user convenience
+- `pyyaml` as a dependency, to automatically parse .yaml/.yml files for you when downloading them
+- The ability to delete `Branches` (although not state managed due to the multi-component element of repo_id + branch_id)
+
+### Changed
+
+- Errors have been moved out of utils into their own file for easier imports (ado_wrapper.errors)
+- New resources are now automatically added to state files when needed, no longer crashing

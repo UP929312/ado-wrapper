@@ -27,6 +27,7 @@ class TestBranch:
         with RepoContextManager(self.ado_client, "create-delete-branch") as repo:
             with pytest.raises(NotImplementedError):
                 Branch.create(self.ado_client, "", "")
+            #
             Commit.create(
                 self.ado_client, repo.repo_id, "main", "test-branch", {"text.txt": "Contents of the file"}, "add", "Test commmit 1"
             )
@@ -34,7 +35,7 @@ class TestBranch:
             non_main_branch = [branch for branch in branches if branch.name != "main"][0]
             assert non_main_branch.name == "test-branch"
             with pytest.raises(NotImplementedError):
-                Branch.delete_by_id(self.ado_client, repo.repo_id, non_main_branch.branch_id)
+                Branch.delete_by_id(self.ado_client, repo.repo_id, non_main_branch.name)
 
     def test_get_certain_branches(self) -> None:
         with RepoContextManager(self.ado_client, "get-certain-branches") as repo:
@@ -43,7 +44,7 @@ class TestBranch:
             assert branch is not None
             assert branch.name == "test-branch-1"
 
-            id_branch = Branch.get_by_id(self.ado_client, repo.repo_id, branch.branch_id)
+            id_branch = Branch.get_by_id(self.ado_client, branch.branch_id, repo.repo_id)
             assert id_branch is not None
             assert id_branch.name == "test-branch-1"
 

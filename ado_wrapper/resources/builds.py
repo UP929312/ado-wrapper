@@ -88,9 +88,6 @@ class Build(StateManagedResource):
         #         request = ado_client.session.patch(f"https://dev.azure.com/{ado_client.ado_org}/{definition_id}/_apis/pipelines/pipelinePermissions/variablegroup/{var_group_id}")  # fmt: skip
         #         rint(request.text, request.status_code)
         #         assert request.status_code <= 204
-        # Include more stuffs
-        # {"stagesToSkip":[],"resources":{"repositories":{"self":{"refName":"refs/heads/main"}}},"templateParameters":{"action":"plan","environment":"global","use_private_agents":"True","exclusions":"- tenant-env","fail_on_plan_change":"False"},"variables":{}}
-        # https://dev.azure.com/VFCloudEngineering/Platform/_git/cep-scheduler?path=/scripts/trigger_build.py
         return super().create(
             ado_client,
             f"/{ado_client.ado_project}/_apis/build/builds?definitionId={definition_id}&api-version=7.1",
@@ -228,7 +225,6 @@ class BuildDefinition(StateManagedResource):
             payload=payload,
         )  # type: ignore[return-value]
 
-
     def update(self, ado_client: "AdoClient", attribute_name: BuildDefinitionEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
         if self.build_repo is None or self.process is None:
             raise ValueError("This build definition does not have a (repository or process) in its data, it cannot be updated")
@@ -268,7 +264,7 @@ class BuildDefinition(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all_by_name(cls, ado_client: "AdoClient", name: str) -> "list[BuildDefinition]":
+    def get_by_name(cls, ado_client: "AdoClient", name: str) -> "BuildDefinition":
         return cls.get_by_abstract_filter(ado_client, lambda x: x.name == name)  # type: ignore[return-value, attr-defined]
 
     def get_all_builds_by_definition(self, ado_client: "AdoClient") -> "list[Build]":
@@ -276,7 +272,7 @@ class BuildDefinition(StateManagedResource):
 
     def get_latest_build_by_definition(self, ado_client: "AdoClient") -> "Build | None":
         builds = self.get_all_builds_by_definition(ado_client)
-        return max(builds, key=lambda build: build.start_time if build.start_time else datetime(2000, 0, 0)) if builds else None
+        return max(builds, key=lambda build: build.start_time if build.start_time else datetime(2000, 1, 1)) if builds else None
 
     @classmethod
     def get_all_by_repo_id(cls, ado_client: "AdoClient", repo_id: str) -> "list[BuildDefinition]":

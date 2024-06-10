@@ -3,8 +3,10 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Member
+# from ado_wrapper.resources.branches import Branch
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import InvalidPermissionsError, from_ado_date_string
+from ado_wrapper.errors import InvalidPermissionsError
+from ado_wrapper.utils import from_ado_date_string
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -78,7 +80,11 @@ class Commit(StateManagedResource):
         assert not (
             from_branch_name.startswith("refs/heads/") or to_branch_name.startswith("refs/heads/")
         ), "Branch names should not start with 'refs/heads/'"
-
+        #
+        # existing_branches = Branch.get_all_by_repo(ado_client, repo_id)
+        # if to_branch_name not in [x.name for x in existing_branches]:
+        #     ado_client.state_manager.add_resource_to_state("Branch", to_branch_name, {})
+        #
         if not updates:
             raise ValueError("No updates provided! It's not possible to create a commit without updates.")
         latest_commit = cls.get_latest_by_repo(ado_client, repo_id, from_branch_name)

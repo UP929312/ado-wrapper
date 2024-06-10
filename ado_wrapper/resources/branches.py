@@ -45,13 +45,21 @@ class Branch(StateManagedResource):
         raise NotImplementedError("You can't create a branch without a commit, use Commit.create instead")
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, repo_id: str, branch_id: str) -> None:
-        raise NotImplementedError("You can't delete a branch without a commit, use Commit.delete instead")
-        # return super().delete_by_id(
-        #     ado_client,
-        #     f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs/{branch_id}?api-version=7.1",
-        #     branch_id,
-        # )
+    def delete_by_id(cls, ado_client: AdoClient, branch_name: str, repo_id: str) -> None:
+        # https://stackoverflow.com/a/67224873
+        PAYLOAD = [
+            {
+                "name": f"refs/heads/{branch_name}",
+                "oldObjectId": cls.get_by_name(ado_client, repo_id, branch_name).branch_id,  # type: ignore[abc]
+                "newObjectId": "0000000000000000000000000000000000000000"
+            }
+        ]
+        request = ado_client.session.post(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs?api-version=7.1",
+            json=PAYLOAD,
+        )
+        assert request.status_code == 200
+        ado_client.state_manager.remove_resource_from_state("Branch", branch_name)
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -73,7 +81,11 @@ class Branch(StateManagedResource):
 
     @classmethod
     def get_main_branch(cls, ado_client: AdoClient, repo_id: str) -> Branch:
-        return [x for x in cls.get_all_by_repo(ado_client, repo_id) if x.name in ("main", "master")][0]
+        return [x for x in cls.get_all_by_repo(ado_client, repo_id) if x.name in ("main", "master", "trunk")][0]
 
-    def delete(self, ado_client: AdoClient) -> None:  # Has to exist for multi-ids
-        self.delete_by_id(ado_client, self.repo_id, self.branch_id)
+    def delete(self, ado_client: AdoClient) -> None:
+        self.delete_by_id(ado_client, self.repo_id, self.name)
+
+    @classmethod
+    def delete_by_name(cls, ado_client: AdoClient, branch_name: str, repo_id: str) -> None:
+        return cls.delete_by_id(ado_client, branch_name, repo_id)

@@ -2,7 +2,7 @@
 name = "ado_wrapper"
 description = "A high level wrapper around the AzureDevops API including OOP principals and state management"
 authors = ["Ben Skerritt"]
-version = "1.9.0"
+version = "1.10.0"
 license = "Proprietary"
 readme = "README.md"
 packages = [{include = "ado_wrapper"}]
@@ -13,6 +13,7 @@ ado_wrapper = "ado_wrapper.__main__:main"
 [tool.poetry.dependencies]
 python = "^3.10"
 requests = "2.31.0"
+pyyaml = "6.0.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"

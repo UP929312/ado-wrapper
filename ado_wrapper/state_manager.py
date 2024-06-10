@@ -4,7 +4,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 from uuid import uuid4
 
-from ado_wrapper.utils import DeletionFailed, ResourceType, get_resource_variables
+from ado_wrapper.utils import ResourceType, get_resource_variables
+from ado_wrapper.errors import DeletionFailed
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -55,6 +56,8 @@ class StateManager:
 
     def add_resource_to_state(self, resource_type: ResourceType, resource_id: str, resource_data: dict[str, Any]) -> None:
         all_states = self.load_state()
+        if resource_type not in all_states["resources"]:
+            all_states["resources"][resource_type] = {}
         if resource_id in all_states["resources"][resource_type]:
             self.remove_resource_from_state(resource_type, resource_id)
         metadata = {"created_datetime": datetime.now().isoformat(), "run_id": self.run_id}

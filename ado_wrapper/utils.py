@@ -1,11 +1,12 @@
 from dataclasses import fields
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Literal, overload
+from typing import TYPE_CHECKING, Literal, overload, Any
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
     from ado_wrapper.state_managed_abc import StateManagedResource
 
+from ado_wrapper.errors import ConfigurationError
 
 @overload
 def from_ado_date_string(date_string: str) -> datetime:
@@ -93,42 +94,6 @@ def get_internal_field_names(cls: type["StateManagedResource"], field_names: lis
     return value
 
 
-class ResourceNotFound(Exception):
-    pass
-
-
-class DeletionFailed(Exception):
-    pass
-
-
-class ResourceAlreadyExists(Exception):
-    pass
-
-
-class UnknownError(Exception):
-    pass
-
-
-class InvalidPermissionsError(Exception):
-    pass
-
-
-class UpdateFailed(Exception):
-    pass
-
-
-class AuthenticationError(Exception):
-    pass
-
-
-class ConfigurationError(Exception):
-    pass
-
-
-class InvalidPermissionError(Exception):
-    pass
-
-
 def requires_initialisation(ado_client: "AdoClient") -> None:
     """Certain services/endpoints require the ado_project_id, which isn't set if bypass_initialisation is set to False."""
     if not ado_client.ado_project_id:
@@ -137,11 +102,20 @@ def requires_initialisation(ado_client: "AdoClient") -> None:
         )
 
 
+def recursively_find_or_none(data: dict[str, Any], indexes: list[str]) -> Any:
+    current = data
+    for index in indexes:
+        if index in current:
+            current = current[index]
+        else:
+            return None
+
+
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports
     """This returns a mapping of resource name (str) to the class type of the resource. This is used to dynamically create instances of resources."""
     from ado_wrapper.resources import (  # type: ignore[attr-defined]  # pylint: disable=possibly-unused-variable
         AgentPool, AnnotatedTag, AuditLog, Branch, Build, BuildDefinition, Commit, Environment, Group, MergePolicies,
-        MergeBranchPolicy, MergePolicyDefaultReviewer, Project, PullRequest, Release, ReleaseDefinition, Repo, BuildRepository,
+        MergeBranchPolicy, MergePolicyDefaultReviewer, Project, PullRequest, Release, ReleaseDefinition, Repo, Run, BuildRepository,
         Team, AdoUser, Member, ServiceEndpoint, Reviewer, VariableGroup,  # fmt: skip
     )
 
@@ -151,5 +125,5 @@ def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We d
 ResourceType = Literal[
     "AgentPool", "AnnotatedTag", "AuditLog", "Branch", "Build", "BuildDefinition", "Commit", "Environment", "Group", "MergePolicies",
     "MergeBranchPolicy", "MergePolicyDefaultReviewer", "Project", "PullRequest", "Release", "ReleaseDefinition",
-    "Repo", "Team", "AdoUser", "Member", "ServiceEndpoint", "Reviewer", "VariableGroup"  # fmt: skip
+    "Repo", "Run", "Team", "AdoUser", "Member", "ServiceEndpoint", "Reviewer", "VariableGroup"  # fmt: skip
 ]

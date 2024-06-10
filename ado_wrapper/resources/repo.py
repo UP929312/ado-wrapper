@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import io
+import json
+import yaml
 import zipfile
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
@@ -8,10 +10,11 @@ from typing import TYPE_CHECKING, Any, Literal
 import requests
 
 from ado_wrapper.resources.commits import Commit
+# from ado_wrapper.resources.branches import Branch
 from ado_wrapper.resources.merge_policies import MergePolicies, MergePolicyDefaultReviewer
 from ado_wrapper.resources.pull_requests import PullRequest, PullRequestStatus
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import ResourceNotFound, UnknownError
+from ado_wrapper.errors import ResourceNotFound, UnknownError
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -71,6 +74,8 @@ class Repo(StateManagedResource):
         # TODO: This never checks if it's disabled, so might error
         for pull_request in Repo.get_all_pull_requests(ado_client, repo_id, "all"):
             ado_client.state_manager.remove_resource_from_state("PullRequest", pull_request.pull_request_id)
+        # for branch in Branch.get_all_by_repo(ado_client, repo_id):
+        #     ado_client.state_manager.remove_resource_from_state("Branch", branch.name)
         return super().delete_by_id(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1",
@@ -93,14 +98,23 @@ class Repo(StateManagedResource):
         return cls.get_by_abstract_filter(ado_client, lambda repo: repo.name == repo_name)  # type: ignore[attr-defined, return-value]
 
     def get_file(self, ado_client: AdoClient, file_path: str, branch_name: str = "main") -> str:
+        """Gets a single file by path, auto_decode converts json files from text to dictionaries"""
         request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?path={file_path}&versionType={'Branch'}&version={branch_name}&api-version=7.1",
         )
         if request.status_code == 404:
-            raise ResourceNotFound(f"File {file_path} not found in repo {self.repo_id}")
+            raise ResourceNotFound(f"File {file_path} not found in repo {self.name} ({self.repo_id})")
         if request.status_code != 200:
             raise UnknownError(f"Error getting file {file_path} from repo {self.repo_id}: {request.text}")
         return request.text  # This is the file content
+
+    def get_and_decode_file(self, ado_client: AdoClient, file_path: str, branch_name: str = "main") -> dict[str, Any]:  # type: ignore
+        file_content = self.get_file(ado_client, file_path, branch_name)
+        if file_path.endswith(".json"):
+            return json.loads(file_content)
+        if file_path.endswith(".yaml") or file_path.endswith(".yml"):
+            return yaml.safe_load(file_content)
+        raise TypeError("Can only decode .json, .yaml or .yml files!")
 
     def get_contents(self, ado_client: AdoClient, file_types: list[str] | None = None, branch_name: str = "main") -> dict[str, str]:
         """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/items/get?view=azure-devops-rest-7.1&tabs=HTTP

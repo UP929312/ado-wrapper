@@ -106,10 +106,10 @@ def requires_initialisation(ado_client: "AdoClient") -> None:
 def recursively_find_or_none(data: dict[str, Any], indexes: list[str]) -> Any:
     current = data
     for index in indexes:
-        if index in current:
-            current = current[index]
-        else:
+        if index not in current:
             return None
+        current = current[index]
+    return current
 
 
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports

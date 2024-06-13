@@ -66,15 +66,15 @@ class Branch(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all_by_repo(cls, ado_client: AdoClient, repo_id: str) -> list[Branch]:
+    def get_all_by_repo(cls, ado_client: AdoClient, repo_name_or_id: str) -> list[Branch]:
         return super().get_all(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs?filter=heads&api-version=7.1",
+            f"/{ado_client.ado_project}/_apis/git/repositories/{repo_name_or_id}/refs?filter=heads&api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, repo_id: str, branch_name: str) -> Branch | None:
-        for branch in cls.get_all_by_repo(ado_client, repo_id):
+    def get_by_name(cls, ado_client: AdoClient, repo_name_or_id: str, branch_name: str) -> Branch | None:
+        for branch in cls.get_all_by_repo(ado_client, repo_name_or_id):
             if branch.name == branch_name:
                 return branch
         raise ValueError(f"Branch {branch_name} not found")

@@ -31,7 +31,7 @@ class AdoClient:
             # Verify Token is working (helps with setup for first time users):
             request = self.session.get(f"https://dev.azure.com/{self.ado_org}/_apis/projects?api-version=7.1")
             if request.status_code != 200:
-                raise AuthenticationError(f"Failed to authenticate with ADO: {request.text}")
+                raise AuthenticationError(f"Failed to authenticate with ADO: Most likely incorrect token or expired token!")
 
             from ado_wrapper.resources.projects import Project  # Stop circular import
             from ado_wrapper.resources.users import AdoUser  # Stop circular import

@@ -34,14 +34,14 @@ class Branch(StateManagedResource):
         )
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, repo_id: str, branch_id: str) -> Branch:  # type: ignore[override]
+    def get_by_id(cls, ado_client: AdoClient, repo_id: str, branch_id: str) -> Branch:
         for branch in cls.get_all_by_repo(ado_client, repo_id):
             if branch.branch_id == branch_id:
                 return branch
         raise ValueError(f"Branch {branch_id} not found")
 
     @classmethod
-    def create(cls, ado_client: AdoClient, repo_id: str, branch_name: str, source_branch: str = "main") -> Branch:  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, repo_id: str, branch_name: str, source_branch: str = "main") -> Branch:
         raise NotImplementedError("You can't create a branch without a commit, use Commit.create instead")
 
     @classmethod
@@ -67,7 +67,7 @@ class Branch(StateManagedResource):
 
     @classmethod
     def get_all_by_repo(cls, ado_client: AdoClient, repo_name_or_id: str) -> list[Branch]:
-        return super().get_all(
+        return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories/{repo_name_or_id}/refs?filter=heads&api-version=7.1",
         )  # type: ignore[return-value]

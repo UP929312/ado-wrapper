@@ -24,22 +24,22 @@ class Project(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, project_id: str) -> Project:
-        return super().get_by_url(
+        return super()._get_by_url(
             ado_client,
             f"/_apis/projects/{project_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, project_name: str, project_description: str) -> Project:  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, project_name: str, project_description: str) -> Project:
         raise NotImplementedError
 
     @staticmethod
-    def delete_by_id(ado_client: AdoClient, project_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(ado_client: AdoClient, project_id: str) -> None:
         raise NotImplementedError
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list[Project]:  # type: ignore[override]
-        return super().get_all(
+    def get_all(cls, ado_client: AdoClient) -> list[Project]:
+        return super()._get_all(
             ado_client,
             "/_apis/projects?api-version=7.1",
         )  # type: ignore[return-value]
@@ -50,4 +50,4 @@ class Project(StateManagedResource):
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, project_name: str) -> Project | None:
-        return cls.get_by_abstract_filter(ado_client, lambda project: project.name == project_name)  # type: ignore[return-value, attr-defined]
+        return cls._get_by_abstract_filter(ado_client, lambda project: project.name == project_name)  # type: ignore[return-value, attr-defined]

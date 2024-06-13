@@ -94,7 +94,7 @@ def main() -> None:  # pylint: disable=too-many-branches, too-many-statements
                         if state_data[key] != real_data[key] and key in internal_attribute_names
                     }
                     for internal_attribute_name, attribute_value in differences.items():
-                        instance.update(ado_client, internal_attribute_name, attribute_value)  # type: ignore[arg-type, call-arg]
+                        instance.update(ado_client, internal_attribute_name, attribute_value)  # type: ignore[attr-defined]
                         print(f"____The {resource_type}'s `{internal_attribute_name}` value has been updated to {attribute_value}")
                     internal_state["resources"][resource_type][resource_id] = instance.to_json()
         ado_client.state_manager.write_state_file(internal_state)

@@ -36,6 +36,8 @@ Commits/Branches are the only things that don't have a generic `get_all`
 Test state_manager.py more?
 Test __main__.py
 
+Get `get_my_pull_requests` of pull request to check if the status is int, if so convert
+
 <https://stackoverflow.com/questions/77522387/approving-pipeline-stage-azure-devops-via-api>
 Auto approve via token ^
 

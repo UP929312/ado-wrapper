@@ -47,14 +47,14 @@ class Repo(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> Repo:
-        return super().get_by_url(
+        return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, name: str, include_readme: bool = True) -> Repo:  # type: ignore[override]
-        repo: Repo = super().create(
+    def create(cls, ado_client: AdoClient, name: str, include_readme: bool = True) -> Repo:
+        repo: Repo = super()._create(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
             {"name": name},
@@ -63,29 +63,29 @@ class Repo(StateManagedResource):
             Commit.add_initial_readme(ado_client, repo.repo_id)
         return repo
 
-    def update(self, ado_client: AdoClient, attribute_name: RepoEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
-        return super().update(
+    def update(self, ado_client: AdoClient, attribute_name: RepoEditableAttribute, attribute_value: Any) -> None:
+        return super()._update(
             ado_client, "patch",
             f"/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}?api-version=7.1",
             attribute_name, attribute_value, {},  # fmt: skip
         )
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, repo_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(cls, ado_client: AdoClient, repo_id: str) -> None:
         # TODO: This never checks if it's disabled, so might error
         for pull_request in Repo.get_all_pull_requests(ado_client, repo_id, "all"):
             ado_client.state_manager.remove_resource_from_state("PullRequest", pull_request.pull_request_id)
         # for branch in Branch.get_all_by_repo(ado_client, repo_id):
         #     ado_client.state_manager.remove_resource_from_state("Branch", branch.name)
-        return super().delete_by_id(
+        return super()._delete_by_id(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1",
             repo_id,
         )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list[Repo]:  # type: ignore[override]
-        return super().get_all(
+    def get_all(cls, ado_client: AdoClient) -> list[Repo]:
+        return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
         )  # type: ignore[return-value]
@@ -96,7 +96,7 @@ class Repo(StateManagedResource):
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, repo_name: str) -> Repo | None:
-        return cls.get_by_abstract_filter(ado_client, lambda repo: repo.name == repo_name)  # type: ignore[attr-defined, return-value]
+        return cls._get_by_abstract_filter(ado_client, lambda repo: repo.name == repo_name)  # type: ignore[attr-defined, return-value]
 
     def get_file(self, ado_client: AdoClient, file_path: str, branch_name: str = "main") -> str:
         """Gets a single file by path, auto_decode converts json files from text to dictionaries"""

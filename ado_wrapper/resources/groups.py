@@ -27,22 +27,22 @@ class Group(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, group_descriptor: str) -> Group:
-        return super().get_by_url(
+        return super()._get_by_url(
             ado_client,  # Preview required
             f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/groups/{group_descriptor}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, name: str) -> Group:  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, name: str) -> Group:
         raise NotImplementedError
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, group_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(cls, ado_client: AdoClient, group_id: str) -> None:
         raise NotImplementedError
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list[Group]:  # type: ignore[override]
-        return super().get_all(
+    def get_all(cls, ado_client: AdoClient) -> list[Group]:
+        return super()._get_all(
             ado_client,  # Preview required
             f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/groups?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
@@ -53,7 +53,7 @@ class Group(StateManagedResource):
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, group_name: str) -> Group | None:
-        return cls.get_by_abstract_filter(ado_client, lambda group: group.name == group_name)  # type: ignore[return-value, attr-defined]
+        return cls._get_by_abstract_filter(ado_client, lambda group: group.name == group_name)  # type: ignore[return-value, attr-defined]
 
     # @classmethod
     # def get_all_by_member(cls, ado_client: AdoClient, member_descriptor_id: str) -> list["Group"]:

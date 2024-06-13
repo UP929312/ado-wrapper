@@ -52,13 +52,13 @@ class PullRequest(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> PullRequest:
-        return super().get_by_url(
+        return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/pullrequests/{pull_request_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(  # type: ignore[override]
+    def create(
         cls, ado_client: AdoClient, repo_id: str, from_branch_name: str, pull_request_title: str,
         pull_request_description: str, is_draft: bool = False
     ) -> PullRequest:  # fmt: skip
@@ -78,21 +78,21 @@ class PullRequest(StateManagedResource):
         return obj
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> None:
         pr = cls.get_by_id(ado_client, pull_request_id)
         pr.update(ado_client, "merge_status", "abandoned")
         ado_client.state_manager.remove_resource_from_state("PullRequest", pull_request_id)
 
-    def update(self, ado_client: AdoClient, attribute_name: PullRequestEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
-        return super().update(
+    def update(self, ado_client: AdoClient, attribute_name: PullRequestEditableAttribute, attribute_value: Any) -> None:
+        return super()._update(
             ado_client, "patch",
             f"/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",
             attribute_name, attribute_value, {}  # fmt: skip
         )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient, status: PullRequestStatus = "all") -> list[PullRequest]:  # type: ignore[override]
-        return super().get_all(
+    def get_all(cls, ado_client: AdoClient, status: PullRequestStatus = "all") -> list[PullRequest]:
+        return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/pullrequests?searchCriteria.status={status}&api-version=7.1",
         )  # type: ignore[return-value]
@@ -131,7 +131,7 @@ class PullRequest(StateManagedResource):
     @classmethod
     def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str, status: PullRequestStatus = "all") -> list[PullRequest]:
         try:
-            return super().get_all(
+            return super()._get_all(
                 ado_client,
                 f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
             )  # type: ignore[return-value]
@@ -188,33 +188,33 @@ class PullRequestCommentThread(StateManagedResource):
         return cls(data["id"], data.get("status"), comments)
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str, thread_id: str) -> PullRequestCommentThread:  # type: ignore[override]
-        return super().get_by_url(
+    def get_by_id(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str, thread_id: str) -> PullRequestCommentThread:
+        return super()._get_by_url(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads/{thread_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str, content: str) -> PullRequest:  # type: ignore[override]
-        return super().create(
+    def create(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str, content: str) -> PullRequest:
+        return super()._create(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads?api-version=7.1",
             {"comments": [{"commentType": 1, "content": content}]},
         )  # type: ignore[return-value]
 
-    def update(self, ado_client: AdoClient, attribute_name: PrCommentStatus, attribute_value: Any) -> None:  # type: ignore[override]
+    def update(self, ado_client: AdoClient, attribute_name: PrCommentStatus, attribute_value: Any) -> None:
         raise NotImplementedError
 
-    def delete_by_id(self, ado_client: AdoClient, repo_id: str, pull_request_id: str, thread_id: str) -> None:  # type: ignore[override]
-        return super().delete_by_id(
+    def delete_by_id(self, ado_client: AdoClient, repo_id: str, pull_request_id: str, thread_id: str) -> None:
+        return super()._delete_by_id(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads/{thread_id}?api-version=7.1",
             thread_id,
         )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str) -> list[PullRequestCommentThread]:  # type: ignore[override]
-        return super().get_all(
+    def get_all(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str) -> list[PullRequestCommentThread]:
+        return super()._get_all(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads?api-version=7.1",
         )  # type: ignore[return-value]

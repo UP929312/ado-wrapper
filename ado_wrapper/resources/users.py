@@ -45,22 +45,22 @@ class AdoUser(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, descriptor_id: str) -> AdoUser:
-        return super().get_by_url(
+        return super()._get_by_url(
             ado_client,  # Preview required
             f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users/{descriptor_id}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, member_name: str, member_email: str) -> AdoUser:  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, member_name: str, member_email: str) -> AdoUser:
         raise NotImplementedError("Creating a new user is not supported")
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, member_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(cls, ado_client: AdoClient, member_id: str) -> None:
         raise NotImplementedError("Deleting a user is not supported")
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list[AdoUser]:  # type: ignore[override]
-        return super().get_all(
+    def get_all(cls, ado_client: AdoClient) -> list[AdoUser]:
+        return super()._get_all(
             ado_client,  # Preview required
             f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
@@ -71,14 +71,14 @@ class AdoUser(StateManagedResource):
 
     @classmethod
     def get_by_email(cls, ado_client: AdoClient, member_email: str) -> AdoUser:
-        user: AdoUser = cls.get_by_abstract_filter(ado_client, lambda user: user.email == member_email)  # type: ignore[attr-defined, assignment]
+        user: AdoUser = cls._get_by_abstract_filter(ado_client, lambda user: user.email == member_email)  # type: ignore[attr-defined, assignment]
         if user is None:
             raise ValueError(f"Member with email {member_email} not found")
         return user
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, member_name: str) -> AdoUser | None:
-        return cls.get_by_abstract_filter(ado_client, lambda user: user.display_name == member_name)  # type: ignore[return-value, attr-defined]
+        return cls._get_by_abstract_filter(ado_client, lambda user: user.display_name == member_name)  # type: ignore[return-value, attr-defined]
 
 
 # ======================================================================================================= #
@@ -106,11 +106,11 @@ class Member(StateManagedResource):
         raise NotImplementedError("Getting a member by ID is not supported")
 
     @classmethod
-    def create(cls, ado_client: AdoClient, member_name: str, member_email: str) -> Member:  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, member_name: str, member_email: str) -> Member:
         raise NotImplementedError("Creating a new member is not supported")
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, member_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(cls, ado_client: AdoClient, member_id: str) -> None:
         raise NotImplementedError("Deleting a member is not supported")
 
 

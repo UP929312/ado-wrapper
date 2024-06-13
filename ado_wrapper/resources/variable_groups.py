@@ -38,13 +38,13 @@ class VariableGroup(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> VariableGroup:
-        return super().get_by_url(
+        return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/distributedtask/variablegroups/{variable_group_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(  # type: ignore[override]
+    def create(
         cls, ado_client: AdoClient, variable_group_name: str, variable_group_description: str, variables: dict[str, str]  # fmt: skip
     ) -> VariableGroup:
         payload = {
@@ -59,36 +59,36 @@ class VariableGroup(StateManagedResource):
                 }
             ],
         }
-        return super().create(
+        return super()._create(
             ado_client,
             f"/{ado_client.ado_project}/_apis/distributedtask/variablegroups?api-version=7.1",
             payload,
         )  # type: ignore[return-value]
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> None:
         requires_initialisation(ado_client)
-        return super().delete_by_id(
+        return super()._delete_by_id(
             ado_client,
             f"/_apis/distributedtask/variablegroups/{variable_group_id}?projectIds={ado_client.ado_project_id}&api-version=7.1",
             variable_group_id,
         )
 
-    def update(self, ado_client: AdoClient, attribute_name: VariableGroupEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
+    def update(self, ado_client: AdoClient, attribute_name: VariableGroupEditableAttribute, attribute_value: Any) -> None:
         # WARNING: This method works 80-90% of the time, for some reason, it fails randomly, ADO API is at fault.
         params = {
             "variableGroupProjectReferences": [{"name": self.name, "projectReference": {"name": ado_client.ado_project}}],
             "name": self.name, "variables": self.variables  # fmt: skip
         }
-        super().update(
+        super()._update(
             ado_client, "put",
             f"/_apis/distributedtask/variablegroups/{self.variable_group_id}?api-version=7.1",
             attribute_name, attribute_value, params  # fmt: skip
         )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list[VariableGroup]:  # type: ignore[override]
-        return super().get_all(
+    def get_all(cls, ado_client: AdoClient) -> list[VariableGroup]:
+        return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/distributedtask/variablegroups?api-version=7.1",
         )  # type: ignore[return-value]
@@ -99,4 +99,4 @@ class VariableGroup(StateManagedResource):
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, name: str) -> VariableGroup | None:
-        return cls.get_by_abstract_filter(ado_client, lambda variable_group: variable_group.name == name)  # type: ignore[return-value, attr-defined]
+        return cls._get_by_abstract_filter(ado_client, lambda variable_group: variable_group.name == name)  # type: ignore[return-value, attr-defined]

@@ -39,13 +39,13 @@ class AgentPool(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, agent_pool_id: str) -> AgentPool:
-        return super().get_by_url(
+        return super()._get_by_url(
             ado_client,
             f"/_apis/distributedtask/pools/{agent_pool_id}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(  # type: ignore[override]
+    def create(
         cls, ado_client: AdoClient, name: str, agent_cloud_id: str | None, auto_provision: bool, auto_size: bool,
         auto_update: bool, is_hosted: bool, size: int, target_size: int | None  # fmt: skip
     ) -> AgentPool:
@@ -65,7 +65,7 @@ class AgentPool(StateManagedResource):
     #     # PATCH https://dev.azure.com/{organization}/_apis/distributedtask/pools/{poolId}?api-version=7.1-preview.1
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, agent_pool_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(cls, ado_client: AdoClient, agent_pool_id: str) -> None:
         raise NotImplementedError
         # return super().delete_by_id(
         #     ado_client,
@@ -74,8 +74,8 @@ class AgentPool(StateManagedResource):
         # )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list[AgentPool]:  # type: ignore[override]
-        return super().get_all(
+    def get_all(cls, ado_client: AdoClient) -> list[AgentPool]:
+        return super()._get_all(
             ado_client,
             "/_apis/distributedtask/pools?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
@@ -86,4 +86,4 @@ class AgentPool(StateManagedResource):
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, agent_pool_id: str) -> AgentPool | None:
-        return cls.get_by_abstract_filter(ado_client, lambda agent_pool: agent_pool.agent_pool_id == agent_pool_id)  # type: ignore[return-value, attr-defined]
+        return cls._get_by_abstract_filter(ado_client, lambda agent_pool: agent_pool.agent_pool_id == agent_pool_id)  # type: ignore[return-value, attr-defined]

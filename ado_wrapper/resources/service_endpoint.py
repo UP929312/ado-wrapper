@@ -46,13 +46,13 @@ class ServiceEndpoint(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> ServiceEndpoint:
-        return super().get_by_url(
+        return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/serviceendpoint/endpoints/{repo_id}",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, name: str, service_endpoint_type: str, url: str,  # type: ignore[override]
+    def create(cls, ado_client: AdoClient, name: str, service_endpoint_type: str, url: str,
                username: str = "", password: str = "",  access_token: str = "") -> ServiceEndpoint:  # fmt: skip
         """Creates a service endpoint, pass in either username and password or access_token."""
         assert ((username and password) and not access_token) or (access_token and not (username and password)), "Either username and password or access_token must be passed in."  # fmt: skip
@@ -65,11 +65,11 @@ class ServiceEndpoint(StateManagedResource):
             payload["authorization"] = {"scheme": "UsernamePassword", "parameters": {"Username": username, "Password": password}}
         elif access_token:
             payload["authorization"] = {"parameters": {"AccessToken": access_token}, "scheme": "Token"}
-        return super().create(
+        return super()._create(
             ado_client, "/_apis/serviceendpoint/endpoints?api-version=7.1", payload,  # fmt: skip
         )  # type: ignore[return-value]
 
-    def update(self, ado_client: AdoClient, attribute_name: ServiceEndpointEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
+    def update(self, ado_client: AdoClient, attribute_name: ServiceEndpointEditableAttribute, attribute_value: Any) -> None:
         raise NotImplementedError
         # self._raw_data[attribute_name] = attribute_value
         # return super().update(
@@ -79,17 +79,17 @@ class ServiceEndpoint(StateManagedResource):
         # )
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, service_endpoint_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(cls, ado_client: AdoClient, service_endpoint_id: str) -> None:
         requires_initialisation(ado_client)
-        return super().delete_by_id(
+        return super()._delete_by_id(
             ado_client,
             f"/_apis/serviceendpoint/endpoints/{service_endpoint_id}?projectIds={ado_client.ado_project_id}&api-version=7.1",
             service_endpoint_id,
         )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list[ServiceEndpoint]:  # type: ignore[override]
-        return super().get_all(
+    def get_all(cls, ado_client: AdoClient) -> list[ServiceEndpoint]:
+        return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/serviceendpoint/endpoints?api-version=7.1",
         )  # type: ignore[return-value]
@@ -100,7 +100,7 @@ class ServiceEndpoint(StateManagedResource):
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, name: str) -> ServiceEndpoint:
-        return super().get_by_url(
+        return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/serviceendpoint/endpoints?endpointNames={name}&api-version=7.1",
         )  # type: ignore[return-value]

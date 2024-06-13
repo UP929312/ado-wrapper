@@ -57,11 +57,11 @@ class StateManagedResource:
         return dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in combined)
 
     @classmethod
-    def get_by_id(cls, ado_client: "AdoClient", resource_id: str) -> "StateManagedResource":
+    def _get_by_id(cls, ado_client: "AdoClient", resource_id: str) -> "StateManagedResource":
         raise NotImplementedError
 
     @classmethod
-    def get_by_url(cls, ado_client: "AdoClient", url: str) -> "StateManagedResource":
+    def _get_by_url(cls, ado_client: "AdoClient", url: str) -> "StateManagedResource":
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
         request = ado_client.session.get(url)
@@ -74,7 +74,7 @@ class StateManagedResource:
         return cls.from_request_payload(request.json())
 
     @classmethod
-    def create(
+    def _create(
         cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None, refetch: bool = False
     ) -> "StateManagedResource | PlannedStateManagedResource":
         """When creating, often the response doesn't contain all the data, refetching does a .get_by_id() after creation."""
@@ -95,12 +95,12 @@ class StateManagedResource:
             raise ValueError(f"Error creating {cls.__name__}: {request.status_code} - {request.text}")
         resource = cls.from_request_payload(request.json())
         if refetch:
-            resource = cls.get_by_id(ado_client, extract_id(resource))
+            resource = cls._get_by_id(ado_client, extract_id(resource))
         ado_client.state_manager.add_resource_to_state(cls.__name__, extract_id(resource), resource.to_json())  # type: ignore[arg-type]
         return resource
 
     @classmethod
-    def delete_by_id(cls, ado_client: "AdoClient", url: str, resource_id: str) -> None:
+    def _delete_by_id(cls, ado_client: "AdoClient", url: str, resource_id: str) -> None:
         """Deletes an object by its id. The id is passed so it can be removed from state"""
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
@@ -115,10 +115,7 @@ class StateManagedResource:
                 raise DeletionFailed(f"[ADO_WRAPPER] Error deleting {cls.__name__} ({resource_id}): {request.text}")
         ado_client.state_manager.remove_resource_from_state(cls.__name__, resource_id)  # type: ignore[arg-type]
 
-    def delete(self, ado_client: "AdoClient") -> None:
-        return self.delete_by_id(ado_client, extract_id(self))  # type: ignore[call-arg]  # pylint: disable=no-value-for-parameter
-
-    def update(self, ado_client: "AdoClient", update_action: Literal["put", "patch"], url: str,  # pylint: disable=too-many-arguments
+    def _update(self, ado_client: "AdoClient", update_action: Literal["put", "patch"], url: str,  # pylint: disable=too-many-arguments
                attribute_name: str, attribute_value: Any, params: dict[str, Any]) -> None:  # fmt: skip
         """The params should be a dictionary which will be combined with the internal name and value of the attribute to be updated."""
         interal_names = get_internal_field_names(self.__class__)
@@ -139,8 +136,11 @@ class StateManagedResource:
         setattr(self, attribute_name, attribute_value)
         ado_client.state_manager.update_resource_in_state(self.__class__.__name__, extract_id(self), self.to_json())  # type: ignore[arg-type]
 
+    def delete(self, ado_client: "AdoClient") -> None:
+        return self.delete_by_id(ado_client, extract_id(self))  # type: ignore[attr-defined]  # pylint: disable=no-value-for-parameter
+
     @classmethod
-    def get_all(cls, ado_client: "AdoClient", url: str) -> list["StateManagedResource"]:
+    def _get_all(cls, ado_client: "AdoClient", url: str) -> list["StateManagedResource"]:
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
         request = ado_client.session.get(url)
@@ -149,19 +149,19 @@ class StateManagedResource:
         return [cls.from_request_payload(resource) for resource in request.json()["value"]]
 
     @classmethod
-    def get_by_abstract_filter(
+    def _get_by_abstract_filter(
         cls, ado_client: "AdoClient", func: Callable[["StateManagedResource"], bool]
     ) -> "StateManagedResource | None":
         """Used internally for getting resources by a filter function. The function should return True if the resource is the one you want."""
-        resources = cls.get_all(ado_client)  # type: ignore[call-arg]  # pylint: disable=no-value-for-parameter
+        resources = cls.get_all(ado_client)  # type: ignore[attr-defined]  # pylint: disable=no-value-for-parameter, no-member
         for resource in resources:
             if func(resource):
-                return resource
+                return resource  # type: ignore[no-any-return]
         return None
 
-    def set_lifecycle_policy(self, ado_client: "AdoClient", policy: Literal["prevent_destroy", "ignore_changes"]) -> None:
-        self.life_cycle_policy = policy  # TODO
-        ado_client.state_manager.update_lifecycle_policy(self.__class__.__name__, extract_id(self), policy)  # type: ignore[arg-type]
+    # def set_lifecycle_policy(self, ado_client: "AdoClient", policy: Literal["prevent_destroy", "ignore_changes"]) -> None:
+    #     self.life_cycle_policy = policy  # TODO
+    #     ado_client.state_manager.update_lifecycle_policy(self.__class__.__name__, extract_id(self), policy)  # type: ignore[arg-type]
 
     # def __enter__(self) -> "StateManagedResource":
     #     return self

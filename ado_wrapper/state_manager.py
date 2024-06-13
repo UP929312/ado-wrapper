@@ -87,7 +87,7 @@ class StateManager:
         all_resource_classes = get_resource_variables()
         class_reference = all_resource_classes[resource_type]
         try:
-            class_reference.delete_by_id(self.ado_client, resource_id)  # type: ignore[call-arg]
+            class_reference.delete_by_id(self.ado_client, resource_id)  # type: ignore[attr-defined]
         except DeletionFailed as exc:
             if not self.ado_client.suppress_warnings:
                 print(str(exc))
@@ -117,7 +117,8 @@ class StateManager:
 
     def import_into_state(self, resource_type: ResourceType, resource_id: str) -> None:
         class_reference = get_resource_variables()[resource_type]
-        data = class_reference.get_by_id(self.ado_client, resource_id).to_json()
+        # The child will have this VVV
+        data = class_reference.get_by_id(self.ado_client, resource_id).to_json()  # type: ignore[attr-defined]
         self.add_resource_to_state(resource_type, resource_id, data)
 
     def wipe_state(self) -> None:
@@ -129,7 +130,8 @@ class StateManager:
         all_states = self.load_state()
         for resource_type in all_states["resources"]:
             for resource_id in all_states["resources"][resource_type]:
-                instance = ALL_RESOURCES[resource_type].get_by_id(self.ado_client, resource_id)
+                # The child will have this VVV
+                instance = ALL_RESOURCES[resource_type].get_by_id(self.ado_client, resource_id)  # type: ignore[attr-defined]
                 if instance.to_json() != all_states["resources"][resource_type][resource_id]["data"]:
                     all_states["resources"][resource_type][resource_id]["data"] = instance.to_json()
         return all_states

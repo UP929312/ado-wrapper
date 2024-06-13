@@ -32,15 +32,15 @@ class AnnotatedTag(StateManagedResource):
         return cls(data["objectId"], repo_id, data["name"], data["message"], member, created_at)
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, repo_id: str, object_id: str) -> AnnotatedTag:  # type: ignore[override]
-        return super().get_by_url(
+    def get_by_id(cls, ado_client: AdoClient, repo_id: str, object_id: str) -> AnnotatedTag:
+        return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/annotatedtags/{object_id}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, repo_id: str, name: str, message: str, object_id: str) -> AnnotatedTag:  # type: ignore[override]
-        return super().create(
+    def create(cls, ado_client: AdoClient, repo_id: str, name: str, message: str, object_id: str) -> AnnotatedTag:
+        return super()._create(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/annotatedTags?api-version=7.1-preview.1",
             payload={"name": name, "message": message, "taggedObject": {"objectId": object_id}},

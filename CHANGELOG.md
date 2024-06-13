@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.11.0
+
+### Changed
+
+- All under-the-hood state managed resource functions have been made private, meaning they won't appear in autocompletes and such.
+  - This was so it was easier to find the real functio you wanted, and is a lot clearer what's part of the public API or not.
+- Branches can now fetch repos by name *or* id now.
+
+### Fixes
+
+- Runs now properly extract their repo id now, previously it would always be `None`
+
 ## v1.10.0
 
 ### Added

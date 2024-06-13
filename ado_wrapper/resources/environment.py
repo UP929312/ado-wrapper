@@ -45,37 +45,37 @@ class Environment(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, environment_id: str) -> Environment:
-        return super().get_by_url(
+        return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/distributedtask/environments/{environment_id}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, name: str, description: str) -> Environment:  # type: ignore[override]
-        return super().create(
+    def create(cls, ado_client: AdoClient, name: str, description: str) -> Environment:
+        return super()._create(
             ado_client,
             f"/{ado_client.ado_project}/_apis/distributedtask/environments?api-version=7.1-preview.1",
             {"name": name, "description": description},
         )  # type: ignore[return-value]
 
-    def update(self, ado_client: AdoClient, attribute_name: EnvironmentEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
-        return super().update(
+    def update(self, ado_client: AdoClient, attribute_name: EnvironmentEditableAttribute, attribute_value: Any) -> None:
+        return super()._update(
             ado_client, "patch",
             f"/{ado_client.ado_project}/_apis/distributedtask/environments/{self.environment_id}?api-version=7.1-preview.1",
             attribute_name, attribute_value, {},  # fmt: skip
         )
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, environment_id: str) -> None:  # type: ignore[override]
-        return super().delete_by_id(
+    def delete_by_id(cls, ado_client: AdoClient, environment_id: str) -> None:
+        return super()._delete_by_id(
             ado_client,
             f"/{ado_client.ado_project}/_apis/distributedtask/environments/{environment_id}?api-version=7.1-preview.1",
             environment_id,
         )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list[Environment]:  # type: ignore[override]
-        return super().get_all(
+    def get_all(cls, ado_client: AdoClient) -> list[Environment]:
+        return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/distributedtask/environments?api-version=7.1-preview.1&$top=10000",
         )  # type: ignore[return-value]
@@ -86,7 +86,7 @@ class Environment(StateManagedResource):
 
     @classmethod
     def get_by_name(cls, ado_client: AdoClient, name: str) -> Environment:
-        return cls.get_by_abstract_filter(ado_client, lambda x: x.name == name)  # type: ignore[return-value, attr-defined]
+        return cls._get_by_abstract_filter(ado_client, lambda x: x.name == name)  # type: ignore[return-value, attr-defined]
 
     # # =============== Pipeline Permissions ===================== #
 

@@ -66,14 +66,14 @@ class Commit(StateManagedResource):
         return cls(data["commitId"], member, from_ado_date_string(data["author"]["date"]), data["comment"])
 
     @classmethod
-    def get_by_id(cls, ado_client: "AdoClient", repo_id: str, commit_id: str) -> "Commit":  # type: ignore[override]
-        return super().get_by_url(
+    def get_by_id(cls, ado_client: "AdoClient", repo_id: str, commit_id: str) -> "Commit":
+        return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits/{commit_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(  # type: ignore[override]
+    def create(
         cls, ado_client: "AdoClient", repo_id: str, from_branch_name: str, to_branch_name: str, updates: dict[str, str], change_type: ChangeType, commit_message: str,  # fmt: skip
     ) -> "Commit":
         """Creates a commit in the given repository with the given updates and returns the commit object.
@@ -104,7 +104,7 @@ class Commit(StateManagedResource):
         return cls.from_request_payload(request.json()["commits"][-1])
 
     @staticmethod
-    def delete_by_id(ado_client: "AdoClient", commit_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(ado_client: "AdoClient", commit_id: str) -> None:
         raise NotImplementedError
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -120,7 +120,7 @@ class Commit(StateManagedResource):
         """Returns a list of all commits in the given repository."""
         extra_query = (f"searchCriteria.itemVersion.version={branch_name}&searchCriteria.itemVersion.versionType={'branch'}&"
                        if branch_name is not None else "")  # fmt: skip
-        return super().get_all(
+        return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits?{extra_query}api-version=7.1",
         )  # type: ignore[return-value]

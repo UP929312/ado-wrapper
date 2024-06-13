@@ -106,30 +106,30 @@ class Release(StateManagedResource):
 
     @classmethod  # TO-DO: Test
     def get_by_id(cls, ado_client: "AdoClient", release_id: str) -> "Release":
-        return super().get_by_url(
+        return super()._get_by_url(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod  # TO-DO: Test
-    def create(cls, ado_client: "AdoClient", definition_id: str, description: str = "Made with the ado_wrapper Python library") -> "Release":  # type: ignore[override]
-        return super().create(
+    def create(cls, ado_client: "AdoClient", definition_id: str, description: str = "Made with the ado_wrapper Python library") -> "Release":
+        return super()._create(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1",
             {"definitionId": definition_id, "description": description},
         )  # type: ignore[return-value]
 
     @classmethod  # TO-DO: Test
-    def delete_by_id(cls, ado_client: "AdoClient", release_id: str) -> None:  # type: ignore[override]
-        return super().delete_by_id(
+    def delete_by_id(cls, ado_client: "AdoClient", release_id: str) -> None:
+        return super()._delete_by_id(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1",
             release_id,
         )
 
     @classmethod
-    def get_all(cls, ado_client: "AdoClient", definition_id: str) -> "list[Release]":  # type: ignore[override]
-        return super().get_all(
+    def get_all(cls, ado_client: "AdoClient", definition_id: str) -> "list[Release]":
+        return super()._get_all(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1&definitionId={definition_id}",
         )  # type: ignore[return-value]
@@ -183,42 +183,42 @@ class ReleaseDefinition(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", release_definition_id: str) -> "ReleaseDefinition":
-        return super().get_by_url(
+        return super()._get_by_url(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_definition_id}?api-version=7.0",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(cls, ado_client: "AdoClient", name: str, variable_group_ids: list[int], agent_pool_id: str) -> "ReleaseDefinition":  # type: ignore[override]
+    def create(cls, ado_client: "AdoClient", name: str, variable_group_ids: list[int], agent_pool_id: str) -> "ReleaseDefinition":
         """Takes a list of variable group ids to include, and an agent_pool_id"""
-        return super().create(
+        return super()._create(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions?api-version=7.0",
             get_release_definition(ado_client, name, variable_group_ids, agent_pool_id),
         )  # type: ignore[return-value]
 
     @classmethod
-    def delete_by_id(cls, ado_client: "AdoClient", release_definition_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(cls, ado_client: "AdoClient", release_definition_id: str) -> None:
         for release in ReleaseDefinition.get_all_releases_for_definition(ado_client, release_definition_id):
             # ado_client.state_manager.remove_resource_from_state("Release", release.release_id)
             release.delete(ado_client)
-        return super().delete_by_id(
+        return super()._delete_by_id(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_definition_id}?forceDelete=True&api-version=7.1",
             release_definition_id,
         )
 
-    def update(self, ado_client: "AdoClient", attribute_name: ReleaseDefinitionEditableAttribute, attribute_value: Any) -> None:  # type: ignore[override]
+    def update(self, ado_client: "AdoClient", attribute_name: ReleaseDefinitionEditableAttribute, attribute_value: Any) -> None:
         self.revision = str(int(self.revision) + 1)
-        return super().update(
+        return super()._update(
             ado_client, "put",
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{self.release_definition_id}?api-version=7.1",
             attribute_name, attribute_value, self._raw_data,  # fmt: skip
         )
 
     @classmethod
-    def get_all(cls, ado_client: "AdoClient") -> "list[ReleaseDefinition]":  # type: ignore[override]
-        return super().get_all(
+    def get_all(cls, ado_client: "AdoClient") -> "list[ReleaseDefinition]":
+        return super()._get_all(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions?api-version=7.1",
         )  # type: ignore[return-value]

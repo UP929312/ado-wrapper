@@ -42,18 +42,18 @@ class Run(StateManagedResource):
                    data["state"], data.get("result", "unknown"), data["templateParameters"])  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: "AdoClient", pipeline_id: str, run_id: str) -> "Run":  # type: ignore[override]
-        return super().get_by_url(
+    def get_by_id(cls, ado_client: "AdoClient", pipeline_id: str, run_id: str) -> "Run":
+        return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project}/_apis/pipelines/{pipeline_id}/runs/{run_id}?api-version=6.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
-    def create(  # type: ignore[override]
+    def create(
         cls, ado_client: "AdoClient", definition_id: str, template_variables: dict[str, Any], source_branch: str = "main",  # fmt: skip
     ) -> "Run":
         try:
-            return super().create(
+            return super()._create(
                 ado_client,
                 f"/{ado_client.ado_project}/_apis/pipelines/{definition_id}/runs?api-version=6.1-preview.1",
                 {"templateParameters": template_variables, "repositories": {"refName": f"refs/heads/{source_branch}"}},
@@ -64,15 +64,15 @@ class Run(StateManagedResource):
             ) from e
 
     @classmethod
-    def delete_by_id(cls, ado_client: "AdoClient", run_id: str) -> None:  # type: ignore[override]
+    def delete_by_id(cls, ado_client: "AdoClient", run_id: str) -> None:
         return Build.delete_by_id(ado_client, run_id)
 
-    def update(self, ado_client: "AdoClient", attribute_name: str, attribute_value: Any) -> None:  # type: ignore[override]
+    def update(self, ado_client: "AdoClient", attribute_name: str, attribute_value: Any) -> None:
         raise NotImplementedError("Use Build's update instead!")
 
     @classmethod
     def get_all_by_definition(cls, ado_client: "AdoClient", pipeline_id: str) -> "list[Run]":
-        return super().get_all(
+        return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project}/_apis/pipelines/{pipeline_id}/runs?api-version=6.1-preview.1",
         )  # type: ignore[return-value]

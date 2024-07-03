@@ -3,7 +3,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
-from ado_wrapper.resources.builds import Build, BuildDefinition
+# from ado_wrapper.resources.builds import Build
+from wrapper.builds import Build, BuildDefinition
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import from_ado_date_string, recursively_find_or_none
 
@@ -17,6 +18,7 @@ RunState = Literal["canceling", "completed", "inProgress", "unknown"]
 class RunAllDictionary(TypedDict):
     template_variables: dict[str, Any]
     branch_name: str
+    stages_to_run: list[str] | None
 
 
 # ========================================================================================================
@@ -50,15 +52,26 @@ class Run(StateManagedResource):
 
     @classmethod
     def create(
-        cls, ado_client: "AdoClient", definition_id: str, template_variables: dict[str, Any], source_branch: str = "main", stage_exclude_list: list = []  # fmt: skip
+        cls, ado_client: "AdoClient", definition_id: str, template_variables: dict[str, Any], source_branch: str = "main", stages_to_run: list[str] | None = None  # fmt: skip
     ) -> "Run":
-        build_stages = BuildDefinition.get_all_stages(ado_client, definition_id, source_branch)
+        """ Takes a list of definition_id -> {template_variables, branch_name, stages_to_run}
+        Once done, returns a mapping of run_id -> `Run` object """
+
+        PAYLOAD = {"templateParameters": template_variables, "stagesToSkip": [], "repositories": {"refName": f"refs/heads/{source_branch}"}}
+        if stages_to_run is not None:
+            build_stages = BuildDefinition.get_all_stages(ado_client, definition_id, source_branch)
+        
+            for name in stages_to_run:
+                if name not in {step.stage_internal_name for step in build_stages}:
+                    raise ValueError(f"The stage_name '{name}' in stages_to_run is not found in the steps.")
+
+            PAYLOAD["stagesToSkip"] = [stage.stage_internal_name for stage in build_stages if stage.stage_internal_name not in stages_to_run]
 
         try:
             return super()._create(
                 ado_client,
                 f"/{ado_client.ado_project}/_apis/pipelines/{definition_id}/runs?api-version=6.1-preview.1",
-                {"templateParameters": template_variables, "stagesToSkip": [stage.stage_internal_name for stage in build_stages if stage.stage_internal_name not in stage_exclude_list], "repositories": {"refName": f"refs/heads/{source_branch}"}},
+                PAYLOAD,
             )  # type: ignore[return-value]
         except ValueError as e:
             raise ValueError(
@@ -85,36 +98,36 @@ class Run(StateManagedResource):
 
     @classmethod
     def run_and_wait_until_completion(cls, ado_client: "AdoClient", definition_id: str, template_variables: dict[str, Any],
-                                         branch_name: str = "main", max_timeout_seconds: int | None = 900, stage_exclude_list: list = []) -> "Run":  # fmt: skip
+                                         branch_name: str = "main", max_timeout_seconds: int | None = 900, stages_to_run: list[str] | None = None) -> "Run":  # fmt: skip
         """Creates a run and waits until it is completed, or raises a TimeoutError if it takes too long.
         WARNING: This is a blocking operation, it will not return until the run is completed or the timeout (15 mins) is reached."""
-        data: dict[str, RunAllDictionary] = {definition_id: {"template_variables": template_variables, "branch_name": branch_name}}
-        return cls.run_all_and_capture_results_simultaneously(ado_client, data, max_timeout_seconds, stage_exclude_list)[definition_id]
+        data: dict[str, RunAllDictionary] = {definition_id: {"template_variables": template_variables, "branch_name": branch_name, "stages_to_run": stages_to_run}}  # fmt: skip
+        return cls.run_all_and_capture_results_simultaneously(ado_client, data, max_timeout_seconds, stages_to_run)[definition_id]
 
     @classmethod
     def run_all_and_capture_results_sequentially(
-        cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800, stage_exclude_list: list = []
+        cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800
     ) -> dict[str, "Run"]:
         """Takes a mapping of definition_id -> {template_variables, branch_name}
         Once done, returns a mapping of definition_id -> `Run` object"""
         return_values = {}
         for definition_id, build_def_data in data.items():
-            template_variables, branch_name = build_def_data["template_variables"], build_def_data["branch_name"]
-            run = cls.run_and_wait_until_completion(ado_client, definition_id, template_variables, branch_name, max_timeout_seconds, stage_exclude_list)
+            template_variables, branch_name, stages_to_run = build_def_data["template_variables"], build_def_data["branch_name"], build_def_data["stages_to_run"]
+            run = cls.run_and_wait_until_completion(ado_client, definition_id, template_variables, branch_name, max_timeout_seconds, stages_to_run)
             return_values[definition_id] = run
         return return_values
 
     @classmethod
     def run_all_and_capture_results_simultaneously(
-        cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800, stage_exclude_list: list = []
+        cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800, stages_to_run: list[str] | None = None
     ) -> dict[str, "Run"]:
         """Takes a mapping of definition_id -> {template_variables, branch_name}
         Once done, returns a mapping of definition_id -> `Run` object"""
         # Get a mapping of definition_id -> Run()
-        runs: dict[str, Run] = {}
+        runs: dict[str, Run] = {},
         for definition_id, build_def_data in data.items():
             template_variables, branch_name = build_def_data["template_variables"], build_def_data["branch_name"]
-            run = cls.create(ado_client, definition_id, template_variables, branch_name, stage_exclude_list)
+            run = cls.create(ado_client, definition_id, template_variables, branch_name, stages_to_run)
             runs[definition_id] = run
         # Then, slowly check on them, and remove the ones that are done
         start_time = datetime.now()

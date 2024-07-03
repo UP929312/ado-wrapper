@@ -20,6 +20,7 @@ class TestPullRequest:
                 "pullRequestId": 123,
                 "title": "Test PR",
                 "description": "Test PR description",
+                "status": "notSet",
                 "sourceRefName": "main",
                 "targetRefName": "main",
                 "creationDate": "2021-08-01T00:00:00Z",

@@ -1,30 +1,33 @@
-class ResourceNotFound(Exception):
+class AdoWrapperException(Exception):
+    pass
+
+class ResourceNotFound(AdoWrapperException):
     pass
 
 
-class DeletionFailed(Exception):
+class DeletionFailed(AdoWrapperException):
     pass
 
 
-class ResourceAlreadyExists(Exception):
+class ResourceAlreadyExists(AdoWrapperException):
     pass
 
 
-class UnknownError(Exception):
+class UnknownError(AdoWrapperException):
     pass
 
 
-class InvalidPermissionsError(Exception):
+class InvalidPermissionsError(AdoWrapperException):
     pass
 
 
-class UpdateFailed(Exception):
+class UpdateFailed(AdoWrapperException):
     pass
 
 
-class AuthenticationError(Exception):
+class AuthenticationError(AdoWrapperException):
     pass
 
 
-class ConfigurationError(Exception):
+class ConfigurationError(AdoWrapperException):
     pass

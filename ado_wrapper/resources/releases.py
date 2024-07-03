@@ -112,7 +112,9 @@ class Release(StateManagedResource):
         )  # type: ignore[return-value]
 
     @classmethod  # TO-DO: Test
-    def create(cls, ado_client: "AdoClient", definition_id: str, description: str = "Made with the ado_wrapper Python library") -> "Release":
+    def create(
+        cls, ado_client: "AdoClient", definition_id: str, description: str = "Made with the ado_wrapper Python library"
+    ) -> "Release":
         return super()._create(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1",

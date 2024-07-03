@@ -42,6 +42,31 @@ ado_user = AdoUser.get_by_name(ado_client, <member_name>)
 </details>
 
 -----
+# AgentPool
+<details>
+
+```py
+# Create
+agent_pool = AgentPool.create(ado_client, <name>, <agent_cloud_id>, <auto_provision>, <auto_size>, <auto_update>, <is_hosted>, <size>, <target_size>)
+
+# Delete
+agent_pool.delete(ado_client)
+
+# Delete By Id
+agent_pool.delete_by_id(ado_client, <agent_pool_id>)
+
+# Get All
+agent_pools = AgentPool.get_all(ado_client)
+
+# Get By Id
+agent_pool = AgentPool.get_by_id(ado_client, <agent_pool_id>)
+
+# Get By Name
+agent_pool = AgentPool.get_by_name(ado_client, <agent_pool_id>)
+```
+</details>
+
+-----
 # AnnotatedTag
 <details>
 
@@ -53,16 +78,35 @@ annotated_tag = AnnotatedTag.create(ado_client, <repo_id>, <name>, <message>, <o
 annotated_tag.delete(ado_client)
 
 # Delete By Id
-annotated_tag.delete_by_id(ado_client, <object_id>)
+annotated_tag.delete_by_id(ado_client, <object_id>, <repo_id>)
 
 # Get All By Repo
-annotated_tags = AnnotatedTag.get_all_by_repo(ado_client, <repo_name>)
+annotated_tags = AnnotatedTag.get_all_by_repo(ado_client, <repo_id>)
 
 # Get By Id
-annotated_tag = AnnotatedTag.get_by_id(ado_client, <repo_id>, <branch_id>)
+annotated_tag = AnnotatedTag.get_by_id(ado_client, <repo_id>, <object_id>)
 
 # Get By Name
 annotated_tag = AnnotatedTag.get_by_name(ado_client, <repo_id>, <tag_name>)
+```
+</details>
+
+-----
+# AuditLog
+<details>
+
+```py
+# Get All
+audit_logs = AuditLog.get_all(ado_client, <start_time>, <end_time>)
+
+# Get All By Area
+audit_logs = AuditLog.get_all_by_area(ado_client, <area_type>, <start_time>, <end_time>)
+
+# Get All By Category
+audit_logs = AuditLog.get_all_by_category(ado_client, <category>, <start_time>, <end_time>)
+
+# Get All By Scope Type
+audit_logs = AuditLog.get_all_by_scope_type(ado_client, <scope_type>, <start_time>, <end_time>)
 ```
 </details>
 
@@ -78,16 +122,19 @@ branch = Branch.create(ado_client, <repo_id>, <branch_name>, <source_branch>)
 branch.delete(ado_client)
 
 # Delete By Id
-branch.delete_by_id(ado_client, <repo_id>, <branch_id>)
+branch.delete_by_id(ado_client, <branch_name>, <repo_id>)
+
+# Delete By Name
+branch.delete_by_name(ado_client, <branch_name>, <repo_id>)
 
 # Get All By Repo
-branchs = Branch.get_all_by_repo(ado_client, <repo_id>)
+branchs = Branch.get_all_by_repo(ado_client, <repo_name_or_id>)
 
 # Get By Id
 branch = Branch.get_by_id(ado_client, <repo_id>, <branch_id>)
 
 # Get By Name
-branch = Branch.get_by_name(ado_client, <repo_id>, <branch_name>)
+branch = Branch.get_by_name(ado_client, <repo_name_or_id>, <branch_name>)
 
 # Get Main Branch
 branch = Branch.get_main_branch(ado_client, <repo_id>)
@@ -140,7 +187,7 @@ build.update(ado_client, <attribute_name>, <attribute_value>)
 
 ```py
 # Create
-build_definition = BuildDefinition.create(ado_client, <name>, <repo_id>, <repo_name>, <path_to_pipeline>, <description>, <agent_pool_id>, <variable_groups>, <branch_name>)
+build_definition = BuildDefinition.create(ado_client, <name>, <repo_id>, <repo_name>, <path_to_pipeline>, <description>, <agent_pool_id>, <branch_name>)
 
 # Delete
 build_definition.delete(ado_client)
@@ -154,14 +201,17 @@ build_definitions = BuildDefinition.get_all(ado_client)
 # Get All Builds By Definition
 builds = BuildDefinition.get_all_builds_by_definition(ado_client)
 
-# Get All By Name
-build_definitions = BuildDefinition.get_all_by_name(ado_client, <name>)
-
 # Get All By Repo Id
 build_definitions = BuildDefinition.get_all_by_repo_id(ado_client, <repo_id>)
 
 # Get By Id
 build_definition = BuildDefinition.get_by_id(ado_client, <build_definition_id>)
+
+# Get By Name
+build_definition = BuildDefinition.get_by_name(ado_client, <name>)
+
+# Get Latest Build By Definition
+build = BuildDefinition.get_latest_build_by_definition(ado_client)
 
 # Update
 build_definition.update(ado_client, <attribute_name>, <attribute_value>)
@@ -285,9 +335,6 @@ member = Member.get_by_id(ado_client, <member_id>)
 # Delete
 merge_branch_policy.delete(ado_client)
 
-# Delete By Id
-merge_branch_policy.delete_by_id(ado_client, <url>, <resource_id>)
-
 # Get Branch Policy
 merge_branch_policy = MergeBranchPolicy.get_branch_policy(ado_client, <repo_id>, <branch_name>)
 
@@ -306,9 +353,6 @@ merge_policies.add_default_reviewer(ado_client, <repo_id>, <reviewer_id>, <is_re
 
 # Delete
 merge_policies.delete(ado_client)
-
-# Delete By Id
-merge_policies.delete_by_id(ado_client, <url>, <resource_id>)
 
 # Get All Branch Policies By Repo Id
 merge_branch_policys = MergePolicies.get_all_branch_policies_by_repo_id(ado_client, <repo_id>, <branch_name>)
@@ -343,9 +387,6 @@ merge_policy_default_reviewer.add_default_reviewer(ado_client, <repo_id>, <revie
 
 # Delete
 merge_policy_default_reviewer.delete(ado_client)
-
-# Delete By Id
-merge_policy_default_reviewer.delete_by_id(ado_client, <url>, <resource_id>)
 
 # Get Default Reviewers
 reviewers = MergePolicyDefaultReviewer.get_default_reviewers(ado_client, <repo_id>, <branch_name>)
@@ -487,6 +528,9 @@ release = Release.get_by_id(ado_client, <release_id>)
 <details>
 
 ```py
+# Agent Pool Id
+release = ReleaseDefinition.agent_pool_id(ado_client, <release_id>)
+
 # Create
 release_definition = ReleaseDefinition.create(ado_client, <name>, <variable_group_ids>, <agent_pool_id>)
 
@@ -533,6 +577,12 @@ repos = Repo.get_all(ado_client)
 # Get All Pull Requests
 pull_requests = Repo.get_all_pull_requests(ado_client, <repo_id>, <status>)
 
+# Get All Repos With Required Reviewer
+repos = Repo.get_all_repos_with_required_reviewer(ado_client, <reviewer_email>)
+
+# Get And Decode File
+dictionary = Repo.get_and_decode_file(ado_client, <file_path>, <branch_name>)
+
 # Get Branch Merge Policy
 merge_branch_policy = Repo.get_branch_merge_policy(ado_client, <repo_id>, <branch_name>)
 
@@ -560,6 +610,46 @@ repo.update(ado_client, <attribute_name>, <attribute_value>)
 </details>
 
 -----
+# RepoUserPermissions
+<details>
+
+```py
+# Delete
+repo_user_permissions.delete(ado_client)
+
+# Display Output
+string_var = RepoUserPermissions.display_output(permissions)
+
+# Display Output For Repo
+string_var = RepoUserPermissions.display_output_for_repo(mapping)
+
+# Get All By Repo Id
+dictionary = RepoUserPermissions.get_all_by_repo_id(ado_client, <repo_id>, <users_only>, <ignore_inherits>, <remove_not_set>)
+
+# Get By Subject Descriptor
+user_permissions = RepoUserPermissions.get_by_subject_descriptor(ado_client, <repo_id>, <subject_descriptor>)
+
+# Get By User Email
+user_permissions = RepoUserPermissions.get_by_user_email(ado_client, <repo_id>, <subject_email>)
+
+# Remove Perm
+repo_user_permissions.remove_perm(ado_client, <repo_id>, <subject_email>, <domain_container_id>)
+
+# Set All Permissions For Repo
+repo_user_permissions.set_all_permissions_for_repo(ado_client, <repo_id>, <mapping>)
+
+# Set By Group Descriptor
+repo_user_permissions.set_by_group_descriptor(ado_client, <repo_id>, <group_descriptor>, <action>, <permission>)
+
+# Set By User Email
+repo_user_permissions.set_by_user_email(ado_client, <repo_id>, <email>, <action>, <permission>, <domain_container_id>)
+
+# Set By User Email Batch
+repo_user_permissions.set_by_user_email_batch(ado_client, <repo_id>, <subject_email>, <mapping>, <domain_container_id>)
+```
+</details>
+
+-----
 # Reviewer
 <details>
 
@@ -575,6 +665,53 @@ reviewer.delete_by_id(ado_client, <member_id>)
 
 # Get By Id
 member = Reviewer.get_by_id(ado_client, <member_id>)
+```
+</details>
+
+-----
+# Run
+<details>
+
+```py
+# Create
+run = Run.create(ado_client, <definition_id>, <template_variables>, <source_branch>)
+
+# Delete
+run.delete(ado_client)
+
+# Delete By Id
+run.delete_by_id(ado_client, <run_id>)
+
+# Get All By Definition
+runs = Run.get_all_by_definition(ado_client, <pipeline_id>)
+
+# Get By Id
+run = Run.get_by_id(ado_client, <pipeline_id>, <run_id>)
+
+# Get Latest
+run = Run.get_latest(ado_client, <definition_id>)
+
+# Run All And Capture Results Sequentially
+dictionary = Run.run_all_and_capture_results_sequentially(ado_client, <data>, <max_timeout_seconds>)
+
+# Run All And Capture Results Simultaneously
+dictionary = Run.run_all_and_capture_results_simultaneously(ado_client, <data>, <max_timeout_seconds>)
+
+# Run And Wait Until Completion
+run = Run.run_and_wait_until_completion(ado_client, <definition_id>, <template_variables>, <branch_name>, <max_timeout_seconds>)
+
+# Update
+run.update(ado_client, <attribute_name>, <attribute_value>)
+```
+</details>
+
+-----
+# Search
+<details>
+
+```py
+# Get By Search String
+any = Search.get_by_search_string(ado_client, <search_text>, <result_count>, <sort_direction>)
 ```
 </details>
 
@@ -656,6 +793,25 @@ team_member.delete_by_id(ado_client, <member_id>)
 
 # Get By Id
 member = TeamMember.get_by_id(ado_client, <member_id>)
+```
+</details>
+
+-----
+# UserPermission
+<details>
+
+```py
+# Get By Subject Descriptor
+user_permissions = UserPermission.get_by_subject_descriptor(ado_client, <subject_descriptor>, <repo_id>)
+
+# Remove Perm
+user_permission.remove_perm(ado_client, <repo_id>, <subject_email>, <domain_container_id>)
+
+# Set By Group Descriptor
+user_permission.set_by_group_descriptor(ado_client, <repo_id>, <group_descriptor>, <action>, <permission>)
+
+# Set By User Email
+user_permission.set_by_user_email(ado_client, <repo_id>, <email>, <action>, <permission>, <domain_container_id>)
 ```
 </details>
 

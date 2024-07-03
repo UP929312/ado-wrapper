@@ -63,8 +63,8 @@ class Hit:
     length: int
     line: int
     column: int
-    code_snippet: str
-    hit_type: str
+    code_snippet: str | None
+    hit_type: str  # content
 
     @classmethod
     def from_request_payload(cls, payload: dict[str, Any]) -> Hit:

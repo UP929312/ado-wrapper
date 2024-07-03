@@ -137,7 +137,7 @@ class StateManagedResource:
         ado_client.state_manager.update_resource_in_state(self.__class__.__name__, extract_id(self), self.to_json())  # type: ignore[arg-type]
 
     def delete(self, ado_client: "AdoClient") -> None:
-        return self.delete_by_id(ado_client, extract_id(self))  # type: ignore[attr-defined]  # pylint: disable=no-value-for-parameter
+        return self.delete_by_id(ado_client, extract_id(self))  # type: ignore[attr-defined, no-any-return]  # pylint: disable=no-value-for-parameter, no-member
 
     @classmethod
     def _get_all(cls, ado_client: "AdoClient", url: str) -> list["StateManagedResource"]:

@@ -13,4 +13,5 @@ htmlcov/
 tests/test_data.txt
 
 script.py
+dev_testing.py
 credentials.txt

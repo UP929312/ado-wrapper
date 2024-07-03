@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
@@ -11,13 +12,27 @@ from ado_wrapper.utils import from_ado_date_string
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
     from ado_wrapper.resources.repo import Repo
+    from ado_wrapper.resources.groups import Group
 
 PullRequestEditableAttribute = Literal["title", "description", "merge_status", "is_draft"]
 PullRequestStatus = Literal["active", "completed", "abandoned", "all", "notSet"]
 MergeStatus = Literal["succeeded", "conflicts", "rejectedByPolicy", "rejectedByUser", "queued", "notSet"]
+DraftState = Literal["Include drafts", "Exclude drafts", "Only include drafts"]
 CommentType = Literal["system", "regular", "codeChange", "unknown"]
 PrCommentStatus = Literal["active", "pending", "fixed", "wontFix", "closed"]
 
+status_mapping: dict[int, MergeStatus] = {  # type: ignore
+    1: "???",
+    2: "conflicts",
+    3: "notSet",
+    4: "4",
+}
+
+other_mapping: dict[int, str] = {  # type: ignore
+    1: "active",
+    2: "completed",
+    3: "abandoned",
+}
 
 @dataclass
 class PullRequest(StateManagedResource):
@@ -33,11 +48,9 @@ class PullRequest(StateManagedResource):
     repo: Repo
     close_date: datetime | None = field(default=None, repr=False)
     is_draft: bool = field(default=False, repr=False, metadata={"editable": True, "internal_name": "isDraft"})
-    merge_status: MergeStatus = field(default="notSet", metadata={"editable": True, "internal_name": "status"})
+    # pr_status: PullRequestStatus = field(default="notSet", metadata={"editable": True, "internal_name": "status"})
+    merge_status: MergeStatus = field(default="notSet", metadata={"editable": True, "internal_name": "mergeStatus"})
     reviewers: list[Reviewer] = field(default_factory=list, repr=False)  # Static(ish)
-
-    def __str__(self) -> str:
-        return f"PullRequest(id={self.pull_request_id}, title={self.title}, repo_name={self.repo.name}, author={self.author!s}, status={self.merge_status})"
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> PullRequest:
@@ -46,9 +59,11 @@ class PullRequest(StateManagedResource):
         author = Member.from_request_payload(data["createdBy"])
         reviewers = [Reviewer.from_request_payload(reviewer) for reviewer in data["reviewers"]]
         repository = Repo(data["repository"]["id"], data["repository"]["name"])
+        merge_status = status_mapping[data.get("mergeStatus", "notSet")] if isinstance(data.get("mergeStatus"), int) else data.get("mergeStatus", "notSet")
         return cls(str(data["pullRequestId"]), data["title"], data.get("description", ""), data["sourceRefName"],
                    data["targetRefName"], author, from_ado_date_string(data["creationDate"]), repository,
-                   from_ado_date_string(data.get("closedDate")), data["isDraft"], data.get("mergeStatus", "notSet"), reviewers)  # fmt: skip
+                   # data["status"]
+                   from_ado_date_string(data.get("closedDate")), data["isDraft"], merge_status, reviewers)  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> PullRequest:
@@ -147,13 +162,43 @@ class PullRequest(StateManagedResource):
     @classmethod
     def get_my_pull_requests(cls, ado_client: AdoClient) -> list[PullRequest]:
         """This is super tempremental, I have to do a bunch of splits, it's not official so might not work, the statuses are also numerical."""
-        import json
-
         request = ado_client.session.get(f"https://dev.azure.com/{ado_client.ado_org}/_pulls")
-        raw_data = (
+        raw_data: dict[str, Any] = json.loads(
             request.text.split("application/json")[1].split('pullRequests"')[1].split("queries")[0].removeprefix(":").removesuffix(',"')
         )
-        return [cls.from_request_payload(pr) for pr in json.loads(raw_data).values()]
+        return [cls.from_request_payload(pr) for pr in raw_data.values()]
+
+    # @staticmethod
+    # def set_my_pull_requests_included_teams(ado_client: AdoClient, status: PullRequestStatus, draft_state: DraftState,
+    #                                         assigned_to: list[Group] | None = None, target_branch: str | None = None,
+    #                                         created_in_last_x_days: int | None = None, updated_in_last_x_days: int | None = None,
+    #                                         completed_in_last_x_days: int | None = None,
+    #     ):
+    #     status_converted = {value: key for key, value in other_mapping.items()}[status]
+    #     payload = {"pullRequestListCustomCriteria": [
+    #         # {"authorIds": ["09615253-ea52-637f-b8e4-63cab674eac7"], "groupByVote": False, "id": "CreatedByMe", "includeDuplicates": False, "readonly": True, "status": 1, "title": "Created by me"},
+    #         # {"groupByVote": True, "id": "AssignedToMe", "includeDuplicates": False, "readonly": True, "reviewerIds": ["09615253-ea52-637f-b8e4-63cab674eac7"], "status": 1, "title": "Assigned to me"},
+    #         {"authorIds":[], "id": "AssignedToMyTeams", "myTeamsAsReviewer": True, "status": status_converted, "title": "Assigned to my teams"}
+    #     ]}
+    #     if assigned_to is not None:
+    #         payload["pullRequestListCustomCriteria"][0]["reviewerIds"] = [x.origin_id for x in assigned_to]
+    #     if target_branch is not None:
+    #         payload["pullRequestListCustomCriteria"][0]["targetRefName"] = f"refs/heads/{target_branch}"
+    #     if created_in_last_x_days is not None:
+    #         payload["pullRequestListCustomCriteria"][0]["maxDaysSinceCreated"] = created_in_last_x_days
+    #     if updated_in_last_x_days is not None:
+    #         payload["pullRequestListCustomCriteria"][0]["maxDaysSinceLastUpdated"] = updated_in_last_x_days
+    #     if completed_in_last_x_days is not None:
+    #         payload["pullRequestListCustomCriteria"][0]["maxDaysSinceClosed"] = completed_in_last_x_days
+    #     if draft_state in ["Exclude drafts", "Only include drafts"]:  # Exclude = False, Include = Not present, Only Include = False
+    #         payload["pullRequestListCustomCriteria"][0]["draftState"] = True if draft_state == "Only include drafts" else False
+    #     request = ado_client.session.post(
+    #         f"https://dev.azure.com/{ado_client.ado_org}/_api/_versioncontrol/updateUserPreferences?__v=5",
+    #         data=json.dumps(payload),
+    #     )
+    #     print(request.text)
+    #     return request.status_code == 200
+
 
     def get_comment_threads(self, ado_client: AdoClient, ignore_system_messages: bool = True) -> list[PullRequestCommentThread]:
         comments = PullRequestCommentThread.get_all(ado_client, self.repo.repo_id, self.pull_request_id)

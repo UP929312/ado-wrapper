@@ -3,7 +3,7 @@
 Releases need vigerous testing - kinda wip, ReleaseDef - Update
 
 A push is when someone has multiple commits and they do a git push (to a branch), it can be multiple sub-commits
-TODO: Look into Pushes vs Commits <https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes/get?view=azure-devops-rest-7.1&tabs=HTTP#gitpush>
+<https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes/get?view=azure-devops-rest-7.1&tabs=HTTP#gitpush>
 
 Rollback a commit? Tricky...
 
@@ -20,9 +20,6 @@ MORE WORK ON LIFECYCLE!
 We need to do something differently with creating stuff, currently if you run the same script twice, it'll just error because the
 object already exists, so the creator in SMR should check try, and if it fails, update the already existing one?
 
-Look into tags for resources?
-<https://learn.microsoft.com/en-us/rest/api/azure/devops/git/annotated-tags/get?view=azure-devops-rest-7.1&tabs=HTTP>
-
 This?
 <https://www.reddit.com/r/ado_wrapper/comments/xj56gs/complete_pull_request_with_bypass_policy_via_api/>
 
@@ -35,8 +32,6 @@ Commits/Branches are the only things that don't have a generic `get_all`
 
 Test state_manager.py more?
 Test __main__.py
-
-Get `get_my_pull_requests` of pull request to check if the status is int, if so convert
 
 <https://stackoverflow.com/questions/77522387/approving-pipeline-stage-azure-devops-via-api>
 Auto approve via token ^
@@ -67,7 +62,11 @@ Searches tests
 AgentPools create/delete and testing  
 AuditLogs Tests  
 
-Perm description for RepoUserPerms? Just a static dict.  
+Get `get_my_pull_requests` of pull request to check if the status is int, if so convert  
+
+Pull Request merge_status seem pointless tbh, they're almost always 2 or 3.
+
+Set "My Pull Request" config, maybe at <https://dev.azure.com/VFCloudEngineering/_api/_versioncontrol/updateUserPreferences?__v=5>
 
 -----
 
@@ -75,15 +74,13 @@ Commands:
 pylint .  
 mypy . --strict  
 black . --line-length 140  
-pytest tests/ -vvvv -s  
+python3.11 -m pytest tests/ -vvvv -s  
 python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt"  
 python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt" --state-file "tests/test_state.state"  
 python3.11 -m ado_wrapper --refresh-resources-on-startup --creds_file "credentials.txt"  
 coverage run -m pytest  
 coverage html && open htmlcov/index.html  
 
-Make all of the StateManagedResources use _ and call them that way, so they don't appear normally, and also in the docs
+coverage run -m pytest && coverage html && open htmlcov/index.html  
 
-coverage run -m pytest && coverage html && open htmlcov/index.html
-
-python3.11 -m pip install ado_wrapper --upgrade
+python3.11 -m pip install ado_wrapper --upgrade  

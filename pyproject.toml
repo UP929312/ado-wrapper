@@ -31,11 +31,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]
-exclude = ['.vscode', '.pytest_cache', '.mypy_cache', '.git', '__pycache__', 'script.py']
+exclude = [".vscode", ".pytest_cache", ".mypy_cache", ".git", "__pycache__", "script.py", "dev_testing.py"]
 strict = true
 
 [tool.pylint.main]
-ignore = [".vscode", ".pytest_cache", ".mypy_cache", ".git", "__pycache__", "script.py"]
+ignore = [".vscode", ".pytest_cache", ".mypy_cache", ".git", "__pycache__", "script.py", "dev_testing.py"]
 recursive = true
 
 [tool.pylint.messages_control]

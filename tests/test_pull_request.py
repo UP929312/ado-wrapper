@@ -98,7 +98,7 @@ class TestPullRequest:
             pull_request.update(self.ado_client, "description", "Updated description")
             assert pull_request.description == "Updated description"  # Test instance attribute is updated
             pull_request.update(self.ado_client, "is_draft", True)
-            assert pull_request.is_draft == True
+            assert pull_request.is_draft
             # =====
             fetched_pull_request = PullRequest.get_by_id(self.ado_client, pull_request.pull_request_id)
             assert fetched_pull_request.title == "ado_wrapper-test-repo-for-update-pull-request-renamed"

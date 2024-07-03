@@ -129,7 +129,7 @@ class StateManager:
         ALL_RESOURCES = get_resource_variables()
         all_states = self.load_state()
         for resource_type in all_states["resources"]:
-            if resource_type in "Run": 
+            if resource_type == "Run":
                 continue
             for resource_id in all_states["resources"][resource_type]:
                 # The child will have this VVV

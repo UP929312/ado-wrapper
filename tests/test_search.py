@@ -1,7 +1,7 @@
 import pytest
 
 from ado_wrapper.resources.searches import Search, Hit
-from tests.setup_client import RepoContextManager, email, existing_agent_pool_id, setup_client  # fmt: skip
+from tests.setup_client import setup_client  # fmt: skip
 
 
 class TestSearch:

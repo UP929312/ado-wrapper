@@ -1,4 +1,3 @@
-from re import template
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -290,25 +289,26 @@ class BuildDefinition(StateManagedResource):
         # Fetch default template parameters, which are required to get the stages
         TEMPLATE_PAYLOAD = {"contributionIds":["ms.vss-build-web.pipeline-run-parameters-data-provider"], "dataProviderContext": {"properties": {
             "pipelineId": int(definition_id), "sourceBranch": f"refs/heads/{branch_name}",
-            "sourcePage": {"routeId":"ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project}}}}}
+            "sourcePage": {"routeId":"ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project}}  # fmt: skip
+        }}}
         template_parameters_request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_id}?api-version=7.0-preview",
-            json=TEMPLATE_PAYLOAD
-        ).json()
-        template_parameters = {x["name"]: x["default"] for x in template_parameters_request["dataProviders"]["ms.vss-build-web.pipeline-run-parameters-data-provider"]["templateParameters"]}
+            json=TEMPLATE_PAYLOAD,
+        ).json()["dataProviders"]["ms.vss-build-web.pipeline-run-parameters-data-provider"]["templateParameters"]
+        template_parameters = {x["name"]: x["default"] for x in template_parameters_request}
         # ================================================================================================================================
         PAYLOAD = {"contributionIds": ["ms.vss-build-web.pipeline-run-parameters-data-provider"], "dataProviderContext": {"properties": {
             "pipelineId": definition_id, "sourceBranch": f"refs/heads/{branch_name}",
             "templateParameters": template_parameters,
-            "sourcePage":{"routeId":"ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project}},
+            "sourcePage": {"routeId":"ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project}},  # fmt: skip
         }}}
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_id}?api-version=7.0-preview",
             json=PAYLOAD,
         )
         assert request.status_code == 200
-        stages_dicts = request.json()["dataProviders"]["ms.vss-build-web.pipeline-run-parameters-data-provider"]["stages"]
-        return [BuildDefinitionStep.from_request_payload(x) for x in stages_dicts]
+        stages_list = request.json()["dataProviders"]["ms.vss-build-web.pipeline-run-parameters-data-provider"]["stages"]
+        return [BuildDefinitionStep.from_request_payload(x) for x in stages_list]
 
 # ========================================================================================================
 
@@ -327,4 +327,3 @@ class BuildDefinitionStep:
             data["isSkippable"],
             data["dependsOn"],
         )
-

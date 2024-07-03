@@ -1,6 +1,6 @@
 # Changelog
 
-## v Upcoming
+## v1.12.0
 
 ### Added
 

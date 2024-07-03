@@ -129,6 +129,8 @@ class StateManager:
         ALL_RESOURCES = get_resource_variables()
         all_states = self.load_state()
         for resource_type in all_states["resources"]:
+            if resource_type in "Run": 
+                continue
             for resource_id in all_states["resources"][resource_type]:
                 # The child will have this VVV
                 instance = ALL_RESOURCES[resource_type].get_by_id(self.ado_client, resource_id)  # type: ignore[attr-defined]

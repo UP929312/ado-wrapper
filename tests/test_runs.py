@@ -78,3 +78,28 @@ class TestRun:
             assert run.status == "completed"
             run_definition.delete(self.ado_client)  # Can't delete run_definitions without deleting runs first
             run.delete(self.ado_client)
+
+    @pytest.mark.skip(reason="This requires waiting for run agents, and running for multiple runs")
+    def test_run_all_and_capture_results_simultaneously(self) -> None:
+        with RepoContextManager(self.ado_client, "run-all-and-capture-results-simu") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": BUILD_YAML_FILE}, "add", "Update")
+            run_definition_1 = BuildDefinition.create(
+                self.ado_client, "ado_wrapper-test-run-all-and-capture-results-simu-1", repo.repo_id, repo.name, "run.yaml",
+                f"Please contact {email} if you see this run definition!", existing_agent_pool_id, "my-branch",  # fmt: skip
+            )
+            run_definition_2 = BuildDefinition.create(
+                self.ado_client, "ado_wrapper-test-run-all-and-capture-results-simu-2", repo.repo_id, repo.name, "run.yaml",
+                f"Please contact {email} if you see this run definition!", existing_agent_pool_id, "my-branch",  # fmt: skip
+            )
+            runs = Run.run_all_and_capture_results_simultaneously(
+                self.ado_client, {
+                    run_definition_1.build_definition_id: {"template_variables": {}, "branch_name": "main"},
+                    run_definition_2.build_definition_id: {"template_variables": {}, "branch_name": "main"},
+                }
+            )
+            assert runs[run_definition_1.build_definition_id].status == "completed"
+            assert runs[run_definition_2.build_definition_id].status == "completed"
+            run_definition_1.delete(self.ado_client)  # Can't delete run_definitions without deleting runs first
+            run_definition_2.delete(self.ado_client)  # Can't delete run_definitions without deleting runs first
+            for run_obj in runs.values():
+                run_obj.delete(self.ado_client)

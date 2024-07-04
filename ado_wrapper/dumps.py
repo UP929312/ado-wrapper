@@ -168,6 +168,14 @@ PULL_REQUEST_DUMP = {
     "artifactId": "vstfs:///Git/PullRequestId/<project_id>%2f<repo_id>%2f10237"
 }
 
+PULL_REQUEST_SET_ASSIGNED_TO_MY_TEAM = {"pullRequestListCustomCriteria":
+    [
+        {"authorIds": ["<author_id>"], "groupByVote": False, "id": "CreatedByMe", "includeDuplicates": False, "readonly": True, "status": 1, "title":"Created by me"},
+        {"groupByVote": True, "id": "AssignedToMe", "includeDuplicates": False, "readonly": True, "reviewerIds": ["<author_id>"], "status": 1, "title": "Assigned to me"},
+        {"authorIds": [], "id": "AssignedToMyTeams", "myTeamsAsReviewer": True, "status": 2, "title": "Assigned to my teams"}
+    ]
+}
+
 REPO_DUMP = {
     "id": "<repo_id>",
     "name": "{repo_name}",

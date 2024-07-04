@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Member, Reviewer
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import from_ado_date_string
+from ado_wrapper.utils import from_ado_date_string, requires_initialisation
+from ado_wrapper.errors import UnknownError
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -16,22 +17,27 @@ if TYPE_CHECKING:
 
 PullRequestEditableAttribute = Literal["title", "description", "merge_status", "is_draft"]
 PullRequestStatus = Literal["active", "completed", "abandoned", "all", "notSet"]
-MergeStatus = Literal["succeeded", "conflicts", "rejectedByPolicy", "rejectedByUser", "queued", "notSet"]
+MergeStatus = Literal["succeeded", "conflicts", "rejectedByPolicy", "rejectedByUser", "queued", "notSet", "failure"]
 DraftState = Literal["Include drafts", "Exclude drafts", "Only include drafts"]
 CommentType = Literal["system", "regular", "codeChange", "unknown"]
 PrCommentStatus = Literal["active", "pending", "fixed", "wontFix", "closed"]
 
-status_mapping: dict[int, MergeStatus] = {  # type: ignore
-    1: "???",
-    2: "conflicts",
-    3: "notSet",
-    4: "4",
+merge_status_mapping: dict[int | None, MergeStatus] = {
+    None: "notSet",
+    0: "notSet",  # Status is not set. Default state.
+    1: "queued",  # Pull request merge is queued.
+    2: "conflicts",  # Pull request merge failed due to conflicts.
+    3: "succeeded",  # Pull request merge succeeded.
+    4: "rejectedByPolicy",  # Pull request merge rejected by policy.
+    5: "failure",  # Pull request merge failed.
 }
 
-other_mapping: dict[int, str] = {  # type: ignore
+pr_status_mapping: dict[int, PullRequestStatus] = {  # type: ignore
+    0: "notSet",
     1: "active",
-    2: "completed",
-    3: "abandoned",
+    2: "abandoned",
+    3: "completed",
+    4: "all",
 }
 
 @dataclass
@@ -48,7 +54,7 @@ class PullRequest(StateManagedResource):
     repo: Repo
     close_date: datetime | None = field(default=None, repr=False)
     is_draft: bool = field(default=False, repr=False, metadata={"editable": True, "internal_name": "isDraft"})
-    # pr_status: PullRequestStatus = field(default="notSet", metadata={"editable": True, "internal_name": "status"})
+    pr_status: PullRequestStatus = field(default="notSet", metadata={"editable": True, "internal_name": "status"})
     merge_status: MergeStatus = field(default="notSet", metadata={"editable": True, "internal_name": "mergeStatus"})
     reviewers: list[Reviewer] = field(default_factory=list, repr=False)  # Static(ish)
 
@@ -59,11 +65,11 @@ class PullRequest(StateManagedResource):
         author = Member.from_request_payload(data["createdBy"])
         reviewers = [Reviewer.from_request_payload(reviewer) for reviewer in data["reviewers"]]
         repository = Repo(data["repository"]["id"], data["repository"]["name"])
-        merge_status = status_mapping[data.get("mergeStatus", "notSet")] if isinstance(data.get("mergeStatus"), int) else data.get("mergeStatus", "notSet")
+        merge_status = merge_status_mapping[data.get("mergeStatus")] if isinstance(data.get("mergeStatus"), int) else data.get("mergeStatus", "notSet")
         return cls(str(data["pullRequestId"]), data["title"], data.get("description", ""), data["sourceRefName"],
                    data["targetRefName"], author, from_ado_date_string(data["creationDate"]), repository,
-                   # data["status"]
-                   from_ado_date_string(data.get("closedDate")), data["isDraft"], merge_status, reviewers)  # fmt: skip
+                   from_ado_date_string(data.get("closedDate")), data["isDraft"], data["status"],
+                   merge_status, reviewers)  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> PullRequest:
@@ -169,35 +175,41 @@ class PullRequest(StateManagedResource):
         return [cls.from_request_payload(pr) for pr in raw_data.values()]
 
     # @staticmethod
-    # def set_my_pull_requests_included_teams(ado_client: AdoClient, status: PullRequestStatus, draft_state: DraftState,
-    #                                         assigned_to: list[Group] | None = None, target_branch: str | None = None,
-    #                                         created_in_last_x_days: int | None = None, updated_in_last_x_days: int | None = None,
-    #                                         completed_in_last_x_days: int | None = None,
+    # def set_my_pull_requests_included_teams(
+    #     ado_client: AdoClient, status: PullRequestStatus = "active", draft_state: DraftState = "Include drafts",
+    #     created_by: list[Group] | None = None, assigned_to: list[Group] | None = None, target_branch: str | None = None,
+    #     created_in_last_x_days: int | None = None, updated_in_last_x_days: int | None = None,
+    #     completed_in_last_x_days: int | None = None,
     #     ):
-    #     status_converted = {value: key for key, value in other_mapping.items()}[status]
-    #     payload = {"pullRequestListCustomCriteria": [
-    #         # {"authorIds": ["09615253-ea52-637f-b8e4-63cab674eac7"], "groupByVote": False, "id": "CreatedByMe", "includeDuplicates": False, "readonly": True, "status": 1, "title": "Created by me"},
-    #         # {"groupByVote": True, "id": "AssignedToMe", "includeDuplicates": False, "readonly": True, "reviewerIds": ["09615253-ea52-637f-b8e4-63cab674eac7"], "status": 1, "title": "Assigned to me"},
-    #         {"authorIds":[], "id": "AssignedToMyTeams", "myTeamsAsReviewer": True, "status": status_converted, "title": "Assigned to my teams"}
-    #     ]}
+    #     requires_initialisation(ado_client)
+    #     status_converted = {value: key for key, value in pr_status_mapping.items()}[status]
+    #     payload = [
+    #         {"groupByVote": False, "id": "CreatedByMe", "includeDuplicates": False, "readonly": True, "status": 1, "title": "Created by me"},
+    #         {"groupByVote": True, "id": "AssignedToMe", "includeDuplicates": False, "readonly": True, "reviewerIds": [ado_client.pat_author.origin_id], "status": 1, "title": "Assigned to me"},
+    #         {"id": "AssignedToMyTeams", "myTeamsAsReviewer": True, "status": status_converted, "title": "Assigned to my teams"}
+    #     ]
+    #     payload[-1]["authorIds"] = [x.origin_id for x in (created_by or [])+[ado_client.pat_author]]
     #     if assigned_to is not None:
-    #         payload["pullRequestListCustomCriteria"][0]["reviewerIds"] = [x.origin_id for x in assigned_to]
+    #         payload[-1]["reviewerIds"] = [x.origin_id for x in assigned_to]
     #     if target_branch is not None:
-    #         payload["pullRequestListCustomCriteria"][0]["targetRefName"] = f"refs/heads/{target_branch}"
+    #         payload[-1]["targetRefName"] = f"refs/heads/{target_branch}"
     #     if created_in_last_x_days is not None:
-    #         payload["pullRequestListCustomCriteria"][0]["maxDaysSinceCreated"] = created_in_last_x_days
+    #         payload[-1]["maxDaysSinceCreated"] = created_in_last_x_days
     #     if updated_in_last_x_days is not None:
-    #         payload["pullRequestListCustomCriteria"][0]["maxDaysSinceLastUpdated"] = updated_in_last_x_days
+    #         payload[-1]["maxDaysSinceLastUpdated"] = updated_in_last_x_days
     #     if completed_in_last_x_days is not None:
-    #         payload["pullRequestListCustomCriteria"][0]["maxDaysSinceClosed"] = completed_in_last_x_days
+    #         payload[-1]["maxDaysSinceClosed"] = completed_in_last_x_days
     #     if draft_state in ["Exclude drafts", "Only include drafts"]:  # Exclude = False, Include = Not present, Only Include = False
-    #         payload["pullRequestListCustomCriteria"][0]["draftState"] = True if draft_state == "Only include drafts" else False
+    #         payload[-1]["draftState"] = (draft_state == "Only include drafts")
+
+    #     print({"pullRequestListCustomCriteria": json.dumps(payload).replace('"', '\\"')})  # THIS IS WHAT's BROKEN
     #     request = ado_client.session.post(
     #         f"https://dev.azure.com/{ado_client.ado_org}/_api/_versioncontrol/updateUserPreferences?__v=5",
-    #         data=json.dumps(payload),
+    #         json={"pullRequestListCustomCriteria": str(payload).replace('"', '\\"')},
     #     )
-    #     print(request.text)
-    #     return request.status_code == 200
+    #     # print(request.text)
+    #     if request.status_code != 200:
+    #         raise UnknownError("Error, unknown error when trying to set included teams")
 
 
     def get_comment_threads(self, ado_client: AdoClient, ignore_system_messages: bool = True) -> list[PullRequestCommentThread]:

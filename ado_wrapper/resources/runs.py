@@ -3,8 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
-# from ado_wrapper.resources.builds import Build
-from wrapper.builds import Build, BuildDefinition
+from ado_wrapper.resources.builds import Build, BuildDefinition
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import from_ado_date_string, recursively_find_or_none
 

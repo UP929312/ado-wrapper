@@ -120,8 +120,8 @@ class Run(StateManagedResource):
     def run_all_and_capture_results_simultaneously(
         cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800, stages_to_run: list[str] | None = None
     ) -> dict[str, "Run"]:
-        """Takes a mapping of definition_id -> {template_variables, branch_name}
-        Once done, returns a mapping of definition_id -> `Run` object"""
+        """Takes a mapping of stage_internal_name -> RunAllDictionary
+    Once done, returns a mapping of stage_internal_name -> `Run` object."""
         # Get a mapping of definition_id -> Run()
         runs: dict[str, Run] = {},
         for definition_id, build_def_data in data.items():

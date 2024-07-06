@@ -1,5 +1,18 @@
 # Changelog
 
+## vUpcoming
+
+### Added
+
+- Runs now support stages to include and variables (as opposed to template paramters)
+
+### Changed
+
+- Search hit's have been renamed to CodeSearchHit to accomodate future support for WorkItemHit and WikiSearchHit.
+- `Run`s template_variables have been renamed to template_parameters (for the inclusion of actual template variables)
+
+---
+
 ## v1.12.0
 
 ### Added
@@ -13,6 +26,8 @@
 - Get repo contents now also works with filters that contain the dot, e.g. [".json"] now works (instead of ["json"])
 - code_snippet of `Search`'s `Hit` is now optional (str | None).
 
+---
+
 ## v1.11.0
 
 ### Changed
@@ -24,6 +39,8 @@
 ### Fixes
 
 - Runs now properly extract their repo id now, previously it would always be `None`
+
+---
 
 ## v1.10.0
 

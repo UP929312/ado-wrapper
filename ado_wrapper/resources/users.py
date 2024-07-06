@@ -28,11 +28,11 @@ class AdoUser(StateManagedResource):
     display_name: str
     email: str
     origin: str
-    origin_id: str  # DON'T USE THIS, USE `descriptor_id` INSTEAD
+    origin_id: str  # NORMALLY DON'T USE THIS, USE `descriptor_id` INSTEAD
     domain_container_id: str  # Ignore this
     # "subjectKind": "user",
     # "metaType": "member",
-    # "directoryAlias": "MiryabblliS",
+    # "directoryAlias": "surnameF",
     # "url": "https://vssps.dev.azure.com/{ado_client.}/_apis/Graph/Users/aad.M2Q5NDlkZTgtZDI2Yi03MGQ3LWEyYjItMDAwYTQzYTdlNzFi",
 
     def __str__(self) -> str:

@@ -62,6 +62,8 @@ AuditLogs Tests
 Test state_manager.py more?  
 Test __main__.py  
 
+GIVE RUNS VARIABLES, https://learn.microsoft.com/en-us/rest/api/azure/devops/pipelines/runs/get?view=azure-devops-rest-6.1#run
+
 Get `get_my_pull_requests` of pull request to check if the status is int, if so convert  
 
 Pull Request merge_status seem pointless tbh, they're almost always 2 or 3.

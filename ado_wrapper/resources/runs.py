@@ -24,7 +24,7 @@ class RunAllDictionary(TypedDict):
 
 @dataclass
 class Run(StateManagedResource):
-    """https://learn.microsoft.com/en-us/rest/api/azure/devops/pipelines/runs?view=azure-devops-rest-6.1"""
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/pipelines/runs?view=azure-devops-rest-7.1"""
 
     run_id: str = field(metadata={"is_id_field": True})
     run_name: str
@@ -45,7 +45,7 @@ class Run(StateManagedResource):
     def get_by_id(cls, ado_client: "AdoClient", pipeline_id: str, run_id: str) -> "Run":
         return super()._get_by_url(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/pipelines/{pipeline_id}/runs/{run_id}?api-version=6.1-preview.1",
+            f"/{ado_client.ado_project}/_apis/pipelines/{pipeline_id}/runs/{run_id}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -55,7 +55,7 @@ class Run(StateManagedResource):
         try:
             return super()._create(
                 ado_client,
-                f"/{ado_client.ado_project}/_apis/pipelines/{definition_id}/runs?api-version=6.1-preview.1",
+                f"/{ado_client.ado_project}/_apis/pipelines/{definition_id}/runs?api-version=7.1-preview.1",
                 {"templateParameters": template_variables, "repositories": {"refName": f"refs/heads/{source_branch}"}},
             )  # type: ignore[return-value]
         except ValueError as e:
@@ -74,7 +74,7 @@ class Run(StateManagedResource):
     def get_all_by_definition(cls, ado_client: "AdoClient", pipeline_id: str) -> "list[Run]":
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/pipelines/{pipeline_id}/runs?api-version=6.1-preview.1",
+            f"/{ado_client.ado_project}/_apis/pipelines/{pipeline_id}/runs?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #

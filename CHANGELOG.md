@@ -4,7 +4,8 @@
 
 ### Added
 
-- Runs now support stages to include and variables (as opposed to template parameters)
+- `Run`s now support stages to include and variables (as opposed to template parameters)
+- `Run`s now tests `run_all_and_capture_results_simultaneously`.
 
 ### Changed
 

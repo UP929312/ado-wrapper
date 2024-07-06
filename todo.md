@@ -63,7 +63,6 @@ Test state_manager.py more?
 Test __main__.py  
 
 Get `get_my_pull_requests` of pull request to check if the status is int, if so convert  
-
 Pull Request merge_status seem pointless tbh, they're almost always 2 or 3.
 
 Set "My Pull Request" config, maybe at <https://dev.azure.com/VFCloudEngineering/_api/_versioncontrol/updateUserPreferences?__v=5>

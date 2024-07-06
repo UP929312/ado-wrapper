@@ -7,13 +7,15 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Member, Reviewer
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import from_ado_date_string, requires_initialisation
-from ado_wrapper.errors import UnknownError
+from ado_wrapper.utils import from_ado_date_string  # , requires_initialisation
+
+# from ado_wrapper.errors import UnknownError
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
     from ado_wrapper.resources.repo import Repo
-    from ado_wrapper.resources.groups import Group
+
+    # from ado_wrapper.resources.groups import Group
 
 PullRequestEditableAttribute = Literal["title", "description", "merge_status", "is_draft"]
 PullRequestStatus = Literal["active", "completed", "abandoned", "all", "notSet"]
@@ -32,13 +34,14 @@ merge_status_mapping: dict[int | None, MergeStatus] = {
     5: "failure",  # Pull request merge failed.
 }
 
-pr_status_mapping: dict[int, PullRequestStatus] = {  # type: ignore
+pr_status_mapping: dict[int, PullRequestStatus] = {
     0: "notSet",
     1: "active",
     2: "abandoned",
     3: "completed",
     4: "all",
 }
+
 
 @dataclass
 class PullRequest(StateManagedResource):
@@ -65,7 +68,9 @@ class PullRequest(StateManagedResource):
         author = Member.from_request_payload(data["createdBy"])
         reviewers = [Reviewer.from_request_payload(reviewer) for reviewer in data["reviewers"]]
         repository = Repo(data["repository"]["id"], data["repository"]["name"])
-        merge_status = merge_status_mapping[data.get("mergeStatus")] if isinstance(data.get("mergeStatus"), int) else data.get("mergeStatus", "notSet")
+        merge_status = (
+            merge_status_mapping[data.get("mergeStatus")] if isinstance(data.get("mergeStatus"), int) else data.get("mergeStatus", "notSet")
+        )
         return cls(str(data["pullRequestId"]), data["title"], data.get("description", ""), data["sourceRefName"],
                    data["targetRefName"], author, from_ado_date_string(data["creationDate"]), repository,
                    from_ado_date_string(data.get("closedDate")), data["isDraft"], data["status"],
@@ -210,7 +215,6 @@ class PullRequest(StateManagedResource):
     #     # print(request.text)
     #     if request.status_code != 200:
     #         raise UnknownError("Error, unknown error when trying to set included teams")
-
 
     def get_comment_threads(self, ado_client: AdoClient, ignore_system_messages: bool = True) -> list[PullRequestCommentThread]:
         comments = PullRequestCommentThread.get_all(ado_client, self.repo.repo_id, self.pull_request_id)

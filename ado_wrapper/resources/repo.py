@@ -144,8 +144,10 @@ class Repo(StateManagedResource):
         try:
             with zipfile.ZipFile(bytes_io) as zip_ref:
                 # For each file, read the bytes and convert to string
-                for file_name in [x for x in zip_ref.namelist() if file_types is None or
-                                  (f"{x.split('.')[-1]}" in file_types or f".{x.split('.')[-1]}" in file_types)]:
+                for file_name in [
+                    x for x in zip_ref.namelist()
+                    if file_types is None or (f"{x.split('.')[-1]}" in file_types or f".{x.split('.')[-1]}" in file_types)  # fmt: skip
+                ]:
                     try:
                         files[file_name] = zip_ref.read(file_name).decode()  # fmt: skip
                     except UnicodeDecodeError:

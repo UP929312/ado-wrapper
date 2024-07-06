@@ -4,12 +4,13 @@
 
 ### Added
 
-- Runs now support stages to include and variables (as opposed to template paramters)
+- Runs now support stages to include and variables (as opposed to template parameters)
 
 ### Changed
 
 - Search hit's have been renamed to CodeSearchHit to accomodate future support for WorkItemHit and WikiSearchHit.
 - `Run`s template_variables have been renamed to template_parameters (for the inclusion of actual template variables)
+- `Run`s source_branch has been renamed to `branch_name`.
 
 ---
 

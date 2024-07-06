@@ -47,7 +47,7 @@ class TestRun:
                 self.ado_client, "ado_wrapper-test-run-for-create-delete-run", repo.repo_id, repo.name, "run.yaml",
                 f"Please contact {email} if you see this run definition!", existing_agent_pool_id, "my-branch",  # fmt: skip
             )
-            run = Run.create(self.ado_client, build_definition.build_definition_id, {}, "my-branch")
+            run = Run.create(self.ado_client, build_definition.build_definition_id, branch_name="my-branch")
             assert run.run_id == Run.get_by_id(self.ado_client, build_definition.build_definition_id, run.run_id).run_id  # THIS LINE HERE
             assert len(Run.get_all_by_definition(self.ado_client, build_definition.build_definition_id)) == 1
             build_definition.delete(self.ado_client)
@@ -61,7 +61,7 @@ class TestRun:
                 self.ado_client, "ado_wrapper-test-run-for-get-by-id", repo.repo_id, repo.name, "run.yaml",
                 f"Please contact {email} if you see this run definition!", existing_agent_pool_id, "my-branch",  # fmt: skip
             )
-            run = Run.create(self.ado_client, build_definition.build_definition_id, {}, "my-branch")
+            run = Run.create(self.ado_client, build_definition.build_definition_id, branch_name="my-branch")
             fetched_run = Run.get_by_id(self.ado_client, build_definition.build_definition_id, run.run_id)
             assert fetched_run.run_id == run.run_id
             build_definition.delete(self.ado_client)
@@ -74,7 +74,7 @@ class TestRun:
                 self.ado_client, "ado_wrapper-test-run-for-wait-until-completion", repo.repo_id, repo.name, "run.yaml",
                 f"Please contact {email} if you see this run definition!", existing_agent_pool_id, "my-branch",  # fmt: skip
             )
-            run = Run.run_and_wait_until_completion(self.ado_client, run_definition.build_definition_id, {}, "my-branch")
+            run = Run.run_and_wait_until_completion(self.ado_client, run_definition.build_definition_id, branch_name="my-branch")
             assert run.status == "completed"
             run_definition.delete(self.ado_client)  # Can't delete run_definitions without deleting runs first
             run.delete(self.ado_client)
@@ -92,10 +92,11 @@ class TestRun:
                 f"Please contact {email} if you see this run definition!", existing_agent_pool_id, "my-branch",  # fmt: skip
             )
             runs = Run.run_all_and_capture_results_simultaneously(
-                self.ado_client, {
-                    run_definition_1.build_definition_id: {"template_variables": {}, "branch_name": "main"},
-                    run_definition_2.build_definition_id: {"template_variables": {}, "branch_name": "main"},
-                }
+                self.ado_client,
+                {
+                    run_definition_1.build_definition_id: {"branch_name": "my-branch"},
+                    run_definition_2.build_definition_id: {"branch_name": "my-branch"},
+                },
             )
             assert runs[run_definition_1.build_definition_id].status == "completed"
             assert runs[run_definition_2.build_definition_id].status == "completed"

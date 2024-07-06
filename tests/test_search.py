@@ -1,6 +1,6 @@
 import pytest
 
-from ado_wrapper.resources.searches import Search, Hit
+from ado_wrapper.resources.searches import Search, CodeSearchHit
 from tests.setup_client import setup_client  # fmt: skip
 
 
@@ -20,12 +20,12 @@ class TestSearch:
                 "matches": {
                     "content": [
                         {
-                        "charOffset": 0,
-                        "length": 1,
-                        "line": 1,
-                        "column": 1,
-                        "codeSnippet": None,
-                        "type": "content",
+                            "charOffset": 0,
+                            "length": 1,
+                            "line": 1,
+                            "column": 1,
+                            "codeSnippet": None,
+                            "type": "content",
                         },
                     ],
                 },
@@ -37,8 +37,7 @@ class TestSearch:
         assert search.file_name == "here.txt"
         assert search.project == "my-test-project"
         assert search.branch_name == "test-branch"
-        assert search.matches == [Hit(0, 1, 1, 1, None, "content")]
-
+        assert search.matches == [CodeSearchHit(0, 1, 1, 1, None, "content")]
 
     # @pytest.mark.create_delete
     # def test_create_delete_run(self) -> None:

@@ -1,6 +1,7 @@
 class AdoWrapperException(Exception):
     pass
 
+
 class ResourceNotFound(AdoWrapperException):
     pass
 

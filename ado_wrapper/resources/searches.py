@@ -11,7 +11,7 @@ SortDirections = Literal["ASC", "DESC"]
 
 @dataclass
 class Search:
-    """https://learn.microsoft.com/en-us/rest/api/azure/devops/search/code-search-results/fetch-code-search-results?view=azure-devops-rest-7.1&tabs=HTTP"""
+    """https://learn.microsoft.com/en-us/rest/api/azure/devops/search/code-search-results/fetch-code-search-results"""
 
     repository_name: str
     path: str
@@ -19,7 +19,7 @@ class Search:
     project: str = field(repr=False)
     repository_id: str = field(repr=False)
     branch_name: str = field(repr=False)
-    matches: list[Hit] = field(default_factory=list, repr=False)
+    matches: list[CodeSearchHit] = field(default_factory=list, repr=False)
 
     # 'versions': [{'branchName': 'main', 'changeId': 'f8a3262a0b2fa01ea4fde05881432628d5969dc6'}], 'contentId': 'c7f221fdfaea814aa742cc2d10eb0655645f101f'}
     # 'versions': [{'branchName': 'main', 'changeId': 'd53915b6d1b1b30d94e66fd19b99f2f2d2a1c3e3'}], 'contentId': 'a03f69e0c43e3bfc4b933bf89e2b2b8253b3ba7a'}
@@ -33,7 +33,7 @@ class Search:
             project=data["project"]["name"],
             repository_id=data["repository"]["id"],
             branch_name=data["versions"][0]["branchName"],
-            matches=[Hit.from_request_payload(x) for x in data["matches"]["content"]],
+            matches=[CodeSearchHit.from_request_payload(x) for x in data["matches"]["content"]],
         )
 
     @classmethod
@@ -58,16 +58,16 @@ class Search:
 
 
 @dataclass
-class Hit:
+class CodeSearchHit:
     char_offset: int
     length: int
     line: int
     column: int
     code_snippet: str | None
-    hit_type: str  # content
+    hit_type: str  # One of `content`, <more>
 
     @classmethod
-    def from_request_payload(cls, payload: dict[str, Any]) -> Hit:
+    def from_request_payload(cls, payload: dict[str, Any]) -> CodeSearchHit:
         # {'charOffset': 49170, 'length': 8, 'line': 0, 'column': 0, 'codeSnippet': None, 'type': 'content'}
         return cls(
             char_offset=payload["charOffset"],

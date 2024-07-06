@@ -126,7 +126,6 @@ class TestRepoUserPerms:
             assert len(only_users) < len(all_perms)
             assert len(only_overrides) == 1
 
-    @pytest.mark.wip
     def test_set_by_user_descriptor(self) -> None:
         with RepoContextManager(self.ado_client, "create-repo-user-perms") as repo:
             RepoUserPermissions.set_by_group_descriptor(self.ado_client, repo.repo_id, existing_group_descriptor, "Allow", "contribute")

@@ -30,9 +30,6 @@ Service connections perms on pipelines (done, not tested)
 
 Commits/Branches are the only things that don't have a generic `get_all`
 
-Test state_manager.py more?
-Test __main__.py
-
 <https://stackoverflow.com/questions/77522387/approving-pipeline-stage-azure-devops-via-api>
 Auto approve via token ^
 
@@ -58,9 +55,14 @@ Most resources have names, or some definining values which has to be unique, e.g
 Tags are a problem, branches a bit too, build definitions too, the problem is that we want to be able to change things and
 have the create update, rather than create, but if the data is different, how do we link them?  
 
-Searches tests  
+Searches tests (extend)  
+More tests around runs
 AgentPools create/delete and testing  
 AuditLogs Tests  
+Test state_manager.py more?  
+Test __main__.py  
+
+GIVE RUNS VARIABLES, https://learn.microsoft.com/en-us/rest/api/azure/devops/pipelines/runs/get?view=azure-devops-rest-6.1#run
 
 Get `get_my_pull_requests` of pull request to check if the status is int, if so convert  
 
@@ -68,7 +70,7 @@ Pull Request merge_status seem pointless tbh, they're almost always 2 or 3.
 
 Set "My Pull Request" config, maybe at <https://dev.azure.com/VFCloudEngineering/_api/_versioncontrol/updateUserPreferences?__v=5>
 
------
+-----  
 
 Commands:  
 pylint .  

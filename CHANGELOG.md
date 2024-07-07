@@ -66,3 +66,46 @@
 
 - Errors have been moved out of utils into their own file for easier imports (ado_wrapper.errors)
 - New resources are now automatically added to state files when needed, no longer crashing
+
+---
+
+## v1.9.0
+
+### Added
+
+- `AuditLog`s, the ability to search and filter by Audit Logs.
+- `MergeBranchPolicy` are now importable directly from root.
+
+---
+
+## v1.8.0
+
+### Added
+
+- `Branch`es now have `creator` attribute, to identify out who created the branch.
+- `UserPermission`s `set_by_group_descriptor` has been added, to set a group's perms on a repo.
+
+### Changed
+
+- `MergePolicies` now work for repos with previously no policies set on them
+- When trying to set default reviewers, it now raises a `ConfigurationError` on exception.
+- When trying to set branch policies, it'll now warn for incorrect perms, and raise a `ConfigurationError` exception.
+- When trying to set individual user perms on a repo, an `InvalidPermissionsError` permission is raised if the PAT token doesn't have perms.
+- `UserPermission`s `set_by_subject_email` has been renamed to `set_by_user_email`.
+
+
+---
+
+## v1.7.0
+
+### Added
+
+- Added `AgentPool`s (cannot create or delete yet)
+- The ability to fetch repos by default reviewers, using `Repo.get_all_repos_with_required_reviewer()`
+- The ability to fetch latest build by definition using `BuildDefinition.get_latest_build_by_definition()`
+
+### Changed
+
+- `Group`s `group_id` has been remapped to `domain` to align better with the official API.
+
+---

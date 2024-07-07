@@ -33,14 +33,17 @@ class Run(StateManagedResource):
     start_time: datetime = field(repr=False)
     finish_time: datetime | None = field(repr=False)
     repo_id: str
+    build_definition_id: str | None
     status: RunState
     result: RunResult
     template_parameters: dict[str, Any]
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Run":
+        potential_build_def_id = recursively_find_or_none(data, ["_links", "self", "href"])
         return cls(str(data["id"]), data["name"], from_ado_date_string(data["createdDate"]), from_ado_date_string(data.get("finishedDate")),
                    recursively_find_or_none(data, ["resources", "repositories", "self", "repository", "id"]),
+                   potential_build_def_id.split("/")[7] if potential_build_def_id is not None else None,
                    data["state"], data.get("result", "unknown"), data["templateParameters"])  # fmt: skip
 
     @classmethod

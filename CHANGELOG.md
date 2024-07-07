@@ -4,6 +4,14 @@
 
 ### Added
 
+- When creating/fetching `Run`s, you can now see the `Run`s `Build Definition` id.
+
+---
+
+## v1.13.0
+
+### Added
+
 - `Run`s now support stages to include and variables (as opposed to template parameters)
 - `Run`s now tests `run_all_and_capture_results_simultaneously`.
 

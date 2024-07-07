@@ -61,6 +61,7 @@ AgentPools create/delete and testing
 AuditLogs Tests  
 Test state_manager.py more?  
 Test __main__.py  
+Test to see if template_parameters is being set when fetching/creating runs
 
 Get `get_my_pull_requests` of pull request to check if the status is int, if so convert  
 Pull Request merge_status seem pointless tbh, they're almost always 2 or 3.

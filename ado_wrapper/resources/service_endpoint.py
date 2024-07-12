@@ -53,7 +53,7 @@ class ServiceEndpoint(StateManagedResource):
 
     @classmethod
     def create(cls, ado_client: AdoClient, name: str, service_endpoint_type: str, url: str,
-               username: str = "", password: str = "",  access_token: str = "") -> ServiceEndpoint:  # fmt: skip
+               username: str = "", password: str = "", access_token: str = "") -> ServiceEndpoint:  # fmt: skip
         """Creates a service endpoint, pass in either username and password or access_token."""
         assert ((username and password) and not access_token) or (access_token and not (username and password)), "Either username and password or access_token must be passed in."  # fmt: skip
         requires_initialisation(ado_client)

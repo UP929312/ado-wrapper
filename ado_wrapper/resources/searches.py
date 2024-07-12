@@ -10,7 +10,7 @@ SortDirections = Literal["ASC", "DESC"]
 
 
 @dataclass
-class Search:
+class CodeSearch:
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/search/code-search-results/fetch-code-search-results"""
 
     repository_name: str
@@ -25,7 +25,7 @@ class Search:
     # 'versions': [{'branchName': 'main', 'changeId': 'd53915b6d1b1b30d94e66fd19b99f2f2d2a1c3e3'}], 'contentId': 'a03f69e0c43e3bfc4b933bf89e2b2b8253b3ba7a'}
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> Search:
+    def from_request_payload(cls, data: dict[str, Any]) -> CodeSearch:
         return cls(
             repository_name=data["repository"]["name"],
             path=data["path"],
@@ -70,10 +70,5 @@ class CodeSearchHit:
     def from_request_payload(cls, payload: dict[str, Any]) -> CodeSearchHit:
         # {'charOffset': 49170, 'length': 8, 'line': 0, 'column': 0, 'codeSnippet': None, 'type': 'content'}
         return cls(
-            char_offset=payload["charOffset"],
-            length=payload["length"],
-            line=payload["line"],
-            column=payload["column"],
-            code_snippet=payload["codeSnippet"],
-            hit_type=payload["type"],
+            payload["charOffset"], payload["length"], payload["line"], payload["column"], payload["codeSnippet"], payload["type"],  # fmt: skip
         )

@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, NotRequired
 
+from ado_wrapper.errors import ResourceNotFound
 from ado_wrapper.resources.builds import Build, BuildDefinition
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import from_ado_date_string, recursively_find_or_none
@@ -12,6 +13,9 @@ if TYPE_CHECKING:
 
 RunResult = Literal["canceled", "failed", "succeeded", "unknown"]
 RunState = Literal["canceling", "completed", "inProgress", "unknown"]
+
+JobStateLiteral = Literal["Queued", "In-Progress", "Complete"]
+JobResultLiteral = Literal["Queued", "Successful", "Warning", "Failed", "Cancelled", "Skipped"]
 
 
 class RunAllDictionary(TypedDict):
@@ -80,11 +84,14 @@ class Run(StateManagedResource):
                 PAYLOAD,
             )  # type: ignore[return-value]
         except ValueError as e:
-            raise ValueError(f"A template parameter inputted is not allowed! {str(e).split('message')[1][3:].removesuffix(':').split('.')[0]}")  # fmt: skip
+            raise ValueError(
+                f"A template parameter inputted is not allowed! {str(e).split('message')[1][3:].removesuffix(':').split('.')[0]}"  # fmt: skip
+            ) from e
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", run_id: str) -> None:
-        return Build.delete_by_id(ado_client, run_id)
+        Build.delete_by_id(ado_client, run_id)
+        ado_client.state_manager.remove_resource_from_state(cls.__name__, run_id)  # type: ignore[arg-type]
 
     def update(self, ado_client: "AdoClient", attribute_name: str, attribute_value: Any) -> None:
         raise NotImplementedError("Use Build's update instead!")
@@ -164,3 +171,65 @@ class Run(StateManagedResource):
         all_runs = cls.get_all_by_definition(ado_client, definition_id)
         runs_with_start = [x for x in all_runs if x.start_time is not None]
         return max(runs_with_start, key=lambda run: run.start_time) if runs_with_start else None
+
+    @staticmethod
+    def get_run_stage_results(ado_client: "AdoClient", build_id: str) -> list["RunStageResult"]:
+        """Fetches a list of Stages: Jobs for a Run, returning each job's status/result"""
+        request = ado_client.session.get(
+            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_build/results?view=results&buildId={build_id}&__rt=fps&__ver=2",
+        )
+        assert request.status_code == 200
+        data = request.json()["fps"]["dataProviders"]["data"].get("ms.vss-build-web.run-details-data-provider")
+        if data is None:
+            raise ResourceNotFound("Could not find that build!")
+        stages: dict[str, RunStageResult] = {}
+        for job in data["jobs"]:
+            if job["stageId"] not in stages:
+                stages[job["stageId"]] = RunStageResult(job["stageId"], job["stageName"], [])
+            stages[job["stageId"]].jobs.append(RunJobResult.from_request_payload(job))
+        return list(stages.values())
+
+
+# ============================================================================================== #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+# ============================================================================================== #
+
+job_state_mapping = {
+    0: "Queued",
+    1: "In-Progress",
+    2: "Complete",
+}
+job_result_mapping = {
+    None: "Queued",
+    0: "Success",
+    1: "Warning",
+    2: "Failed",
+    3: "Cancelled",
+    4: "Skipped",
+}
+
+
+@dataclass
+class RunStageResult:
+    stage_id: str
+    stage_name: str
+    jobs: list["RunJobResult"]
+
+
+@dataclass
+class RunJobResult:
+    job_id: str
+    name: str
+    image_name: str = field(repr=False)
+    start_time: datetime = field(repr=False)
+    end_time: datetime | None = field(repr=False)
+    state: JobStateLiteral
+    result: JobResultLiteral
+
+    @classmethod
+    def from_request_payload(cls, data: dict[str, Any]) -> "RunJobResult":
+        return cls(
+            str(data["id"]), data["name"], data["imageName"],
+            from_ado_date_string(data["startTime"]), from_ado_date_string(data.get("finishTime")),
+            job_state_mapping[data["state"]], job_result_mapping[data["result"]]  # type: ignore[arg-type]
+        )  # fmt: skip

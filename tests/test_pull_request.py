@@ -39,7 +39,7 @@ class TestPullRequest:
         with RepoContextManager(self.ado_client, "create-delete-pull-request") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
             pull_request = PullRequest.create(self.ado_client, repo.repo_id, "test-branch", "Test PR for create-delete",
-                                            "Test PR description", is_draft=True)  # fmt: skip
+                                              "Test PR description", is_draft=True)  # fmt: skip
             assert pull_request.title == "Test PR for create-delete"
             assert pull_request.description == "Test PR description"
             assert pull_request.is_draft

@@ -55,10 +55,9 @@ Most resources have names, or some definining values which has to be unique, e.g
 Tags are a problem, branches a bit too, build definitions too, the problem is that we want to be able to change things and
 have the create update, rather than create, but if the data is different, how do we link them?  
 
-Searches tests (extend)  
 More tests around runs
 AgentPools create/delete and testing  
-AuditLogs Tests  
+AuditLogs Tests - Only have perms in UK, dang  
 Test state_manager.py more?  
 Test __main__.py  
 Test to see if template_parameters is being set when fetching/creating runs
@@ -67,6 +66,8 @@ Get `get_my_pull_requests` of pull request to check if the status is int, if so 
 Pull Request merge_status seem pointless tbh, they're almost always 2 or 3.
 
 Set "My Pull Request" config, maybe at <https://dev.azure.com/VFCloudEngineering/_api/_versioncontrol/updateUserPreferences?__v=5>
+
+Delete Run doesn't clear the state because it calls the Build's Delete, which means the resource type is Build not Run
 
 -----  
 

@@ -114,7 +114,7 @@ def recursively_find_or_none(data: dict[str, Any], indexes: list[str]) -> Any:
 
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports
     """This returns a mapping of resource name (str) to the class type of the resource. This is used to dynamically create instances of resources."""
-    from ado_wrapper.resources import (  # type: ignore[attr-defined]  # pylint: disable=possibly-unused-variable
+    from ado_wrapper.resources import (  # type: ignore[attr-defined]  # pylint: disable=possibly-unused-variable  # noqa: F401
         AgentPool, AnnotatedTag, AuditLog, Branch, Build, BuildDefinition, Commit, Environment, Group, MergePolicies,
         MergeBranchPolicy, MergePolicyDefaultReviewer, Project, PullRequest, Release, ReleaseDefinition, Repo, Run, BuildRepository,
         Team, AdoUser, Member, ServiceEndpoint, Reviewer, VariableGroup,  # fmt: skip

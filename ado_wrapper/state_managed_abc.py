@@ -116,7 +116,7 @@ class StateManagedResource:
         ado_client.state_manager.remove_resource_from_state(cls.__name__, resource_id)  # type: ignore[arg-type]
 
     def _update(self, ado_client: "AdoClient", update_action: Literal["put", "patch"], url: str,  # pylint: disable=too-many-arguments
-               attribute_name: str, attribute_value: Any, params: dict[str, Any]) -> None:  # fmt: skip
+                attribute_name: str, attribute_value: Any, params: dict[str, Any]) -> None:  # fmt: skip
         """The params should be a dictionary which will be combined with the internal name and value of the attribute to be updated."""
         interal_names = get_internal_field_names(self.__class__)
         if attribute_name not in get_internal_field_names(self.__class__):

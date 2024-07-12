@@ -187,9 +187,11 @@ class Repo(StateManagedResource):
         return MergePolicies.get_branch_policy(ado_client, repo_id, branch_name)
 
     @staticmethod
-    def set_branch_merge_policy(ado_client: AdoClient, repo_id: str, minimum_approver_count: int,
-                          creator_vote_counts: bool, prohibit_last_pushers_vote: bool, allow_completion_with_rejects: bool,
-                          when_new_changes_are_pushed: WhenChangesArePushed, branch_name: str = "main") -> MergePolicies | None:  # fmt: skip
+    def set_branch_merge_policy(
+        ado_client: AdoClient, repo_id: str, minimum_approver_count: int,
+        creator_vote_counts: bool, prohibit_last_pushers_vote: bool, allow_completion_with_rejects: bool,
+        when_new_changes_are_pushed: WhenChangesArePushed, branch_name: str = "main",  # fmt: skip
+    ) -> MergePolicies | None:
         return MergePolicies.set_branch_policy(ado_client, repo_id, minimum_approver_count, creator_vote_counts,
                                                prohibit_last_pushers_vote, allow_completion_with_rejects, when_new_changes_are_pushed,
                                                branch_name)  # fmt: skip
@@ -198,8 +200,7 @@ class Repo(StateManagedResource):
     def get_all_repos_with_required_reviewer(cls, ado_client: AdoClient, reviewer_email: str) -> list[Repo]:
         return [
             repo for repo in Repo.get_all(ado_client)
-            if any(x.email.lower() == reviewer_email.lower() for x in MergePolicyDefaultReviewer.get_default_reviewers(ado_client, repo.repo_id)
-            )
+            if any(x.email.lower() == reviewer_email.lower() for x in MergePolicyDefaultReviewer.get_default_reviewers(ado_client, repo.repo_id))
         ]  # fmt: skip
 
 

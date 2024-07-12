@@ -231,12 +231,12 @@ class BuildDefinition(StateManagedResource):
         payload = (
             {"name": self.name, "id": self.build_definition_id, "revision": int(self.revision),
              "repository": {"id": self.build_repo.build_repository_id, "type": self.build_repo.type},
-             "process": {"yamlFilename": self.process["yamlFilename"], "type": self.process["type"]}} | # fmt: skip
-            {attribute_name: attribute_value}  # fmt: skip
-        )
+             "process": {"yamlFilename": self.process["yamlFilename"], "type": self.process["type"]}}
+            | {attribute_name: attribute_value}
+        )  # fmt: skip
         super()._update(
             ado_client, "put",
-            f"/{ado_client.ado_project}/_apis/build/definitions/{self.build_definition_id}?api-version=7.1", #secretsSourceDefinitionRevision={self.revision}&
+            f"/{ado_client.ado_project}/_apis/build/definitions/{self.build_definition_id}?api-version=7.1",  # secretsSourceDefinitionRevision={self.revision}&
             attribute_name, attribute_value, payload  # fmt: skip
         )
         self.revision = str(int(self.revision) + 1)
@@ -290,7 +290,7 @@ class BuildDefinition(StateManagedResource):
         TEMPLATE_PAYLOAD = {
             "contributionIds": ["ms.vss-build-web.pipeline-run-parameters-data-provider"], "dataProviderContext": {"properties": {
                     "pipelineId": int(definition_id), "sourceBranch": f"refs/heads/{branch_name}",
-                    "sourcePage": {"routeId":"ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project}}
+                    "sourcePage": {"routeId": "ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project}}
                 }
             },
         }  # fmt: skip
@@ -303,9 +303,8 @@ class BuildDefinition(StateManagedResource):
         PAYLOAD = {
             "contributionIds": ["ms.vss-build-web.pipeline-run-parameters-data-provider"], "dataProviderContext": {"properties": {
                 "pipelineId": definition_id, "sourceBranch": f"refs/heads/{branch_name}", "templateParameters": template_parameters,
-                "sourcePage": {"routeId":"ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project}},
-                }
-            },
+                "sourcePage": {"routeId": "ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project}},
+            }},
         }  # fmt: skip
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_id}?api-version=7.0-preview",

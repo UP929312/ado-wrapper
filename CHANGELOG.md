@@ -1,10 +1,17 @@
 # Changelog
 
-## vUpcoming
+## v1.14.0
 
 ### Added
 
 - When creating/fetching `Run`s, you can now see the `Run`s `Build Definition` id.
+- More tests for `Search`es.
+- `Run.get_run_stage_results` to get a list of each job's status/result
+
+### Changed
+
+- Ran Flake8 over the codebase, many non-code but formatting changes
+- `Search` is now called `CodeSearch` (to allow for other search types in the future)
 
 ---
 
@@ -92,7 +99,6 @@
 - When trying to set branch policies, it'll now warn for incorrect perms, and raise a `ConfigurationError` exception.
 - When trying to set individual user perms on a repo, an `InvalidPermissionsError` permission is raised if the PAT token doesn't have perms.
 - `UserPermission`s `set_by_subject_email` has been renamed to `set_by_user_email`.
-
 
 ---
 

@@ -178,10 +178,13 @@ class ReleaseDefinition(StateManagedResource):
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "ReleaseDefinition":
         created_by = Member.from_request_payload(data["createdBy"])
-        return cls(str(data["id"]), data["name"], data.get("description") or "", created_by, from_ado_date_string(data["createdOn"]),
-                   data["releaseNameFormat"], data["variableGroups"], data.get("isDeleted", False), data.get("variables"),
-                   data.get("environments", []), data.get("environments", [{"deployPhases": [{"deploymentInput": {"queueId": "1"}}]}]
-                            )[0]["deployPhases"][0]["deploymentInput"]["queueId"], data.get("revision", "1"), data)  # fmt: skip
+        return cls(
+            str(data["id"]), data["name"], data.get("description") or "", created_by, from_ado_date_string(data["createdOn"]),
+            data["releaseNameFormat"], data["variableGroups"], data.get("isDeleted", False), data.get("variables"),
+            data.get("environments", []),
+            data.get("environments", [{"deployPhases": [{"deploymentInput": {"queueId": "1"}}]}])[0]["deployPhases"][0]["deploymentInput"]["queueId"],
+            data.get("revision", "1"), data  # fmt: skip
+        )
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", release_definition_id: str) -> "ReleaseDefinition":

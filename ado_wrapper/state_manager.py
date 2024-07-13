@@ -10,7 +10,7 @@ from ado_wrapper.errors import DeletionFailed
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 
-STATE_FILE_VERSION = "1.6"
+STATE_FILE_VERSION = "1.7"
 
 
 class StateFileType(TypedDict):

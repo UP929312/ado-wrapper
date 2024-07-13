@@ -2,7 +2,7 @@
 name = "ado_wrapper"
 description = "A high level wrapper around the AzureDevops API including OOP principals and state management"
 authors = ["Ben Skerritt"]
-version = "1.14.0"
+version = "1.15.0"
 license = "Proprietary"
 readme = "README.md"
 packages = [{include = "ado_wrapper"}]

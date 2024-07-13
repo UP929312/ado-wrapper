@@ -65,6 +65,8 @@ class StateManagedResource:
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
         request = ado_client.session.get(url)
+        if request.status_code == 401:
+            raise InvalidPermissionsError(f"You do not have permission to fetch {cls.__name__}(s)!")
         if request.status_code == 404:
             raise ResourceNotFound(f"No {cls.__name__} found with that identifier!")
         if request.status_code >= 300:
@@ -144,8 +146,10 @@ class StateManagedResource:
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
         request = ado_client.session.get(url)
+        if request.status_code == 401:
+            raise InvalidPermissionsError(f"You do not have permission to get all {cls.__name__}(s)!")
         if request.status_code >= 300:
-            raise ValueError(f"Error getting all {cls.__name__}: {request.text}")
+            raise ValueError(f"Error getting all {cls.__name__}: {request.status_code}, error={request.text}")
         return [cls.from_request_payload(resource) for resource in request.json()["value"]]
 
     @classmethod

@@ -6,6 +6,7 @@ A push is when someone has multiple commits and they do a git push (to a branch)
 <https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pushes/get?view=azure-devops-rest-7.1&tabs=HTTP#gitpush>
 
 Rollback a commit? Tricky...
+I guess I could fetch the repo by a certain commit, and find the difference for all the files, and then make a commit like that?
 
 Update the state file on startup, and have an option to disable it - DONE
 Maybe add the alternative way? I.E. if it's changed in real resources
@@ -23,11 +24,6 @@ object already exists, so the creator in SMR should check try, and if it fails, 
 This?
 <https://www.reddit.com/r/ado_wrapper/comments/xj56gs/complete_pull_request_with_bypass_policy_via_api/>
 
-Dataclass "init=False" part of a field, but this won't work for type hinting I guess, also, while things like
-normally take 1 input (id), things like create can take more complicated stuff
-
-Service connections perms on pipelines (done, not tested)
-
 Commits/Branches are the only things that don't have a generic `get_all`
 
 <https://stackoverflow.com/questions/77522387/approving-pipeline-stage-azure-devops-via-api>
@@ -43,11 +39,8 @@ Maybe rather than RepoContextManager, we have it work for all resources? Maybe t
 Make all resources be able to be context managers?
 This would work great (I think), but the objects need to store the ado_client, because exiting requires it...
 
-TestStateManager needs some work
 Hmmmmm, it appears that when creating a variable group, it doesn't return the created by or modified by with enough data.
 This is different from the get_by_id, because the get_by_id gets the creator, but the creation return doesn't...
-
-build_defs/allow_on_environment Needs testing
 
 The problem we have with the whole "create twice" instead of update can be fixed.
 The state stores the repo id, but it also stores the repo *name*, which is coincidentally also unique.
@@ -55,19 +48,19 @@ Most resources have names, or some definining values which has to be unique, e.g
 Tags are a problem, branches a bit too, build definitions too, the problem is that we want to be able to change things and
 have the create update, rather than create, but if the data is different, how do we link them?  
 
-More tests around runs
+More tests around:
+Service connections perms on pipelines (done, not tested)
+TestStateManager needs some work
+build_defs/allow_on_environment Needs testing
+Runs
+Run's Get Stage Results
 AgentPools create/delete and testing  
 AuditLogs Tests - Only have perms in UK, dang  
 Test state_manager.py more?  
 Test __main__.py  
-Test to see if template_parameters is being set when fetching/creating runs
+Test to test if template_parameters is being set when fetching/creating runs
 
-Get `get_my_pull_requests` of pull request to check if the status is int, if so convert  
-Pull Request merge_status seem pointless tbh, they're almost always 2 or 3.
-
-Set "My Pull Request" config, maybe at <https://dev.azure.com/VFCloudEngineering/_api/_versioncontrol/updateUserPreferences?__v=5>
-
-Delete Run doesn't clear the state because it calls the Build's Delete, which means the resource type is Build not Run
+Add all the required perms with @required_perms
 
 -----  
 

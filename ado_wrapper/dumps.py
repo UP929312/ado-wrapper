@@ -132,8 +132,12 @@ GROUP_DUMP = {
     "originId": "{originId}",
     "displayName": "Our Team",
     "_links": {"self": {"href": "https://vssps.dev.azure.com/{ado_client.org}/_apis/Graph/Groups/{subject_descriptor}"}, "memberships": {"href": "https://vssps.dev.azure.com/{ado_client.org}/_apis/Graph/Memberships/{subject_descriptor}"}, "membershipState": {"href": "https://vssps.dev.azure.com/{ado_client.org}/_apis/Graph/MembershipStates/{subject_descriptor}"}, "storageKey": {"href": "https://vssps.dev.azure.com/{ado_client.org}/_apis/Graph/StorageKeys/{subject_descriptor}"}},
-    "url": "https://vssps.dev.azure.com/{ado_client.org}/_apis/Graph/Groups/{subject_descriptor}"}
+    "url": "https://vssps.dev.azure.com/{ado_client.org}/_apis/Graph/Groups/{subject_descriptor}"
+}
 
+PERMISSIONS_DUMP = [
+    {'securityNamespaceId': '2e9eb7ed-3c0a-47d4-87c1-0ffdd275fd87', 'token': 'repoV2/{ado_client.ado_project_id}', 'permissions': 256, 'value': True}, {'securityNamespaceId': '49b48001-ca20-4adc-8111-5b60c903a50c', 'token': 'repoV2/{ado_client.ado_project_id}', 'permissions': 256, 'value': False}
+]
 
 PROJECT_DUMP = {
     "id": "<32_char_uuid>",

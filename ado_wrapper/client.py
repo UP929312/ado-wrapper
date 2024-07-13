@@ -4,8 +4,9 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from ado_wrapper.plan_resources.plan_state_manager import PlanStateManager
+from ado_wrapper.resources.permissions import Permission
 from ado_wrapper.state_manager import StateManager
-from ado_wrapper.errors import AuthenticationError
+from ado_wrapper.errors import AuthenticationError, InvalidPermissionsError
 
 
 class AdoClient:
@@ -16,10 +17,14 @@ class AdoClient:
     ) -> None:
         """Takes an email, PAT, org, project, and state file name. The state file name is optional, and if not provided,
         state will be stored in "main.state" (can be disabled using None)"""
+        from ado_wrapper.resources.projects import Project  # Stop circular import
+        from ado_wrapper.resources.users import AdoUser  # Stop circular import
+
         self.ado_email = ado_email
         self.ado_pat = ado_pat
         self.ado_org = ado_org
         self.ado_project = ado_project
+        self.perms = None
 
         self.suppress_warnings = suppress_warnings
         self.plan_mode = action == "plan"
@@ -33,16 +38,20 @@ class AdoClient:
             if request.status_code != 200:
                 raise AuthenticationError("Failed to authenticate with ADO: Most likely incorrect token or expired token!")
 
-            from ado_wrapper.resources.projects import Project  # Stop circular import
-            from ado_wrapper.resources.users import AdoUser  # Stop circular import
-
             self.ado_project_id = Project.get_by_name(self, self.ado_project).project_id  # type: ignore[union-attr]
             try:
                 self.pat_author: AdoUser = AdoUser.get_by_email(self, ado_email)
-            except ValueError:
+            except (ValueError, InvalidPermissionsError):
                 if not suppress_warnings:
                     print(
                         f"[ADO_WRAPPER] WARNING: User {ado_email} not found in ADO, nothing critical, but stops releases from being made, and plans from being accurate."
                     )
+
+            self.perms = Permission.get_project_perms(self)
+            # try:
+            #     self.perms = Permission.get_project_perms(self)
+            # except Exception as e:
+            #     print(e)
+            #     raise AuthenticationError("Failed to fetch this PAT's permissions, no smart errors will be shown for invalid perms")
 
         self.state_manager = StateManager(self, state_file_name) if action == "apply" else PlanStateManager(self)  # Has to be last

@@ -9,20 +9,19 @@ from typing import TYPE_CHECKING, Any, Literal
 import requests
 import yaml
 
-from ado_wrapper.resources.commits import Commit
 
 # from ado_wrapper.resources.branches import Branch
+from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.merge_policies import MergePolicies, MergePolicyDefaultReviewer
 from ado_wrapper.resources.pull_requests import PullRequest, PullRequestStatus
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.errors import ResourceNotFound, UnknownError
 
+# from ado_wrapper.utils import requires_perms
+
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
-    from ado_wrapper.resources.merge_policies import (
-        MergeBranchPolicy,
-        WhenChangesArePushed,
-    )
+    from ado_wrapper.resources.merge_policies import MergeBranchPolicy, WhenChangesArePushed
 
 RepoEditableAttribute = Literal["name", "default_branch", "is_disabled"]
 
@@ -46,6 +45,7 @@ class Repo(StateManagedResource):
         )
 
     @classmethod
+    # @requires_perms("Git Repositories/Read")
     def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> Repo:
         return super()._get_by_url(
             ado_client,
@@ -140,7 +140,7 @@ class Repo(StateManagedResource):
         for chunk in request.iter_content(chunk_size=128):
             bytes_io.write(chunk)
 
-        files = {}
+        files: dict[str, str] = {}
         try:
             with zipfile.ZipFile(bytes_io) as zip_ref:
                 # For each file, read the bytes and convert to string

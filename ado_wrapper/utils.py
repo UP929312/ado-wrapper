@@ -1,8 +1,8 @@
 from dataclasses import fields
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Literal, overload, Any
+from typing import TYPE_CHECKING, Literal, Callable, Type, overload, Any
 
-from ado_wrapper.errors import ConfigurationError
+from ado_wrapper.errors import ConfigurationError, InvalidPermissionsError
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -112,11 +112,32 @@ def recursively_find_or_none(data: dict[str, Any], indexes: list[str]) -> Any:
     return current
 
 
+def requires_perms(required_perms: list[str] | str) -> Callable:  # type: ignore[type-arg]
+    """This wraps a call (with ado_client as second arg) with a list of required permissions,
+    will raise an error if the client doesn't have them"""
+
+    def decorator(func: Callable) -> Callable:  # type: ignore[type-arg]
+        def wrapper(cls: Any, ado_client: "AdoClient", *args: Any, **kwargs: Any) -> Type | None:  # type: ignore[type-arg]
+            if ado_client.perms is not None:
+                for required_perm_name in required_perms if isinstance(required_perms, list) else [required_perms]:
+                    if required_perm_name not in [f"{x.group}/{x.name}" for x in ado_client.perms if x.has_permission]:
+                        raise InvalidPermissionsError(f"Error! The client tried to make a call to a service with invalid permissions! Didn't have {required_perm_name}")  # fmt: skip
+            elif not ado_client.suppress_warnings:
+                print("Warning, could not verify the authenticated PAT has the right perms.")
+            return func(cls, ado_client, *args, **kwargs)  # type: ignore[no-any-return]
+
+        wrapper.__name__ = func.__name__  # Also copies the name and docstring of the original function to preserve metadata.
+        wrapper.__doc__ = func.__doc__
+        return wrapper
+
+    return decorator
+
+
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports
     """This returns a mapping of resource name (str) to the class type of the resource. This is used to dynamically create instances of resources."""
     from ado_wrapper.resources import (  # type: ignore[attr-defined]  # pylint: disable=possibly-unused-variable  # noqa: F401
         AgentPool, AnnotatedTag, AuditLog, Branch, Build, BuildDefinition, Commit, Environment, Group, MergePolicies,
-        MergeBranchPolicy, MergePolicyDefaultReviewer, Project, PullRequest, Release, ReleaseDefinition, Repo, Run, BuildRepository,
+        MergeBranchPolicy, MergePolicyDefaultReviewer, Permission, Project, PullRequest, Release, ReleaseDefinition, Repo, Run, BuildRepository,
         Team, AdoUser, Member, ServiceEndpoint, Reviewer, VariableGroup,  # fmt: skip
     )
 
@@ -125,6 +146,6 @@ def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We d
 
 ResourceType = Literal[
     "AgentPool", "AnnotatedTag", "AuditLog", "Branch", "Build", "BuildDefinition", "Commit", "Environment", "Group", "MergePolicies",
-    "MergeBranchPolicy", "MergePolicyDefaultReviewer", "Project", "PullRequest", "Release", "ReleaseDefinition",
+    "MergeBranchPolicy", "MergePolicyDefaultReviewer", "Permission", "Project", "PullRequest", "Release", "ReleaseDefinition",
     "Repo", "Run", "Team", "AdoUser", "Member", "ServiceEndpoint", "Reviewer", "VariableGroup"  # fmt: skip
 ]

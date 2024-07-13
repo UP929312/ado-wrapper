@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.15.0
+
+### Added
+
+- The ability to fetch `Assigned to my teams` PullRequest list using `PullRequest.get_my_pull_requests()`
+- Can be altered permantly using `PullRequest.set_my_pull_requests_included_teams()`
+- The ability to get the permission set by the provider PAT, e.g. Git Repo -> Contribute. using `Permission.get_by_project()`
+- Started work on a feature to decorate functions with `@required_perms()` which will pre-emptively warn the user for which perm they need.
+
+### Changed
+
+- Unmarking a PR as draft now works properly (previously it would try to re-mark as draft)
+- Slightly improved the error message when the API raises a 401 (raises an InvalidPermissionsError)
+
+---
+
 ## v1.14.0
 
 ### Added

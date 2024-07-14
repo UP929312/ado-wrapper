@@ -32,10 +32,10 @@ limit_merge_type_mapping = {
 def _get_type_id(ado_client: AdoClient, action_type: str) -> str:
     """Used internally to get a specific update request ID"""
     request = ado_client.session.get(
-        f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/policy/types?api-version=6.0"
+        f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/policy/types?api-version=6.0"
     )
     # rint([(x["displayName"], x["id"]) for x in request.json()["value"]])
-    return [x for x in request.json()["value"] if x["displayName"] == action_type][0]["id"]  # type: ignore[no-any-return]
+    return str([x for x in request.json()["value"] if x["displayName"] == action_type][0]["id"])
 
 
 @dataclass
@@ -56,7 +56,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
         payload = {"contributionIds": ["ms.vss-code-web.branch-policies-data-provider"],
                    "dataProviderContext": {"properties": {"projectId": ado_client.ado_project_id, "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}"}}}  # fmt: skip
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery?api-version=7.1-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.1-preview.1",
             json=payload,
         ).json()
         if request is None:
@@ -93,7 +93,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
             },
         }
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/policy/configurations?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/policy/configurations?api-version=7.1",
             json=payload,
         )
         if request.status_code == 400:
@@ -107,7 +107,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
         if not policy_id:
             return
         request = ado_client.session.delete(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/policy/configurations/{policy_id}?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/policy/configurations/{policy_id}?api-version=7.1",
         )
         assert request.status_code == 204, "Error removing required reviewer"
 
@@ -170,7 +170,7 @@ class MergeBranchPolicy(StateManagedResource):
         }
         request = ado_client.session.request(
             "PUT" if latest_policy_id else "POST",
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/policy/Configurations{latest_policy_id}?api-version=7.1",  # fmt: skip
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/policy/Configurations{latest_policy_id}?api-version=7.1",  # fmt: skip
             json=payload,
         )
         assert request.status_code == 200, f"Error setting branch policy: {request.text}"
@@ -214,9 +214,9 @@ class MergePolicies(StateManagedResource):
     @classmethod
     def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list[MergePolicyDefaultReviewer | MergeBranchPolicy] | None:  # fmt: skip
         payload = {"contributionIds": ["ms.vss-code-web.branch-policies-data-provider"], "dataProviderContext": {"properties": {
-            "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}", "sourcePage": {"routeValues": {"project": ado_client.ado_project}}}}}  # fmt: skip
+            "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}", "sourcePage": {"routeValues": {"project": ado_client.ado_project_name}}}}}  # fmt: skip
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview.1",
             json=payload,
         ).json()
         return cls.from_request_payload(request)

@@ -53,6 +53,7 @@ class TestRun:
             build_definition.delete(self.ado_client)
             run.delete(self.ado_client)
 
+    @pytest.mark.wip
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
         with RepoContextManager(self.ado_client, "get-runs-by-id") as repo:
@@ -64,6 +65,7 @@ class TestRun:
             run = Run.create(self.ado_client, build_definition.build_definition_id, branch_name="my-branch")
             fetched_run = Run.get_by_id(self.ado_client, build_definition.build_definition_id, run.run_id)
             assert fetched_run.run_id == run.run_id
+            run.delete(self.ado_client)
             build_definition.delete(self.ado_client)
 
     @pytest.mark.skip(reason="This requires waiting for run agents, and running for a whole run")

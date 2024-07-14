@@ -1,5 +1,29 @@
 # Changelog
 
+## UNRELEASED v1.16.0
+
+### Added
+
+- `typing_info.py`, which allows users to import types for type hinting in their scripts.
+- Tests for Permissions
+- `Organisation`s, specifically the ability to get an object by name (and hence extract `organisation_id`)
+- The client now has `.ado_org_id` string, which is used when fetching personal access tokens.
+- The ability to fetch Personal Access Tokens (to see when they'll expire, and what perms they have)
+
+### Changed
+
+- Changed the return type of CodeSearch's `get_by_search_string` from Any to `list[CodeSearch]`
+- Removed the "namespace_id" from the permissions as it was always it's parents namespace_id, use group_namespace_id instead
+- Fixed TestRun/test_get_by_id from not removing an old run.
+- The StateManager is less fussy about trying to remove resources from a state without that resource's key.
+- Commit's `ChangeType` has been renamed to `CommitChangeType` for the same reason
+- Permission's `ActionType` has been renamed to `PermissionActionType` so when importing for typing will be more specific
+- Repo's `ActionType` & `PermissionType` have been renamed to `RepoPermsActionType` & `RepoPermissionType` respectively
+- Internally, `ado_client.ado_org` has been remapped to `ado_client.ado_org_name`. For backwards compability reasons, `ado_client.ado_org` still exists but will soon be removed.
+- `ado_client.ado_project` has been remapped to `ado_client.ado_project_name` (to better reflect what it is) and allow the project object to replace it in the future. For backwards compability reasons, `ado_client.ado_project` still exists but will soon be removed.
+
+---
+
 ## v1.15.0
 
 ### Added

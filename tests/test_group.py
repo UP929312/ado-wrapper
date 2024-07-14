@@ -3,7 +3,7 @@ import pytest
 from ado_wrapper.resources.groups import Group
 from tests.setup_client import (
     existing_group_descriptor,
-    existing_group_name,
+    existing_team_name,
     setup_client,
 )
 
@@ -48,9 +48,9 @@ class TestGroup:
         assert all(isinstance(group, Group) for group in groups)
 
     def test_get_by_name(self) -> None:
-        group = Group.get_by_name(self.ado_client, existing_group_name)
+        group = Group.get_by_name(self.ado_client, existing_team_name)
         assert group is not None
-        assert group.name == existing_group_name
+        assert group.name == existing_team_name
 
     # def test_get_members(self) -> None:
     #     members = Group.get_by_name(self.ado_client, existing_group_name).get_members(self.ado_client)

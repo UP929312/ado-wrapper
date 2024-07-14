@@ -2,12 +2,12 @@ import os
 
 from ado_wrapper.client import AdoClient
 from ado_wrapper.resources.repo import Repo
-from tests.setup_client import ado_org, ado_project, email, pat_token
+from tests.setup_client import ado_org_name, ado_project, email, pat_token
 
 
 class TestState:
     def setup_method(self) -> None:
-        self.ado_client = AdoClient(email, pat_token, ado_org, ado_project, state_file_name="tests/test_actual_state.state")
+        self.ado_client = AdoClient(email, pat_token, ado_org_name, ado_project, state_file_name="tests/test_actual_state.state")
 
     def test_adding_deleting(self) -> None:
         state_manager = self.ado_client.state_manager

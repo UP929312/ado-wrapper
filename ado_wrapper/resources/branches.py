@@ -55,7 +55,7 @@ class Branch(StateManagedResource):
             }
         ]
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/refs?api-version=7.1",
             json=PAYLOAD,
         )
         assert request.status_code == 200
@@ -69,7 +69,7 @@ class Branch(StateManagedResource):
     def get_all_by_repo(cls, ado_client: AdoClient, repo_name_or_id: str) -> list[Branch]:
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/git/repositories/{repo_name_or_id}/refs?filter=heads&api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_name_or_id}/refs?filter=heads&api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod

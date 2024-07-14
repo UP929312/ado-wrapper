@@ -15,9 +15,9 @@ All these examples assume an already created AdoClient, perhaps similar to this:
 from ado_wrapper import AdoClient
 
 with open("credentials.txt", "r") as file:
-    email, ado_access_token, ado_org, ado_project = file.read().split("\\n")
+    email, ado_access_token, ado_org_name, ado_project = file.read().split("\\n")
 
-ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
+ado_client = AdoClient(email, ado_access_token, ado_org_name, ado_project)
 ```
 
 """
@@ -52,13 +52,15 @@ def dataclass_attributes(cls) -> list[str]:  # type: ignore[no-untyped-def]
 sorted_pairs = dict(sorted({string: value for string, value in globals().items() if string[0].isupper()}.items()))
 
 for class_name, value in sorted_pairs.items():
-    # if class_name != "Build":
+    # print(class_name)
+    # if class_name != "Permission":
     #     continue
     function_data = {
         key: value for key, value in dict(inspect.getmembers(value)).items()
         if not key.startswith("_") and key not in ignored_functions and
         key not in dataclass_attributes(globals()[class_name])  # fmt: skip
     }
+    # print(function_data)
     if not function_data:
         continue
     string += f"-----\n# {class_name}\n<details>\n\n```py\n"

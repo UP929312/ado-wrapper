@@ -4,11 +4,11 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from ado_wrapper.resources.users import Member
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import from_ado_date_string
 
 if TYPE_CHECKING:
+    from ado_wrapper.resources.users import Member
     from ado_wrapper.client import AdoClient
 
 
@@ -31,6 +31,8 @@ class AgentPool(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> AgentPool:
+        from ado_wrapper.resources.users import Member  # Stop circular imports
+
         created_by = Member.from_request_payload(data["createdBy"])
         return cls(
             str(data["id"]), data["agentCloudId"], data["name"], data["size"], data["targetSize"], data["autoSize"], data["autoUpdate"],

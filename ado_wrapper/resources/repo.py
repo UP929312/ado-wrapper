@@ -49,14 +49,15 @@ class Repo(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> Repo:
         return super()._get_by_url(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
+    # @requires_perms("Git Repositories/Create repository")
     def create(cls, ado_client: AdoClient, name: str, include_readme: bool = True) -> Repo:
         repo: Repo = super()._create(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/git/repositories?api-version=7.1",
             {"name": name},
         )  # type: ignore[assignment]
         if include_readme:
@@ -66,7 +67,7 @@ class Repo(StateManagedResource):
     def update(self, ado_client: AdoClient, attribute_name: RepoEditableAttribute, attribute_value: Any) -> None:
         return super()._update(
             ado_client, "patch",
-            f"/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/git/repositories/{self.repo_id}?api-version=7.1",
             attribute_name, attribute_value, {},  # fmt: skip
         )
 
@@ -79,7 +80,7 @@ class Repo(StateManagedResource):
         #     ado_client.state_manager.remove_resource_from_state("Branch", branch.name)
         return super()._delete_by_id(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}?api-version=7.1",
             repo_id,
         )
 
@@ -87,7 +88,7 @@ class Repo(StateManagedResource):
     def get_all(cls, ado_client: AdoClient) -> list[Repo]:
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/git/repositories?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/git/repositories?api-version=7.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -101,7 +102,7 @@ class Repo(StateManagedResource):
     def get_file(self, ado_client: AdoClient, file_path: str, branch_name: str = "main") -> str:
         """Gets a single file by path, auto_decode converts json files from text to dictionaries"""
         request = ado_client.session.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?path={file_path}&versionType={'Branch'}&version={branch_name}&api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{self.repo_id}/items?path={file_path}&versionType={'Branch'}&version={branch_name}&api-version=7.1",
         )
         if request.status_code == 404:
             raise ResourceNotFound(f"File {file_path} not found in repo {self.name} ({self.repo_id})")
@@ -123,7 +124,7 @@ class Repo(StateManagedResource):
         The file_types parameter is a list of file types to filter for, e.g. ["json", "yaml"] etc."""
         try:
             request = ado_client.session.get(
-                f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo_id}/items?recursionLevel={'Full'}&download={True}&$format={'Zip'}&versionDescriptor.version={branch_name}&api-version=7.1",
+                f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{self.repo_id}/items?recursionLevel={'Full'}&download={True}&$format={'Zip'}&versionDescriptor.version={branch_name}&api-version=7.1",
             )
         except requests.exceptions.ConnectionError:
             if not ado_client.suppress_warnings:

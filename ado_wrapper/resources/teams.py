@@ -31,7 +31,7 @@ class Team(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, team_id: str) -> Team:
         resource: Team = super()._get_by_url(
             ado_client,
-            f"/_apis/projects/{ado_client.ado_project}/teams/{team_id}?$expandIdentity={True}&api-version=7.1-preview.1",
+            f"/_apis/projects/{ado_client.ado_project_name}/teams/{team_id}?$expandIdentity={True}&api-version=7.1-preview.1",
         )  # type: ignore[assignment]
         resource.team_members = resource.get_members(ado_client)
         return resource
@@ -66,7 +66,7 @@ class Team(StateManagedResource):
 
     def get_members(self, ado_client: AdoClient) -> list[TeamMember]:
         request = ado_client.session.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{ado_client.ado_project}/teams/{self.team_id}/members?api-version=7.1-preview.2",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/projects/{ado_client.ado_project_name}/teams/{self.team_id}/members?api-version=7.1-preview.2",
         ).json()
         if "value" not in request and request.get("message", "").startswith("The team with id "):  # If the team doesn't exist anymore.
             return []

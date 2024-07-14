@@ -74,7 +74,7 @@ class Build(StateManagedResource):
     def get_by_id(cls, ado_client: "AdoClient", build_id: str) -> "Build":
         return super()._get_by_url(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/build/builds/{build_id}?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/build/builds/{build_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -85,12 +85,12 @@ class Build(StateManagedResource):
         # if permit_use_of_var_groups:
         #     rint(f"Variable Groups: {BuildDefinition.get_by_id(ado_client, definition_id).variable_groups}")
         #     for var_group_id in BuildDefinition.get_by_id(ado_client, definition_id).variable_groups:
-        #         request = ado_client.session.patch(f"https://dev.azure.com/{ado_client.ado_org}/{definition_id}/_apis/pipelines/pipelinePermissions/variablegroup/{var_group_id}")  # fmt: skip
+        #         request = ado_client.session.patch(f"https://dev.azure.com/{ado_client.ado_org_name}/{definition_id}/_apis/pipelines/pipelinePermissions/variablegroup/{var_group_id}")  # fmt: skip
         #         rint(request.text, request.status_code)
         #         assert request.status_code <= 204
         return super()._create(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/build/builds?definitionId={definition_id}&api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/build/builds?definitionId={definition_id}&api-version=7.1",
             {"reason": "An automated build created with the ado_wrapper Python library", "sourceBranch": source_branch},
         )  # type: ignore[return-value]
 
@@ -99,14 +99,14 @@ class Build(StateManagedResource):
         cls.delete_all_leases(ado_client, build_id)
         return super()._delete_by_id(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/build/builds/{build_id}?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/build/builds/{build_id}?api-version=7.1",
             build_id,
         )
 
     def update(self, ado_client: "AdoClient", attribute_name: str, attribute_value: Any) -> None:
         return super()._update(
             ado_client, "patch",
-            f"/{ado_client.ado_project}/_apis/build/builds/{self.build_id}?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/build/builds/{self.build_id}?api-version=7.1",
             attribute_name, attribute_value, {attribute_name: attribute_value}  # fmt: skip
         )
 
@@ -114,7 +114,7 @@ class Build(StateManagedResource):
     def get_all(cls, ado_client: "AdoClient") -> "list[Build]":
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/build/builds?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/build/builds?api-version=7.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -140,7 +140,7 @@ class Build(StateManagedResource):
     @staticmethod
     def delete_all_leases(ado_client: "AdoClient", build_id: str) -> None:
         leases_request = ado_client.session.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/builds/{build_id}/leases?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/build/builds/{build_id}/leases?api-version=7.1",
         )
         if leases_request.status_code != 200:
             if not ado_client.suppress_warnings:
@@ -149,7 +149,7 @@ class Build(StateManagedResource):
         leases = leases_request.json()["value"]
         for lease in leases:
             lease_response = ado_client.session.delete(
-                f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/retention/leases?ids={lease['leaseId']}&api-version=6.1",
+                f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/build/retention/leases?ids={lease['leaseId']}&api-version=6.1",
             )
             assert lease_response.status_code <= 204
 
@@ -157,7 +157,7 @@ class Build(StateManagedResource):
     def get_all_by_definition(cls, ado_client: "AdoClient", definition_id: str) -> "list[Build]":
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/build/builds?definitions={definition_id}&api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/build/builds?definitions={definition_id}&api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -209,7 +209,7 @@ class BuildDefinition(StateManagedResource):
     def get_by_id(cls, ado_client: "AdoClient", build_definition_id: str) -> "BuildDefinition":
         return super()._get_by_url(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/build/definitions/{build_definition_id}?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/build/definitions/{build_definition_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -218,10 +218,10 @@ class BuildDefinition(StateManagedResource):
         description: str, agent_pool_id: str, branch_name: str = "main",  # fmt: skip
     ) -> "BuildDefinition":
         payload = get_build_definition(name, repo_id, repo_name, path_to_pipeline, description,
-                                       ado_client.ado_project, agent_pool_id, branch_name)  # fmt: skip
+                                       ado_client.ado_project_name, agent_pool_id, branch_name)  # fmt: skip
         return super()._create(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/build/definitions?api-version=7.0",
+            f"/{ado_client.ado_project_name}/_apis/build/definitions?api-version=7.0",
             payload=payload,
         )  # type: ignore[return-value]
 
@@ -236,7 +236,7 @@ class BuildDefinition(StateManagedResource):
         )  # fmt: skip
         super()._update(
             ado_client, "put",
-            f"/{ado_client.ado_project}/_apis/build/definitions/{self.build_definition_id}?api-version=7.1",  # secretsSourceDefinitionRevision={self.revision}&
+            f"/{ado_client.ado_project_name}/_apis/build/definitions/{self.build_definition_id}?api-version=7.1",  # secretsSourceDefinitionRevision={self.revision}&
             attribute_name, attribute_value, payload  # fmt: skip
         )
         self.revision = str(int(self.revision) + 1)
@@ -247,7 +247,7 @@ class BuildDefinition(StateManagedResource):
             build.delete(ado_client)  # Can't remove from state because retention policies etc.
         return super()._delete_by_id(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/build/definitions/{resource_id}?forceDelete=true&api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/build/definitions/{resource_id}?forceDelete=true&api-version=7.1",
             resource_id,
         )
 
@@ -256,7 +256,7 @@ class BuildDefinition(StateManagedResource):
         """WARNING: This returns a list of references, which don't have variable groups and more data included."""
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/build/definitions?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/build/definitions?api-version=7.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -278,7 +278,7 @@ class BuildDefinition(StateManagedResource):
     def get_all_by_repo_id(cls, ado_client: "AdoClient", repo_id: str) -> "list[BuildDefinition]":
         return super()._get_all(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/build/definitions?repositoryId={repo_id}&repositoryType={'TfsGit'}&api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/build/definitions?repositoryId={repo_id}&repositoryType={'TfsGit'}&api-version=7.1",
         )  # type: ignore[return-value]
 
     @staticmethod
@@ -290,12 +290,12 @@ class BuildDefinition(StateManagedResource):
         TEMPLATE_PAYLOAD = {
             "contributionIds": ["ms.vss-build-web.pipeline-run-parameters-data-provider"], "dataProviderContext": {"properties": {
                     "pipelineId": int(definition_id), "sourceBranch": f"refs/heads/{branch_name}",
-                    "sourcePage": {"routeId": "ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project}}
+                    "sourcePage": {"routeId": "ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project_name}}
                 }
             },
         }  # fmt: skip
         template_parameters_request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_id}?api-version=7.0-preview",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_id}?api-version=7.0-preview",
             json=TEMPLATE_PAYLOAD,
         ).json()["dataProviders"]["ms.vss-build-web.pipeline-run-parameters-data-provider"]["templateParameters"]
         template_parameters = {x["name"]: x["default"] for x in template_parameters_request}
@@ -303,11 +303,11 @@ class BuildDefinition(StateManagedResource):
         PAYLOAD = {
             "contributionIds": ["ms.vss-build-web.pipeline-run-parameters-data-provider"], "dataProviderContext": {"properties": {
                 "pipelineId": definition_id, "sourceBranch": f"refs/heads/{branch_name}", "templateParameters": template_parameters,
-                "sourcePage": {"routeId": "ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project}},
+                "sourcePage": {"routeId": "ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project_name}},
             }},
         }  # fmt: skip
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_id}?api-version=7.0-preview",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_id}?api-version=7.0-preview",
             json=PAYLOAD,
         )
         assert request.status_code == 200

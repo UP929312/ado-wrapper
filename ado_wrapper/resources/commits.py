@@ -12,11 +12,13 @@ from ado_wrapper.utils import from_ado_date_string
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 
-ChangeType = Literal["edit", "add", "delete"]
+CommitChangeType = Literal["edit", "add", "delete"]
 FIRST_COMMIT_ID = "0000000000000000000000000000000000000000"  # I don't know why this works, but it does, please leave it.
 
 
-def get_commit_body_template(old_object_id: str | None, updates: dict[str, str], branch_name: str, change_type: ChangeType, commit_message: str) -> dict[str, str | dict | list]:  # type: ignore[type-arg]
+def get_commit_body_template(
+    old_object_id: str | None, updates: dict[str, str], branch_name: str, change_type: CommitChangeType, commit_message: str
+) -> dict[str, Any]:  # fmt: skip
     return {
         "refUpdates": [
             {
@@ -69,12 +71,12 @@ class Commit(StateManagedResource):
     def get_by_id(cls, ado_client: "AdoClient", repo_id: str, commit_id: str) -> "Commit":
         return super()._get_by_url(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits/{commit_id}?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/commits/{commit_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
     def create(
-        cls, ado_client: "AdoClient", repo_id: str, from_branch_name: str, to_branch_name: str, updates: dict[str, str], change_type: ChangeType, commit_message: str,  # fmt: skip
+        cls, ado_client: "AdoClient", repo_id: str, from_branch_name: str, to_branch_name: str, updates: dict[str, str], change_type: CommitChangeType, commit_message: str,  # fmt: skip
     ) -> "Commit":
         """Creates a commit in the given repository with the given updates and returns the commit object.
         Takes a branch to get the latest commit from (and to update), and a to_branch to fork to."""
@@ -92,7 +94,7 @@ class Commit(StateManagedResource):
         latest_commit_id = None if latest_commit is None else latest_commit.commit_id
         data = get_commit_body_template(latest_commit_id, updates, to_branch_name, change_type, commit_message)
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pushes?api-version=7.1",
             json=data,
         )
         if request.status_code == 400:
@@ -122,7 +124,7 @@ class Commit(StateManagedResource):
                        if branch_name is not None else "")  # fmt: skip
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/commits?{extra_query}api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/commits?{extra_query}api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -136,7 +138,7 @@ class Commit(StateManagedResource):
             }],
         }]  # fmt: skip
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pushes?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pushes?api-version=7.1",
             json=default_commit_body,
         )
         return cls.from_request_payload(request.json()["commits"][0])

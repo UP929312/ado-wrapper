@@ -69,7 +69,7 @@ class AuditLog:
         continuation_token = None
         while has_more:
             data = ado_client.session.get(
-                f"https://auditservice.dev.azure.com/{ado_client.ado_org}/_apis/audit/auditlog?batchSize=100000&startTime={to_iso(start_time)}&endTime={to_iso(end_time)}{f'&continuationToken={continuation_token}' if continuation_token else ''}&api-version=7.1-preview.1",
+                f"https://auditservice.dev.azure.com/{ado_client.ado_org_name}/_apis/audit/auditlog?batchSize=100000&startTime={to_iso(start_time)}&endTime={to_iso(end_time)}{f'&continuationToken={continuation_token}' if continuation_token else ''}&api-version=7.1-preview.1",
             )
             if data.status_code == 403:
                 raise InvalidPermissionsError("You have insufficient perms to use this function, it requires 'View audit log'")

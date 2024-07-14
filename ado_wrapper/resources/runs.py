@@ -54,7 +54,7 @@ class Run(StateManagedResource):
     def get_by_id(cls, ado_client: "AdoClient", pipeline_id: str, run_id: str) -> "Run":
         return super()._get_by_url(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/pipelines/{pipeline_id}/runs/{run_id}?api-version=7.1-preview.1",
+            f"/{ado_client.ado_project_name}/_apis/pipelines/{pipeline_id}/runs/{run_id}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -80,7 +80,7 @@ class Run(StateManagedResource):
         try:
             return super()._create(
                 ado_client,
-                f"/{ado_client.ado_project}/_apis/pipelines/{definition_id}/runs?api-version=6.1-preview.1",
+                f"/{ado_client.ado_project_name}/_apis/pipelines/{definition_id}/runs?api-version=6.1-preview.1",
                 PAYLOAD,
             )  # type: ignore[return-value]
         except ValueError as e:
@@ -100,7 +100,7 @@ class Run(StateManagedResource):
     def get_all_by_definition(cls, ado_client: "AdoClient", pipeline_id: str) -> "list[Run]":
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/pipelines/{pipeline_id}/runs?api-version=7.1-preview.1",
+            f"/{ado_client.ado_project_name}/_apis/pipelines/{pipeline_id}/runs?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -176,7 +176,7 @@ class Run(StateManagedResource):
     def get_run_stage_results(ado_client: "AdoClient", build_id: str) -> list["RunStageResult"]:
         """Fetches a list of Stages: Jobs for a Run, returning each job's status/result"""
         request = ado_client.session.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_build/results?view=results&buildId={build_id}&__rt=fps&__ver=2",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build/results?view=results&buildId={build_id}&__rt=fps&__ver=2",
         )
         assert request.status_code == 200
         data = request.json()["fps"]["dataProviders"]["data"].get("ms.vss-build-web.run-details-data-provider")

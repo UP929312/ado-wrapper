@@ -40,7 +40,7 @@ class VariableGroup(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> VariableGroup:
         return super()._get_by_url(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/distributedtask/variablegroups/{variable_group_id}?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/distributedtask/variablegroups/{variable_group_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -55,13 +55,13 @@ class VariableGroup(StateManagedResource):
                 {
                     "description": variable_group_description,
                     "name": variable_group_name,
-                    "projectReference": {"name": ado_client.ado_project},
+                    "projectReference": {"name": ado_client.ado_project_name},
                 }
             ],
         }
         return super()._create(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/distributedtask/variablegroups?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/distributedtask/variablegroups?api-version=7.1",
             payload,
         )  # type: ignore[return-value]
 
@@ -77,7 +77,7 @@ class VariableGroup(StateManagedResource):
     def update(self, ado_client: AdoClient, attribute_name: VariableGroupEditableAttribute, attribute_value: Any) -> None:
         # WARNING: This method works 80-90% of the time, for some reason, it fails randomly, ADO API is at fault.
         params = {
-            "variableGroupProjectReferences": [{"name": self.name, "projectReference": {"name": ado_client.ado_project}}],
+            "variableGroupProjectReferences": [{"name": self.name, "projectReference": {"name": ado_client.ado_project_name}}],
             "name": self.name, "variables": self.variables  # fmt: skip
         }
         super()._update(
@@ -90,7 +90,7 @@ class VariableGroup(StateManagedResource):
     def get_all(cls, ado_client: AdoClient) -> list[VariableGroup]:
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/distributedtask/variablegroups?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/distributedtask/variablegroups?api-version=7.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #

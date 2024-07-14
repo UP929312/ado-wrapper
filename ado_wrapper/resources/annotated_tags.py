@@ -35,14 +35,14 @@ class AnnotatedTag(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, repo_id: str, object_id: str) -> AnnotatedTag:
         return super()._get_by_url(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/annotatedtags/{object_id}?api-version=7.1-preview.1",
+            f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/annotatedtags/{object_id}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
     def create(cls, ado_client: AdoClient, repo_id: str, name: str, message: str, object_id: str) -> AnnotatedTag:
         return super()._create(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/annotatedTags?api-version=7.1-preview.1",
+            f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/annotatedTags?api-version=7.1-preview.1",
             payload={"name": name, "message": message, "taggedObject": {"objectId": object_id}},
         )  # type: ignore[return-value]
 
@@ -61,7 +61,7 @@ class AnnotatedTag(StateManagedResource):
             "newObjectId": "0000000000000000000000000000000000000000",
         }  # fmt: skip
         ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/refs?api-version=7.1-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/refs?api-version=7.1-preview.1",
             json=[PAYLOAD],
         )
         ado_client.state_manager.remove_resource_from_state(cls.__name__, object_id)  # type: ignore[arg-type]
@@ -74,7 +74,7 @@ class AnnotatedTag(StateManagedResource):
     def get_all_by_repo(cls, ado_client: AdoClient, repo_id: str) -> list[AnnotatedTag]:
         """Unofficial API. Also doesn't return a repo_id"""
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_git/{repo_id}/tags/?api-version=7.1-preview.1"
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{repo_id}/tags/?api-version=7.1-preview.1"
         )
         assert request.status_code == 200
         second_half = request.text.split("ms.vss-code-web.git-tags-data-provider")[1].removeprefix('":')

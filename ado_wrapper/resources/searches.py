@@ -39,7 +39,7 @@ class CodeSearch:
     @classmethod
     def get_by_search_string(
         cls, ado_client: AdoClient, search_text: str, result_count: int = 1000, sort_direction: SortDirections = "ASC"
-    ) -> Any:
+    ) -> list[CodeSearch]:
         assert 0 < result_count <= 1000
         body = {
             "$orderBy": [{"field": "filename", "sortOrder": sort_direction}],  # fmt: skip
@@ -51,7 +51,7 @@ class CodeSearch:
             # "$skip": 0,  # Probably add this later for getting the next page, it should probably be page_number * result_count
         }
         data = ado_client.session.post(
-            f"https://almsearch.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/search/codesearchresults?api-version=7.0",
+            f"https://almsearch.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/search/codesearchresults?api-version=7.0",
             json=body,
         ).json()["results"]
         return [cls.from_request_payload(x) for x in data]

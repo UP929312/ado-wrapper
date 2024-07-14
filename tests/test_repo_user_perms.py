@@ -1,6 +1,6 @@
 import pytest
 
-from ado_wrapper.resources.repo_user_permission import RepoUserPermissions, UserPermission, PermissionType, ActionType
+from ado_wrapper.resources.repo_user_permission import RepoUserPermissions, UserPermission, RepoPermissionType, RepoPermsActionType
 from tests.setup_client import setup_client, RepoContextManager, email, existing_user_name, existing_group_descriptor
 
 
@@ -51,7 +51,7 @@ class TestRepoUserPerms:
 
     def test_set_by_user_email_batch(self) -> None:
         with RepoContextManager(self.ado_client, "set-by-user-email-batch") as repo:
-            input_perms: dict[PermissionType, ActionType] = {
+            input_perms: dict[RepoPermissionType, RepoPermsActionType] = {
                 "manage_and_dismiss_alerts": "Allow",
                 "manage_settings": "Allow",
                 "view_alerts": "Allow",
@@ -77,7 +77,7 @@ class TestRepoUserPerms:
 
     def test_set_all_permissions_for_repo(self) -> None:
         with RepoContextManager(self.ado_client, "set-by-user-email-batch") as repo:
-            input_perms: dict[str, dict[PermissionType, ActionType]] = {
+            input_perms: dict[str, dict[RepoPermissionType, RepoPermsActionType]] = {
                 email: {
                     "manage_and_dismiss_alerts": "Allow",
                     "manage_settings": "Allow",
@@ -100,7 +100,7 @@ class TestRepoUserPerms:
             }
             RepoUserPermissions.set_all_permissions_for_repo(self.ado_client, repo.repo_id, input_perms)
             all_perms = RepoUserPermissions.get_all_by_repo_id(self.ado_client, repo.repo_id)
-            perms_formatted: dict[PermissionType, ActionType] = {
+            perms_formatted: dict[RepoPermissionType, RepoPermsActionType] = {
                 perm.programmatic_name: perm.permission_display_string for perm in all_perms[existing_user_name]  # type: ignore[misc]
             }
             assert perms_formatted == input_perms[email]

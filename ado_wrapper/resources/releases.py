@@ -108,7 +108,7 @@ class Release(StateManagedResource):
     def get_by_id(cls, ado_client: "AdoClient", release_id: str) -> "Release":
         return super()._get_by_url(
             ado_client,
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/releases/{release_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod  # TO-DO: Test
@@ -117,7 +117,7 @@ class Release(StateManagedResource):
     ) -> "Release":
         return super()._create(
             ado_client,
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/releases?api-version=7.1",
             {"definitionId": definition_id, "description": description},
         )  # type: ignore[return-value]
 
@@ -125,7 +125,7 @@ class Release(StateManagedResource):
     def delete_by_id(cls, ado_client: "AdoClient", release_id: str) -> None:
         return super()._delete_by_id(
             ado_client,
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases/{release_id}?api-version=7.1",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/releases/{release_id}?api-version=7.1",
             release_id,
         )
 
@@ -133,7 +133,7 @@ class Release(StateManagedResource):
     def get_all(cls, ado_client: "AdoClient", definition_id: str) -> "list[Release]":
         return super()._get_all(
             ado_client,
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/releases?api-version=7.1&definitionId={definition_id}",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/releases?api-version=7.1&definitionId={definition_id}",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -190,7 +190,7 @@ class ReleaseDefinition(StateManagedResource):
     def get_by_id(cls, ado_client: "AdoClient", release_definition_id: str) -> "ReleaseDefinition":
         return super()._get_by_url(
             ado_client,
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_definition_id}?api-version=7.0",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/definitions/{release_definition_id}?api-version=7.0",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -198,7 +198,7 @@ class ReleaseDefinition(StateManagedResource):
         """Takes a list of variable group ids to include, and an agent_pool_id"""
         return super()._create(
             ado_client,
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions?api-version=7.0",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/definitions?api-version=7.0",
             get_release_definition(ado_client, name, variable_group_ids, agent_pool_id),
         )  # type: ignore[return-value]
 
@@ -209,7 +209,7 @@ class ReleaseDefinition(StateManagedResource):
             release.delete(ado_client)
         return super()._delete_by_id(
             ado_client,
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{release_definition_id}?forceDelete=True&api-version=7.1",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/definitions/{release_definition_id}?forceDelete=True&api-version=7.1",
             release_definition_id,
         )
 
@@ -217,7 +217,7 @@ class ReleaseDefinition(StateManagedResource):
         self.revision = str(int(self.revision) + 1)
         return super()._update(
             ado_client, "put",
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions/{self.release_definition_id}?api-version=7.1",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/definitions/{self.release_definition_id}?api-version=7.1",
             attribute_name, attribute_value, self._raw_data,  # fmt: skip
         )
 
@@ -225,7 +225,7 @@ class ReleaseDefinition(StateManagedResource):
     def get_all(cls, ado_client: "AdoClient") -> "list[ReleaseDefinition]":
         return super()._get_all(
             ado_client,
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/release/definitions?api-version=7.1",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/definitions?api-version=7.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #

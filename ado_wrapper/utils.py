@@ -1,12 +1,15 @@
 from dataclasses import fields
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Literal, Callable, Type, overload, Any
+from typing import TYPE_CHECKING, Literal, Callable, TypeVar, Type, ParamSpec, overload, Any
 
 from ado_wrapper.errors import ConfigurationError, InvalidPermissionsError
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
     from ado_wrapper.state_managed_abc import StateManagedResource
+
+T = TypeVar("T")
+P = ParamSpec("P")
 
 
 @overload
@@ -77,7 +80,7 @@ def get_id_field_name(cls: type["StateManagedResource"]) -> str:
 def extract_id(obj: "StateManagedResource") -> str:
     """Extracts the id from a StateManagedResource object. The id field is defined by the "is_id_field" metadata."""
     id_field_name = get_id_field_name(obj.__class__)
-    return getattr(obj, id_field_name)  # type: ignore[no-any-return]
+    return str(getattr(obj, id_field_name))
 
 
 def get_editable_fields(cls: type["StateManagedResource"]) -> list[str]:
@@ -112,33 +115,35 @@ def recursively_find_or_none(data: dict[str, Any], indexes: list[str]) -> Any:
     return current
 
 
-def requires_perms(required_perms: list[str] | str) -> Callable:  # type: ignore[type-arg]
+def requires_perms(required_perms: list[str] | str) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """This wraps a call (with ado_client as second arg) with a list of required permissions,
     will raise an error if the client doesn't have them"""
 
-    def decorator(func: Callable) -> Callable:  # type: ignore[type-arg]
-        def wrapper(cls: Any, ado_client: "AdoClient", *args: Any, **kwargs: Any) -> Type | None:  # type: ignore[type-arg]
+    def decorator(func: Callable[P, T]) -> Callable[P, T]:
+        def wrapper(cls: Type[Any], ado_client: "AdoClient", *args: P.args, **kwargs: P.kwargs) -> T:
             if ado_client.perms is not None:
                 for required_perm_name in required_perms if isinstance(required_perms, list) else [required_perms]:
                     if required_perm_name not in [f"{x.group}/{x.name}" for x in ado_client.perms if x.has_permission]:
                         raise InvalidPermissionsError(f"Error! The client tried to make a call to a service with invalid permissions! Didn't have {required_perm_name}")  # fmt: skip
             elif not ado_client.suppress_warnings:
                 print("Warning, could not verify the authenticated PAT has the right perms.")
-            return func(cls, ado_client, *args, **kwargs)  # type: ignore[no-any-return]
+            return func(cls, ado_client, *args, **kwargs)  # type: ignore[arg-type]
 
-        wrapper.__name__ = func.__name__  # Also copies the name and docstring of the original function to preserve metadata.
-        wrapper.__doc__ = func.__doc__
-        return wrapper
+        return wrapper  # type: ignore[return-value]
 
     return decorator
 
 
-def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this to avoid circular imports
+# ============================================================================================== #
+
+
+def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this whole func to avoid circular imports
     """This returns a mapping of resource name (str) to the class type of the resource. This is used to dynamically create instances of resources."""
     from ado_wrapper.resources import (  # type: ignore[attr-defined]  # pylint: disable=possibly-unused-variable  # noqa: F401
         AgentPool, AnnotatedTag, AuditLog, Branch, Build, BuildDefinition, Commit, Environment, Group, MergePolicies,
-        MergeBranchPolicy, MergePolicyDefaultReviewer, Permission, Project, PullRequest, Release, ReleaseDefinition, Repo, Run, BuildRepository,
-        Team, AdoUser, Member, ServiceEndpoint, Reviewer, VariableGroup,  # fmt: skip
+        MergeBranchPolicy, MergePolicyDefaultReviewer, Organisation, PersonalAccessToken, Permission, Project,
+        PullRequest, Release, ReleaseDefinition, Repo, Run, BuildRepository, Team, AdoUser, Member, ServiceEndpoint,
+        Reviewer, VariableGroup,  # fmt: skip
     )
 
     return locals()
@@ -146,6 +151,7 @@ def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We d
 
 ResourceType = Literal[
     "AgentPool", "AnnotatedTag", "AuditLog", "Branch", "Build", "BuildDefinition", "Commit", "Environment", "Group", "MergePolicies",
-    "MergeBranchPolicy", "MergePolicyDefaultReviewer", "Permission", "Project", "PullRequest", "Release", "ReleaseDefinition",
-    "Repo", "Run", "Team", "AdoUser", "Member", "ServiceEndpoint", "Reviewer", "VariableGroup"  # fmt: skip
+    "MergeBranchPolicy", "MergePolicyDefaultReviewer", "Organisation", "PersonalAccessToken", "Permission", "Project",
+    "PullRequest", "Release", "ReleaseDefinition", "Repo", "Run", "Team", "AdoUser", "Member", "ServiceEndpoint",
+    "Reviewer", "VariableGroup"  # fmt: skip
 ]

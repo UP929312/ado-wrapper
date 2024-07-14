@@ -2,7 +2,7 @@ from dataclasses import dataclass, fields
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Literal
 
-from ado_wrapper.plan_resources.plan_resource import PlannedStateManagedResource
+# from ado_wrapper.plan_resources.plan_resource import PlannedStateManagedResource
 from ado_wrapper.errors import DeletionFailed, ResourceAlreadyExists, ResourceNotFound, UpdateFailed, InvalidPermissionsError  # fmt: skip
 from ado_wrapper.utils import extract_id, get_internal_field_names, get_resource_variables
 
@@ -63,7 +63,7 @@ class StateManagedResource:
     @classmethod
     def _get_by_url(cls, ado_client: "AdoClient", url: str) -> "StateManagedResource":
         if not url.startswith("https://"):
-            url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
+            url = f"https://dev.azure.com/{ado_client.ado_org_name}{url}"
         request = ado_client.session.get(url)
         if request.status_code == 401:
             raise InvalidPermissionsError(f"You do not have permission to fetch {cls.__name__}(s)!")
@@ -78,16 +78,16 @@ class StateManagedResource:
     @classmethod
     def _create(
         cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None, refetch: bool = False
-    ) -> "StateManagedResource | PlannedStateManagedResource":
+    ) -> "StateManagedResource":  # PlannedStateManagedResource
         """When creating, often the response doesn't contain all the data, refetching does a .get_by_id() after creation."""
         # If it already exists:
         # if cls.get_by_id(ado_client, extract_unique_name(payload)):
         #     raise ResourceAlreadyExists(f"The {cls.__name__} with that identifier already exist!")
         #     <update the resource>
-        if ado_client.plan_mode:
-            return PlannedStateManagedResource.create(cls, ado_client, url, payload)
+        # if ado_client.plan_mode:
+        #     return PlannedStateManagedResource.create(cls, ado_client, url, payload)
         if not url.startswith("https://"):
-            url = f"https://dev.azure.com/{ado_client.ado_org}" + url
+            url = f"https://dev.azure.com/{ado_client.ado_org_name}" + url
         request = ado_client.session.post(url, json=payload or {})  # Create a brand new dict
         if request.status_code >= 300:
             if request.status_code in [401, 403]:
@@ -105,7 +105,7 @@ class StateManagedResource:
     def _delete_by_id(cls, ado_client: "AdoClient", url: str, resource_id: str) -> None:
         """Deletes an object by its id. The id is passed so it can be removed from state"""
         if not url.startswith("https://"):
-            url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
+            url = f"https://dev.azure.com/{ado_client.ado_org_name}{url}"
         request = ado_client.session.delete(url)
         if request.status_code != 204:
             if request.status_code == 404:
@@ -125,11 +125,11 @@ class StateManagedResource:
             raise ValueError(f"The attribute `{attribute_name}` is not editable!  Editable attributes are: {list(interal_names.keys())}")
         params |= {interal_names[attribute_name]: attribute_value}
 
-        if ado_client.plan_mode:
-            return PlannedStateManagedResource.update(self, ado_client, url, attribute_name, attribute_value, params)
+        # if ado_client.plan_mode:
+        #    return PlannedStateManagedResource.update(self, ado_client, url, attribute_name, attribute_value, params)
 
         if not url.startswith("https://"):
-            url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
+            url = f"https://dev.azure.com/{ado_client.ado_org_name}{url}"
         request = ado_client.session.request(update_action, url, json=params)
         if request.status_code != 200:
             raise UpdateFailed(
@@ -144,7 +144,7 @@ class StateManagedResource:
     @classmethod
     def _get_all(cls, ado_client: "AdoClient", url: str) -> list["StateManagedResource"]:
         if not url.startswith("https://"):
-            url = f"https://dev.azure.com/{ado_client.ado_org}{url}"
+            url = f"https://dev.azure.com/{ado_client.ado_org_name}{url}"
         request = ado_client.session.get(url)
         if request.status_code == 401:
             raise InvalidPermissionsError(f"You do not have permission to get all {cls.__name__}(s)!")

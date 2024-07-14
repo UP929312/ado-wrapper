@@ -8,7 +8,9 @@ from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.environment import Environment, PipelineAuthorisation
 from ado_wrapper.resources.groups import Group
 from ado_wrapper.resources.merge_policies import MergeBranchPolicy, MergePolicies, MergePolicyDefaultReviewer  # fmt: skip
+from ado_wrapper.resources.organisations import Organisation
 from ado_wrapper.resources.permissions import Permission
+from ado_wrapper.resources.personal_access_tokens import PersonalAccessToken
 from ado_wrapper.resources.projects import Project
 from ado_wrapper.resources.pull_requests import PullRequest
 from ado_wrapper.resources.releases import Release, ReleaseDefinition

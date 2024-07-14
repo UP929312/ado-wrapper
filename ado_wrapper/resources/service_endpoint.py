@@ -48,7 +48,7 @@ class ServiceEndpoint(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> ServiceEndpoint:
         return super()._get_by_url(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/serviceendpoint/endpoints/{repo_id}",
+            f"/{ado_client.ado_project_name}/_apis/serviceendpoint/endpoints/{repo_id}",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -91,7 +91,7 @@ class ServiceEndpoint(StateManagedResource):
     def get_all(cls, ado_client: AdoClient) -> list[ServiceEndpoint]:
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/serviceendpoint/endpoints?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/serviceendpoint/endpoints?api-version=7.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -102,7 +102,7 @@ class ServiceEndpoint(StateManagedResource):
     def get_by_name(cls, ado_client: AdoClient, name: str) -> ServiceEndpoint:
         return super()._get_by_url(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/serviceendpoint/endpoints?endpointNames={name}&api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/serviceendpoint/endpoints?endpointNames={name}&api-version=7.1",
         )  # type: ignore[return-value]
 
     def update_pipeline_perms(self, ado_client: AdoClient, pipeline_id: str | Literal["all"]) -> dict[str, Any]:
@@ -116,6 +116,6 @@ class ServiceEndpoint(StateManagedResource):
             "allPipelines": {"authorized": True, "authorizedBy": "null", "authorizedOn": "null"},
         }
         return ado_client.session.patch(  # type: ignore[no-any-return]
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/pipelines/pipelinePermissions/endpoint/{self.service_endpoint_id}?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/pipelinePermissions/endpoint/{self.service_endpoint_id}?api-version=7.1",
             json=PAYLOAD,
         ).json()

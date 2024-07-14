@@ -80,7 +80,7 @@ class PullRequest(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, pull_request_id: str) -> PullRequest:
         return super()._get_by_url(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/git/pullrequests/{pull_request_id}?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/git/pullrequests/{pull_request_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -94,7 +94,7 @@ class PullRequest(StateManagedResource):
         payload = {"sourceRefName": f"refs/heads/{from_branch_name}", "targetRefName": "refs/heads/main", "title": pull_request_title,
                    "description": pull_request_description, "isDraft": is_draft}  # fmt: skip
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullrequests?api-version=7.1",
             json=payload,
         ).json()
         if request.get("message", "").startswith("TF401398"):
@@ -112,7 +112,7 @@ class PullRequest(StateManagedResource):
     def update(self, ado_client: AdoClient, attribute_name: PullRequestEditableAttribute, attribute_value: Any) -> None:
         return super()._update(
             ado_client, "patch",
-            f"/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}?api-version=7.1",
             attribute_name, attribute_value, {}  # fmt: skip
         )
 
@@ -120,7 +120,7 @@ class PullRequest(StateManagedResource):
     def get_all(cls, ado_client: AdoClient, status: PullRequestStatus = "all") -> list[PullRequest]:
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project}/_apis/git/pullrequests?searchCriteria.status={status}&api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/git/pullrequests?searchCriteria.status={status}&api-version=7.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -134,7 +134,7 @@ class PullRequest(StateManagedResource):
     def add_reviewer_static(ado_client: AdoClient, repo_id: str, pull_request_id: str, reviewer_id: str) -> None:
         """Copy of the add_reviewer method, but static, i.e. if you have the repo id and pr id, you don't need to fetch them again"""
         request = ado_client.session.put(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/reviewers/{reviewer_id}?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/reviewers/{reviewer_id}?api-version=7.1",
             json={"vote": "0", "isRequired": "true"},
         )
         assert request.status_code < 300
@@ -150,7 +150,7 @@ class PullRequest(StateManagedResource):
 
     def get_reviewers(self, ado_client: AdoClient) -> list[Member]:
         request = ado_client.session.get(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}/reviewers?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}/reviewers?api-version=7.1",
         ).json()
         return [Member.from_request_payload(reviewer) for reviewer in request["value"]]
 
@@ -159,7 +159,7 @@ class PullRequest(StateManagedResource):
         try:
             return super()._get_all(
                 ado_client,
-                f"/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
+                f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
             )  # type: ignore[return-value]
         except KeyError:
             if not ado_client.suppress_warnings:
@@ -176,7 +176,7 @@ class PullRequest(StateManagedResource):
             {"queryIds": ["AssignedToMyTeams"], "sourcePage": {"routeId":"ms.vss-code-web.my-pullrequests-me-page-route"}}}
         }  # fmt: skip
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview",
             json=PAYLOAD,
         ).json()
         pr_payloads = request["dataProviders"]["ms.vss-code-web.prs-list-data-provider"]["pullRequests"].values()
@@ -197,7 +197,7 @@ class PullRequest(StateManagedResource):
         requires_initialisation(ado_client)
         # ==========================================================================================================================================
         # GET REQUEST VERIFICATION TOKEN
-        request = ado_client.session.get(f"https://dev.azure.com/{ado_client.ado_org}/_pulls")
+        request = ado_client.session.get(f"https://dev.azure.com/{ado_client.ado_org_name}/_pulls")
         request_verification_token = request.text.split("__RequestVerificationToken")[1].removeprefix('" value="').split('"')[0]
         # ==========================================================================================================================================
         # Configure Payload
@@ -229,7 +229,7 @@ class PullRequest(StateManagedResource):
         payload_with_token = {"preferences": json.dumps({"pullRequestListCustomCriteria": json.dumps(combined_payloads)}),  # Double encoding... gross
                               "__RequestVerificationToken": request_verification_token}  # fmt: skip
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/_api/_versioncontrol/updateUserPreferences?__v=5",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_api/_versioncontrol/updateUserPreferences?__v=5",
             data=payload_with_token,
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
@@ -248,7 +248,7 @@ class PullRequest(StateManagedResource):
 
     def post_comment(self, ado_client: AdoClient, content: str) -> PullRequestComment:
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}/threads?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}/threads?api-version=7.1",
             json={"comments": [{"commentType": 1, "content": content}], "status": "1"},
         ).json()
         return PullRequestComment.from_request_payload(request["comments"][0])
@@ -272,14 +272,14 @@ class PullRequestCommentThread(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str, thread_id: str) -> PullRequestCommentThread:
         return super()._get_by_url(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads/{thread_id}?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads/{thread_id}?api-version=7.1",
         )  # type: ignore[return-value]
 
     @classmethod
     def create(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str, content: str) -> PullRequest:
         return super()._create(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads?api-version=7.1",
             {"comments": [{"commentType": 1, "content": content}]},
         )  # type: ignore[return-value]
 
@@ -289,7 +289,7 @@ class PullRequestCommentThread(StateManagedResource):
     def delete_by_id(self, ado_client: AdoClient, repo_id: str, pull_request_id: str, thread_id: str) -> None:
         return super()._delete_by_id(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads/{thread_id}?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads/{thread_id}?api-version=7.1",
             thread_id,
         )
 
@@ -297,7 +297,7 @@ class PullRequestCommentThread(StateManagedResource):
     def get_all(cls, ado_client: AdoClient, repo_id: str, pull_request_id: str) -> list[PullRequestCommentThread]:
         return super()._get_all(
             ado_client,
-            f"https://dev.azure.com/{ado_client.ado_org}/{ado_client.ado_project}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads?api-version=7.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads?api-version=7.1",
         )  # type: ignore[return-value]
 
 

@@ -67,6 +67,8 @@ class StateManager:
 
     def remove_resource_from_state(self, resource_type: ResourceType, resource_id: str) -> None:
         all_states = self.load_state()
+        if resource_type not in all_states["resources"]:
+            return self.write_state_file(all_states)
         all_states["resources"][resource_type] = {k: v for k, v in all_states["resources"][resource_type].items() if k != resource_id}
         return self.write_state_file(all_states)
 

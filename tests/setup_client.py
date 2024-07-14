@@ -5,13 +5,13 @@ from ado_wrapper.resources.repo import Repo
 
 with open("tests/test_data.txt", encoding="utf-8") as test_data:
     (
-        ado_org, ado_project, email, pat_token, existing_team_name, existing_team_id, existing_user_name,
+        ado_org_name, ado_project, email, pat_token, existing_team_name, existing_team_id, existing_user_name,
         existing_user_email, existing_user_id, existing_user_descriptor, existing_agent_pool_id,
-        existing_project_name, existing_project_id, existing_group_descriptor, existing_group_name,
+        existing_project_name, existing_project_id, existing_group_descriptor,
         test_search_string
     ) = test_data.read().splitlines()  # fmt: skip
 
-ado_client = AdoClient(email, pat_token, ado_org, ado_project, "tests/test_state.state")
+ado_client = AdoClient(email, pat_token, ado_org_name, ado_project, "tests/test_state.state")
 
 
 def setup_client() -> AdoClient:

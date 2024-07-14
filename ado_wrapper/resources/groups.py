@@ -29,7 +29,7 @@ class Group(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, group_descriptor: str) -> Group:
         return super()._get_by_url(
             ado_client,  # Preview required
-            f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/groups/{group_descriptor}?api-version=7.1-preview.1",
+            f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/graph/groups/{group_descriptor}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -44,7 +44,7 @@ class Group(StateManagedResource):
     def get_all(cls, ado_client: AdoClient) -> list[Group]:
         return super()._get_all(
             ado_client,  # Preview required
-            f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/groups?api-version=7.1-preview.1",
+            f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/graph/groups?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -63,7 +63,7 @@ class Group(StateManagedResource):
 
     # def get_members(self, ado_client: AdoClient) -> list["GroupMember"]:
     #     request = ado_client.session.get(
-    #         f"https://dev.azure.com/{ado_client.ado_org}/_apis/projects/{ado_client.ado_project}/groups/{self.group_id}/members?api-version=7.1-preview.2",
+    #         f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/projects/{ado_client.ado_project_name}/groups/{self.group_id}/members?api-version=7.1-preview.2",
     #     ).json()
     #     rint(request)
     #     # return [GroupMember.from_request_payload(member) for member in request]

@@ -47,7 +47,7 @@ class AdoUser(StateManagedResource):
     def get_by_id(cls, ado_client: AdoClient, descriptor_id: str) -> AdoUser:
         return super()._get_by_url(
             ado_client,  # Preview required
-            f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users/{descriptor_id}?api-version=7.1-preview.1",
+            f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/graph/users/{descriptor_id}?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     @classmethod
@@ -62,7 +62,7 @@ class AdoUser(StateManagedResource):
     def get_all(cls, ado_client: AdoClient) -> list[AdoUser]:
         return super()._get_all(
             ado_client,  # Preview required
-            f"https://vssps.dev.azure.com/{ado_client.ado_org}/_apis/graph/users?api-version=7.1-preview.1",
+            f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/graph/users?api-version=7.1-preview.1",
         )  # type: ignore[return-value]
 
     # ============ End of requirement set by all state managed resources ================== #

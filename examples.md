@@ -8,9 +8,9 @@ All these examples assume an already created AdoClient, perhaps similar to this:
 from ado_wrapper import AdoClient
 
 with open("credentials.txt", "r") as file:
-    email, ado_access_token, ado_org, ado_project = file.read().split("\n")
+    email, ado_access_token, ado_org_name, ado_project = file.read().split("\n")
 
-ado_client = AdoClient(email, ado_access_token, ado_org, ado_project)
+ado_client = AdoClient(email, ado_access_token, ado_org_name, ado_project)
 ```
 
 -----
@@ -204,6 +204,9 @@ builds = BuildDefinition.get_all_builds_by_definition(ado_client)
 # Get All By Repo Id
 build_definitions = BuildDefinition.get_all_by_repo_id(ado_client, <repo_id>)
 
+# Get All Stages
+build_definition_steps = BuildDefinition.get_all_stages(ado_client, <definition_id>, <branch_name>)
+
 # Get By Id
 build_definition = BuildDefinition.get_by_id(ado_client, <build_definition_id>)
 
@@ -215,6 +218,16 @@ build = BuildDefinition.get_latest_build_by_definition(ado_client)
 
 # Update
 build_definition.update(ado_client, <attribute_name>, <attribute_value>)
+```
+</details>
+
+-----
+# CodeSearch
+<details>
+
+```py
+# Get By Search String
+any = CodeSearch.get_by_search_string(ado_client, <search_text>, <result_count>, <sort_direction>)
 ```
 </details>
 
@@ -674,7 +687,7 @@ member = Reviewer.get_by_id(ado_client, <member_id>)
 
 ```py
 # Create
-run = Run.create(ado_client, <definition_id>, <template_variables>, <source_branch>)
+run = Run.create(ado_client, <definition_id>, <template_parameters>, <run_variables>, <branch_name>, <stages_to_run>)
 
 # Delete
 run.delete(ado_client)
@@ -691,6 +704,9 @@ run = Run.get_by_id(ado_client, <pipeline_id>, <run_id>)
 # Get Latest
 run = Run.get_latest(ado_client, <definition_id>)
 
+# Get Run Stage Results
+run_stage_results = Run.get_run_stage_results(ado_client, <build_id>)
+
 # Run All And Capture Results Sequentially
 dictionary = Run.run_all_and_capture_results_sequentially(ado_client, <data>, <max_timeout_seconds>)
 
@@ -698,20 +714,10 @@ dictionary = Run.run_all_and_capture_results_sequentially(ado_client, <data>, <m
 dictionary = Run.run_all_and_capture_results_simultaneously(ado_client, <data>, <max_timeout_seconds>)
 
 # Run And Wait Until Completion
-run = Run.run_and_wait_until_completion(ado_client, <definition_id>, <template_variables>, <branch_name>, <max_timeout_seconds>)
+run = Run.run_and_wait_until_completion(ado_client, <definition_id>, <template_parameters>, <run_variables>, <branch_name>, <stages_to_run>, <max_timeout_seconds>)
 
 # Update
 run.update(ado_client, <attribute_name>, <attribute_value>)
-```
-</details>
-
------
-# Search
-<details>
-
-```py
-# Get By Search String
-any = Search.get_by_search_string(ado_client, <search_text>, <result_count>, <sort_direction>)
 ```
 </details>
 

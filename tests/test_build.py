@@ -5,12 +5,7 @@ import pytest
 from ado_wrapper.resources.builds import Build, BuildDefinition
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.users import Member
-from tests.setup_client import (
-    RepoContextManager,
-    email,
-    existing_agent_pool_id,
-    setup_client,
-)
+from tests.setup_client import RepoContextManager, email, existing_agent_pool_id, setup_client  # fmt: skip
 
 BUILD_YAML_FILE = """---
 trigger:
@@ -55,7 +50,7 @@ class TestBuild:
         with RepoContextManager(self.ado_client, "create-delete-builds") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
-                self.ado_client, "ado_wrapper-test-buildfor-create-delete-build", repo.repo_id, repo.name, "build.yaml",
+                self.ado_client, "ado_wrapper-test-build-for-create-delete-build", repo.repo_id, repo.name, "build.yaml",
                 f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "my-branch",  # fmt: skip
             )
             build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")

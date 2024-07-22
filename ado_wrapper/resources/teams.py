@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ado_wrapper.resources.users import TeamMember
 from ado_wrapper.state_managed_abc import StateManagedResource
@@ -24,47 +22,44 @@ class Team(StateManagedResource):
         return f"{self.name} ({self.team_id}" + (", ".join([str(member) for member in self.team_members])) + ")"
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, str]) -> Team:
+    def from_request_payload(cls, data: dict[str, Any]) -> "Team":
         return cls(data["id"], data["name"], data.get("description", ""), [])
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, team_id: str) -> Team:
+    def get_by_id(cls, ado_client: "AdoClient", team_id: str) -> "Team":
         resource: Team = super()._get_by_url(
             ado_client,
             f"/_apis/projects/{ado_client.ado_project_name}/teams/{team_id}?$expandIdentity={True}&api-version=7.1-preview.1",
-        )  # type: ignore[assignment]
+        )
         resource.team_members = resource.get_members(ado_client)
         return resource
 
     @classmethod
-    def create(cls, ado_client: AdoClient, name: str, description: str) -> Team:
+    def create(cls, ado_client: "AdoClient", name: str, description: str) -> "Team":
         raise NotImplementedError
         # request = ado_client.session.post(f"/_apis/teams?api-version=7.1", json={"name": name, "description": description}).json()
         # return cls.from_request_payload(request)
 
-    def update(self, ado_client: AdoClient, attribute_name: str, attribute_value: str) -> None:
+    @classmethod
+    def delete_by_id(cls, ado_client: "AdoClient", team_id: str) -> None:
         raise NotImplementedError
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, team_id: str) -> None:
-        raise NotImplementedError
-
-    @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list[Team]:
+    def get_all(cls, ado_client: "AdoClient") -> list["Team"]:
         return super()._get_all(
             ado_client,
             "/_apis/teams?api-version=7.1-preview.2",
-        )  # type: ignore[return-value]
+        )  # pyright: ignore[reportReturnType]
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, team_name: str) -> Team | None:
-        return cls._get_by_abstract_filter(ado_client, lambda team: team.name == team_name)  # type: ignore[return-value, attr-defined]
+    def get_by_name(cls, ado_client: "AdoClient", team_name: str) -> "Team | None":
+        return cls._get_by_abstract_filter(ado_client, lambda team: team.name == team_name)
 
-    def get_members(self, ado_client: AdoClient) -> list[TeamMember]:
+    def get_members(self, ado_client: "AdoClient") -> list[TeamMember]:
         request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/projects/{ado_client.ado_project_name}/teams/{self.team_id}/members?api-version=7.1-preview.2",
         ).json()
@@ -75,7 +70,7 @@ class Team(StateManagedResource):
         return team_members
 
     # @staticmethod
-    # def _recursively_extract_teams(ado_client: AdoClient, team_or_member: Team | TeamMember):
+    # def _recursively_extract_teams(ado_client: "AdoClient", team_or_member: Team | TeamMember):
     #     if isinstance(team_or_member, Team):
     #         rint("Found a team!")
     #         team_or_member.get_members(ado_client)
@@ -84,12 +79,12 @@ class Team(StateManagedResource):
     #     return team_or_member
 
     # @classmethod
-    # def get_all_teams_recursively(cls, ado_client: AdoClient) -> list["TeamMember | Team"]:
+    # def get_all_teams_recursively(cls, ado_client: "AdoClient") -> list["TeamMember | Team"]:
     #     all_teams = [
     #         cls._recursively_extract_teams(ado_client, team)
     #         for team in cls.get_all(ado_client)
     #     ]
-    #     return all_teams  # type: ignore[return-value]
+    #     return all_teams
 
     # """
     # The output should be as follows:

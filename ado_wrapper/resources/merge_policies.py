@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
@@ -29,7 +27,7 @@ limit_merge_type_mapping = {
 }
 
 
-def _get_type_id(ado_client: AdoClient, action_type: str) -> str:
+def _get_type_id(ado_client: "AdoClient", action_type: str) -> str:
     """Used internally to get a specific update request ID"""
     request = ado_client.session.get(
         f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/policy/types?api-version=6.0"
@@ -47,11 +45,11 @@ class MergePolicyDefaultReviewer(StateManagedResource):
     is_required: bool
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> StateManagedResource:
+    def from_request_payload(cls, data: dict[str, Any]) -> "MergePolicyDefaultReviewer":
         return cls(data["id"], data["settings"]["requiredReviewerIds"][0], data["isBlocking"])
 
     @staticmethod
-    def get_default_reviewers(ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list[Reviewer]:
+    def get_default_reviewers(ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> list[Reviewer]:
         requires_initialisation(ado_client)
         payload = {"contributionIds": ["ms.vss-code-web.branch-policies-data-provider"],
                    "dataProviderContext": {"properties": {"projectId": ado_client.ado_project_id, "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}"}}}  # fmt: skip
@@ -79,7 +77,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
         return all_reviewers
 
     @classmethod
-    def add_default_reviewer(cls, ado_client: AdoClient, repo_id: str, reviewer_id: str, is_required: bool, branch_name: str = "main") -> None:  # fmt: skip
+    def add_default_reviewer(cls, ado_client: "AdoClient", repo_id: str, reviewer_id: str, is_required: bool, branch_name: str = "main") -> None:  # fmt: skip
         """If the reviewer is a group, use the Group.origin_id attribute, for users, use their regular user id"""
         if reviewer_id in [x.member_id for x in cls.get_default_reviewers(ado_client, repo_id, branch_name)]:
             raise ValueError("Reviewer already exists! To update, please remove the reviewer first.")
@@ -101,7 +99,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
         assert request.status_code == 200, f"Error setting branch policy: {request.text}"
 
     @staticmethod
-    def remove_default_reviewer(ado_client: AdoClient, repo_id: str, reviewer_id: str, branch_name: str = "main") -> None:
+    def remove_default_reviewer(ado_client: "AdoClient", repo_id: str, reviewer_id: str, branch_name: str = "main") -> None:
         policies = MergePolicies.get_default_reviewers_by_repo_id(ado_client, repo_id, branch_name)
         policy_id = [x for x in policies if x.required_reviewer_id == reviewer_id][0].policy_id if policies is not None else None  # fmt: skip
         if not policy_id:
@@ -126,7 +124,7 @@ class MergeBranchPolicy(StateManagedResource):
     is_inherited: bool = field(default=False, repr=False)
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any], is_inherited: bool) -> MergeBranchPolicy:  # type: ignore[override]
+    def from_request_payload(cls, data: dict[str, Any], is_inherited: bool) -> "MergeBranchPolicy":  # type: ignore[override]  # <- is_inherited
         settings = data["settings"]
         when_new_changes_are_pushed = merge_complete_name_mapping[
             ([x for x in merge_complete_name_mapping if settings.get(x, False)] or ["do_nothing"])[0]
@@ -140,13 +138,13 @@ class MergeBranchPolicy(StateManagedResource):
         )
 
     @classmethod
-    def get_branch_policy(cls, ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> MergeBranchPolicy | None:
+    def get_branch_policy(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "MergeBranchPolicy | None":
         """Gets the latest merge requirements for a pull request."""
         policy = MergePolicies.get_all_branch_policies_by_repo_id(ado_client, repo_id, branch_name)
         return policy[0] if policy else None
 
     @staticmethod
-    def set_branch_policy(ado_client: AdoClient, repo_id: str, minimum_approver_count: int,
+    def set_branch_policy(ado_client: "AdoClient", repo_id: str, minimum_approver_count: int,
                           creator_vote_counts: bool, prohibit_last_pushers_vote: bool, allow_completion_with_rejects: bool,
                           when_new_changes_are_pushed: WhenChangesArePushed, branch_name: str = "main") -> None:  # fmt: skip
         """Sets the perms for a pull request, can also be used as a "update" function."""
@@ -179,10 +177,10 @@ class MergeBranchPolicy(StateManagedResource):
 @dataclass
 class MergePolicies(StateManagedResource):
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> list[MergePolicyDefaultReviewer | MergeBranchPolicy] | None:  # type: ignore[override]
+    def from_request_payload(cls, data: dict[str, Any]) -> "list[MergePolicyDefaultReviewer | MergeBranchPolicy] | None":  # type: ignore[override]
         """Used internally to get a list of all policies."""
         policy_groups: dict[str, Any] = data["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["policyGroups"] or {}  # fmt: skip
-        all_policies = []
+        all_policies: list[MergePolicyDefaultReviewer | MergeBranchPolicy] = []
         for policy_group in policy_groups.values():
             for policy in policy_group["currentScopePolicies"] or []:  # If it's None, don't loop
                 settings = policy["settings"]
@@ -209,10 +207,10 @@ class MergePolicies(StateManagedResource):
             # for inherited_policy in policy_group["inheritedPolicies"] or []:
             #     all_policies.append(MergeBranchPolicy.from_request_payload(inherited_policy, True))
 
-        return all_policies or None  # type: ignore[return-value]
+        return all_policies or None
 
     @classmethod
-    def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list[MergePolicyDefaultReviewer | MergeBranchPolicy] | None:  # fmt: skip
+    def get_all_by_repo_id(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "list[MergePolicyDefaultReviewer | MergeBranchPolicy] | None":  # fmt: skip
         payload = {"contributionIds": ["ms.vss-code-web.branch-policies-data-provider"], "dataProviderContext": {"properties": {
             "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}", "sourcePage": {"routeValues": {"project": ado_client.ado_project_name}}}}}  # fmt: skip
         request = ado_client.session.post(
@@ -222,7 +220,7 @@ class MergePolicies(StateManagedResource):
         return cls.from_request_payload(request)
 
     @classmethod
-    def get_all_branch_policies_by_repo_id(cls, ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list[MergeBranchPolicy] | None:  # fmt: skip
+    def get_all_branch_policies_by_repo_id(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "list[MergeBranchPolicy] | None":  # fmt: skip
         policies = cls.get_all_by_repo_id(ado_client, repo_id, branch_name)
         return (
             sorted([x for x in policies if isinstance(x, MergeBranchPolicy)], key=lambda x: x.created_date, reverse=True)  # pylint: disable=not-an-iterable
@@ -230,7 +228,7 @@ class MergePolicies(StateManagedResource):
         )  # fmt: skip
 
     @classmethod
-    def get_default_reviewers_by_repo_id(cls, ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list[MergePolicyDefaultReviewer] | None:  # fmt: skip
+    def get_default_reviewers_by_repo_id(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "list[MergePolicyDefaultReviewer] | None":  # fmt: skip
         policies = cls.get_all_by_repo_id(ado_client, repo_id, branch_name)
         return (
             [x for x in policies if isinstance(x, MergePolicyDefaultReviewer)]  # pylint: disable=not-an-iterable
@@ -240,21 +238,21 @@ class MergePolicies(StateManagedResource):
 
     # ================== Default Reviewers ================== #
     @staticmethod
-    def add_default_reviewer(ado_client: AdoClient, repo_id: str, reviewer_id: str, is_required: bool, branch_name: str = "main") -> None:
+    def add_default_reviewer(ado_client: "AdoClient", repo_id: str, reviewer_id: str, is_required: bool, branch_name: str = "main") -> None:
         """If the reviewer is a group, use the Group.origin_id attribute, for users, use their regular user id"""
         return MergePolicyDefaultReviewer.add_default_reviewer(ado_client, repo_id, reviewer_id, is_required, branch_name)
 
     @staticmethod
-    def get_default_reviewers(ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> list[Reviewer]:
+    def get_default_reviewers(ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> list[Reviewer]:
         return MergePolicyDefaultReviewer.get_default_reviewers(ado_client, repo_id, branch_name)
 
     @staticmethod
-    def remove_default_reviewer(ado_client: AdoClient, repo_id: str, reviewer_id: str, branch_name: str = "main") -> None:
+    def remove_default_reviewer(ado_client: "AdoClient", repo_id: str, reviewer_id: str, branch_name: str = "main") -> None:
         return MergePolicyDefaultReviewer.remove_default_reviewer(ado_client, repo_id, reviewer_id, branch_name)
 
     # ================== Branch Policies ================== #
     @staticmethod
-    def set_branch_policy(ado_client: AdoClient, repo_id: str, minimum_approver_count: int,
+    def set_branch_policy(ado_client: "AdoClient", repo_id: str, minimum_approver_count: int,
                           creator_vote_counts: bool, prohibit_last_pushers_vote: bool, allow_completion_with_rejects: bool,
                           when_new_changes_are_pushed: WhenChangesArePushed, branch_name: str = "main") -> None:  # fmt: skip
         return MergeBranchPolicy.set_branch_policy(ado_client, repo_id, minimum_approver_count, creator_vote_counts,
@@ -262,5 +260,5 @@ class MergePolicies(StateManagedResource):
                                                    when_new_changes_are_pushed, branch_name)  # fmt: skip
 
     @staticmethod
-    def get_branch_policy(ado_client: AdoClient, repo_id: str, branch_name: str = "main") -> MergeBranchPolicy | None:
+    def get_branch_policy(ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "MergeBranchPolicy | None":
         return MergeBranchPolicy.get_branch_policy(ado_client, repo_id, branch_name)

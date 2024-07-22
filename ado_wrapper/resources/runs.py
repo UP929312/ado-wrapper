@@ -55,7 +55,7 @@ class Run(StateManagedResource):
         return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/pipelines/{pipeline_id}/runs/{run_id}?api-version=7.1-preview.1",
-        )  # type: ignore[return-value]
+        )
 
     @classmethod
     def create(
@@ -82,7 +82,7 @@ class Run(StateManagedResource):
                 ado_client,
                 f"/{ado_client.ado_project_name}/_apis/pipelines/{definition_id}/runs?api-version=6.1-preview.1",
                 PAYLOAD,
-            )  # type: ignore[return-value]
+            )
         except ValueError as e:
             raise ValueError(
                 f"A template parameter inputted is not allowed! {str(e).split('message')[1][3:].removesuffix(':').split('.')[0]}"  # fmt: skip
@@ -91,7 +91,7 @@ class Run(StateManagedResource):
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", run_id: str) -> None:
         Build.delete_by_id(ado_client, run_id)
-        ado_client.state_manager.remove_resource_from_state(cls.__name__, run_id)  # type: ignore[arg-type]
+        ado_client.state_manager.remove_resource_from_state("Run", run_id)
 
     def update(self, ado_client: "AdoClient", attribute_name: str, attribute_value: Any) -> None:
         raise NotImplementedError("Use Build's update instead!")
@@ -101,7 +101,7 @@ class Run(StateManagedResource):
         return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/pipelines/{pipeline_id}/runs?api-version=7.1-preview.1",
-        )  # type: ignore[return-value]
+        )  # pyright: ignore[reportReturnType]
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -189,19 +189,22 @@ class Run(StateManagedResource):
             stages[job["stageId"]].jobs.append(RunJobResult.from_request_payload(job))
         return list(stages.values())
 
+    get_run_log_content = Build.get_build_log_content
+    _get_all_logs_ids = Build._get_all_logs_ids  # pylint: disable=protected-access
+
 
 # ============================================================================================== #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 # ============================================================================================== #
 
-job_state_mapping = {
+job_state_mapping: dict[int, JobStateLiteral] = {
     0: "Queued",
     1: "In-Progress",
     2: "Complete",
 }
-job_result_mapping = {
+job_result_mapping: dict[int | None, JobResultLiteral] = {
     None: "Queued",
-    0: "Success",
+    0: "Successful",
     1: "Warning",
     2: "Failed",
     3: "Cancelled",
@@ -231,5 +234,5 @@ class RunJobResult:
         return cls(
             str(data["id"]), data["name"], data["imageName"],
             from_ado_date_string(data["startTime"]), from_ado_date_string(data.get("finishTime")),
-            job_state_mapping[data["state"]], job_result_mapping[data["result"]]  # type: ignore[arg-type]
+            job_state_mapping[data["state"]], job_result_mapping[data["result"]]
         )  # fmt: skip

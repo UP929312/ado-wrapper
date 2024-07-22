@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
@@ -27,10 +25,10 @@ class AgentPool(StateManagedResource):
     is_hosted: bool
     scope: str = field(repr=False)
     created_on: datetime = field(repr=False)
-    created_by: Member = field(repr=False)
+    created_by: "Member" = field(repr=False)
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> AgentPool:
+    def from_request_payload(cls, data: dict[str, Any]) -> "AgentPool":
         from ado_wrapper.resources.users import Member  # Stop circular imports
 
         created_by = Member.from_request_payload(data["createdBy"])
@@ -40,17 +38,17 @@ class AgentPool(StateManagedResource):
         )
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, agent_pool_id: str) -> AgentPool:
+    def get_by_id(cls, ado_client: "AdoClient", agent_pool_id: str) -> "AgentPool":
         return super()._get_by_url(
             ado_client,
             f"/_apis/distributedtask/pools/{agent_pool_id}?api-version=7.1-preview.1",
-        )  # type: ignore[return-value]
+        )
 
     @classmethod
     def create(
-        cls, ado_client: AdoClient, name: str, agent_cloud_id: str | None, auto_provision: bool, auto_size: bool,
+        cls, ado_client: "AdoClient", name: str, agent_cloud_id: str | None, auto_provision: bool, auto_size: bool,
         auto_update: bool, is_hosted: bool, size: int, target_size: int | None  # fmt: skip
-    ) -> AgentPool:
+    ) -> "AgentPool":
         raise NotImplementedError
         # PAYLOAD = {
         #     "name": name, "agentCloudId": agent_cloud_id, "autoProvision": auto_provision, "autoSize": auto_size,
@@ -60,14 +58,14 @@ class AgentPool(StateManagedResource):
         #     ado_client,
         #     "/_apis/distributedtask/pools?api-version=7.1-preview.1",
         #     payload=PAYLOAD,
-        # )  # type: ignore[return-value]
+        # )
 
     # def update(self) -> None:
     #     raise NotImplementedError
     #     # PATCH https://dev.azure.com/{organization}/_apis/distributedtask/pools/{poolId}?api-version=7.1-preview.1
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, agent_pool_id: str) -> None:
+    def delete_by_id(cls, ado_client: "AdoClient", agent_pool_id: str) -> None:
         raise NotImplementedError
         # return super().delete_by_id(
         #     ado_client,
@@ -76,16 +74,16 @@ class AgentPool(StateManagedResource):
         # )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list[AgentPool]:
+    def get_all(cls, ado_client: "AdoClient") -> list["AgentPool"]:
         return super()._get_all(
             ado_client,
             "/_apis/distributedtask/pools?api-version=7.1-preview.1",
-        )  # type: ignore[return-value]
+        )  # pyright: ignore[reportReturnType]
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, agent_pool_id: str) -> AgentPool | None:
-        return cls._get_by_abstract_filter(ado_client, lambda agent_pool: agent_pool.agent_pool_id == agent_pool_id)  # type: ignore[return-value, attr-defined]
+    def get_by_name(cls, ado_client: "AdoClient", agent_pool_id: str) -> "AgentPool | None":
+        return cls._get_by_abstract_filter(ado_client, lambda agent_pool: agent_pool.agent_pool_id == agent_pool_id)

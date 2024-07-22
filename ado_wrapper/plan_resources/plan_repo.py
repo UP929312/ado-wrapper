@@ -13,7 +13,7 @@ class PlanRepo:
     def get_by_id(self, ado_client: "AdoClient", repo_id: str) -> Repo:
         state_copy = ado_client.state_manager.load_state()["resources"][self.__class__.__name__].get(repo_id)  # type: ignore
         if state_copy:
-            return Repo.from_json(state_copy)  # type: ignore[return-value]
+            return Repo.from_json(state_copy)
         return Repo.get_by_id(ado_client, repo_id)
 
     @staticmethod

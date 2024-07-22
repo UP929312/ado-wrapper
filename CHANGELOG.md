@@ -1,6 +1,25 @@
 # Changelog
 
-## UNRELEASED v1.16.0
+## v1.17.0
+
+### Added
+
+- `Build.get_build_log_content()` to get the output from a build log terminal.
+- `Run` has also got the same function (just aliased)
+- Build Artifacts, and the ability to get them all, get individuals, and get the individual file contents.
+- Trying to make resources with the same identifier (e.g. repos with the same name) now gives a `ResourceAlreadyExists` error.
+
+### Changed
+
+- The predefined StateManager's classes typing has been massively improved to remove a lot of type: ignores
+- All cases of from __future__ import annotations have been removed. All imported types are now wrapped in "strings"
+- `PullRequestCommentThread`'s `create` now has the proper return type
+- Some resources raise Configuration Error rather than use asserts (`AuditLog.get_all()`, `CodeSearch.get_by_search_string`, `ServiceEndpoint.create()`)
+- Removed a lot of NotImplementedError functions, these now won't show up and then instantly error.
+
+---
+
+## v1.16.0
 
 ### Added
 

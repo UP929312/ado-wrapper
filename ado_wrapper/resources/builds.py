@@ -1,12 +1,16 @@
+import json
+import re
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
 
+
 from ado_wrapper.resources.environment import Environment, PipelineAuthorisation
 from ado_wrapper.resources.repo import BuildRepository
 from ado_wrapper.resources.users import Member
 from ado_wrapper.state_managed_abc import StateManagedResource
+from ado_wrapper.errors import ConfigurationError
 from ado_wrapper.utils import from_ado_date_string, requires_initialisation
 
 if TYPE_CHECKING:
@@ -16,6 +20,8 @@ BuildDefinitionEditableAttribute = Literal["name", "description"]
 BuildStatus = Literal["notStarted", "inProgress", "completed", "cancelling", "postponed", "notSet", "none"]
 QueuePriority = Literal["low", "belowNormal", "normal", "aboveNormal", "high"]
 
+ansi_re_pattern = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+datetime_re_pattern = re.compile(r"^20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{7}Z")
 # ========================================================================================================
 
 
@@ -75,7 +81,7 @@ class Build(StateManagedResource):
         return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/builds/{build_id}?api-version=7.1",
-        )  # type: ignore[return-value]
+        )
 
     @classmethod
     def create(
@@ -92,7 +98,7 @@ class Build(StateManagedResource):
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/builds?definitionId={definition_id}&api-version=7.1",
             {"reason": "An automated build created with the ado_wrapper Python library", "sourceBranch": source_branch},
-        )  # type: ignore[return-value]
+        )
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", build_id: str) -> None:
@@ -115,7 +121,7 @@ class Build(StateManagedResource):
         return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/builds?api-version=7.1",
-        )  # type: ignore[return-value]
+        )  # pyright: ignore[reportReturnType]
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -158,7 +164,7 @@ class Build(StateManagedResource):
         return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/builds?definitions={definition_id}&api-version=7.1",
-        )  # type: ignore[return-value]
+        )  # pyright: ignore[reportReturnType]
 
     @classmethod
     def allow_on_environment(cls, ado_client: "AdoClient", definition_id: str, environment_id: str) -> PipelineAuthorisation:
@@ -170,6 +176,37 @@ class Build(StateManagedResource):
         all_builds = cls.get_all_by_definition(ado_client, definition_id)
         builds_with_start = [x for x in all_builds if x.start_time is not None]
         return max(builds_with_start, key=lambda build: build.start_time) if builds_with_start else None  # type: ignore[return-value, arg-type]
+
+    @staticmethod
+    def _get_all_logs_ids(ado_client: "AdoClient", build_id: str) -> dict[str, str]:
+        request = ado_client.session.get(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build/results?buildId={build_id}&view=logs"
+        ).text
+        # Jobs
+        jobs_data = request.split('"jobs":')[1].split('"tasks":[')[0].removesuffix(",")
+        jobs_mapping = {job["id"]: job["name"] for job in json.loads(jobs_data)}
+        # Tasks
+        raw_data = request.split('"tasks":')[1].split('"buildId"')[0].removesuffix(",")
+        json_data = json.loads(raw_data)
+        # Combined
+        mapping = {f"{jobs_mapping[x['parentId']]}/{x['name']}": x["logId"] for x in json_data}
+        return mapping
+
+    @classmethod
+    def get_build_log_content(cls, ado_client: "AdoClient", build_id: str, stage_name: str, job_name: str,
+                              remove_prefixed_timestamp: bool = True, remove_colours: bool = False) -> str:  # fmt: skip
+        mapping = cls._get_all_logs_ids(ado_client, build_id)
+        log_id = mapping.get(f"{stage_name}/{job_name}")
+        if log_id is None:
+            raise ConfigurationError(f"Wrong stage name or job name combination (case sensitive), recieved {stage_name}/{job_name}")
+        request = ado_client.session.get(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/build/builds/{build_id}/logs/{log_id}"
+        ).text
+        if remove_colours:
+            request = ansi_re_pattern.sub("", request)
+        if remove_prefixed_timestamp:
+            request = "\n".join([datetime_re_pattern.sub("", line) for line in request.split("\n")])
+        return request
 
 
 # ========================================================================================================
@@ -210,7 +247,7 @@ class BuildDefinition(StateManagedResource):
         return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/definitions/{build_definition_id}?api-version=7.1",
-        )  # type: ignore[return-value]
+        )
 
     @classmethod
     def create(
@@ -223,7 +260,7 @@ class BuildDefinition(StateManagedResource):
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/definitions?api-version=7.0",
             payload=payload,
-        )  # type: ignore[return-value]
+        )
 
     def update(self, ado_client: "AdoClient", attribute_name: BuildDefinitionEditableAttribute, attribute_value: Any) -> None:
         if self.build_repo is None or self.process is None:
@@ -257,15 +294,15 @@ class BuildDefinition(StateManagedResource):
         return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/definitions?api-version=7.1",
-        )  # type: ignore[return-value]
+        )  # pyright: ignore[reportReturnType]
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: "AdoClient", name: str) -> "BuildDefinition":
-        return cls._get_by_abstract_filter(ado_client, lambda x: x.name == name)  # type: ignore[return-value, attr-defined]
+    def get_by_name(cls, ado_client: "AdoClient", name: str) -> "BuildDefinition | None":
+        return cls._get_by_abstract_filter(ado_client, lambda x: x.name == name)
 
     def get_all_builds_by_definition(self, ado_client: "AdoClient") -> "list[Build]":
         return Build.get_all_by_definition(ado_client, self.build_definition_id)
@@ -279,11 +316,11 @@ class BuildDefinition(StateManagedResource):
         return super()._get_all(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/build/definitions?repositoryId={repo_id}&repositoryType={'TfsGit'}&api-version=7.1",
-        )  # type: ignore[return-value]
+        )  # pyright: ignore[reportReturnType]
 
     @staticmethod
     def get_all_stages(ado_client: "AdoClient", definition_id: str, branch_name: str = "main") -> list["BuildDefinitionStep"]:
-        """Fetches a list of BuildDefinitionSteps"""
+        """Fetches a list of BuildDefinitionSteps, does not return results"""
         requires_initialisation(ado_client)
         # ================================================================================================================================
         # Fetch default template parameters, which are required to get the stages

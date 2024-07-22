@@ -100,8 +100,8 @@ class TestRepoUserPerms:
             }
             RepoUserPermissions.set_all_permissions_for_repo(self.ado_client, repo.repo_id, input_perms)
             all_perms = RepoUserPermissions.get_all_by_repo_id(self.ado_client, repo.repo_id)
-            perms_formatted: dict[RepoPermissionType, RepoPermsActionType] = {
-                perm.programmatic_name: perm.permission_display_string for perm in all_perms[existing_user_name]  # type: ignore[misc]
+            perms_formatted: dict[RepoPermissionType, str] = {
+                perm.programmatic_name: perm.permission_display_string for perm in all_perms[existing_user_name]
             }
             assert perms_formatted == input_perms[email]
 

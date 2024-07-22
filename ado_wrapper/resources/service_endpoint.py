@@ -1,8 +1,7 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 
+from ado_wrapper.errors import ConfigurationError
 from ado_wrapper.resources.users import Member
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import requires_initialisation
@@ -35,7 +34,7 @@ class ServiceEndpoint(StateManagedResource):
     # _raw_data: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> ServiceEndpoint:
+    def from_request_payload(cls, data: dict[str, Any]) -> "ServiceEndpoint":
         return cls(
             data["id"], data["name"], data["type"], data["url"],
             Member.from_request_payload(data["createdBy"]),
@@ -45,17 +44,18 @@ class ServiceEndpoint(StateManagedResource):
         )
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, repo_id: str) -> ServiceEndpoint:
+    def get_by_id(cls, ado_client: "AdoClient", repo_id: str) -> "ServiceEndpoint":
         return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/serviceendpoint/endpoints/{repo_id}",
-        )  # type: ignore[return-value]
+        )
 
     @classmethod
-    def create(cls, ado_client: AdoClient, name: str, service_endpoint_type: str, url: str,
-               username: str = "", password: str = "", access_token: str = "") -> ServiceEndpoint:  # fmt: skip
+    def create(cls, ado_client: "AdoClient", name: str, service_endpoint_type: str, url: str,
+               username: str = "", password: str = "", access_token: str = "") -> "ServiceEndpoint":  # fmt: skip
         """Creates a service endpoint, pass in either username and password or access_token."""
-        assert ((username and password) and not access_token) or (access_token and not (username and password)), "Either username and password or access_token must be passed in."  # fmt: skip
+        if (username or password) and access_token:  # fmt: skip
+            raise ConfigurationError("Either `username and password` or `access_token` must be passed in, not both!")
         requires_initialisation(ado_client)
         payload = {
             "name": name, "type": service_endpoint_type, "url": url, "isShared": True, "isReady": True,
@@ -67,9 +67,9 @@ class ServiceEndpoint(StateManagedResource):
             payload["authorization"] = {"parameters": {"AccessToken": access_token}, "scheme": "Token"}
         return super()._create(
             ado_client, "/_apis/serviceendpoint/endpoints?api-version=7.1", payload,  # fmt: skip
-        )  # type: ignore[return-value]
+        )
 
-    def update(self, ado_client: AdoClient, attribute_name: ServiceEndpointEditableAttribute, attribute_value: Any) -> None:
+    def update(self, ado_client: "AdoClient", attribute_name: ServiceEndpointEditableAttribute, attribute_value: Any) -> None:
         raise NotImplementedError
         # self._raw_data[attribute_name] = attribute_value
         # return super().update(
@@ -79,7 +79,7 @@ class ServiceEndpoint(StateManagedResource):
         # )
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, service_endpoint_id: str) -> None:
+    def delete_by_id(cls, ado_client: "AdoClient", service_endpoint_id: str) -> None:
         requires_initialisation(ado_client)
         return super()._delete_by_id(
             ado_client,
@@ -88,24 +88,24 @@ class ServiceEndpoint(StateManagedResource):
         )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list[ServiceEndpoint]:
+    def get_all(cls, ado_client: "AdoClient") -> list["ServiceEndpoint"]:
         return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/serviceendpoint/endpoints?api-version=7.1",
-        )  # type: ignore[return-value]
+        )  # pyright: ignore[reportReturnType]
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, name: str) -> ServiceEndpoint:
+    def get_by_name(cls, ado_client: "AdoClient", name: str) -> "ServiceEndpoint":
         return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/serviceendpoint/endpoints?endpointNames={name}&api-version=7.1",
-        )  # type: ignore[return-value]
+        )
 
-    def update_pipeline_perms(self, ado_client: AdoClient, pipeline_id: str | Literal["all"]) -> dict[str, Any]:
+    def update_pipeline_perms(self, ado_client: "AdoClient", pipeline_id: str | Literal["all"]) -> dict[str, Any]:
         """Updates the permissions of a service endpoint in a pipeline.
         UNTESTED
         https://learn.microsoft.com/en-us/rest/api/azure/devops/approvalsandchecks/pipeline-permissions/update-pipeline-permisions-for-resources?view=azure-devops-rest-7.1
@@ -115,7 +115,8 @@ class ServiceEndpoint(StateManagedResource):
             "pipelines": [] if pipeline_id == "all" else [{"id": pipeline_id}],
             "allPipelines": {"authorized": True, "authorizedBy": "null", "authorizedOn": "null"},
         }
-        return ado_client.session.patch(  # type: ignore[no-any-return]
+        pipeline_perms: dict[str, Any] = ado_client.session.patch(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/pipelinePermissions/endpoint/{self.service_endpoint_id}?api-version=7.1",
             json=PAYLOAD,
         ).json()
+        return pipeline_perms

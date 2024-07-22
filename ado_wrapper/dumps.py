@@ -18,6 +18,25 @@ ADO_USER_DUMP = {
     "descriptor": "<user_descriptor>",
 }
 
+ARTIFACT_DUMP = [
+    {
+        'id': "{artifact_id}",
+        'name': '{artifact_name}',
+        'source': '{source_job_id_uuid}',  # The artifact source, which will be the ID of the job that produced this artifact. If an artifact is associated with multiple sources, this points to the first source.
+        'resource': {
+            'type': 'Container',
+            'data': '#/71951719/{artifact_name}',
+            'properties': {
+                'localpath': '/home/vsts/work/1/s/{path_data}', 
+                'artifactsize': '12025'
+            },
+            'url': 'https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_id}/_apis/build/builds/{build_id}/artifacts?artifactName={artifact_name}&api-version=7.1-preview.5',
+            'downloadUrl': 'https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_id}/_apis/build/builds/{build_id}/artifacts?artifactName={artifact_name}-1&api-version=7.1-preview.5&%24format=zip'
+        }
+    },
+    # <another copy>
+]
+
 AUDIT_LOG_DUMP = {
     'id': '999999999999999999;00000000-0000-0000-0000-000000000000;00000000-0000-0000-0000-000000000000',
     'correlationId': '00000000-0000-0000-0000-000000000000',

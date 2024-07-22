@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -21,7 +19,7 @@ RepoPermissionType = Literal[
     "rename_repository",  # fmt: skip
 ]
 
-external_to_internal_mapping = {
+external_to_internal_mapping: dict[str, RepoPermissionType] = {
     "Advanced Security: manage and dismiss alerts": "manage_and_dismiss_alerts",
     "Advanced Security: manage settings": "manage_settings",
     "Advanced Security: view alerts": "view_alerts",
@@ -73,14 +71,14 @@ class UserPermission:
     permission_display_string: str
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> UserPermission:
+    def from_request_payload(cls, data: dict[str, Any]) -> "UserPermission":
         return cls(
-            data["namespaceId"], data["displayName"], external_to_internal_mapping.get(data["displayName"], data["displayName"]),  # type: ignore[arg-type]
+            data["namespaceId"], data["displayName"], external_to_internal_mapping.get(data["displayName"], data["displayName"]),
             data["token"], data["bit"], data.get("canEdit", False), data["permissionDisplayString"]  # fmt: skip
         )
 
     @classmethod
-    def get_by_subject_descriptor(cls, ado_client: AdoClient, subject_descriptor: str, repo_id: str) -> list[UserPermission]:
+    def get_by_subject_descriptor(cls, ado_client: "AdoClient", subject_descriptor: str, repo_id: str) -> list["UserPermission"]:
         requires_initialisation(ado_client)
         PAYLOAD = {
             "contributionIds": ["ms.vss-admin-web.security-view-permissions-data-provider"], "dataProviderContext": {"properties": {
@@ -98,7 +96,7 @@ class UserPermission:
         return [UserPermission.from_request_payload(x) for x in request["subjectPermissions"]]
 
     @classmethod
-    def set_by_group_descriptor(cls, ado_client: AdoClient, repo_id: str, group_descriptor: str, action: RepoPermsActionType, permission: RepoPermissionType) -> None:  # fmt: skip
+    def set_by_group_descriptor(cls, ado_client: "AdoClient", repo_id: str, group_descriptor: str, action: RepoPermsActionType, permission: RepoPermissionType) -> None:  # fmt: skip
         requires_initialisation(ado_client)
         IDENTITY_PAYLOAD = {"contributionIds": ["ms.vss-admin-web.security-view-permissions-data-provider"], "dataProviderContext": {"properties": {
             "subjectDescriptor": group_descriptor, "permissionSetId": PERMISSION_SET_ID,
@@ -123,7 +121,7 @@ class UserPermission:
         assert request.status_code == 200
 
     @classmethod
-    def set_by_user_email(cls, ado_client: AdoClient, repo_id: str, email: str, action: RepoPermsActionType,
+    def set_by_user_email(cls, ado_client: "AdoClient", repo_id: str, email: str, action: RepoPermsActionType,
                           permission: RepoPermissionType, domain_container_id: str = "") -> None:  # fmt: skip
         requires_initialisation(ado_client)
         if not domain_container_id:
@@ -141,7 +139,7 @@ class UserPermission:
         assert request.status_code == 200
 
     @classmethod
-    def remove_perm(cls, ado_client: AdoClient, repo_id: str, subject_email: str, domain_container_id: str = "") -> None:
+    def remove_perm(cls, ado_client: "AdoClient", repo_id: str, subject_email: str, domain_container_id: str = "") -> None:
         requires_initialisation(ado_client)
         if not domain_container_id:
             domain_container_id = AdoUser.get_by_email(ado_client, subject_email).domain_container_id
@@ -156,9 +154,10 @@ class UserPermission:
 @dataclass
 class RepoUserPermissions(StateManagedResource):
     @classmethod
-    def get_all_by_repo_id(cls, ado_client: AdoClient, repo_id: str, users_only: bool = True,
+    def get_all_by_repo_id(cls, ado_client: "AdoClient", repo_id: str, users_only: bool = True,
                            ignore_inherits: bool = True, remove_not_set: bool = False) -> dict[str, list[UserPermission]]:  # fmt: skip
-        """Gets all user permissions for a repo, user_only removes groups"""
+        """Gets all user permissions for a repo, user_only removes groups.
+        Returns a mapping of First Last: [UserPermission, UserPermission]"""
         requires_initialisation(ado_client)
         PAYLOAD = {"contributionIds": ["ms.vss-admin-web.security-view-members-data-provider"], "dataProviderContext": {"properties": {
             "permissionSetId": PERMISSION_SET_ID,
@@ -182,7 +181,7 @@ class RepoUserPermissions(StateManagedResource):
             for descriptor, name in groups_and_users.items()  # fmt: skip
         }
         # Then, if they want to remove inherited perms, we do that.
-        filtered_perms = {
+        filtered_perms: dict[str, list[UserPermission]] = {
             user: perms for user, perms in perms_mapping.items() if not ignore_inherits or
             any(x.permission_display_string in ["Allow", "Deny"] for x in perms)  # fmt: skip
         }
@@ -193,25 +192,25 @@ class RepoUserPermissions(StateManagedResource):
         }
 
     @staticmethod
-    def get_by_subject_descriptor(ado_client: AdoClient, repo_id: str, subject_descriptor: str) -> list[UserPermission]:
+    def get_by_subject_descriptor(ado_client: "AdoClient", repo_id: str, subject_descriptor: str) -> list[UserPermission]:
         return UserPermission.get_by_subject_descriptor(ado_client, subject_descriptor, repo_id)
 
     @classmethod
-    def get_by_user_email(cls, ado_client: AdoClient, repo_id: str, subject_email: str) -> list[UserPermission]:
+    def get_by_user_email(cls, ado_client: "AdoClient", repo_id: str, subject_email: str) -> list[UserPermission]:
         descriptor = AdoUser.get_by_email(ado_client, subject_email).descriptor_id
         return cls.get_by_subject_descriptor(ado_client, repo_id, descriptor)
 
     @staticmethod
-    def set_by_group_descriptor(ado_client: AdoClient, repo_id: str, group_descriptor: str, action: RepoPermsActionType, permission: RepoPermissionType) -> None:  # fmt: skip
+    def set_by_group_descriptor(ado_client: "AdoClient", repo_id: str, group_descriptor: str, action: RepoPermsActionType, permission: RepoPermissionType) -> None:  # fmt: skip
         return UserPermission.set_by_group_descriptor(ado_client, repo_id, group_descriptor, action, permission)
 
     @staticmethod
-    def set_by_user_email(ado_client: AdoClient, repo_id: str, email: str, action: RepoPermsActionType,
+    def set_by_user_email(ado_client: "AdoClient", repo_id: str, email: str, action: RepoPermsActionType,
                           permission: RepoPermissionType, domain_container_id: str = "") -> None:  # fmt: skip
         return UserPermission.set_by_user_email(ado_client, repo_id, email, action, permission, domain_container_id)
 
     @classmethod
-    def set_by_user_email_batch(cls, ado_client: AdoClient, repo_id: str, subject_email: str,
+    def set_by_user_email_batch(cls, ado_client: "AdoClient", repo_id: str, subject_email: str,
                                 mapping: dict[RepoPermissionType, RepoPermsActionType], domain_container_id: str = "") -> None:  # fmt: skip
         """Does a batch job of updating permissions, updating all permissions for each user"""
         if not domain_container_id:
@@ -220,14 +219,14 @@ class RepoUserPermissions(StateManagedResource):
             cls.set_by_user_email(ado_client, repo_id, subject_email, action, permission, domain_container_id)
 
     @classmethod
-    def set_all_permissions_for_repo(cls, ado_client: AdoClient, repo_id: str, mapping: dict[str, dict[RepoPermissionType, RepoPermsActionType]]) -> None:  # fmt: skip
+    def set_all_permissions_for_repo(cls, ado_client: "AdoClient", repo_id: str, mapping: dict[str, dict[RepoPermissionType, RepoPermsActionType]]) -> None:  # fmt: skip
         """Takes a mapping of <user_email>: {permission_name: Allow | Deny | Not set}}"""
         domain_container_id = AdoUser.get_by_email(ado_client, list(mapping.keys())[0]).domain_container_id
         for email, permission_pairs in mapping.items():
             cls.set_by_user_email_batch(ado_client, repo_id, email, permission_pairs, domain_container_id)
 
     @classmethod
-    def remove_perm(cls, ado_client: AdoClient, repo_id: str, subject_email: str, domain_container_id: str = "") -> None:
+    def remove_perm(cls, ado_client: "AdoClient", repo_id: str, subject_email: str, domain_container_id: str = "") -> None:
         return UserPermission.remove_perm(ado_client, repo_id, subject_email, domain_container_id)
 
     @staticmethod

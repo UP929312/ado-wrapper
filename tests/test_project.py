@@ -27,8 +27,6 @@ class TestProject:
     def test_create_delete_project(self) -> None:
         with pytest.raises(NotImplementedError):
             Project.create(self.ado_client, "ado_wrapper-test-project", "description")
-        with pytest.raises(NotImplementedError):
-            Project.delete_by_id(self.ado_client, "abc")
 
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:

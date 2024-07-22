@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 from datetime import datetime
@@ -30,14 +28,14 @@ class PersonalAccessToken:
     user_id: str
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> PersonalAccessToken:
+    def from_request_payload(cls, data: dict[str, Any]) -> "PersonalAccessToken":
         return cls(
             data["displayName"], from_ado_date_string(data["validFrom"]), from_ado_date_string(data["validTo"]),
             data["scope"], data["accessId"], data["userId"],  # fmt: skip
         )
 
     # @classmethod
-    # def create_personal_access_token(cls, ado_client: AdoClient, display_name: str) -> PersonalAccessToken:
+    # def create_personal_access_token(cls, ado_client: "AdoClient", display_name: str) -> "PersonalAccessToken":
     #     requires_initialisation(ado_client)
     #     PAYLOAD = {
     #         "contributionIds": ["ms.vss-token-web.personal-access-token-issue-session-token-provider"],
@@ -73,8 +71,8 @@ class PersonalAccessToken:
 
     @classmethod
     def get_access_tokens(
-        cls, ado_client: AdoClient, include_different_orgs: bool=False, include_expired_tokens: bool = False
-    ) -> list[PersonalAccessToken]:  # fmt: skip
+        cls, ado_client: "AdoClient", include_different_orgs: bool = False, include_expired_tokens: bool = False
+    ) -> list["PersonalAccessToken"]:  # fmt: skip
         # Sun, 14 Jul 2024 18:14:24 GMT
         requires_initialisation(ado_client)
         now = datetime.now()
@@ -87,21 +85,21 @@ class PersonalAccessToken:
                 and (include_different_orgs or x["targetAccounts"] == [ado_client.ado_org_id])]  # fmt: skip
 
     @classmethod
-    def get_access_token_by_name(cls, ado_client: AdoClient, display_name: str) -> PersonalAccessToken | None:
+    def get_access_token_by_name(cls, ado_client: "AdoClient", display_name: str) -> "PersonalAccessToken | None":
         requires_initialisation(ado_client)
         return [x for x in cls.get_access_tokens(ado_client, include_different_orgs=True, include_expired_tokens=True)
                 if x.display_name == display_name][0]  # fmt: skip
 
     # @staticmethod
-    # def revoke_personal_access_token(ado_client: AdoClient, pat_id: str) -> None:
+    # def revoke_personal_access_token(ado_client: "AdoClient", pat_id: str) -> None:
     #     requires_initialisation(ado_client)
     #     pass
 
-    # @staticmethod
-    # def regenerate_personal_access_token(ado_client: AdoClient, token_name: str) -> str:
+    # @cls
+    # def regenerate_personal_access_token(cls, ado_client: "AdoClient", token_name: str) -> str:
     #     """Regenerates a PAT and returns the new token"""
     #     requires_initialisation(ado_client)
-    #     token: PersonalAccessToken = PersonalAccessToken.get_access_token_by_name(ado_client, token_name)  # type: ignore[union-attr]
+    #     token: PersonalAccessToken = cls.get_access_token_by_name(ado_client, token_name)
     #     PAYLOAD = {
     #         "contributionIds": ["ms.vss-token-web.personal-access-token-issue-session-token-provider"],
     #         "dataProviderContext": {

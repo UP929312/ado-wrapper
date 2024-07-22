@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
@@ -166,7 +164,7 @@ class Permission:
     has_permission: bool
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> Permission:
+    def from_request_payload(cls, data: dict[str, Any]) -> "Permission":
         security_namespace = data["securityNamespaceId"]
         action = namespace_id_to_perm[(security_namespace), data["permissions"]]
         return cls(
@@ -175,7 +173,7 @@ class Permission:
         )
 
     @classmethod
-    def get_project_perms(cls, ado_client: AdoClient) -> list[Permission]:
+    def get_project_perms(cls, ado_client: "AdoClient") -> list["Permission"]:
         """Returns a list of permissions (with has_permission set to True if the perms have been granted) for the given
         Public Access Token (PAT) passed in to the client."""
         PAYLOAD = {
@@ -192,11 +190,11 @@ class Permission:
         return [cls.from_request_payload(x) for x in request["evaluations"]]
 
     @classmethod
-    def get_project_perms_by_group(cls, ado_client: AdoClient, group: PermissionGroupLiteral) -> list[Permission]:
+    def get_project_perms_by_group(cls, ado_client: "AdoClient", group: PermissionGroupLiteral) -> list["Permission"]:
         return [x for x in cls.get_project_perms(ado_client) if x.group == group]
 
     @staticmethod
-    def print_perms(ado_client: AdoClient) -> None:
+    def print_perms(ado_client: "AdoClient") -> None:
         print("\n".join([str(x) for x in Permission.get_project_perms(ado_client)]))
 
 

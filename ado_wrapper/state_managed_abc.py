@@ -1,13 +1,15 @@
+import json
 from dataclasses import dataclass, fields
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable, Literal
+from typing import TYPE_CHECKING, Any, Callable, Literal, Type, TypeVar
 
-# from ado_wrapper.plan_resources.plan_resource import PlannedStateManagedResource
 from ado_wrapper.errors import DeletionFailed, ResourceAlreadyExists, ResourceNotFound, UpdateFailed, InvalidPermissionsError  # fmt: skip
 from ado_wrapper.utils import extract_id, get_internal_field_names, get_resource_variables
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
+
+T = TypeVar("T", bound="StateManagedResource")
 
 
 def recursively_convert_to_json(attribute_name: str, attribute_value: Any) -> tuple[str, Any]:
@@ -43,11 +45,11 @@ def recursively_convert_from_json(dictionary: dict[str, Any]) -> Any:
 @dataclass
 class StateManagedResource:
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "StateManagedResource":
+    def from_request_payload(cls: Type[T], data: dict[str, Any]) -> T:
         raise NotImplementedError
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "StateManagedResource":
+    def from_json(cls: Type[T], data: dict[str, Any]) -> T:
         return cls(**recursively_convert_from_json(data))
 
     def to_json(self) -> dict[str, Any]:
@@ -57,11 +59,11 @@ class StateManagedResource:
         return dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in combined)
 
     @classmethod
-    def _get_by_id(cls, ado_client: "AdoClient", resource_id: str) -> "StateManagedResource":
+    def _get_by_id(cls: Type[T], ado_client: "AdoClient", resource_id: str) -> T:
         raise NotImplementedError
 
     @classmethod
-    def _get_by_url(cls, ado_client: "AdoClient", url: str) -> "StateManagedResource":
+    def _get_by_url(cls: Type[T], ado_client: "AdoClient", url: str) -> T:
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org_name}{url}"
         request = ado_client.session.get(url)
@@ -76,9 +78,7 @@ class StateManagedResource:
         return cls.from_request_payload(request.json())
 
     @classmethod
-    def _create(
-        cls, ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None, refetch: bool = False
-    ) -> "StateManagedResource":  # PlannedStateManagedResource
+    def _create(cls: Type[T], ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None, refetch: bool = False) -> T:
         """When creating, often the response doesn't contain all the data, refetching does a .get_by_id() after creation."""
         # If it already exists:
         # if cls.get_by_id(ado_client, extract_unique_name(payload)):
@@ -94,15 +94,20 @@ class StateManagedResource:
                 raise InvalidPermissionsError(f"You do not have permission to create this {cls.__name__}! {request.text}")
             if request.status_code == 409:
                 raise ResourceAlreadyExists(f"The {cls.__name__} with that identifier already exist!")
+            try:
+                if request.status_code == 400 and "already exists" in request.json().get("message", ""):
+                    raise ResourceAlreadyExists(f"The {cls.__name__} with that identifier already exist!")
+            except json.JSONDecodeError:
+                pass
             raise ValueError(f"Error creating {cls.__name__}: {request.status_code} - {request.text}")
         resource = cls.from_request_payload(request.json())
         if refetch:
             resource = cls._get_by_id(ado_client, extract_id(resource))
         ado_client.state_manager.add_resource_to_state(cls.__name__, extract_id(resource), resource.to_json())  # type: ignore[arg-type]
-        return resource
+        return resource  # [return-value]
 
     @classmethod
-    def _delete_by_id(cls, ado_client: "AdoClient", url: str, resource_id: str) -> None:
+    def _delete_by_id(cls: Type[T], ado_client: "AdoClient", url: str, resource_id: str) -> None:
         """Deletes an object by its id. The id is passed so it can be removed from state"""
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org_name}{url}"
@@ -142,7 +147,7 @@ class StateManagedResource:
         return self.delete_by_id(ado_client, extract_id(self))  # type: ignore[attr-defined, no-any-return]  # pylint: disable=no-value-for-parameter, no-member
 
     @classmethod
-    def _get_all(cls, ado_client: "AdoClient", url: str) -> list["StateManagedResource"]:
+    def _get_all(cls: Type[T], ado_client: "AdoClient", url: str) -> list[T]:
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org_name}{url}"
         request = ado_client.session.get(url)
@@ -153,9 +158,7 @@ class StateManagedResource:
         return [cls.from_request_payload(resource) for resource in request.json()["value"]]
 
     @classmethod
-    def _get_by_abstract_filter(
-        cls, ado_client: "AdoClient", func: Callable[["StateManagedResource"], bool]
-    ) -> "StateManagedResource | None":
+    def _get_by_abstract_filter(cls: Type[T], ado_client: "AdoClient", func: Callable[[T], bool]) -> T | None:
         """Used internally for getting resources by a filter function. The function should return True if the resource is the one you want."""
         resources = cls.get_all(ado_client)  # type: ignore[attr-defined]  # pylint: disable=no-value-for-parameter, no-member
         for resource in resources:

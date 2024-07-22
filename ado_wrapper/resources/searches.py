@@ -1,7 +1,7 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
+
+from ado_wrapper.errors import ConfigurationError
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -19,13 +19,13 @@ class CodeSearch:
     project: str = field(repr=False)
     repository_id: str = field(repr=False)
     branch_name: str = field(repr=False)
-    matches: list[CodeSearchHit] = field(default_factory=list, repr=False)
+    matches: list["CodeSearchHit"] = field(default_factory=list, repr=False)
 
     # 'versions': [{'branchName': 'main', 'changeId': 'f8a3262a0b2fa01ea4fde05881432628d5969dc6'}], 'contentId': 'c7f221fdfaea814aa742cc2d10eb0655645f101f'}
     # 'versions': [{'branchName': 'main', 'changeId': 'd53915b6d1b1b30d94e66fd19b99f2f2d2a1c3e3'}], 'contentId': 'a03f69e0c43e3bfc4b933bf89e2b2b8253b3ba7a'}
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> CodeSearch:
+    def from_request_payload(cls, data: dict[str, Any]) -> "CodeSearch":
         return cls(
             repository_name=data["repository"]["name"],
             path=data["path"],
@@ -38,9 +38,10 @@ class CodeSearch:
 
     @classmethod
     def get_by_search_string(
-        cls, ado_client: AdoClient, search_text: str, result_count: int = 1000, sort_direction: SortDirections = "ASC"
-    ) -> list[CodeSearch]:
-        assert 0 < result_count <= 1000
+        cls, ado_client: "AdoClient", search_text: str, result_count: int = 1000, sort_direction: SortDirections = "ASC"
+    ) -> list["CodeSearch"]:
+        if not 0 < result_count <= 1000:
+            raise ConfigurationError("Error, result_count must be between 1 and 1000 (inclusive)")
         body = {
             "$orderBy": [{"field": "filename", "sortOrder": sort_direction}],  # fmt: skip
             "$top": result_count,
@@ -67,8 +68,8 @@ class CodeSearchHit:
     hit_type: str  # One of `content`, <more>
 
     @classmethod
-    def from_request_payload(cls, payload: dict[str, Any]) -> CodeSearchHit:
+    def from_request_payload(cls, data: dict[str, Any]) -> "CodeSearchHit":
         # {'charOffset': 49170, 'length': 8, 'line': 0, 'column': 0, 'codeSnippet': None, 'type': 'content'}
         return cls(
-            payload["charOffset"], payload["length"], payload["line"], payload["column"], payload["codeSnippet"], payload["type"],  # fmt: skip
+            data["charOffset"], data["length"], data["line"], data["column"], data["codeSnippet"], data["type"],  # fmt: skip
         )

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
@@ -31,7 +29,7 @@ class Environment(StateManagedResource):
     modified_on: datetime | None
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> Environment:
+    def from_request_payload(cls, data: dict[str, Any]) -> "Environment":
         return cls(
             str(data["id"]),
             data["name"],
@@ -44,21 +42,21 @@ class Environment(StateManagedResource):
         )
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, environment_id: str) -> Environment:
+    def get_by_id(cls, ado_client: "AdoClient", environment_id: str) -> "Environment":
         return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/distributedtask/environments/{environment_id}?api-version=7.1-preview.1",
-        )  # type: ignore[return-value]
+        )
 
     @classmethod
-    def create(cls, ado_client: AdoClient, name: str, description: str) -> Environment:
+    def create(cls, ado_client: "AdoClient", name: str, description: str) -> "Environment":
         return super()._create(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/distributedtask/environments?api-version=7.1-preview.1",
             {"name": name, "description": description},
-        )  # type: ignore[return-value]
+        )
 
-    def update(self, ado_client: AdoClient, attribute_name: EnvironmentEditableAttribute, attribute_value: Any) -> None:
+    def update(self, ado_client: "AdoClient", attribute_name: EnvironmentEditableAttribute, attribute_value: Any) -> None:
         return super()._update(
             ado_client, "patch",
             f"/{ado_client.ado_project_name}/_apis/distributedtask/environments/{self.environment_id}?api-version=7.1-preview.1",
@@ -66,7 +64,7 @@ class Environment(StateManagedResource):
         )
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, environment_id: str) -> None:
+    def delete_by_id(cls, ado_client: "AdoClient", environment_id: str) -> None:
         return super()._delete_by_id(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/distributedtask/environments/{environment_id}?api-version=7.1-preview.1",
@@ -74,29 +72,29 @@ class Environment(StateManagedResource):
         )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list[Environment]:
+    def get_all(cls, ado_client: "AdoClient") -> list["Environment"]:
         return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/distributedtask/environments?api-version=7.1-preview.1&$top=10000",
-        )  # type: ignore[return-value]
+        )  # pyright: ignore[reportReturnType]
 
     # # ============ End of requirement set by all state managed resources ================== #
     # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, name: str) -> Environment:
-        return cls._get_by_abstract_filter(ado_client, lambda x: x.name == name)  # type: ignore[return-value, attr-defined]
+    def get_by_name(cls, ado_client: "AdoClient", name: str) -> "Environment | None":
+        return cls._get_by_abstract_filter(ado_client, lambda x: x.name == name)
 
     # # =============== Pipeline Permissions ===================== #
 
-    def get_pipeline_permissions(self, ado_client: AdoClient) -> list[PipelineAuthorisation]:
+    def get_pipeline_permissions(self, ado_client: "AdoClient") -> list["PipelineAuthorisation"]:
         return PipelineAuthorisation.get_all_for_environment(ado_client, self.environment_id)
 
-    def add_pipeline_permission(self, ado_client: AdoClient, pipeline_id: str) -> PipelineAuthorisation:
+    def add_pipeline_permission(self, ado_client: "AdoClient", pipeline_id: str) -> "PipelineAuthorisation":
         return PipelineAuthorisation.create(ado_client, self.environment_id, pipeline_id)
 
-    def remove_pipeline_permissions(self, ado_client: AdoClient, pipeline_id: str) -> None:
+    def remove_pipeline_permissions(self, ado_client: "AdoClient", pipeline_id: str) -> None:
         PipelineAuthorisation.delete_by_id(ado_client, self.environment_id, pipeline_id)
 
 
@@ -111,7 +109,7 @@ class PipelineAuthorisation:
     authorized_on: datetime
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any], environment_id: str) -> PipelineAuthorisation:
+    def from_request_payload(cls, data: dict[str, Any], environment_id: str) -> "PipelineAuthorisation":
         return cls(
             str(data["id"]),
             environment_id,
@@ -121,14 +119,14 @@ class PipelineAuthorisation:
         )
 
     @classmethod
-    def get_all_for_environment(cls, ado_client: AdoClient, environment_id: str) -> list[PipelineAuthorisation]:
+    def get_all_for_environment(cls, ado_client: "AdoClient", environment_id: str) -> list["PipelineAuthorisation"]:
         request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/pipelinePermissions/environment/{environment_id}",
         ).json()
         return [cls.from_request_payload(x, request["resource"]["id"]) for x in request["pipelines"]]
 
     @classmethod
-    def create(cls, ado_client: AdoClient, environment_id: str, pipeline_id: str, authorized: bool = True) -> PipelineAuthorisation:
+    def create(cls, ado_client: "AdoClient", environment_id: str, pipeline_id: str, authorized: bool = True) -> "PipelineAuthorisation":
         all_existing = cls.get_all_for_environment(ado_client, environment_id)
         payload: dict[str, Any] = {"pipelines": [{"id": x.pipeline_id, "authorized": True} for x in all_existing]}
         payload["pipelines"] = [x for x in payload["pipelines"] if x["id"] != pipeline_id]  # Remove existing entry if it exists
@@ -146,13 +144,13 @@ class PipelineAuthorisation:
         created_pipeline_dict = max(request.json()["pipelines"], key=lambda x: x["authorizedOn"])
         return cls.from_request_payload(created_pipeline_dict, environment_id)
 
-    def update(self, ado_client: AdoClient, authorized: bool) -> None:
+    def update(self, ado_client: "AdoClient", authorized: bool) -> None:
         self.delete_by_id(ado_client, self.environment_id, self.pipeline_id)
         new = self.create(ado_client, self.environment_id, self.pipeline_id, authorized)
         self.__dict__.update(new.__dict__)
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, environment_id: str, pipeline_authorisation_id: str) -> None:
+    def delete_by_id(cls, ado_client: "AdoClient", environment_id: str, pipeline_authorisation_id: str) -> None:
         try:
             cls.create(ado_client, environment_id, pipeline_authorisation_id, False)
         except ValueError:

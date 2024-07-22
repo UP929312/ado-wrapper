@@ -1,10 +1,8 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Literal
 
-from ado_wrapper.errors import InvalidPermissionsError
+from ado_wrapper.errors import ConfigurationError, InvalidPermissionsError
 from ado_wrapper.utils import from_ado_date_string, to_iso
 
 if TYPE_CHECKING:
@@ -48,7 +46,7 @@ class AuditLog:
     data: dict[str, str]  # External data such as CUIDs, item names, etc.
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> AuditLog:
+    def from_request_payload(cls, data: dict[str, Any]) -> "AuditLog":
         return cls(
             data["id"], data["correlationId"], data["activityId"], data["actorUserId"],
             data["actorClientId"], data["actorUPN"], data["authenticationMechanism"],
@@ -59,11 +57,15 @@ class AuditLog:
         )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient, start_time: datetime | None = None, end_time: datetime = datetime.now()) -> list[AuditLog]:
-        """https://learn.microsoft.com/en-us/rest/api/azure/devops/audit/audit-log/query?view=azure-devops-rest-7.1&tabs=HTTP#auditlogqueryresult"""
+    def get_all(cls, ado_client: "AdoClient", start_time: datetime | None = None, end_time: datetime | None = None) -> list["AuditLog"]:
+        # """https://learn.microsoft.com/en-us/rest/api/azure/devops/audit/audit-log/query?view=azure-devops-rest-7.1&tabs=HTTP#auditlogqueryresult"""
+        """If no start_time is passed in, use 24 hours ago, if no end_time is passed in, use `now`"""
         if start_time is None:
             start_time = datetime.now() - timedelta(days=1)
-        assert start_time <= end_time, "Start time must be before end time!"
+        if end_time is None:
+            end_time = datetime.now()
+        if start_time >= end_time:
+            raise ConfigurationError("Start time must be before end time!")
         combined_entries = []
         has_more = True
         continuation_token = None
@@ -81,18 +83,18 @@ class AuditLog:
 
     @classmethod
     def get_all_by_area(
-        cls, ado_client: AdoClient, area_type: AreaType, start_time: datetime | None = None, end_time: datetime = datetime.now()
-    ) -> list[AuditLog]:
+        cls, ado_client: "AdoClient", area_type: AreaType, start_time: datetime | None = None, end_time: datetime | None = None
+    ) -> list["AuditLog"]:
         return [x for x in cls.get_all(ado_client, start_time, end_time) if x.area == area_type]
 
     @classmethod
     def get_all_by_category(
-        cls, ado_client: AdoClient, category: CategoryType, start_time: datetime | None = None, end_time: datetime = datetime.now()
-    ) -> list[AuditLog]:
+        cls, ado_client: "AdoClient", category: CategoryType, start_time: datetime | None = None, end_time: datetime | None = None
+    ) -> list["AuditLog"]:
         return [x for x in cls.get_all(ado_client, start_time, end_time) if x.category == category]
 
     @classmethod
     def get_all_by_scope_type(
-        cls, ado_client: AdoClient, scope_type: ScopeTypeType, start_time: datetime | None = None, end_time: datetime = datetime.now()
-    ) -> list[AuditLog]:
+        cls, ado_client: "AdoClient", scope_type: ScopeTypeType, start_time: datetime | None = None, end_time: datetime | None = None
+    ) -> list["AuditLog"]:
         return [x for x in cls.get_all(ado_client, start_time, end_time) if x.scope_type == scope_type]

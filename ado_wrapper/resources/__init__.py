@@ -1,6 +1,7 @@
 # flake8: noqa
 from ado_wrapper.resources.agent_pools import AgentPool
 from ado_wrapper.resources.annotated_tags import AnnotatedTag
+from ado_wrapper.resources.artifact import Artifact
 from ado_wrapper.resources.audit_logs import AuditLog
 from ado_wrapper.resources.branches import Branch
 from ado_wrapper.resources.builds import Build, BuildDefinition

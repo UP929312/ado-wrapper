@@ -69,7 +69,7 @@ class TestEnvironment:
     def test_get_by_name(self) -> None:
         environment = Environment.create(self.ado_client, "ado_wrapper-test-environment-get-by-name", "test environment")
         # ---
-        fetched_environment = Environment.get_by_name(self.ado_client, "ado_wrapper-test-environment-get-by-name")
+        fetched_environment: Environment = Environment.get_by_name(self.ado_client, "ado_wrapper-test-environment-get-by-name")  # type: ignore[assignment]
         assert fetched_environment.name == "ado_wrapper-test-environment-get-by-name"
         assert fetched_environment.description == "test environment"
         # ---

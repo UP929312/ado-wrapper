@@ -137,11 +137,41 @@ def requires_perms(required_perms: list[str] | str) -> Callable[[Callable[P, T]]
 # ============================================================================================== #
 
 
+def binary_data_to_file_dictionary(binary_data: bytes, file_types: list[str] | None, suppress_warnings: bool) -> dict[str, str]:
+    import io
+    import zipfile
+
+    bytes_io = io.BytesIO(binary_data)
+    files: dict[str, str] = {}
+
+    with zipfile.ZipFile(bytes_io) as zip_ref:
+        # For each file, read the bytes and convert to string
+        for path in [
+            x for x in zip_ref.namelist()
+            if file_types is None or (f"{x.split('.')[-1]}" in file_types or f".{x.split('.')[-1]}" in file_types)  # fmt: skip
+        ]:
+            if path.endswith("/"):
+                continue
+            data = zip_ref.read(path)
+            try:
+                files[path] = data.decode("utf-8", errors="ignore")
+            except UnicodeDecodeError:
+                if not suppress_warnings:
+                    print(f"Could not decode {path}, leaving it as bytes instead.")
+                    files[path] = data  # type: ignore[assignment]
+
+    bytes_io.close()
+    return files
+
+
+# ============================================================================================== #
+
+
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this whole func to avoid circular imports
     """This returns a mapping of resource name (str) to the class type of the resource. This is used to dynamically create instances of resources."""
     from ado_wrapper.resources import (  # type: ignore[attr-defined]  # pylint: disable=possibly-unused-variable  # noqa: F401
-        AgentPool, AnnotatedTag, AuditLog, Branch, Build, BuildDefinition, Commit, Environment, Group, MergePolicies,
-        MergeBranchPolicy, MergePolicyDefaultReviewer, Organisation, PersonalAccessToken, Permission, Project,
+        AgentPool, AnnotatedTag, Artifact, AuditLog, Branch, Build, BuildDefinition, Commit, Environment, Group,
+        MergePolicies, MergeBranchPolicy, MergePolicyDefaultReviewer, Organisation, PersonalAccessToken, Permission, Project,
         PullRequest, Release, ReleaseDefinition, Repo, Run, BuildRepository, Team, AdoUser, Member, ServiceEndpoint,
         Reviewer, VariableGroup,  # fmt: skip
     )
@@ -150,8 +180,8 @@ def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We d
 
 
 ResourceType = Literal[
-    "AgentPool", "AnnotatedTag", "AuditLog", "Branch", "Build", "BuildDefinition", "Commit", "Environment", "Group", "MergePolicies",
-    "MergeBranchPolicy", "MergePolicyDefaultReviewer", "Organisation", "PersonalAccessToken", "Permission", "Project",
+    "AgentPool", "AnnotatedTag", "Artifact", "AuditLog", "Branch", "Build", "BuildDefinition", "Commit", "Environment", "Group",
+    "MergePolicies", "MergeBranchPolicy", "MergePolicyDefaultReviewer", "Organisation", "PersonalAccessToken", "Permission", "Project",
     "PullRequest", "Release", "ReleaseDefinition", "Repo", "Run", "Team", "AdoUser", "Member", "ServiceEndpoint",
     "Reviewer", "VariableGroup"  # fmt: skip
 ]

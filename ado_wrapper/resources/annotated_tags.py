@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -25,34 +23,34 @@ class AnnotatedTag(StateManagedResource):
     created_at: datetime
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> AnnotatedTag:
+    def from_request_payload(cls, data: dict[str, Any]) -> "AnnotatedTag":
         repo_id = data["url"].split("/_apis/git/repositories/")[1].split("/annotatedtags/")[0]
         member = Member(data["taggedBy"]["name"], data["taggedBy"]["email"], "UNKNOWN")
         created_at = datetime.fromisoformat(data["taggedBy"]["date"])
         return cls(data["objectId"], repo_id, data["name"], data["message"], member, created_at)
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, repo_id: str, object_id: str) -> AnnotatedTag:
+    def get_by_id(cls, ado_client: "AdoClient", repo_id: str, object_id: str) -> "AnnotatedTag":
         return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/annotatedtags/{object_id}?api-version=7.1-preview.1",
-        )  # type: ignore[return-value]
+        )
 
     @classmethod
-    def create(cls, ado_client: AdoClient, repo_id: str, name: str, message: str, object_id: str) -> AnnotatedTag:
+    def create(cls, ado_client: "AdoClient", repo_id: str, name: str, message: str, object_id: str) -> "AnnotatedTag":
         return super()._create(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/annotatedTags?api-version=7.1-preview.1",
             payload={"name": name, "message": message, "taggedObject": {"objectId": object_id}},
-        )  # type: ignore[return-value]
+        )
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, object_id: str, repo_id: str) -> None:
+    def delete_by_id(cls, ado_client: "AdoClient", object_id: str, repo_id: str) -> None:
         tag = cls.get_by_id(ado_client, object_id, repo_id)
         cls._special_delete(ado_client, tag.repo_id, tag.object_id, tag.name)
 
     @classmethod
-    def _special_delete(cls, ado_client: AdoClient, repo_id: str, object_id: str, tag_name: str) -> None:
+    def _special_delete(cls, ado_client: "AdoClient", repo_id: str, object_id: str, tag_name: str) -> None:
         """This is a messy workaround because the official API does not support deleting tags.
         Additionally, to delete we need a bunch of other stuff, can't just delete by object_id."""
         PAYLOAD = {
@@ -64,15 +62,15 @@ class AnnotatedTag(StateManagedResource):
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/refs?api-version=7.1-preview.1",
             json=[PAYLOAD],
         )
-        ado_client.state_manager.remove_resource_from_state(cls.__name__, object_id)  # type: ignore[arg-type]
+        ado_client.state_manager.remove_resource_from_state("AnnotatedTag", object_id)
 
     # # ============ End of requirement set by all state managed resources ================== #
     # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_all_by_repo(cls, ado_client: AdoClient, repo_id: str) -> list[AnnotatedTag]:
-        """Unofficial API. Also doesn't return a repo_id"""
+    def get_all_by_repo(cls, ado_client: "AdoClient", repo_id: str) -> list["AnnotatedTag"]:
+        """WARNING: Unofficial API."""
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{repo_id}/tags/?api-version=7.1-preview.1"
         )
@@ -89,11 +87,11 @@ class AnnotatedTag(StateManagedResource):
         ]
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, repo_id: str, tag_name: str) -> AnnotatedTag | None:
+    def get_by_name(cls, ado_client: "AdoClient", repo_id: str, tag_name: str) -> "AnnotatedTag | None":
         for tag in cls.get_all_by_repo(ado_client, repo_id):
             if tag.name == tag_name:
                 return tag
         raise ValueError(f"Tag {tag_name} not found")
 
-    def delete(self, ado_client: AdoClient) -> None:
+    def delete(self, ado_client: "AdoClient") -> None:
         self._special_delete(ado_client, self.repo_id, self.object_id, self.name)

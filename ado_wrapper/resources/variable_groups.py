@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
@@ -28,7 +26,7 @@ class VariableGroup(StateManagedResource):
     modified_on: datetime | None = None
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> VariableGroup:
+    def from_request_payload(cls, data: dict[str, Any]) -> "VariableGroup":
         # print("\n", data)
         created_by = Member.from_request_payload(data["createdBy"])
         modified_by = Member.from_request_payload(data["modifiedBy"])
@@ -37,16 +35,16 @@ class VariableGroup(StateManagedResource):
                    from_ado_date_string(data["createdOn"]), created_by, modified_by, from_ado_date_string(data.get("modifiedOn")))  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> VariableGroup:
+    def get_by_id(cls, ado_client: "AdoClient", variable_group_id: str) -> "VariableGroup":
         return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/distributedtask/variablegroups/{variable_group_id}?api-version=7.1",
-        )  # type: ignore[return-value]
+        )  # pyright: ignore[reportReturnType]
 
     @classmethod
     def create(
-        cls, ado_client: AdoClient, variable_group_name: str, variable_group_description: str, variables: dict[str, str]  # fmt: skip
-    ) -> VariableGroup:
+        cls, ado_client: "AdoClient", variable_group_name: str, variable_group_description: str, variables: dict[str, str]  # fmt: skip
+    ) -> "VariableGroup":
         payload = {
             "name": variable_group_name,
             "variables": variables,
@@ -63,10 +61,10 @@ class VariableGroup(StateManagedResource):
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/distributedtask/variablegroups?api-version=7.1",
             payload,
-        )  # type: ignore[return-value]
+        )  # pyright: ignore[reportReturnType]
 
     @classmethod
-    def delete_by_id(cls, ado_client: AdoClient, variable_group_id: str) -> None:
+    def delete_by_id(cls, ado_client: "AdoClient", variable_group_id: str) -> None:
         requires_initialisation(ado_client)
         return super()._delete_by_id(
             ado_client,
@@ -74,7 +72,7 @@ class VariableGroup(StateManagedResource):
             variable_group_id,
         )
 
-    def update(self, ado_client: AdoClient, attribute_name: VariableGroupEditableAttribute, attribute_value: Any) -> None:
+    def update(self, ado_client: "AdoClient", attribute_name: VariableGroupEditableAttribute, attribute_value: Any) -> None:
         # WARNING: This method works 80-90% of the time, for some reason, it fails randomly, ADO API is at fault.
         params = {
             "variableGroupProjectReferences": [{"name": self.name, "projectReference": {"name": ado_client.ado_project_name}}],
@@ -87,16 +85,16 @@ class VariableGroup(StateManagedResource):
         )
 
     @classmethod
-    def get_all(cls, ado_client: AdoClient) -> list[VariableGroup]:
+    def get_all(cls, ado_client: "AdoClient") -> list["VariableGroup"]:
         return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/distributedtask/variablegroups?api-version=7.1",
-        )  # type: ignore[return-value]
+        )  # pyright: ignore[reportReturnType]
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: AdoClient, name: str) -> VariableGroup | None:
-        return cls._get_by_abstract_filter(ado_client, lambda variable_group: variable_group.name == name)  # type: ignore[return-value, attr-defined]
+    def get_by_name(cls, ado_client: "AdoClient", name: str) -> "VariableGroup | None":
+        return cls._get_by_abstract_filter(ado_client, lambda variable_group: variable_group.name == name)

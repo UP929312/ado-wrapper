@@ -72,7 +72,7 @@ class Commit(StateManagedResource):
         return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/commits/{commit_id}?api-version=7.1",
-        )  # type: ignore[return-value]
+        )
 
     @classmethod
     def create(
@@ -125,7 +125,7 @@ class Commit(StateManagedResource):
         return super()._get_all(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/commits?{extra_query}api-version=7.1",
-        )  # type: ignore[return-value]
+        )  # pyright: ignore[reportReturnType]
 
     @classmethod
     def add_initial_readme(cls, ado_client: "AdoClient", repo_id: str) -> "Commit":

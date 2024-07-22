@@ -62,13 +62,18 @@ Test to test if template_parameters is being set when fetching/creating runs
 
 Add all the required perms with @required_perms
 
+<https://github.com/microsoft/azure-devops-python-api/blob/dev/azure-devops/azure/devops/v7_0/build/build_client.py#L1248>
+
 -----  
 
 Commands:  
 pylint .  
 mypy . --strict  
+flake8 --ignore=E501,E126,E121,W503,W504,PBP --exclude=script.py  
+ruff check  
 black . --line-length 140  
 python3.11 -m pytest tests/ -vvvv -s  
+
 python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt"  
 python3.11 -m ado_wrapper --delete-everything --creds_file "credentials.txt" --state-file "tests/test_state.state"  
 python3.11 -m ado_wrapper --refresh-resources-on-startup --creds_file "credentials.txt"  
@@ -78,3 +83,5 @@ coverage html && open htmlcov/index.html
 coverage run -m pytest && coverage html && open htmlcov/index.html  
 
 python3.11 -m pip install ado_wrapper --upgrade  
+
+pylint . && mypy . --strict && flake8 --ignore=E501,E126,E121,W503,W504,PBP --exclude=script.py && ruff check  

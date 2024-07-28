@@ -142,3 +142,28 @@ class Commit(StateManagedResource):
             json=default_commit_body,
         )
         return cls.from_request_payload(request.json()["commits"][0])
+
+    # @classmethod
+    # def roll_back_to_commit(cls, ado_client: "AdoClient", repo_id: str, commit_id: str, branch_name: str) -> None:
+    #     PAYLOAD = {
+    #         "generatedRefName": f"refs/heads/{commit_id}[:8]-revert-from-main",
+    #         "ontoRefName": f"refs/heads/{branch_name}",
+    #         "source": {"commitList": [{"commitId": commit_id}]}}
+    #         # "repository": {
+    #         #     "id": repo_id,
+    #         #     "name": "repo_name",
+    #         #     "project": {"id": ado_client.ado_project_id, "name": ado_client.ado_project_name, "state": 1, "revision":399,
+    #         #                 "visibility":0,"lastUpdateTime":"2024-02-06T14:14:30.360Z"
+    #         #     },
+    #         # },
+    #     request = ado_client.session.post(
+    #         f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_id}/_apis/git/repositories/{repo_id}/reverts",
+    #         json=PAYLOAD
+    #     )
+    #     if request.status_code != 201:
+    #         raise UnknownError("Could not rollback commit.")
+    #     revert_get_request = ado_client.session.get(
+    #         f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_id}/_apis/git/repositories/{repo_id}/reverts/{request.json()['revertId']}"
+    #     ).json()
+    #     if revert_get_request["status"] == 4 or revert_get_request["detailedStatus"]["conflict"]:
+    #         raise UnknownError("Error, there was a detected conflict and therefore could not complete.")

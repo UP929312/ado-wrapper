@@ -61,6 +61,7 @@ class Build(StateManagedResource):
     build_repo: BuildRepository = field(repr=False)
     parameters: dict[str, str] = field(repr=False)
     definition: "BuildDefinition | None" = field(repr=False)
+    pool_id: str | None
     start_time: datetime | None = field(repr=False)
     finish_time: datetime | None = field(repr=False)
     queue_time: datetime | None = field(repr=False, default=None)
@@ -73,8 +74,9 @@ class Build(StateManagedResource):
         build_repo = BuildRepository.from_request_payload(data["repository"])
         build_definition = BuildDefinition.from_request_payload(data["definition"]) if "definition" in data else None
         return cls(str(data["id"]), str(data["buildNumber"]), data["status"], requested_by, build_repo, data.get("templateParameters", {}),
-                   build_definition, from_ado_date_string(data.get("startTime")), from_ado_date_string(data.get("finishTime")),
-                   from_ado_date_string(data.get("queueTime")), data["reason"], data["priority"])  # fmt: skip
+                   build_definition, data.get("queue", {}).get("pool", {}).get("id"), from_ado_date_string(data.get("startTime")),
+                   from_ado_date_string(data.get("finishTime")), from_ado_date_string(data.get("queueTime")), data["reason"],
+                   data["priority"])  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", build_id: str) -> "Build":

@@ -11,11 +11,11 @@ from ado_wrapper.utils import from_ado_date_string, recursively_find_or_none
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 
-RunResult = Literal["canceled", "failed", "succeeded", "unknown"]
+RunResult = Literal["canceled", "failed", "succeeded", "unknown", "skipped"]
 RunState = Literal["canceling", "completed", "inProgress", "unknown"]
 
-JobStateLiteral = Literal["Queued", "In-Progress", "Complete"]
 JobResultLiteral = Literal["Queued", "Successful", "Warning", "Failed", "Cancelled", "Skipped"]
+JobStateLiteral = Literal["Queued", "In-Progress", "Complete"]
 
 
 class RunAllDictionary(TypedDict):

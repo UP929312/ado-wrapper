@@ -19,7 +19,7 @@ steps:
     displayName: 'Run a one-line script'"""
 
 
-class TestBuild:
+class TestBuildArtifact:
     def setup_method(self) -> None:
         self.ado_client = setup_client()
 
@@ -32,8 +32,8 @@ class TestBuild:
                 "source": "abcdefghi",  # The artifact source, which will be the ID of the job that produced this artifact. If an artifact is associated with multiple sources, this points to the first source.
                 "resource": {
                     "properties": {"localpath": "/home/vsts/work/1/s/abcde", "artifactsize": "12345"},
+                    "downloadUrl": "https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_id}/_apis/build/builds/{build_id}/artifacts?artifactName={artifact_name}&api-version=7.1-preview.5&$format=zip",
                 },
-                "downloadUrl": "https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_id}/_apis/build/builds/{build_id}/artifacts?artifactName={artifact_name}&api-version=7.1-preview.5&$format=zip",
             },
         )
         assert artifact.artifact_id == "123456789"

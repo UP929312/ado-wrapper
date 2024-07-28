@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.18.0
+
+### Added
+
+- Build's now store the agent pool id, under `pool_id` (although it's sometimes `None`)
+- Added `BuildTimeline`s, which contain a large amount of data of a build, each checkpoint, stage, step, phase, job, etc.
+- Added the Ability to get a `BuildTimeline`s retries automatically, by passing in fetch_retries=True (although this is an expensive operation)
+- Added `skipped` as another option to the `RunResult` literal (to align it more with the A.P.I.)
+
+### Changed
+
+- How a lot of extracting and converting from json is for instance's `get_by_id` (and similar functions) to better respond to empty strings (now raises `UnknownError`)
+- Added __all__ to better set exports for modules.
+- Renamed `Artifacts` test class from `Build` to `BuildArtifact`
+- Removed an eroneous print statement in `BuildArtifact`s
+
+---
+
 ## v1.17.0
 
 ### Added

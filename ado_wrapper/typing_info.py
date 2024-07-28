@@ -1,6 +1,7 @@
 # flake8: noqa  # pylint: disable-all
 """This file exists so you can import typing data for using scripts"""
 from ado_wrapper.resources.audit_logs import AuthenticationMechanismType, AreaType, CategoryType, CategoryDisplayNameType, ScopeTypeType
+from ado_wrapper.resources.build_timeline import BuildTimelineItemTypeType, TaskType, LogType, PreviousAttemptType, IssueDataType, IssueType
 from ado_wrapper.resources.builds import BuildStatus, QueuePriority
 from ado_wrapper.resources.commits import CommitChangeType
 from ado_wrapper.resources.merge_policies import WhenChangesArePushed

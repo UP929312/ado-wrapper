@@ -38,6 +38,7 @@ class TestBuild:
                 "queueTime": "2021-10-01T00:00:00Z",
                 "reason": "test",
                 "priority": "test",
+                "queue": {"pool": {"id": 123}},
             }
         )
         assert build.build_id == "123"

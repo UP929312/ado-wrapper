@@ -169,8 +169,8 @@ def binary_data_to_file_dictionary(binary_data: bytes, file_types: list[str] | N
 
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this whole func to avoid circular imports
     """This returns a mapping of resource name (str) to the class type of the resource. This is used to dynamically create instances of resources."""
-    from ado_wrapper.resources import (  # type: ignore[attr-defined]  # pylint: disable=possibly-unused-variable  # noqa: F401
-        AgentPool, AnnotatedTag, Artifact, AuditLog, Branch, Build, BuildDefinition, Commit, Environment, Group,
+    from ado_wrapper.resources import (  # pylint: disable=possibly-unused-variable  # noqa: F401
+        AgentPool, AnnotatedTag, Artifact, AuditLog, Branch, BuildTimeline, Build, BuildDefinition, Commit, Environment, Group,
         MergePolicies, MergeBranchPolicy, MergePolicyDefaultReviewer, Organisation, PersonalAccessToken, Permission, Project,
         PullRequest, Release, ReleaseDefinition, Repo, Run, BuildRepository, Team, AdoUser, Member, ServiceEndpoint,
         Reviewer, VariableGroup,  # fmt: skip
@@ -180,7 +180,7 @@ def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We d
 
 
 ResourceType = Literal[
-    "AgentPool", "AnnotatedTag", "Artifact", "AuditLog", "Branch", "Build", "BuildDefinition", "Commit", "Environment", "Group",
+    "AgentPool", "AnnotatedTag", "Artifact", "AuditLog", "Branch", "BuildTimeline", "Build", "BuildDefinition", "Commit", "Environment", "Group",
     "MergePolicies", "MergeBranchPolicy", "MergePolicyDefaultReviewer", "Organisation", "PersonalAccessToken", "Permission", "Project",
     "PullRequest", "Release", "ReleaseDefinition", "Repo", "Run", "Team", "AdoUser", "Member", "ServiceEndpoint",
     "Reviewer", "VariableGroup"  # fmt: skip

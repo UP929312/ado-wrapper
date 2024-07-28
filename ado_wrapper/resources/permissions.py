@@ -183,7 +183,7 @@ class Permission:
                 for action in perm_group["actions"]
             ]
         }  # fmt: skip
-        request = ado_client.session.post(
+        request = ado_client.session.post(  # Post, so can't use super()._get_by_url
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/security/permissionevaluationbatch?api-version=7.1-preview.1",
             json=PAYLOAD,
         ).json()

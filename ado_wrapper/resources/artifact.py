@@ -23,7 +23,7 @@ class BuildArtifact(StateManagedResource):
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "BuildArtifact":
-        print(f"{data=}")
+        # print(f"{data=}")
         artifact_size: str | None = data["resource"].get("properties", {"artifactsize": None})["artifactsize"]
         return cls(
             str(data["id"]), data["name"], data["source"],

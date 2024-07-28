@@ -3,7 +3,7 @@ from dataclasses import dataclass, fields
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Literal, Type, TypeVar
 
-from ado_wrapper.errors import DeletionFailed, ResourceAlreadyExists, ResourceNotFound, UpdateFailed, InvalidPermissionsError  # fmt: skip
+from ado_wrapper.errors import DeletionFailed, ResourceAlreadyExists, ResourceNotFound, UnknownError, UpdateFailed, InvalidPermissionsError  # fmt: skip
 from ado_wrapper.utils import extract_id, get_internal_field_names, get_resource_variables
 
 if TYPE_CHECKING:
@@ -73,6 +73,8 @@ class StateManagedResource:
             raise ResourceNotFound(f"No {cls.__name__} found with that identifier!")
         if request.status_code >= 300:
             raise ValueError(f"Error getting {cls.__name__} by id: {request.text}")
+        if request.text == "":
+            raise UnknownError(f"Error fetching {cls.__name__}, unknown error.")
         if "value" in request.json():
             return cls.from_request_payload(request.json()["value"][0])
         return cls.from_request_payload(request.json())

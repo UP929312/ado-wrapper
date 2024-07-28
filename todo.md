@@ -64,6 +64,8 @@ Add all the required perms with @required_perms
 
 <https://github.com/microsoft/azure-devops-python-api/blob/dev/azure-devops/azure/devops/v7_0/build/build_client.py#L1248>
 
+Can Jobs have logs, not just the steps?
+
 -----  
 
 Commands:  

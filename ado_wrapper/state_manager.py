@@ -10,7 +10,7 @@ from ado_wrapper.errors import DeletionFailed
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 
-STATE_FILE_VERSION = "1.7"
+STATE_FILE_VERSION = "1.8"
 
 
 class StateFileType(TypedDict):
@@ -96,7 +96,7 @@ class StateManager:
         except (NotImplementedError, TypeError):
             if not self.ado_client.suppress_warnings:
                 print(
-                    f"[ADO_WRAPPER] Cannot delete {resource_type} {resource_id} from state or real space, please delete this manually or using code."
+                    f"[ADO_WRAPPER] Cannot delete {resource_type} {resource_id} from state or real space, please delete this manually or using code."  # nosec B608,
                 )
         else:
             if not self.ado_client.suppress_warnings:

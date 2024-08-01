@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.19.0
+
+### Added
+
+- `Build.get_all()` now supports a limit, as well as a filter for build status (e.g. completed, failed, etc)
+- `MergeTypeRestrictionPolicy`s can now be set for repos, disallowing non-squashes, fast-forwards, etc.
+- Added `MergePolicies.get_all_repo_policies()` to fetch all the policies relating to a repo, e.g. required reviewers, allowed merge types, merge requirements, etc.
+
+### Changed
+
+- The codebase is now covered by `Bandit`, a code analysis and security tool.
+- Slightly more of the codebase is tested (which should mean slightly less library errors)
+
+---
+
 ## v1.18.0
 
 ### Added

@@ -60,11 +60,15 @@ Test state_manager.py more?
 Test __main__.py  
 Test to test if template_parameters is being set when fetching/creating runs
 
-Add all the required perms with @required_perms
-
-<https://github.com/microsoft/azure-devops-python-api/blob/dev/azure-devops/azure/devops/v7_0/build/build_client.py#L1248>
+Add all the required perms with @required_perms - On hold, perms seem to be user based, not token based
 
 Can Jobs have logs, not just the steps?
+
+Build, Fetch: &maxTime={maxTime}&minTime={minTime}"
+
+Docs have functions which raise NotImplemented, inspect and remove if they do?
+
+Pat token stuffs, commit rollback, artifact stuffs
 
 -----  
 
@@ -72,6 +76,7 @@ Commands:
 pylint .  
 mypy . --strict  
 flake8 --ignore=E501,E126,E121,W503,W504,PBP --exclude=script.py  
+bandit -c pyproject.toml -r .
 ruff check  
 black . --line-length 140  
 python3.11 -m pytest tests/ -vvvv -s  
@@ -87,3 +92,4 @@ coverage run -m pytest && coverage html && open htmlcov/index.html
 python3.11 -m pip install ado_wrapper --upgrade  
 
 pylint . && mypy . --strict && flake8 --ignore=E501,E126,E121,W503,W504,PBP --exclude=script.py && ruff check  
+bandit -c pyproject.toml -r .  

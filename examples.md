@@ -92,6 +92,25 @@ annotated_tag = AnnotatedTag.get_by_name(ado_client, <repo_id>, <tag_name>)
 </details>
 
 -----
+# Artifact
+<details>
+
+```py
+# Delete
+artifact.delete(ado_client)
+
+# Download Artifact
+dictionary = Artifact.download_artifact(ado_client, <download_url>)
+
+# Get All By Build Id
+build_artifacts = Artifact.get_all_by_build_id(ado_client, <build_id>)
+
+# Get By Name
+build_artifact = Artifact.get_by_name(ado_client, <build_id>, <artifact_name>)
+```
+</details>
+
+-----
 # AuditLog
 <details>
 
@@ -170,6 +189,9 @@ builds = Build.get_all(ado_client)
 # Get All By Definition
 builds = Build.get_all_by_definition(ado_client, <definition_id>)
 
+# Get Build Log Content
+string_var = Build.get_build_log_content(ado_client, <build_id>, <stage_name>, <job_name>, <remove_prefixed_timestamp>, <remove_colours>)
+
 # Get By Id
 build = Build.get_by_id(ado_client, <build_id>)
 
@@ -222,12 +244,37 @@ build_definition.update(ado_client, <attribute_name>, <attribute_value>)
 </details>
 
 -----
+# BuildTimeline
+<details>
+
+```py
+# Delete
+build_timeline.delete(ado_client)
+
+# Delete By Id
+build_timeline.delete_by_id(ado_client, <build_id>)
+
+# Get All By Type
+build_timeline = BuildTimeline.get_all_by_type(ado_client, <build_id>, <item_type>, <fetch_retries>)
+
+# Get Build Timeline
+build_timeline = BuildTimeline.get_build_timeline(ado_client, <build_id>, <fetch_retries>)
+
+# Get Build Timeline By Id
+build_timeline = BuildTimeline.get_build_timeline_by_id(ado_client, <build_id>, <timeline_id>)
+
+# Get By Id
+build_timeline = BuildTimeline.get_by_id(ado_client, <build_id>, <timeline_id>)
+```
+</details>
+
+-----
 # CodeSearch
 <details>
 
 ```py
 # Get By Search String
-any = CodeSearch.get_by_search_string(ado_client, <search_text>, <result_count>, <sort_direction>)
+code_searchs = CodeSearch.get_by_search_string(ado_client, <search_text>, <result_count>, <sort_direction>)
 ```
 </details>
 
@@ -371,7 +418,7 @@ merge_policies.delete(ado_client)
 merge_branch_policys = MergePolicies.get_all_branch_policies_by_repo_id(ado_client, <repo_id>, <branch_name>)
 
 # Get All By Repo Id
-merge_policy_default_reviewers = MergePolicies.get_all_by_repo_id(ado_client, <repo_id>, <branch_name>)
+list[_merge_policy_default_reviewer = MergePolicies.get_all_by_repo_id(ado_client, <repo_id>, <branch_name>)
 
 # Get Branch Policy
 merge_branch_policy = MergePolicies.get_branch_policy(ado_client, <repo_id>, <branch_name>)
@@ -410,6 +457,54 @@ merge_policy_default_reviewer.remove_default_reviewer(ado_client, <repo_id>, <re
 </details>
 
 -----
+# Organisation
+<details>
+
+```py
+# Delete
+organisation.delete(ado_client)
+
+# Get All
+organisations = Organisation.get_all(ado_client)
+
+# Get By Id
+organisation = Organisation.get_by_id(ado_client, <organisation_id>)
+
+# Get By Name
+organisation = Organisation.get_by_name(ado_client, <organisation_name>)
+```
+</details>
+
+-----
+# Permission
+<details>
+
+```py
+# Get Project Perms
+permissions = Permission.get_project_perms(ado_client)
+
+# Get Project Perms By Group
+permissions = Permission.get_project_perms_by_group(ado_client, <group>)
+
+# Print Perms
+permission.print_perms(ado_client)
+```
+</details>
+
+-----
+# PersonalAccessToken
+<details>
+
+```py
+# Get Access Token By Name
+personal_access_token = PersonalAccessToken.get_access_token_by_name(ado_client, <display_name>)
+
+# Get Access Tokens
+personal_access_tokens = PersonalAccessToken.get_access_tokens(ado_client, <include_different_orgs>, <include_expired_tokens>)
+```
+</details>
+
+-----
 # PipelineAuthorisation
 <details>
 
@@ -438,9 +533,6 @@ project = Project.create(ado_client, <project_name>, <project_description>)
 
 # Delete
 project.delete(ado_client)
-
-# Delete By Id
-project.delete_by_id(ado_client, <project_id>)
 
 # Get All
 projects = Project.get_all(ado_client)
@@ -505,6 +597,9 @@ pull_request.mark_as_draft(ado_client)
 
 # Post Comment
 pull_request_comment = PullRequest.post_comment(ado_client, <content>)
+
+# Set My Pull Requests Included Teams
+pull_request.set_my_pull_requests_included_teams(ado_client, <status>, <draft_state>, <created_by>, <assigned_to>, <target_branch>, <created_in_last_x_days>, <updated_in_last_x_days>, <completed_in_last_x_days>)
 
 # Unmark As Draft
 pull_request.unmark_as_draft(ado_client)
@@ -631,13 +726,13 @@ repo.update(ado_client, <attribute_name>, <attribute_value>)
 repo_user_permissions.delete(ado_client)
 
 # Display Output
-string_var = RepoUserPermissions.display_output(permissions)
+string_var = RepoUserPermissions.display_output(<permissions>)
 
 # Display Output For Repo
-string_var = RepoUserPermissions.display_output_for_repo(mapping)
+string_var = RepoUserPermissions.display_output_for_repo(<mapping>)
 
 # Get All By Repo Id
-dictionary = RepoUserPermissions.get_all_by_repo_id(ado_client, <repo_id>, <users_only>, <ignore_inherits>, <remove_not_set>)
+user_permissions = RepoUserPermissions.get_all_by_repo_id(ado_client, <repo_id>, <users_only>, <ignore_inherits>, <remove_not_set>)
 
 # Get By Subject Descriptor
 user_permissions = RepoUserPermissions.get_by_subject_descriptor(ado_client, <repo_id>, <subject_descriptor>)
@@ -703,6 +798,9 @@ run = Run.get_by_id(ado_client, <pipeline_id>, <run_id>)
 
 # Get Latest
 run = Run.get_latest(ado_client, <definition_id>)
+
+# Get Run Log Content
+string_var = Run.get_run_log_content(ado_client, <build_id>, <stage_name>, <job_name>, <remove_prefixed_timestamp>, <remove_colours>)
 
 # Get Run Stage Results
 run_stage_results = Run.get_run_stage_results(ado_client, <build_id>)
@@ -777,9 +875,6 @@ team = Team.get_by_name(ado_client, <team_name>)
 
 # Get Members
 team_members = Team.get_members(ado_client)
-
-# Update
-team.update(ado_client, <attribute_name>, <attribute_value>)
 ```
 </details>
 

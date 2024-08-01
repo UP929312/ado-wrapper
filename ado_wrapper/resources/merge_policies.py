@@ -19,11 +19,14 @@ merge_complete_name_mapping = {
     "resetRejectionsOnSourcePush": "reset_rejections_on_source_push",
     "do_nothing": "do_nothing",
 }
+MergeTypeOptionsType = Literal[
+    "allow_basic_no_fast_forwards", "allow_squash", "allow_rebase_and_fast_forward", "allow_rebase_with_merge_commit"
+]
 limit_merge_type_mapping = {
+    "allowNoFastForward": "allow_basic_no_fast_forwards",
     "allowSquash": "allow_squash",
-    "allowNoFastForward": "allow_no_fast_forward",
-    "allowRebase": "allow_rebase",
-    "allowRebaseMerge": "allow_rebase_merge",
+    "allowRebase": "allow_rebase_and_fast_forward",
+    "allowRebaseMerge": "allow_rebase_with_merge_commit",
 }
 
 
@@ -100,10 +103,15 @@ class MergePolicyDefaultReviewer(StateManagedResource):
 
     @staticmethod
     def remove_default_reviewer(ado_client: "AdoClient", repo_id: str, reviewer_id: str, branch_name: str = "main") -> None:
-        policies = MergePolicies.get_default_reviewers_by_repo_id(ado_client, repo_id, branch_name)
-        policy_id = [x for x in policies if x.required_reviewer_id == reviewer_id][0].policy_id if policies is not None else None  # fmt: skip
-        if not policy_id:
+        policies = MergePolicies.get_all_by_repo_id(ado_client, repo_id, branch_name)
+        default_reviewer_policy = (
+            [x for x in policies if isinstance(x, MergePolicyDefaultReviewer)]  # pylint: disable=not-an-iterable
+            if policies is not None
+            else None
+        )
+        if default_reviewer_policy is None:
             return
+        policy_id = [x for x in default_reviewer_policy if x.required_reviewer_id == reviewer_id][0].policy_id  # fmt: skip
         request = ado_client.session.delete(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/policy/configurations/{policy_id}?api-version=7.1",
         )
@@ -140,8 +148,14 @@ class MergeBranchPolicy(StateManagedResource):
     @classmethod
     def get_branch_policy(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "MergeBranchPolicy | None":
         """Gets the latest merge requirements for a pull request."""
-        policy = MergePolicies.get_all_branch_policies_by_repo_id(ado_client, repo_id, branch_name)
-        return policy[0] if policy else None
+        policies = MergePolicies.get_all_by_repo_id(ado_client, repo_id, branch_name)
+        if policies is None:
+            return None
+        merge_branch_policies = sorted(
+            [x for x in policies if isinstance(x, MergeBranchPolicy)],  # pylint: disable=not-an-iterable
+            key=lambda x: x.created_date, reverse=True,  # fmt: skip
+        )
+        return merge_branch_policies[0] if merge_branch_policies else None
 
     @staticmethod
     def set_branch_policy(ado_client: "AdoClient", repo_id: str, minimum_approver_count: int,
@@ -175,26 +189,88 @@ class MergeBranchPolicy(StateManagedResource):
 
 
 @dataclass
+class MergeTypeRestrictionPolicy(StateManagedResource):
+    policy_id: str = field(metadata={"is_id_field": True})
+    repo_id: str = field(repr=False)
+    branch_name: str | None = field(repr=False)
+    created_date: datetime = field(repr=False)
+    allow_basic_no_fast_forwards: bool = field(metadata={"internal_name": "allowNoFastForward"})
+    allow_squash: bool = field(metadata={"internal_name": "allowSquash"})
+    allow_rebase_and_fast_forward: bool = field(metadata={"internal_name": "allowRebase"})
+    allow_rebase_with_merge_commit: bool = field(metadata={"internal_name": "allowRebaseMerge"})
+
+    @classmethod
+    def from_request_payload(cls, data: dict[str, Any]) -> "MergeTypeRestrictionPolicy":
+        settings = data["settings"]
+        branch_name: str | None = settings["scope"][0]["refName"]
+        return cls(
+            data["id"], settings["scope"][0]["repositoryId"], (branch_name.removeprefix("refs/heads/") if branch_name else None),
+            from_ado_date_string(data["createdDate"]),
+            settings.get("allowNoFastForward", False), settings.get("allowSquash", False),
+            settings.get("allowRebase"), settings.get("allowRebaseMerge"),  # fmt: skip
+        )
+
+    @classmethod
+    def get_allowed_merge_types(
+        cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main"
+    ) -> "MergeTypeRestrictionPolicy | None":
+        policies = MergePolicies.get_all_by_repo_id(ado_client, repo_id, branch_name)
+        if policies is None:
+            return None
+        merge_type_restriction_policies = sorted(
+            [x for x in policies if isinstance(x, MergeTypeRestrictionPolicy)],  # pylint: disable=not-an-iterable
+            key=lambda x: x.created_date, reverse=True,  # fmt: skip
+        )
+        return merge_type_restriction_policies[0] if merge_type_restriction_policies else None
+
+    @staticmethod
+    def set_allowed_merge_types(ado_client: "AdoClient", repo_id: str, allow_basic_no_fast_forwards: bool, allow_squash: bool,
+                                allow_rebase_and_fast_forward: bool, allow_rebase_with_merge_commit: bool,
+                                branch_name: str = "main") -> None:  # fmt: skip
+        """Sets the perms for a pull request's merge type (e.g. rebase), can also be used as a "update" function."""
+        existing_policy = MergePolicies.get_allowed_merge_types(ado_client, repo_id, branch_name)
+        latest_policy_id = f"/{existing_policy.policy_id}" if existing_policy is not None else ""
+        payload = {
+            "settings": {
+                "allowNoFastForward": allow_basic_no_fast_forwards,
+                "allowSquash": allow_squash,
+                "allowRebase": allow_rebase_and_fast_forward,
+                "allowRebaseMerge": allow_rebase_with_merge_commit,
+                "scope": [{"refName": f"refs/heads/{branch_name}", "repositoryId": repo_id, "matchKind": "Exact"}],
+            },
+            "type": {"id": _get_type_id(ado_client, "Require a merge strategy")},
+            "isEnabled": True,
+            "isBlocking": True,
+        }
+        request = ado_client.session.request(
+            "PUT" if latest_policy_id else "POST",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/policy/Configurations{latest_policy_id}?api-version=7.1",  # fmt: skip
+            json=payload,
+        )
+        assert request.status_code == 200, f"Error setting merge type restriction policy: {request.text}"
+
+
+@dataclass
 class MergePolicies(StateManagedResource):
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "list[MergePolicyDefaultReviewer | MergeBranchPolicy] | None":  # type: ignore[override]
+    def from_request_payload(cls, data: dict[str, Any]) -> list[MergePolicyDefaultReviewer | MergeBranchPolicy | MergeTypeRestrictionPolicy] | None:  # type: ignore[override]
         """Used internally to get a list of all policies."""
         policy_groups: dict[str, Any] = data["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["policyGroups"] or {}  # fmt: skip
-        all_policies: list[MergePolicyDefaultReviewer | MergeBranchPolicy] = []
+        all_policies: list[MergePolicyDefaultReviewer | MergeBranchPolicy | MergeTypeRestrictionPolicy] = []
         for policy_group in policy_groups.values():
             for policy in policy_group["currentScopePolicies"] or []:  # If it's None, don't loop
                 settings = policy["settings"]
-                # Limit merge types
-                if any(x in settings for x in limit_merge_type_mapping):
-                    continue
                 # Build Validation {'buildDefinitionId': 4, 'queueOnSourceUpdateOnly': True, 'manualQueueOnly': False, 'displayName': None, 'validDuration': 720.0
                 if "buildDefinitionId" in settings:
                     continue
                 # Comments Required
                 if policy.get("type", {"displayName": ""})["displayName"] == "Comment requirements":
                     continue
+                # Limit merge types
+                if any(x in settings for x in limit_merge_type_mapping):
+                    all_policies.append(MergeTypeRestrictionPolicy.from_request_payload(policy))
                 # Automatically included reviewers
-                if "requiredReviewerIds" in settings:
+                elif "requiredReviewerIds" in settings:
                     all_policies.append(MergePolicyDefaultReviewer.from_request_payload(policy))
                 elif "minimumApproverCount" in settings:
                     new_policy = MergeBranchPolicy.from_request_payload(policy, False)
@@ -210,31 +286,25 @@ class MergePolicies(StateManagedResource):
         return all_policies or None
 
     @classmethod
-    def get_all_by_repo_id(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "list[MergePolicyDefaultReviewer | MergeBranchPolicy] | None":  # fmt: skip
+    def get_all_by_repo_id(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> list[MergePolicyDefaultReviewer | MergeBranchPolicy | MergeTypeRestrictionPolicy] | None:  # fmt: skip
         payload = {"contributionIds": ["ms.vss-code-web.branch-policies-data-provider"], "dataProviderContext": {"properties": {
             "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}", "sourcePage": {"routeValues": {"project": ado_client.ado_project_name}}}}}  # fmt: skip
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview.1",
             json=payload,
         ).json()
+        # print(request)
         return cls.from_request_payload(request)
 
-    @classmethod
-    def get_all_branch_policies_by_repo_id(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "list[MergeBranchPolicy] | None":  # fmt: skip
-        policies = cls.get_all_by_repo_id(ado_client, repo_id, branch_name)
-        return (
-            sorted([x for x in policies if isinstance(x, MergeBranchPolicy)], key=lambda x: x.created_date, reverse=True)  # pylint: disable=not-an-iterable
-            if policies is not None else None
-        )  # fmt: skip
-
-    @classmethod
-    def get_default_reviewers_by_repo_id(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "list[MergePolicyDefaultReviewer] | None":  # fmt: skip
-        policies = cls.get_all_by_repo_id(ado_client, repo_id, branch_name)
-        return (
-            [x for x in policies if isinstance(x, MergePolicyDefaultReviewer)]  # pylint: disable=not-an-iterable
-            if policies is not None
-            else None
-        )
+    # ======================= Combined ====================== #
+    @staticmethod
+    def get_all_repo_policies(
+        ado_client: "AdoClient", repo_id: str, branch_name: str = "main"
+    ) -> tuple[list[Reviewer], MergeBranchPolicy | None, MergeTypeRestrictionPolicy | None]:  # fmt: skip
+        default_reviewer = MergePolicyDefaultReviewer.get_default_reviewers(ado_client, repo_id, branch_name)
+        branch_policy = MergeBranchPolicy.get_branch_policy(ado_client, repo_id, branch_name)
+        allowed_merge_types = MergeTypeRestrictionPolicy.get_allowed_merge_types(ado_client, repo_id, branch_name)
+        return (default_reviewer, branch_policy, allowed_merge_types)
 
     # ================== Default Reviewers ================== #
     @staticmethod
@@ -262,3 +332,20 @@ class MergePolicies(StateManagedResource):
     @staticmethod
     def get_branch_policy(ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "MergeBranchPolicy | None":
         return MergeBranchPolicy.get_branch_policy(ado_client, repo_id, branch_name)
+
+    # ================= Merge Type Policy ================= #
+
+    @staticmethod
+    def set_allowed_merge_types(
+        ado_client: "AdoClient", repo_id: str,
+        allow_basic_no_fast_forwards: bool, allow_squash: bool, allow_rebase_and_fast_forward: bool, allow_rebase_with_merge_commit: bool,
+        branch_name: str = "main",  # fmt: skip
+    ) -> "MergeTypeRestrictionPolicy | None":
+        return MergeTypeRestrictionPolicy.set_allowed_merge_types(
+            ado_client, repo_id, allow_basic_no_fast_forwards, allow_squash,
+            allow_rebase_and_fast_forward, allow_rebase_with_merge_commit, branch_name,  # fmt: skip
+        )
+
+    @staticmethod
+    def get_allowed_merge_types(ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "MergeTypeRestrictionPolicy | None":
+        return MergeTypeRestrictionPolicy.get_allowed_merge_types(ado_client, repo_id, branch_name)

@@ -3,8 +3,10 @@ import re
 
 from ado_wrapper.resources import *  # pylint: disable=W0401,W0614  # noqa: F401,F403
 
+# This reference to ado_wrapper is wrong, it uses the installed package, not the local copy.
+
 pattern = re.compile(r"(?<!^)(?=[A-Z])")
-ignored_functions = ["get_by_url", "to_json", "from_json", "get_by_abstract_filter", "from_request_payload", "set_lifecycle_policy"]
+ignored_functions = ["to_json", "from_json", "from_request_payload", "set_lifecycle_policy"]
 string = """
 
 # Examples
@@ -30,18 +32,21 @@ def pascal_to_snake(string: str) -> str:
 def format_return_type(return_type: str) -> str | None:
     """Returns the value, formatted, and = if it's not None, makes list[`object`] also be called `objects`"""
     return_type = pascal_to_snake(return_type.split(" | ")[0])
+    # print(f"return_type_to_snake = {return_type}")
+    is_list = "]" in return_type
     if "." in return_type:
-        return_type = return_type.split(".")[-1].removesuffix(">").removeprefix("_")
-    if return_type == "str":
+        return_type = return_type.split(".")[-1].removesuffix(">").removeprefix("_")  # Will remove list[] stuffs as well
+        # print(f"return_type_with_dot = {return_type}")
+    if return_type == "<class str>":
         return "string_var = "
     if return_type.startswith("dict"):
         return "dictionary = "
     if return_type.startswith("none"):
         return ""
-    if "state_managed_resource" in return_type:
-        return None
-    if return_type.startswith("list[_"):
-        return_type = return_type.removeprefix("list[_").removesuffix("]") + "s"
+    if is_list:
+        return_type = return_type.removeprefix("list[").rstrip("]").lstrip("_") + "s"
+    if "]" in return_type and "[" not in return_type:
+        return_type = return_type.rstrip("]")
     return f"{return_type} = "
 
 
@@ -53,7 +58,7 @@ sorted_pairs = dict(sorted({string: value for string, value in globals().items()
 
 for class_name, value in sorted_pairs.items():
     # print(class_name)
-    # if class_name != "Permission":
+    # if class_name != "MergePolicyDefaultReviewer":
     #     continue
     function_data = {
         key: value for key, value in dict(inspect.getmembers(value)).items()
@@ -72,14 +77,17 @@ for class_name, value in sorted_pairs.items():
         # =======
         comment = function_name.replace("_", " ").title()
         #
-        return_type = format_return_type(str(signature.return_annotation))
+        # if function_name != "get_default_reviewers":
+        #     continue
+        # print(f"Func={function_name}, Args={function_args}, Return Anno={signature.return_annotation}")
+        return_type = format_return_type(str(signature.return_annotation).replace("typing.", ""))
+        # print(f"{return_type=}")
+        # print("\n")
         if return_type is None:
             continue
         #
         function_args = [x for x in signature.parameters.keys() if x != "self"]
-        if function_args == ["ado_client", "update_action", "url", "attribute_name", "attribute_value", "params"]:
-            continue  # For things inheritting from update, for the time being before we remap to _update
-        single_args_formatted = [x if i == 0 else f"<{x}>" for i, x in enumerate(function_args)]
+        single_args_formatted = [x if x == "ado_client" else f"<{x}>" for x in function_args]  # Wrap non ado_client in <>
         function_args_formatted = ", ".join(single_args_formatted)
         string += f"# {comment}\n{return_type}{class_name if ' = ' in return_type else pascal_to_snake(class_name)}.{function_name}({function_args_formatted})\n\n"
 

@@ -119,10 +119,10 @@ class Build(StateManagedResource):
         )
 
     @classmethod
-    def get_all(cls, ado_client: "AdoClient") -> "list[Build]":
+    def get_all(cls, ado_client: "AdoClient", limit: int = 1000, status: BuildStatus | Literal["all"] = "all") -> "list[Build]":
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project_name}/_apis/build/builds?api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/build/builds?api-version=7.1&queryOrder=finishTimeDescending&$top={limit}&statusFilter={status}",
         )  # pyright: ignore[reportReturnType]
 
     # ============ End of requirement set by all state managed resources ================== #

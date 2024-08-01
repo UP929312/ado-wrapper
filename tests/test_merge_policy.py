@@ -56,3 +56,16 @@ class TestMergePolicy:
 
             # We also need to do way more work with the "inheritedPolicies" field, currently, "currentScopePolicies" is None for many, this
             # Might not actually be a problem though, idk
+
+    @pytest.mark.create_delete
+    def test_create_merge_type_restriction_policy(self) -> None:
+        with RepoContextManager(self.ado_client, "create-delete-merge-type-restriction") as repo:
+            no_policy = MergePolicies.get_allowed_merge_types(self.ado_client, repo.repo_id)
+            assert no_policy is None
+            MergePolicies.set_allowed_merge_types(self.ado_client, repo.repo_id, True, False, True, False)
+            allowed_merge_types = MergePolicies.get_allowed_merge_types(self.ado_client, repo.repo_id)
+            assert allowed_merge_types is not None
+            assert allowed_merge_types.allow_basic_no_fast_forwards
+            assert not allowed_merge_types.allow_squash
+            assert allowed_merge_types.allow_rebase_and_fast_forward
+            assert not allowed_merge_types.allow_rebase_with_merge_commit

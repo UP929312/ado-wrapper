@@ -9,7 +9,7 @@ __all__ = [
     "AdoClient",
     "AgentPool", "AnnotatedTag", "Artifact", "AuditLog", "Branch", "BuildTimeline", "Build", "BuildDefinition", "Commit",
     "Environment", "PipelineAuthorisation", "Group", "MergeBranchPolicy", "MergePolicies", "MergePolicyDefaultReviewer",
-    "Organisation", "Permission", "PersonalAccessToken", "Project", "PullRequest", "Release", "ReleaseDefinition",
+    "MergeTypeRestrictionPolicy", "Organisation", "Permission", "PersonalAccessToken", "Project", "PullRequest", "Release", "ReleaseDefinition",
     "RepoUserPermissions", "UserPermission", "BuildRepository", "Repo", "Run", "CodeSearch", "ServiceEndpoint", "Team",
     "AdoUser", "Member", "Reviewer", "TeamMember", "VariableGroup",
 ]  # fmt: skip

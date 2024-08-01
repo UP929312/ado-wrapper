@@ -307,6 +307,15 @@ class MergePolicies(StateManagedResource):
         return (default_reviewer, branch_policy, allowed_merge_types)
 
     # ================== Default Reviewers ================== #
+    @classmethod
+    def get_default_reviewer_policy_by_repo_id(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "list[MergePolicyDefaultReviewer] | None":  # fmt: skip
+        policies = cls.get_all_by_repo_id(ado_client, repo_id, branch_name)
+        return (
+            [x for x in policies if isinstance(x, MergePolicyDefaultReviewer)]  # pylint: disable=not-an-iterable
+            if policies is not None
+            else None
+        )
+
     @staticmethod
     def add_default_reviewer(ado_client: "AdoClient", repo_id: str, reviewer_id: str, is_required: bool, branch_name: str = "main") -> None:
         """If the reviewer is a group, use the Group.origin_id attribute, for users, use their regular user id"""

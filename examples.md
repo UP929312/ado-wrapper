@@ -184,7 +184,7 @@ build.delete_all_leases(ado_client, <build_id>)
 build.delete_by_id(ado_client, <build_id>)
 
 # Get All
-builds = Build.get_all(ado_client)
+builds = Build.get_all(ado_client, <limit>, <status>)
 
 # Get All By Definition
 builds = Build.get_all_by_definition(ado_client, <definition_id>)
@@ -414,11 +414,14 @@ merge_policies.add_default_reviewer(ado_client, <repo_id>, <reviewer_id>, <is_re
 # Delete
 merge_policies.delete(ado_client)
 
-# Get All Branch Policies By Repo Id
-merge_branch_policys = MergePolicies.get_all_branch_policies_by_repo_id(ado_client, <repo_id>, <branch_name>)
-
 # Get All By Repo Id
-list[_merge_policy_default_reviewer = MergePolicies.get_all_by_repo_id(ado_client, <repo_id>, <branch_name>)
+merge_policy_default_reviewer = MergePolicies.get_all_by_repo_id(ado_client, <repo_id>, <branch_name>)
+
+# Get All Repo Policies
+merge_branch_policys = MergePolicies.get_all_repo_policies(ado_client, <repo_id>, <branch_name>)
+
+# Get Allowed Merge Types
+merge_type_restriction_policy = MergePolicies.get_allowed_merge_types(ado_client, <repo_id>, <branch_name>)
 
 # Get Branch Policy
 merge_branch_policy = MergePolicies.get_branch_policy(ado_client, <repo_id>, <branch_name>)
@@ -426,11 +429,11 @@ merge_branch_policy = MergePolicies.get_branch_policy(ado_client, <repo_id>, <br
 # Get Default Reviewers
 reviewers = MergePolicies.get_default_reviewers(ado_client, <repo_id>, <branch_name>)
 
-# Get Default Reviewers By Repo Id
-merge_policy_default_reviewers = MergePolicies.get_default_reviewers_by_repo_id(ado_client, <repo_id>, <branch_name>)
-
 # Remove Default Reviewer
 merge_policies.remove_default_reviewer(ado_client, <repo_id>, <reviewer_id>, <branch_name>)
+
+# Set Allowed Merge Types
+merge_type_restriction_policy = MergePolicies.set_allowed_merge_types(ado_client, <repo_id>, <allow_basic_no_fast_forwards>, <allow_squash>, <allow_rebase_and_fast_forward>, <allow_rebase_with_merge_commit>, <branch_name>)
 
 # Set Branch Policy
 merge_policies.set_branch_policy(ado_client, <repo_id>, <minimum_approver_count>, <creator_vote_counts>, <prohibit_last_pushers_vote>, <allow_completion_with_rejects>, <when_new_changes_are_pushed>, <branch_name>)
@@ -496,6 +499,9 @@ permission.print_perms(ado_client)
 <details>
 
 ```py
+# Create Personal Access Token
+personal_access_token.create_personal_access_token(ado_client, <display_name>)
+
 # Get Access Token By Name
 personal_access_token = PersonalAccessToken.get_access_token_by_name(ado_client, <display_name>)
 

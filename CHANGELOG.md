@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.19.1
+
+### Changed
+
+- `get_default_reviewers_by_repo_id` has been renamed to `get_default_reviewer_policy_by_repo_id` (and re-implemented)
+- Added `MergeTypeRestrictionPolicy` to the __all__ so it can be imported easily
+
+---
+
 ## v1.19.0
 
 ### Added

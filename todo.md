@@ -62,7 +62,7 @@ Test to test if template_parameters is being set when fetching/creating runs
 
 Add all the required perms with @required_perms - On hold, perms seem to be user based, not token based
 
-Can Jobs have logs, not just the steps?
+Can Jobs have logs, not just the tasks? Maybe the stage can have logs?
 
 Build, Fetch: &maxTime={maxTime}&minTime={minTime}"
 
@@ -70,13 +70,17 @@ Docs have functions which raise NotImplemented, inspect and remove if they do?
 
 Pat token stuffs, commit rollback, artifact stuffs
 
+Somehow detect expired tokens? simple_http
+simple_ado.exceptions.ADOHTTPException: ADO returned a non-200 status code, configuration=<simple_ado.http_client.ADOHTTPClient object at 0x1025de310>, status_code=401, text=Access Denied: The Personal Access Token used has expired.
+Does it
+
 -----  
 
 Commands:  
 pylint .  
 mypy . --strict  
 flake8 --ignore=E501,E126,E121,W503,W504,PBP --exclude=script.py  
-bandit -c pyproject.toml -r .
+bandit -c pyproject.toml -r .  
 ruff check  
 black . --line-length 140  
 python3.11 -m pytest tests/ -vvvv -s  

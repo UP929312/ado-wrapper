@@ -1,3 +1,4 @@
+import re
 from dataclasses import fields
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Literal, Callable, TypeVar, Type, ParamSpec, overload, Any
@@ -10,6 +11,25 @@ if TYPE_CHECKING:
 
 T = TypeVar("T")
 P = ParamSpec("P")
+
+ansi_re_pattern = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+datetime_re_pattern = re.compile(r"^20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{7}Z")
+
+ANSI_GREY = "\x1B[90m"
+ANSI_GRAY = ANSI_GREY
+
+ANSI_WHITE = "\x1B[37m"
+ANSI_CYAN = "\x1B[36m"
+ANSI_MAGENTA = "\x1B[35m"
+ANSI_BLUE = "\x1B[34m"
+ANSI_YELLOW = "\x1B[33m"
+ANSI_GREEN = "\x1B[32m"
+ANSI_RED = "\x1B[31m"
+ANSI_BLACK = "\x1B[30m"
+
+ANSI_UNDERLINE = "\x1b[4m"
+ANSI_BOLD = "\x1B[1m"
+ANSI_RESET = "\x1B[0m"
 
 
 @overload

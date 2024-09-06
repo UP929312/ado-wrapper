@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 
 BuildTimelineItemTypeType = Literal["Checkpoint", "Task", "Container", "Job", "Phase", "Stage"]
+# Stage -> Phase/Job -> Task
 
 
 # ========================================================================================================
@@ -74,6 +75,17 @@ class BuildTimeline(StateManagedResource):
         timeline.records = filtered_records
         return timeline
 
+    @classmethod
+    def get_all_by_types(
+        cls, ado_client: "AdoClient", build_id: str, item_types: list[BuildTimelineItemTypeType], fetch_retries: bool = False
+    ) -> dict[BuildTimelineItemTypeType, list["BuildTimelineGenericItem"]]:
+        timeline = cls.get_build_timeline(ado_client, build_id, fetch_retries)
+        item_types_mapping: dict[BuildTimelineItemTypeType, list[BuildTimelineGenericItem]] = {item_type: [] for item_type in item_types}
+        for item in timeline.records:
+            if item.item_type in item_types:
+                item_types_mapping[item.item_type].append(item)
+        return item_types_mapping
+
     get_build_timeline_by_id = get_by_id
 
 
@@ -123,7 +135,7 @@ class BuildTimelineGenericItem:
     percent_complete: int | None
     state: "RunState"
     result: "RunResult"
-    result_code: str | None  # E.g. Evaluating: ne(variables['terragrunt_output.apply_flag'], False)\nExpanded: ne('false', False)\nResult: False\n
+    result_code: str | None  # E.g. Evaluating: ne(variables['input_variables.apply_flag'], False)\nExpanded: ne('false', False)\nResult: False\n
     change_id: int
     last_modified: datetime
     worker_name: str | None

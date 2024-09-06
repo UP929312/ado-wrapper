@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.20.0
+
+### Added
+
+- The `ado_wrapper.utils` import now contains multiple ansi colour codes for use with build logs.
+- The ability to do `BuildTimeline.get_all_by_types()`, which returns multiple types (e.g. stages, jobs)
+- The ability to do `Build.get_stages_jobs_tasks()`, which returns a nested dictionary of all the stages, jobs and tasks for a certain build.
+- `Run.get_task_parents()`, which returns the ids and names of any pipeline run's task's parents (e.g. stage & job)
+
+### Changed
+
+- Run's created off branches should now work again.
+- `Build.get_build_log_content()` now requires stage, job and task, since previously you could have the same job and task (but different stage)
+- The internal `_get_all_logs_ids` is now much more nicely coded, and doesn't rely on parsing HTML.
+- `BuildDefinitionStage` has been renamed from `BuildDefinitionStep`, it has always reflected stages.
+
+---
+
 ## v1.19.1
 
 ### Changed

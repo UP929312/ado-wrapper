@@ -1,5 +1,3 @@
-import json
-import re
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -9,9 +7,10 @@ from typing import TYPE_CHECKING, Any, Literal
 from ado_wrapper.resources.environment import Environment, PipelineAuthorisation
 from ado_wrapper.resources.repo import BuildRepository
 from ado_wrapper.resources.users import Member
+from ado_wrapper.resources.build_timeline import BuildTimeline, BuildTimelineGenericItem, BuildTimelineItemTypeType
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.errors import ConfigurationError
-from ado_wrapper.utils import from_ado_date_string, requires_initialisation
+from ado_wrapper.utils import from_ado_date_string, requires_initialisation, ansi_re_pattern, datetime_re_pattern
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -20,8 +19,6 @@ BuildDefinitionEditableAttribute = Literal["name", "description"]
 BuildStatus = Literal["notStarted", "inProgress", "completed", "cancelling", "postponed", "notSet", "none"]
 QueuePriority = Literal["low", "belowNormal", "normal", "aboveNormal", "high"]
 
-ansi_re_pattern = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-datetime_re_pattern = re.compile(r"^20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{7}Z")
 # ========================================================================================================
 
 
@@ -180,34 +177,60 @@ class Build(StateManagedResource):
         return max(builds_with_start, key=lambda build: build.start_time) if builds_with_start else None  # type: ignore[return-value, arg-type]
 
     @staticmethod
-    def _get_all_logs_ids(ado_client: "AdoClient", build_id: str) -> dict[str, str]:
-        request = ado_client.session.get(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build/results?buildId={build_id}&view=logs"
-        ).text
-        # Jobs
-        jobs_data = request.split('"jobs":')[1].split('"tasks":[')[0].removesuffix(",")
-        jobs_mapping = {job["id"]: job["name"] for job in json.loads(jobs_data)}
-        # Tasks
-        raw_data = request.split('"tasks":')[1].split('"buildId"')[0].removesuffix(",")
-        json_data = json.loads(raw_data)
-        # Combined
-        mapping = {f"{jobs_mapping[x['parentId']]}/{x['name']}": x["logId"] for x in json_data}
-        return mapping
+    def get_stages_jobs_tasks(
+        ado_client: "AdoClient", build_id: str
+    ) -> dict[str, dict[str, dict[str, dict[str, dict[str, str]]]]]:  # This is really ridiculous...
+        """Returns a nested dictionary of stages -> stage_id+jobs -> job_id+tasks -> list[task_id], with each key being the name, and each value
+        containing both a list of childen (e.g. stages has jobs, jobs has tasks) and an "id" key/value."""
+        items: dict[BuildTimelineItemTypeType, list[BuildTimelineGenericItem]] = BuildTimeline.get_all_by_types(
+            ado_client, build_id, ["Stage", "Phase", "Job", "Task"]
+        )
+        # Used to go straight from Job -> Stage without needing the Phase
+        phases_mapping = {phase.item_id: phase.parent_id for phase in items["Phase"]}
+
+        mapping = {stage.name: {"id": stage.item_id, "jobs": {}} for stage in items["Stage"]}
+        for job in [x for x in items["Job"] if x.parent_id]:
+            stage_name = [stage_name for stage_name, stage_values in mapping.items() if stage_values["id"] == phases_mapping[job.parent_id]][0]  # type: ignore[index]
+            mapping[stage_name]["jobs"][job.name] = {"id": job.item_id, "tasks": {}}  # type: ignore[index]
+        for task in [x for x in items["Task"] if x.worker_name]:
+            relating_job: BuildTimelineGenericItem = [job for job in items["Job"] if job.item_id == task.parent_id][0]
+            relating_stage_name = [stage_name for stage_name, stage_values in mapping.items() if stage_values["id"] == phases_mapping[relating_job.parent_id]][0]  # type: ignore[index]
+            mapping[relating_stage_name]["jobs"][relating_job.name]["tasks"][task.name] = task.item_id  # type: ignore[index]
+        return mapping  # type: ignore[return-value]
 
     @classmethod
-    def get_build_log_content(cls, ado_client: "AdoClient", build_id: str, stage_name: str, job_name: str,
+    def _get_all_logs_ids(cls, ado_client: "AdoClient", build_id: str) -> dict[str, str]:
+        """Returns a mapping of stage_name/job_name/task_name: log_id"""
+        # Get all the individual task -> log_id mapping
+        tasks: list[BuildTimelineGenericItem] = [
+            x for x in BuildTimeline.get_all_by_type(ado_client, build_id, "Task").records
+            if x.log  # All the ones with logs (removes skipped tasks)
+        ]  # fmt: skip
+        return {
+            f"{stage_name}/{job_name}/{task_name}": [task for task in tasks if task.item_id == task_id][0].log["id"]  # type: ignore
+            for stage_name, stage_data in cls.get_stages_jobs_tasks(ado_client, build_id).items()
+            for job_name, job_data in stage_data["jobs"].items()
+            for task_name, task_id in job_data["tasks"].items()
+            if [task for task in tasks if task.item_id == task_id]
+        }
+
+    @classmethod
+    def get_build_log_content(cls, ado_client: "AdoClient", build_id: str, stage_name: str, job_name: str, task_name: str,
                               remove_prefixed_timestamp: bool = True, remove_colours: bool = False) -> str:  # fmt: skip
+        """Returns the text content of the log by stage name and job name"""
         mapping = cls._get_all_logs_ids(ado_client, build_id)
-        log_id = mapping.get(f"{stage_name}/{job_name}")
+        log_id = mapping.get(f"{stage_name}/{job_name}/{task_name}")
         if log_id is None:
-            raise ConfigurationError(f"Wrong stage name or job name combination (case sensitive), recieved {stage_name}/{job_name}")
+            raise ConfigurationError(
+                f"Wrong stage name or job name combination (case sensitive), recieved {stage_name}/{job_name}/{task_name}"
+            )
         request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/build/builds/{build_id}/logs/{log_id}"
         ).text
         if remove_colours:
             request = ansi_re_pattern.sub("", request)
         if remove_prefixed_timestamp:
-            request = "\n".join([datetime_re_pattern.sub("", line) for line in request.split("\n")])
+            request = "\n".join([datetime_re_pattern.sub("", line) for line in request.split("\n")])  # TODO: Do what we do above???
         return request
 
 
@@ -321,8 +344,8 @@ class BuildDefinition(StateManagedResource):
         )  # pyright: ignore[reportReturnType]
 
     @staticmethod
-    def get_all_stages(ado_client: "AdoClient", definition_id: str, branch_name: str = "main") -> list["BuildDefinitionStep"]:
-        """Fetches a list of BuildDefinitionSteps, does not return results"""
+    def get_all_stages(ado_client: "AdoClient", definition_id: str, branch_name: str = "main") -> list["BuildDefinitionStage"]:
+        """Fetches a list of BuildDefinitionStage's, does not return the tasks results"""
         requires_initialisation(ado_client)
         # ================================================================================================================================
         # Fetch default template parameters, which are required to get the stages
@@ -351,21 +374,21 @@ class BuildDefinition(StateManagedResource):
         )
         assert request.status_code == 200
         stages_list = request.json()["dataProviders"]["ms.vss-build-web.pipeline-run-parameters-data-provider"]["stages"]
-        return [BuildDefinitionStep.from_request_payload(x) for x in stages_list]
+        return [BuildDefinitionStage.from_request_payload(x) for x in stages_list]
 
 
 # ========================================================================================================
 
 
 @dataclass
-class BuildDefinitionStep:
+class BuildDefinitionStage:
     stage_display_name: str
     stage_internal_name: str
     is_skippable: bool
     depends_on: list[str]
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "BuildDefinitionStep":
+    def from_request_payload(cls, data: dict[str, Any]) -> "BuildDefinitionStage":
         return cls(
             data["name"],
             data["refName"],

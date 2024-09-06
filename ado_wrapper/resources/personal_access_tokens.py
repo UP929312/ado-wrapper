@@ -34,40 +34,71 @@ class PersonalAccessToken:
             data["scope"], data["accessId"], data["userId"],  # fmt: skip
         )
 
-    # @classmethod
-    # def create_personal_access_token(cls, ado_client: "AdoClient", display_name: str) -> "PersonalAccessToken":
-    #     requires_initialisation(ado_client)
-    #     PAYLOAD = {
-    #         "contributionIds": ["ms.vss-token-web.personal-access-token-issue-session-token-provider"],
-    #         "dataProviderContext": {
-    #             "properties": {
-    #                 "displayName": display_name,
-    #                 "validTo": "2024-07-15T17:04:05.555Z",
-    #                 "scope": "app_token",
-    #                 "targetAccounts": ["org_id"],
-    #                 "sourcePage": {
-    #                     "url": f"https://dev.azure.com/{ado_client.ado_org_name}/_usersSettings/tokens",
-    #                     "routeId":"ms.vss-admin-web.user-admin-hub-route",
-    #                     "routeValues": {
-    #                         "adminPivot": "tokens",
-    #                         "controller": "ContributedPage",
-    #                         "action": "Execute",
-    #                     }
-    #                 }
-    #             }
-    #         }
-    #     }
-    #     # {"contributionIds":["ms.vss-token-web.personal-access-token-issue-session-token-provider"],"dataProviderContext":{"properties":{"displayName":"123456789","validTo":"2024-07-16T17:18:07.998Z","scope":"app_token","targetAccounts":["org_id"],
-    #     headers = {"Accept": "application/json;api-version=5.0-preview.1;excludeUrls=true;enumsAsNumbers=true;msDateFormat=true;noArrayWrap=true"}
-    #     headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'
-    #     request = ado_client.session.post(
-    #         f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery",  # ?api-version=5.0-preview.1
-    #         headers=headers,
-    #         json=PAYLOAD,
-    #     ).json()
-    #     print(request["dataProviderExceptions"]["ms.vss-token-web.personal-access-token-issue-session-token-provider"]["message"])
-    #     return cls.from_request_payload(request)
-    #     # {"contributionIds":["ms.vss-token-web.personal-access-token-issue-session-token-provider"],"dataProviderContext":{"properties":{"displayName":"Temp 123","validTo":"2024-08-13T17:16:16.800Z","scope":"app_token","targetAccounts":["org_id"],"sourcePage":{"url":"https://dev.azure.com/{ado_client.ado_org_name}/_usersSettings/tokens","routeId":"ms.vss-admin-web.user-admin-hub-route","routeValues":{"adminPivot":"tokens","controller":"ContributedPage","action":"Execute","}}}}}
+    @classmethod
+    def create_personal_access_token(cls, ado_client: "AdoClient", display_name: str) -> None:  # "PersonalAccessToken":
+        requires_initialisation(ado_client)
+        # PAYLOAD = {
+        #     "contributionIds": ["ms.vss-token-web.personal-access-token-issue-session-token-provider"],
+        #     "dataProviderContext": {
+        #         "properties": {
+        #             "displayName": display_name,
+        #             "validTo": "2024-07-15T17:04:05.555Z",
+        #             "scope": "app_token",
+        #             "targetAccounts": [ado_client.ado_org_id],
+        #             "sourcePage": {
+        #                 "url": f"https://dev.azure.com/{ado_client.ado_org_name}/_usersSettings/tokens",
+        #                 "routeId":"ms.vss-admin-web.user-admin-hub-route",
+        #                 "routeValues": {
+        #                     "adminPivot": "tokens",
+        #                     "controller": "ContributedPage",
+        #                     "action": "Execute",
+        #                     "serviceHost": f"{ado_client.ado_org_id} ({ado_client.ado_org_name})",
+        #                 }
+        #             }
+        #         }
+        #     }
+        # }
+        # PAYLOAD = {"contributionIds":["ms.vss-token-web.personal-access-token-issue-session-token-provider"],"dataProviderContext":{"properties":{"displayName":"abcdef","validTo":"2024-07-30T20:14:44.342Z","scope":"app_token","targetAccounts":["b47671bd-f9c8-42ee-a446-4aa13c8ff99a"],"sourcePage":{"url": f"https://dev.azure.com/{ado_client.ado_org_name}/_usersSettings/tokens","routeId":"ms.vss-admin-web.user-admin-hub-route","routeValues":{"adminPivot":"tokens","controller":"ContributedPage","action":"Execute","serviceHost": f"{ado_client.ado_org_id} ({ado_client.ado_org_name})"}}}}}
+        # {"contributionIds":["ms.vss-token-web.personal-access-token-issue-session-token-provider"],"dataProviderContext":{"properties":{"displayName":"aaabbb",   "validTo":"2024-07-30T12:42:17.617Z","scope":"app_token","targetAccounts":["{ado_client.ado_org_id}""],
+        # "sourcePage":{"url":"https://dev.azure.com/{ado_client.ado_org_name}/_usersSettings/tokens","routeId":"ms.vss-admin-web.user-admin-hub-route","routeValues":{"adminPivot":"tokens","controller":"ContributedPage","action":"Execute","serviceHost":"{ado_client.ado_org_id} ({ado_client.ado_org_name})"}}}}}
+        # headers = {
+        #     "Accept": "application/json;api-version=5.0-preview.1;excludeUrls=true;enumsAsNumbers=true;msDateFormat=true;noArrayWrap=true",
+        #     "Accept-Encoding": "gzip, deflate, br, zstd",
+        #     "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
+        #     "Content-Type": "application/json",
+        #     "Content-Length": "568",
+        #     "Origin": "https://dev.azure.com",
+        #     "Priority": "u=1, i",
+        #     "Referer": f"https://dev.azure.com/{ado_client.ado_org_name}/_usersSettings/tokens",
+        #     "Authorization": f"Bearer {AAD_AUTHENTICATION}",
+        #     "Sec-Ch-Ua": '"Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"',
+        #     "Sec-Ch-Ua-Mobile": "?0",
+        #     "Sec-Ch-Ua-Platform": '"macOS"',
+        #     "User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36',
+        #     "X-Vss-Clientauthprovider": "MsalTokenProvider",
+        #     "X-Vss-reauthenticationaction": "Suppress",
+        #     "Content-Length": "566",
+        #     "Cookie": f"VstsSession={VSTS_SESSION}; MSFPC={MSFPC}; __RequestVerificationToken={REQUEST_VERIFICATION_TOKEN}; UserAuthentication={USER_AUTHENTICATION}; HostAuthentication={HOST_AUTHENTICATION}; AadAuthentication={AAD_AUTHENTICATION}"
+        # }
+        # cookies = {
+        #     "__RequestVerificationToken264dae6ea-4a7f-431d-a54f-526b36248f16": REQUEST_VERIFICATION_TOKEN_WITH_ID,
+        #     "MicrosoftApplicationsTelemetryDeviceId": MICROSOFT_APPLICATION_TELEMENTRY_DEVICE_ID, "VstsSession": VSTS_SESSION, "__RequestVerificationToken": REQUEST_VERIFICATION_TOKEN,
+        #     # Ones that change:
+        #     "MSFPC": MSFPC, "UserAuthentication": USER_AUTHENTICATION, "HostAuthentication": HOST_AUTHENTICATION, "AadAuthentication":  AAD_AUTHENTICATION,
+        # }
+        # request = ado_client.session.post(
+        #     f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery",  # ?api-version=5.0-preview.1
+        #     headers=headers,
+        #     json=PAYLOAD,
+        #     cookies=cookies,
+        # )
+        # assert request.status_code == 200
+        # print(request.status_code)
+        # print(request.json())
+        # return None  # type: ignore
+        # print("###", request["dataProviderExceptions"]["ms.vss-token-web.personal-access-token-issue-session-token-provider"]["message"], "###")
+        # return cls.from_request_payload(request)
+        # {"contributionIds":["ms.vss-token-web.personal-access-token-issue-session-token-provider"],"dataProviderContext":{"properties":{"displayName":"Temp 123","validTo":"2024-08-13T17:16:16.800Z","scope":"app_token","targetAccounts":["org_id"],"sourcePage":{"url":"https://dev.azure.com/{ado_client.ado_org_name}/_usersSettings/tokens","routeId":"ms.vss-admin-web.user-admin-hub-route","routeValues":{"adminPivot":"tokens","controller":"ContributedPage","action":"Execute","}}}}}
 
     @classmethod
     def get_access_tokens(
@@ -137,10 +168,10 @@ class PersonalAccessToken:
     #         f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=5.0-preview.1",
     #         json=PAYLOAD,
     #     ).json()
-    #     print(request["dataProviderExceptions"]["ms.vss-token-web.personal-access-token-issue-session-token-provider"]["message"])
+    #     rint(request["dataProviderExceptions"]["ms.vss-token-web.personal-access-token-issue-session-token-provider"]["message"])
     #     return ""
     #     new_token: str = request["dataProviders"]["ms.vss-token-web.personal-access-token-issue-session-token-provider"]["token"]
-    #     print(new_token)
+    #     rint(new_token)
     #     return new_token
 
 

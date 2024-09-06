@@ -67,14 +67,14 @@ class Run(StateManagedResource):
         PAYLOAD: dict[str, Any] = {
             "templateParameters": template_parameters or {},
             "variables": run_variables or {},
-            "repositories": {"refName": f"refs/heads/{branch_name}"},
+            "resources": {"repositories": {"self": {"refName": f"refs/heads/{branch_name}"}}},
         }
         if stages_to_run is not None:
             build_stages = BuildDefinition.get_all_stages(ado_client, definition_id, branch_name)
 
             for name in stages_to_run:
-                if name not in {step.stage_internal_name for step in build_stages}:
-                    raise ValueError(f"The stage_name '{name}' in stages_to_run is not found in the steps.")
+                if name not in {stage.stage_internal_name for stage in build_stages}:
+                    raise ValueError(f"The stage_name '{name}' in stages_to_run is not found in the stages.")
 
             PAYLOAD["stagesToSkip"] = [stage.stage_internal_name for stage in build_stages if stage.stage_internal_name not in stages_to_run]  # fmt: skip
         try:
@@ -84,6 +84,7 @@ class Run(StateManagedResource):
                 PAYLOAD,
             )
         except ValueError as e:
+            # TODO: Json parse and extract this properly?
             raise ValueError(
                 f"A template parameter inputted is not allowed! {str(e).split('message')[1][3:].removesuffix(':').split('.')[0]}"  # fmt: skip
             ) from e
@@ -94,7 +95,7 @@ class Run(StateManagedResource):
         ado_client.state_manager.remove_resource_from_state("Run", run_id)
 
     def update(self, ado_client: "AdoClient", attribute_name: str, attribute_value: Any) -> None:
-        raise NotImplementedError("Use Build's update instead!")
+        raise NotImplementedError("Use Build's update instead!")  # Override
 
     @classmethod
     def get_all_by_definition(cls, ado_client: "AdoClient", pipeline_id: str) -> "list[Run]":
@@ -189,8 +190,25 @@ class Run(StateManagedResource):
             stages[job["stageId"]].jobs.append(RunJobResult.from_request_payload(job))
         return list(stages.values())
 
-    get_run_log_content = Build.get_build_log_content
+    @classmethod
+    def get_task_parents(
+        cls, ado_client: "AdoClient", build_id: str, task_id: str
+    ) -> tuple[str, str, str, str, str, str]:  # fmt: skip
+        """Returns the task's parent stage name & id, the task's parent job name & id, as well as the task itself's name & id
+        e.g. my_stage, abc, my_job, def, my_task, ghi"""
+        stages_jobs_tasks = Run.get_stages_jobs_tasks(ado_client, build_id)
+        for stage_name, stage_data in stages_jobs_tasks.items():  # Try get the task's stage, job and own name
+            for job_name, job_data in stage_data["jobs"].items():
+                for task_name, fetched_task_id in job_data["tasks"].items():
+                    if fetched_task_id == task_id:
+                        return stage_name, stage_data["id"], job_name, job_data["id"], task_name, fetched_task_id  # type: ignore
+        raise ResourceNotFound
+
+    # ==================================================
+
+    get_stages_jobs_tasks = Build.get_stages_jobs_tasks
     _get_all_logs_ids = Build._get_all_logs_ids  # pylint: disable=protected-access
+    get_run_log_content = Build.get_build_log_content
 
 
 # ============================================================================================== #

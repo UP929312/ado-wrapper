@@ -344,11 +344,15 @@ class BuildDefinition(StateManagedResource):
         )  # pyright: ignore[reportReturnType]
 
     @staticmethod
-    def get_all_stages(ado_client: "AdoClient", definition_id: str, branch_name: str = "main") -> list["BuildDefinitionStage"]:
-        """Fetches a list of BuildDefinitionStage's, does not return the tasks results"""
+    def get_all_stages(
+        ado_client: "AdoClient", definition_id: str,
+        template_parameters: dict[str, Any] | None = None, branch_name: str = "main",
+    ) -> list["BuildDefinitionStage"]:  # fmt: skip
+        """Fetches a list of BuildDefinitionStage's, does not return the tasks results.
+        Pass in custom template parameters as override key value pairs, or ignore this field to use the defaults."""
         requires_initialisation(ado_client)
         # ================================================================================================================================
-        # Fetch default template parameters, which are required to get the stages
+        # Fetch default template parameters, if the user doesn't pass them in, for the next stage.
         TEMPLATE_PAYLOAD = {
             "contributionIds": ["ms.vss-build-web.pipeline-run-parameters-data-provider"], "dataProviderContext": {"properties": {
                     "pipelineId": int(definition_id), "sourceBranch": f"refs/heads/{branch_name}",
@@ -356,18 +360,20 @@ class BuildDefinition(StateManagedResource):
                 }
             },
         }  # fmt: skip
-        template_parameters_request = ado_client.session.post(
+        default_template_parameters_request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_id}?api-version=7.0-preview",
             json=TEMPLATE_PAYLOAD,
         ).json()["dataProviders"]["ms.vss-build-web.pipeline-run-parameters-data-provider"]["templateParameters"]
-        template_parameters = {x["name"]: x["default"] for x in template_parameters_request}
+        default_template_parameters = {x["name"]: x["default"] for x in default_template_parameters_request}
         # ================================================================================================================================
         PAYLOAD = {
             "contributionIds": ["ms.vss-build-web.pipeline-run-parameters-data-provider"], "dataProviderContext": {"properties": {
-                "pipelineId": definition_id, "sourceBranch": f"refs/heads/{branch_name}", "templateParameters": template_parameters,
+                "pipelineId": definition_id, "sourceBranch": f"refs/heads/{branch_name}", "templateParameters": default_template_parameters,
                 "sourcePage": {"routeId": "ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project_name}},
             }},
         }  # fmt: skip
+        if template_parameters is not None:
+            PAYLOAD["dataProviderContext"]["properties"]["templateParameters"] |= template_parameters  # type: ignore[index]
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_id}?api-version=7.0-preview",
             json=PAYLOAD,

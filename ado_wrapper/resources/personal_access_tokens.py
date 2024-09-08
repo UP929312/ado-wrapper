@@ -104,10 +104,10 @@ class PersonalAccessToken:
     def get_access_tokens(
         cls, ado_client: "AdoClient", include_different_orgs: bool = False, include_expired_tokens: bool = False
     ) -> list["PersonalAccessToken"]:  # fmt: skip
-        # Sun, 14 Jul 2024 18:14:24 GMT
         requires_initialisation(ado_client)
         now = datetime.now()
-        page_request_timestamp = f"{DAYS_OF_WEEK[now.weekday()]}, {now.day} {MONTHS[now.month-1]} {now.year} {now.hour}:{now.minute}:{now.second:02} GMT"  # fmt: skip
+        # Sun, 14 Jul 2024 18:14:24 GMT
+        page_request_timestamp = f"{DAYS_OF_WEEK[now.weekday()]}, {str(now.day):0>2} {MONTHS[now.month-1]} {now.year} {now.hour}:{now.minute}:{now.second:02} GMT"  # fmt: skip
         request = ado_client.session.get(
             f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/Token/SessionTokens?displayFilterOption=1&createdByOption=3&sortByOption=2&isSortAscending=true&startRowNumber=1&pageSize=1000&pageRequestTimeStamp={page_request_timestamp}&api-version=5.0-preview.1"
         ).json()
@@ -117,7 +117,6 @@ class PersonalAccessToken:
 
     @classmethod
     def get_access_token_by_name(cls, ado_client: "AdoClient", display_name: str) -> "PersonalAccessToken | None":
-        requires_initialisation(ado_client)
         return [x for x in cls.get_access_tokens(ado_client, include_different_orgs=True, include_expired_tokens=True)
                 if x.display_name == display_name][0]  # fmt: skip
 

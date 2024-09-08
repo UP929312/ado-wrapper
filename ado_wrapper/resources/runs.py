@@ -70,7 +70,7 @@ class Run(StateManagedResource):
             "resources": {"repositories": {"self": {"refName": f"refs/heads/{branch_name}"}}},
         }
         if stages_to_run is not None:
-            build_stages = BuildDefinition.get_all_stages(ado_client, definition_id, branch_name)
+            build_stages = BuildDefinition.get_all_stages(ado_client, definition_id, template_parameters, branch_name)
 
             for name in stages_to_run:
                 if name not in {stage.stage_internal_name for stage in build_stages}:

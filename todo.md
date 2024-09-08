@@ -70,9 +70,11 @@ Docs have functions which raise NotImplemented, inspect and remove if they do?
 
 Pat token stuffs, commit rollback, artifact stuffs
 
-Somehow detect expired tokens? simple_http
+Somehow detect expired tokens? simple_http???
 simple_ado.exceptions.ADOHTTPException: ADO returned a non-200 status code, configuration=<simple_ado.http_client.ADOHTTPClient object at 0x1025de310>, status_code=401, text=Access Denied: The Personal Access Token used has expired.
-Does it
+
+UNSURE HOW TO DO ABOVE
+But because we can fetch access_tokens, maybe we can instead check if the current one's expired? Somehow?
 
 -----  
 

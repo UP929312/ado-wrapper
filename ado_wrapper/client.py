@@ -24,9 +24,6 @@ class AdoClient:
         self.ado_project_name = ado_project_name
         self.perms = None
 
-        self.ado_org = ado_org_name  # FOR BACKWARDS COMPABILITY, SOON TO BE REMOVED
-        self.ado_project = ado_project_name  # FOR BACKWARDS COMPABILITY, SOON TO BE REMOVED
-
         self.suppress_warnings = suppress_warnings
         self.plan_mode = action == "plan"
 
@@ -47,13 +44,14 @@ class AdoClient:
             # =================================================================
             self.ado_org_id = Organisation.get_by_name(self, self.ado_org_name).organisation_id  # type: ignore[union-attr]
             self.ado_project_id = Project.get_by_name(self, self.ado_project_name).project_id  # type: ignore[union-attr]
-            try:
-                self.pat_author: AdoUser = AdoUser.get_by_email(self, ado_email)
-            except (ValueError, InvalidPermissionsError):
-                if not suppress_warnings:
-                    print(
-                        f"[ADO_WRAPPER] WARNING: User {ado_email} not found in ADO, nothing critical, but stops releases from being made, and plans from being accurate."
-                    )
+            if ado_email != "" and ado_email is not None:
+                try:
+                    self.pat_author: AdoUser = AdoUser.get_by_email(self, ado_email)
+                except (ValueError, InvalidPermissionsError):
+                    if not suppress_warnings:
+                        print(
+                            f"[ADO_WRAPPER] WARNING: User {ado_email} not found in ADO, nothing critical, but stops releases from being made, and plans from being accurate."
+                        )
 
             self.perms = Permission.get_project_perms(self)
             # try:

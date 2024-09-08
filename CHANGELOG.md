@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.21.0
+
+### Added
+
+- `BuildDefinition.get_all_stages()` now takes template_parameters, whereas before it would simply use the defaults for that pipeline.
+- A warning when trying to use an invalid access token.
+
+### Changed
+
+- Fetching a list of `PersonalAccessTokens` using `PersonalAccessToken.get_access_tokens()` now works for days in the month < 10 (e.g. 1st->9th)
+- Finally removed the deprecated `AdoClient.ado_org` and `AdoClient.ado_project`, use `ado_org_name` and `ado_project_name` instead.
+- Fixed some tests regarding a renamed team (should create test environment for this reason, maybe one day)
+
+---
+
 ## v1.20.0
 
 ### Added

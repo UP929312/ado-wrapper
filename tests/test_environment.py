@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from ado_wrapper.resources.builds import BuildDefinition
+from ado_wrapper.resources.build_definitions import BuildDefinition
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.environment import Environment
 from ado_wrapper.resources.users import Member

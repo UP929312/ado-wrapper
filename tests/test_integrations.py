@@ -1,6 +1,7 @@
 import pytest
 
-from ado_wrapper.resources.builds import Build, BuildDefinition
+from ado_wrapper.resources.build_definitions import BuildDefinition
+from ado_wrapper.resources.builds import Build
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.repo import Repo
 

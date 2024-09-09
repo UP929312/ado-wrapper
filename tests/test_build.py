@@ -2,7 +2,8 @@ from datetime import datetime
 
 import pytest
 
-from ado_wrapper.resources.builds import Build, BuildDefinition
+from ado_wrapper.resources.build_definitions import BuildDefinition
+from ado_wrapper.resources.builds import Build
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.users import Member
 from tests.setup_client import RepoContextManager, email, existing_agent_pool_id, setup_client  # fmt: skip

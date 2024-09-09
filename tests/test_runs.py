@@ -1,7 +1,7 @@
 import pytest
 
 from ado_wrapper.resources.runs import Run
-from ado_wrapper.resources.builds import BuildDefinition
+from ado_wrapper.resources.build_definitions import BuildDefinition
 from ado_wrapper.resources.commits import Commit
 from tests.setup_client import RepoContextManager, email, existing_agent_pool_id, setup_client  # fmt: skip
 

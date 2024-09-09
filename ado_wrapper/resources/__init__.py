@@ -3,8 +3,9 @@ from ado_wrapper.resources.annotated_tags import AnnotatedTag
 from ado_wrapper.resources.artifact import Artifact
 from ado_wrapper.resources.audit_logs import AuditLog
 from ado_wrapper.resources.branches import Branch
+from ado_wrapper.resources.build_definitions import BuildDefinition
 from ado_wrapper.resources.build_timeline import BuildTimeline
-from ado_wrapper.resources.builds import Build, BuildDefinition
+from ado_wrapper.resources.builds import Build
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.environment import Environment, PipelineAuthorisation
 from ado_wrapper.resources.groups import Group

@@ -4,7 +4,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, NotRequired
 
 from ado_wrapper.errors import ResourceNotFound
-from ado_wrapper.resources.builds import Build, BuildDefinition
+from ado_wrapper.resources.builds import Build
+from ado_wrapper.resources.build_definitions import BuildDefinition
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import from_ado_date_string, recursively_find_or_none
 

@@ -98,4 +98,5 @@ coverage run -m pytest && coverage html && open htmlcov/index.html
 python3.11 -m pip install ado_wrapper --upgrade  
 
 pylint . && mypy . --strict && flake8 --ignore=E501,E126,E121,W503,W504,PBP --exclude=script.py && ruff check  
+pylint . || mypy . --strict || flake8 --ignore=E501,E126,E121,W503,W504,PBP --exclude=script.py || ruff check  
 bandit -c pyproject.toml -r .  

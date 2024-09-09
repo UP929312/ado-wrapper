@@ -190,13 +190,16 @@ builds = Build.get_all(ado_client, <limit>, <status>)
 builds = Build.get_all_by_definition(ado_client, <definition_id>)
 
 # Get Build Log Content
-string_var = Build.get_build_log_content(ado_client, <build_id>, <stage_name>, <job_name>, <remove_prefixed_timestamp>, <remove_colours>)
+string_var = Build.get_build_log_content(ado_client, <build_id>, <stage_name>, <job_name>, <task_name>, <remove_prefixed_timestamp>, <remove_colours>)
 
 # Get By Id
 build = Build.get_by_id(ado_client, <build_id>)
 
 # Get Latest
 build = Build.get_latest(ado_client, <definition_id>)
+
+# Get Stages Jobs Tasks
+dictionary = Build.get_stages_jobs_tasks(ado_client, <build_id>)
 
 # Update
 build.update(ado_client, <attribute_name>, <attribute_value>)
@@ -227,7 +230,7 @@ builds = BuildDefinition.get_all_builds_by_definition(ado_client)
 build_definitions = BuildDefinition.get_all_by_repo_id(ado_client, <repo_id>)
 
 # Get All Stages
-build_definition_steps = BuildDefinition.get_all_stages(ado_client, <definition_id>, <branch_name>)
+build_definition_stages = BuildDefinition.get_all_stages(ado_client, <definition_id>, <template_parameters>, <branch_name>)
 
 # Get By Id
 build_definition = BuildDefinition.get_by_id(ado_client, <build_definition_id>)
@@ -256,6 +259,9 @@ build_timeline.delete_by_id(ado_client, <build_id>)
 
 # Get All By Type
 build_timeline = BuildTimeline.get_all_by_type(ado_client, <build_id>, <item_type>, <fetch_retries>)
+
+# Get All By Types
+dictionary = BuildTimeline.get_all_by_types(ado_client, <build_id>, <item_types>, <fetch_retries>)
 
 # Get Build Timeline
 build_timeline = BuildTimeline.get_build_timeline(ado_client, <build_id>, <fetch_retries>)
@@ -426,6 +432,9 @@ merge_type_restriction_policy = MergePolicies.get_allowed_merge_types(ado_client
 # Get Branch Policy
 merge_branch_policy = MergePolicies.get_branch_policy(ado_client, <repo_id>, <branch_name>)
 
+# Get Default Reviewer Policy By Repo Id
+merge_policy_default_reviewers = MergePolicies.get_default_reviewer_policy_by_repo_id(ado_client, <repo_id>, <branch_name>)
+
 # Get Default Reviewers
 reviewers = MergePolicies.get_default_reviewers(ado_client, <repo_id>, <branch_name>)
 
@@ -456,6 +465,22 @@ reviewers = MergePolicyDefaultReviewer.get_default_reviewers(ado_client, <repo_i
 
 # Remove Default Reviewer
 merge_policy_default_reviewer.remove_default_reviewer(ado_client, <repo_id>, <reviewer_id>, <branch_name>)
+```
+</details>
+
+-----
+# MergeTypeRestrictionPolicy
+<details>
+
+```py
+# Delete
+merge_type_restriction_policy.delete(ado_client)
+
+# Get Allowed Merge Types
+merge_type_restriction_policy = MergeTypeRestrictionPolicy.get_allowed_merge_types(ado_client, <repo_id>, <branch_name>)
+
+# Set Allowed Merge Types
+merge_type_restriction_policy.set_allowed_merge_types(ado_client, <repo_id>, <allow_basic_no_fast_forwards>, <allow_squash>, <allow_rebase_and_fast_forward>, <allow_rebase_with_merge_commit>, <branch_name>)
 ```
 </details>
 
@@ -806,10 +831,16 @@ run = Run.get_by_id(ado_client, <pipeline_id>, <run_id>)
 run = Run.get_latest(ado_client, <definition_id>)
 
 # Get Run Log Content
-string_var = Run.get_run_log_content(ado_client, <build_id>, <stage_name>, <job_name>, <remove_prefixed_timestamp>, <remove_colours>)
+string_var = Run.get_run_log_content(ado_client, <build_id>, <stage_name>, <job_name>, <task_name>, <remove_prefixed_timestamp>, <remove_colours>)
 
 # Get Run Stage Results
 run_stage_results = Run.get_run_stage_results(ado_client, <build_id>)
+
+# Get Stages Jobs Tasks
+dictionary = Run.get_stages_jobs_tasks(ado_client, <build_id>)
+
+# Get Task Parents
+tuple[str, str, str, str, str, strs = Run.get_task_parents(ado_client, <build_id>, <task_id>)
 
 # Run All And Capture Results Sequentially
 dictionary = Run.run_all_and_capture_results_sequentially(ado_client, <data>, <max_timeout_seconds>)

@@ -71,9 +71,13 @@ class Run(StateManagedResource):
         }
         if stages_to_run is not None:
             build_stages = BuildDefinition.get_all_stages(ado_client, definition_id, template_parameters, branch_name)
+            stage_mapping = {stage.stage_display_name: stage.stage_internal_name for stage in build_stages}
 
-            for name in stages_to_run:
-                if name not in {stage.stage_internal_name for stage in build_stages}:
+            for i, name in enumerate(stages_to_run):
+                if name in stage_mapping.keys():  # If it's a display name, not internal name
+                    stages_to_run[i] = stage_mapping[name]  # Replace it with the internal name
+                    continue
+                if name not in stage_mapping.values():
                     raise ValueError(f"The stage_name '{name}' in stages_to_run is not found in the stages.")
 
             PAYLOAD["stagesToSkip"] = [stage.stage_internal_name for stage in build_stages if stage.stage_internal_name not in stages_to_run]  # fmt: skip

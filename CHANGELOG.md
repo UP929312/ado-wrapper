@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.21.1
+
+### Added
+
+- `BuildDefinition.get_all_stages()`'s stages_to_run now converts display names to internal names if provided.
+
+---
+
 ## v1.21.0
 
 ### Added

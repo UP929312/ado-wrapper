@@ -83,13 +83,13 @@ class PullRequest(StateManagedResource):
 
     @classmethod
     def create(
-        cls, ado_client: "AdoClient", repo_id: str, from_branch_name: str, pull_request_title: str,
-        pull_request_description: str, is_draft: bool = False
+        cls, ado_client: "AdoClient", repo_id: str, pull_request_title: str,
+        pull_request_description: str, from_branch_name: str, to_branch_name: str = "main", is_draft: bool = False
     ) -> "PullRequest":  # fmt: skip
         """Takes a list of reviewer ids, a branch to pull into main, and an option to start as draft"""
         # https://stackoverflow.com/questions/64655138/add-reviewers-to-azure-devops-pull-request-in-api-call   <- Why we can't allow reviewers from the get go
         # , "reviewers": [{"id": reviewer_id for reviewer_id in reviewer_ids}]
-        payload = {"sourceRefName": f"refs/heads/{from_branch_name}", "targetRefName": "refs/heads/main", "title": pull_request_title,
+        payload = {"sourceRefName": f"refs/heads/{from_branch_name}", "targetRefName": f"refs/heads/{to_branch_name}", "title": pull_request_title,
                    "description": pull_request_description, "isDraft": is_draft}  # fmt: skip
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullrequests?api-version=7.1",

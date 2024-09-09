@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.23.0
+
+### Added
+
+- `PullRequest.create()` now accepts a target branch, this defaults to main, but can be overriden to any branch, including master.
+- Better documentation around which Build methods return stages/jobs/task `display_name` versus returning their `internal_name`
+
+### Changed
+
+- `BuildTimeline`s "identifier" has been renamed to `internal_name`.
+- Repo's utility function "create_pull_request" now accepts a target branch name, and is_draft for setting it to draft.
+
+---
+
 ---
 
 ## v1.22.0

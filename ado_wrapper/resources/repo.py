@@ -143,9 +143,12 @@ class Repo(StateManagedResource):
                 print(f"{self.name} ({self.repo_id}) couldn't be unzipped:", e)
         return files
 
-    def create_pull_request(self, ado_client: "AdoClient", branch_name: str, pull_request_title: str, pull_request_description: str) -> PullRequest:  # fmt: skip
+    def create_pull_request(
+            self, ado_client: "AdoClient", branch_name: str, pull_request_title: str, pull_request_description: str,
+            to_branch_name: str = "main", is_draft: bool = False
+    ) -> PullRequest:  # fmt: skip
         """Helper function which redirects to the PullRequest class to make a PR"""
-        return PullRequest.create(ado_client, self.repo_id, branch_name, pull_request_title, pull_request_description)
+        return PullRequest.create(ado_client, self.repo_id, pull_request_title, pull_request_description, branch_name, to_branch_name, is_draft)
 
     @staticmethod
     def get_all_pull_requests(ado_client: "AdoClient", repo_id: str, status: PullRequestStatus = "all") -> list[PullRequest]:

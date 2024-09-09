@@ -147,7 +147,7 @@ class BuildTimelineGenericItem:
     log: LogType | None
     task: TaskType | None
     attempt: int
-    identifier: str
+    internal_name: str  # Previously identifier
     issues: list[IssueType]
 
     @classmethod

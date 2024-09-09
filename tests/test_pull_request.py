@@ -38,8 +38,8 @@ class TestPullRequest:
     def test_create_delete(self) -> None:
         with RepoContextManager(self.ado_client, "create-delete-pull-request") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
-            pull_request = PullRequest.create(self.ado_client, repo.repo_id, "test-branch", "Test PR for create-delete",
-                                              "Test PR description", is_draft=True)  # fmt: skip
+            pull_request = PullRequest.create(self.ado_client, repo.repo_id, "Test PR for create-delete",
+                                              "Test PR description", "test-branch", is_draft=True)  # fmt: skip
             assert pull_request.title == "Test PR for create-delete"
             assert pull_request.description == "Test PR description"
             assert pull_request.is_draft
@@ -50,7 +50,7 @@ class TestPullRequest:
         with RepoContextManager(self.ado_client, "repo-for-get-pull-request-by-id") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
             pull_request_created = PullRequest.create(
-                self.ado_client, repo.repo_id, "test-branch", "Test PR For Get PR By ID", "Test description"
+                self.ado_client, repo.repo_id, "Test PR For Get PR By ID", "Test description", "test-branch"
             )
             pull_request = PullRequest.get_by_id(self.ado_client, pull_request_created.pull_request_id)
             assert pull_request.pull_request_id == pull_request_created.pull_request_id
@@ -62,10 +62,10 @@ class TestPullRequest:
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch2", {"test2.txt": "This is one thing"}, "add", "Test commit 2")
             pull_request_1 = PullRequest.create(
-                self.ado_client, repo.repo_id, "new-branch", "Test PR For Get Pull Requests 1", "Test description"
+                self.ado_client, repo.repo_id, "Test PR For Get Pull Requests 1", "Test description", "new-branch"
             )
             pull_request_2 = PullRequest.create(
-                self.ado_client, repo.repo_id, "new-branch2", "Test PR For Get Pull Requests 1", "Test description"
+                self.ado_client, repo.repo_id, "Test PR For Get Pull Requests 1", "Test description", "new-branch2"
             )
             all_pull_requests = Repo.get_all_pull_requests(self.ado_client, repo_id=repo.repo_id, status="active")
             assert len(all_pull_requests) == 2
@@ -76,7 +76,7 @@ class TestPullRequest:
         with RepoContextManager(self.ado_client, "repo-for-mark-as-draft") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
             pull_request = PullRequest.create(
-                self.ado_client, repo.repo_id, "test-branch", "Test PR for mark as drafk", "Test PR description"
+                self.ado_client, repo.repo_id, "Test PR for mark as drafk", "Test PR description", "test-branch"
             )
             # ----
             pull_request.mark_as_draft(self.ado_client)
@@ -91,7 +91,7 @@ class TestPullRequest:
     def test_update(self) -> None:
         with RepoContextManager(self.ado_client, "repo-for-update-pull-request") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
-            pull_request = PullRequest.create(self.ado_client, repo.repo_id, "test-branch", "Test PR for Update", "Test PR description")
+            pull_request = PullRequest.create(self.ado_client, repo.repo_id, "Test PR for Update", "Test PR description", "test-branch")
             # =====
             pull_request.update(self.ado_client, "title", "ado_wrapper-test-repo-for-update-pull-request-renamed")
             assert pull_request.title == "ado_wrapper-test-repo-for-update-pull-request-renamed"  # Test instance attribute is updated
@@ -112,7 +112,7 @@ class TestPullRequest:
         with RepoContextManager(self.ado_client, "repo-for-get-all-by-repo-id") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")
             pull_request_1 = PullRequest.create(
-                self.ado_client, repo.repo_id, "new-branch", "Test PR For Get Pull Requests 1", "Test description"
+                self.ado_client, repo.repo_id, "Test PR For Get Pull Requests 1", "Test description", "new-branch"
             )
             all_pull_requests = PullRequest.get_all_by_repo_id(self.ado_client, repo_id=repo.repo_id, status="active")
             assert len(all_pull_requests) == 1
@@ -122,7 +122,7 @@ class TestPullRequest:
     def test_post_comment(self) -> None:
         with RepoContextManager(self.ado_client, "repo-for-post-comment") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "Change"}, "add", "Test commit")
-            pull_request = PullRequest.create(self.ado_client, repo.repo_id, "new-branch", "Test PR For Post Comment", "")
+            pull_request = PullRequest.create(self.ado_client, repo.repo_id, "Test PR For Post Comment", "", "new-branch")
             pull_request.post_comment(self.ado_client, "This is a test comment")
             pull_request_comments = pull_request.get_comments(self.ado_client, ignore_system_messages=True)
             assert len(pull_request_comments) == 1
@@ -132,7 +132,7 @@ class TestPullRequest:
     def test_comment_thread(self) -> None:
         with RepoContextManager(self.ado_client, "repo-for-comment-thread") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "Change"}, "add", "Test commit")
-            pull_request = PullRequest.create(self.ado_client, repo.repo_id, "new-branch", "Test PR For Comment Thread", "")
+            pull_request = PullRequest.create(self.ado_client, repo.repo_id, "Test PR For Comment Thread", "", "new-branch")
             pull_request.post_comment(self.ado_client, "This is a test comment")
             pull_request.post_comment(self.ado_client, "This is a another test comment")
             all_comments = pull_request.get_comments(self.ado_client, ignore_system_messages=True)

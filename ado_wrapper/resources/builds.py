@@ -155,10 +155,11 @@ class Build(StateManagedResource):
 
     @staticmethod
     def get_stages_jobs_tasks(
-        ado_client: "AdoClient", build_id: str
+        ado_client: "AdoClient", build_id: str,
     ) -> dict[str, dict[str, dict[str, dict[str, dict[str, str]]]]]:  # This is really ridiculous...
         """Returns a nested dictionary of stages -> stage_id+jobs -> job_id+tasks -> list[task_id], with each key being the name, and each value
-        containing both a list of childen (e.g. stages has jobs, jobs has tasks) and an "id" key/value."""
+        containing both a list of childen (e.g. stages has jobs, jobs has tasks) and an "id" key/value.
+        The items are returned by their display name, not their internal name)"""
         items: dict[BuildTimelineItemTypeType, list[BuildTimelineGenericItem]] = BuildTimeline.get_all_by_types(
             ado_client, build_id, ["Stage", "Phase", "Job", "Task"]
         )
@@ -212,8 +213,9 @@ class Build(StateManagedResource):
 
     @classmethod
     def get_environment_approvals(cls, ado_client: "AdoClient", build_id: str) -> dict[str, str]:
-        """Returns a mapping for the stage approvals for a build
-        Returns {stage_name: approval_id}"""
+        """Returns a mapping for the stage approvals for a build\n
+        Returns {stage_name: approval_id}\n
+        NOTE: This is the stage's display name, not it's internal name"""
         stage_ids: list[str] = [stage_data["id"] for stage_data in Build.get_stages_jobs_tasks(ado_client, build_id).values()]  # type: ignore[misc]
         PAYLOAD = {"contributionIds": ["ms.vss-build-web.checks-panel-data-provider"], "dataProviderContext": {"properties": {
             "buildId": build_id, "stageIds": ",".join(stage_ids), "sourcePage": {"routeValues": {"project": ado_client.ado_project_name}}
@@ -228,15 +230,18 @@ class Build(StateManagedResource):
 
     @classmethod
     def approve_environment_for_pipeline(cls, ado_client: "AdoClient", build_id: str, stage_name: str) -> None:
+        """Approves a single stage environment approval.\n
+        Takes the stage's `display_name`, not it's `internal_name`."""
         approval_ids = cls.get_environment_approvals(ado_client, build_id)
         if stage_name not in approval_ids:
-            raise IndexError("Stage name not found for those approvals, potentially because it was already approved?")
+            raise IndexError(
+                "Stage name not found for those approvals, potentially because it was already approved, or you passed in the internal name, not the display name?"
+            )
         PAYLOAD = [{"approvalId": approval_ids[stage_name], "status": 4, "comment": "", "deferredTo": None}]
         request = ado_client.session.patch(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/approvals?api-version=6.1-preview",
             json=PAYLOAD,
         )
         assert request.status_code == 200
-
 
 # ========================================================================================================

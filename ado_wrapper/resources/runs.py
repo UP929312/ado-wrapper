@@ -200,7 +200,8 @@ class Run(StateManagedResource):
         cls, ado_client: "AdoClient", build_id: str, task_id: str
     ) -> tuple[str, str, str, str, str, str]:  # fmt: skip
         """Returns the task's parent stage name & id, the task's parent job name & id, as well as the task itself's name & id
-        e.g. my_stage, abc, my_job, def, my_task, ghi"""
+        e.g. my_stage, abc, my_job, def, my_task, ghi
+        N.b, They return the display names of the tasks, not the internal_names"""
         stages_jobs_tasks = Run.get_stages_jobs_tasks(ado_client, build_id)
         for stage_name, stage_data in stages_jobs_tasks.items():  # Try get the task's stage, job and own name
             for job_name, job_data in stage_data["jobs"].items():

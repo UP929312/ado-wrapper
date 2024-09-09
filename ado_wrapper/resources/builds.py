@@ -1,6 +1,7 @@
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
+import json
 from typing import TYPE_CHECKING, Any, Literal
 
 
@@ -211,14 +212,26 @@ class Build(StateManagedResource):
             request = "\n".join([datetime_re_pattern.sub("", line) for line in request.split("\n")])  # TODO: Do what we do above???
         return request
 
+    @staticmethod
+    def get_root_stage_names(ado_client: "AdoClient", build_id: str) -> list[str]:
+        """Returns a list of display names of stages that `don't` have previous dependencies"""
+        request = ado_client.session.post(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/Platform/_build/results?buildId={build_id}&view=results"
+        ).text
+        json_raw = request.split('"ms.vss-build-web.run-details-data-provider":')[1].split('"ms.vss-web.proof-of-presence-config-data":')[0].removesuffix(",")
+        json_data = json.loads(json_raw)
+        return [x["name"] for x in json_data["stages"] if not x.get("dependsOn")]
+
     @classmethod
     def get_environment_approvals(cls, ado_client: "AdoClient", build_id: str) -> dict[str, str]:
         """Returns a mapping for the stage approvals for a build\n
         Returns {stage_name: approval_id}\n
         NOTE: This is the stage's display name, not it's internal name"""
-        stage_ids: list[str] = [stage_data["id"] for stage_data in Build.get_stages_jobs_tasks(ado_client, build_id).values()]  # type: ignore[misc]
+        non_dependant_stages = cls.get_root_stage_names(ado_client, build_id)
+        stage_ids: list[str] = [stage_data["id"] for stage_name, stage_data in Build.get_stages_jobs_tasks(ado_client, build_id).items()  # type: ignore[misc]
+                                if stage_name in non_dependant_stages]
         PAYLOAD = {"contributionIds": ["ms.vss-build-web.checks-panel-data-provider"], "dataProviderContext": {"properties": {
-            "buildId": build_id, "stageIds": ",".join(stage_ids), "sourcePage": {"routeValues": {"project": ado_client.ado_project_name}}
+            "buildId": build_id, "stageIds": ",".join(stage_ids), "sourcePage": {"routeId": "ms.vss-build-web.ci-results-hub-route", "routeValues": {"project": ado_client.ado_project_name}}
         }}}  # fmt: skip
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=6.1-preview",

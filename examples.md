@@ -168,6 +168,9 @@ branch = Branch.get_main_branch(ado_client, <repo_id>)
 # Allow On Environment
 pipeline_authorisation = Build.allow_on_environment(ado_client, <definition_id>, <environment_id>)
 
+# Approve Environment For Pipeline
+build.approve_environment_for_pipeline(ado_client, <build_id>, <stage_name>)
+
 # Create
 build = Build.create(ado_client, <definition_id>, <source_branch>, <permit_use_of_var_groups>)
 
@@ -195,8 +198,14 @@ string_var = Build.get_build_log_content(ado_client, <build_id>, <stage_name>, <
 # Get By Id
 build = Build.get_by_id(ado_client, <build_id>)
 
+# Get Environment Approvals
+dictionary = Build.get_environment_approvals(ado_client, <build_id>)
+
 # Get Latest
 build = Build.get_latest(ado_client, <definition_id>)
+
+# Get Root Stage Names
+strs = Build.get_root_stage_names(ado_client, <build_id>)
 
 # Get Stages Jobs Tasks
 dictionary = Build.get_stages_jobs_tasks(ado_client, <build_id>)

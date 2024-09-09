@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.24.0
+
+### Added
+
+- `Build`'s get_environment_approvals now doesn't supply pipelines with dependencies anymore (to prevent an issue).
+- Ability to get `Build.get_root_stage_names()` to get all stages with no dependencies, at root level.
+
+### Changed
+
+- `Run.create()` with stages_to_run now no longer mutates the list it takes, instead shadowing it and discarding at the end.
+- Improved error message in `Run.get_task_parents`.
+
+---
+
 ## v1.23.0
 
 ### Added
@@ -11,8 +25,6 @@
 
 - `BuildTimeline`s "identifier" has been renamed to `internal_name`.
 - Repo's utility function "create_pull_request" now accepts a target branch name, and is_draft for setting it to draft.
-
----
 
 ---
 

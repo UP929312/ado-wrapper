@@ -71,17 +71,18 @@ class Run(StateManagedResource):
             "resources": {"repositories": {"self": {"refName": f"refs/heads/{branch_name}"}}},
         }
         if stages_to_run is not None:
+            _stages_to_run = list(stages_to_run)  # Shallow copy the stages to run to prevent overriding input
             build_stages = BuildDefinition.get_all_stages(ado_client, definition_id, template_parameters, branch_name)
             stage_mapping = {stage.stage_display_name: stage.stage_internal_name for stage in build_stages}
 
-            for i, name in enumerate(stages_to_run):
+            for i, name in enumerate(_stages_to_run):
                 if name in stage_mapping.keys():  # If it's a display name, not internal name
-                    stages_to_run[i] = stage_mapping[name]  # Replace it with the internal name
+                    _stages_to_run[i] = stage_mapping[name]  # Replace it with the internal name
                     continue
                 if name not in stage_mapping.values():
                     raise ValueError(f"The stage_name '{name}' in stages_to_run is not found in the stages.")
 
-            PAYLOAD["stagesToSkip"] = [stage.stage_internal_name for stage in build_stages if stage.stage_internal_name not in stages_to_run]  # fmt: skip
+            PAYLOAD["stagesToSkip"] = [stage.stage_internal_name for stage in build_stages if stage.stage_internal_name not in _stages_to_run]  # fmt: skip
         try:
             return super()._create(
                 ado_client,
@@ -208,7 +209,7 @@ class Run(StateManagedResource):
                 for task_name, fetched_task_id in job_data["tasks"].items():
                     if fetched_task_id == task_id:
                         return stage_name, stage_data["id"], job_name, job_data["id"], task_name, fetched_task_id  # type: ignore
-        raise ResourceNotFound
+        raise ResourceNotFound("Error, cannot find this task's parents")
 
     # ==================================================
 

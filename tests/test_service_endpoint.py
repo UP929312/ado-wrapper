@@ -1,5 +1,8 @@
 import pytest
 
+if __name__ == "__main__":
+    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+
 from ado_wrapper.resources.service_endpoint import ServiceEndpoint
 from tests.setup_client import setup_client
 
@@ -92,16 +95,25 @@ class TestServiceEndpoints:
 
     @pytest.mark.get_all
     def test_get_all(self) -> None:
+        service_endpoint_created = ServiceEndpoint.create(
+            self.ado_client, "ado_wrapper-test-get-all", "github", "https://github.com", "test-username", "test-password"
+        )
         service_endpoints = ServiceEndpoint.get_all(self.ado_client)
-        assert len(service_endpoints) > 10
+        assert len(service_endpoints) >= 1
         assert all(isinstance(service_endpoint, ServiceEndpoint) for service_endpoint in service_endpoints)
+        service_endpoint_created.delete(self.ado_client)
 
     @pytest.mark.get_all_by_name
     def test_get_by_name(self) -> None:
         service_endpoint_created = ServiceEndpoint.create(
-            self.ado_client, "ado_wrapper-test-service-endpoint-get-by-name", "github", "https://github.com", "test-user", "test-password"
+            self.ado_client, "ado_wrapper-test-service-endpoint-get-by-name", "github", "https://github.com", "test-username", "test-password"
         )
         service_endpoint = ServiceEndpoint.get_by_name(self.ado_client, "ado_wrapper-test-service-endpoint-get-by-name")
         assert service_endpoint.name == service_endpoint_created.name
         assert service_endpoint.service_endpoint_id == service_endpoint_created.service_endpoint_id
         service_endpoint_created.delete(self.ado_client)
+
+
+if __name__ == "__main__":
+    # pytest.main([__file__, "-s", "-vvvv"])
+    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

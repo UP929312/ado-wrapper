@@ -112,6 +112,8 @@ PullRequest.set_my_pull_requests_included_teams?
 
 PullRequest -> Organisations -> Variable Groups
 
+For polling requests, set a global ado_client polling_interval.
+
 -----  
 
 Commands:  

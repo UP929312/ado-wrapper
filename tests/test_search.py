@@ -1,7 +1,12 @@
 import pytest
 
+if __name__ == "__main__":
+    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+
+from ado_wrapper.errors import ConfigurationError
 from ado_wrapper.resources.searches import CodeSearch, CodeSearchHit
-from tests.setup_client import setup_client, test_search_string  # fmt: skip
+from ado_wrapper.resources.commits import Commit
+from tests.setup_client import RepoContextManager, setup_client  # fmt: skip
 
 
 class TestCodeSearch:
@@ -41,9 +46,21 @@ class TestCodeSearch:
 
     @pytest.mark.from_request_payload
     def test_create_delete(self) -> None:
-        search_results = CodeSearch.get_by_search_string(self.ado_client, test_search_string)
-        assert len(search_results) > 10
-        search_results = CodeSearch.get_by_search_string(self.ado_client, test_search_string, 1)
-        assert len(search_results) == 1
-        search_results = CodeSearch.get_by_search_string(self.ado_client, test_search_string, 5, sort_direction="DESC")
-        assert len(search_results) == 5
+        TEXT = "abcdef123456"
+        with RepoContextManager(self.ado_client, "code-search") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"text.txt": TEXT}, "add", "Add initial")
+            Commit.create(self.ado_client, repo.repo_id, "my-branch", "my-branch", {"text2.txt": TEXT}, "add", "Add initial 2")
+            with pytest.raises(ConfigurationError):
+                search_results = CodeSearch.get_by_search_string(self.ado_client, TEXT)
+                assert len(search_results) == 2
+            with pytest.raises(ConfigurationError):
+                search_results = CodeSearch.get_by_search_string(self.ado_client, TEXT, 1)
+                assert len(search_results) == 1
+            with pytest.raises(ConfigurationError):
+                search_results = CodeSearch.get_by_search_string(self.ado_client, TEXT, 2, sort_direction="DESC")
+                assert len(search_results) == 2
+
+
+if __name__ == "__main__":
+    # pytest.main([__file__, "-s", "-vvvv"])
+    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

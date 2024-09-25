@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from ado_wrapper.resources.users import AdoUser
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.errors import ResourceNotFound, InvalidPermissionsError
-from ado_wrapper.utils import requires_initialisation
+from ado_wrapper.utils import requires_initialisation, build_hierarchy_payload
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -80,13 +80,13 @@ class UserPermission:
     @classmethod
     def get_by_subject_descriptor(cls, ado_client: "AdoClient", subject_descriptor: str, repo_id: str) -> list["UserPermission"]:
         requires_initialisation(ado_client)
-        PAYLOAD = {
-            "contributionIds": ["ms.vss-admin-web.security-view-permissions-data-provider"], "dataProviderContext": {"properties": {
+        PAYLOAD = build_hierarchy_payload(
+            ado_client, "admin-web.security-view-permissions-data-provider", additional_properties={
                 "subjectDescriptor": subject_descriptor,
                 "permissionSetId": PERMISSION_SET_ID,
                 "permissionSetToken": f"repoV2/{ado_client.ado_project_id}/{repo_id}",
-            }},
-        }  # fmt: skip
+            }
+        )
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=5.0-preview.1",
             json=PAYLOAD,
@@ -98,10 +98,12 @@ class UserPermission:
     @classmethod
     def set_by_group_descriptor(cls, ado_client: "AdoClient", repo_id: str, group_descriptor: str, action: RepoPermsActionType, permission: RepoPermissionType) -> None:  # fmt: skip
         requires_initialisation(ado_client)
-        IDENTITY_PAYLOAD = {"contributionIds": ["ms.vss-admin-web.security-view-permissions-data-provider"], "dataProviderContext": {"properties": {
-            "subjectDescriptor": group_descriptor, "permissionSetId": PERMISSION_SET_ID,
-            "permissionSetToken": f"repoV2/{ado_client.ado_project_id}/{repo_id}",
-        }}}  # fmt: skip
+        IDENTITY_PAYLOAD = build_hierarchy_payload(
+            ado_client, "admin-web.security-view-permissions-data-provider", additional_properties={
+                "subjectDescriptor": group_descriptor, "permissionSetId": PERMISSION_SET_ID,
+                "permissionSetToken": f"repoV2/{ado_client.ado_project_id}/{repo_id}",
+            }
+        )
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview.1",
             json=IDENTITY_PAYLOAD,

@@ -1,12 +1,10 @@
 import pytest
 
+if __name__ == "__main__":
+    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+
 from ado_wrapper.resources.users import AdoUser
-from tests.setup_client import (
-    existing_user_descriptor,
-    existing_user_email,
-    existing_user_name,
-    setup_client,
-)
+from tests.setup_client import existing_user_descriptor, email, existing_user_name, setup_client  # fmt: skip
 
 
 class TestAdoUser:
@@ -48,6 +46,11 @@ class TestAdoUser:
         assert user.descriptor_id == existing_user_descriptor
 
     def test_get_by_email(self) -> None:
-        user = AdoUser.get_by_email(self.ado_client, existing_user_email)
+        user = AdoUser.get_by_email(self.ado_client, email)
         assert user is not None
         assert user.descriptor_id == existing_user_descriptor
+
+
+if __name__ == "__main__":
+    # pytest.main([__file__, "-s", "-vvvv"])
+    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

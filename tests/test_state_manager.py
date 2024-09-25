@@ -1,8 +1,11 @@
+import pytest
+
+if __name__ == "__main__":
+    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+
 # from ado_wrapper.resources.variable_groups import VariableGroup
 # from ado_wrapper.resources.service_endpoint import ServiceEndpoint
 from tests.setup_client import RepoContextManager, setup_client
-
-# import pytest
 
 
 class TestStateManager:
@@ -39,3 +42,8 @@ class TestStateManager:
             state_manager.remove_resource_from_state("Repo", repo.repo_id)
             state_manager.import_into_state("Repo", repo.repo_id)
             assert state_manager.load_state()["resources"]["Repo"][repo.repo_id]["data"] == repo.to_json()
+
+
+if __name__ == "__main__":
+    # pytest.main([__file__, "-s", "-vvvv"])
+    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

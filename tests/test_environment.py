@@ -6,8 +6,8 @@ from ado_wrapper.resources.build_definitions import BuildDefinition
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.environment import Environment
 from ado_wrapper.resources.users import Member
-from tests.setup_client import RepoContextManager, existing_agent_pool_id, setup_client
-from tests.test_build import BUILD_YAML_FILE
+from tests.setup_client import RepoContextManager, setup_client
+from tests.build_definition_templates import MOST_BASIC_BUILD_YAML_FILE
 
 
 class TestEnvironment:
@@ -61,9 +61,11 @@ class TestEnvironment:
 
     @pytest.mark.get_all
     def test_get_all(self) -> None:
+        environment = Environment.create(self.ado_client, "ado_wrapper-test-get-all", "Test")
         environments = Environment.get_all(self.ado_client)
-        assert len(environments) > 1
+        assert len(environments) >= 1
         assert all(isinstance(env, Environment) for env in environments)
+        environment.delete(self.ado_client)
 
     @pytest.mark.get_all_by_name
     def test_get_by_name(self) -> None:
@@ -77,9 +79,9 @@ class TestEnvironment:
 
     def test_pipeline_perms(self) -> None:
         with RepoContextManager(self.ado_client, "pipeline_perms") as repo:
-            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "test commit")
+            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "test commit")
             build_def = BuildDefinition.create(
-                self.ado_client, repo.name, repo.repo_id, repo.name, "build.yaml", "", existing_agent_pool_id,
+                self.ado_client, repo.name, repo.repo_id, repo.name, "build.yaml", "", branch_name="my-branch"
             )  # fmt: skip
 
         environment = Environment.create(self.ado_client, "ado_wrapper-test-environment-pipeline-perms", "test environment")

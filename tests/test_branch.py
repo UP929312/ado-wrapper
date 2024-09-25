@@ -1,5 +1,8 @@
 import pytest
 
+if __name__ == "__main__":
+    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+
 from ado_wrapper.resources.branches import Branch
 from ado_wrapper.resources.commits import Commit
 from tests.setup_client import RepoContextManager, setup_client
@@ -25,17 +28,16 @@ class TestBranch:
     @pytest.mark.create_delete
     def test_create_delete_branch(self) -> None:
         with RepoContextManager(self.ado_client, "create-delete-branch") as repo:
-            with pytest.raises(NotImplementedError):
-                Branch.create(self.ado_client, "", "")
-            #
-            Commit.create(
-                self.ado_client, repo.repo_id, "main", "test-branch", {"text.txt": "Contents of the file"}, "add", "Test commmit 1"
-            )
-            branches = Branch.get_all_by_repo(self.ado_client, repo.repo_id)
-            non_main_branch = [branch for branch in branches if branch.name != "main"][0]
-            assert non_main_branch.name == "test-branch"
+            branch = Branch.create(self.ado_client, repo.repo_id, "test-branch")
+            Branch.delete_by_id(self.ado_client, branch.name, repo.repo_id)
 
-            Branch.delete_by_id(self.ado_client, non_main_branch.name, repo.repo_id)
+    @pytest.mark.create_delete
+    def test_create_delete_multiple_branches(self) -> None:
+        with RepoContextManager(self.ado_client, "create-delete-multiple-branches") as repo:
+            branch1 = Branch.create(self.ado_client, repo.repo_id, "test-branch")
+            branch2 = Branch.create(self.ado_client, repo.repo_id, "test-branch2")
+            Branch.delete_by_id(self.ado_client, branch1.name, repo.repo_id)
+            Branch.delete_by_id(self.ado_client, branch2.name, repo.repo_id)
 
     def test_get_certain_branches(self) -> None:
         with RepoContextManager(self.ado_client, "get-certain-branches") as repo:
@@ -60,3 +62,8 @@ class TestBranch:
             # assert len(active_branches) == 2
 
             branch.delete(self.ado_client)
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-s", "-vvvv"])
+    # pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

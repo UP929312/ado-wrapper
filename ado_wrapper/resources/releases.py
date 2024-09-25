@@ -19,12 +19,12 @@ ReleaseStatus = Literal["active", "abandoned", "draft", "undefined"]
 
 
 def get_release_definition(
-    ado_client: "AdoClient", name: str, variable_group_ids: list[int], agent_pool_id: str, revision: str = "1", _id: str = ""
+    ado_client: "AdoClient", name: str, variable_group_ids: list[int] | None, agent_pool_id: str | None = None, revision: str = "1", _id: str = ""
 ) -> dict[str, Any]:
     return {
         "name": name,
         "id": _id,
-        "variableGroups": variable_group_ids,
+        "variableGroups": variable_group_ids or [],
         "path": "\\",
         "releaseNameFormat": "Release-$(rev: r)",
         "revision": int(revision),
@@ -65,7 +65,7 @@ def get_release_definition(
                         "deploymentInput": {
                             "parallelExecution": {"parallelExecutionType": "none"},
                             "skipArtifactsDownload": False,
-                            "queueId": agent_pool_id,
+                            "queueId": agent_pool_id or "Azure Pipelines",
                             "demands": [],
                             "enableAccessToken": False,
                             "timeoutInMinutes": 0,
@@ -104,14 +104,14 @@ class Release(StateManagedResource):
         return cls(str(data["id"]), data["name"], data["status"], from_ado_date_string(data["createdOn"]), created_by, data["description"],
                    data.get("variables"), data.get("variableGroups"), data["keepForever"])  # fmt: skip
 
-    @classmethod  # TO-DO: Test
+    @classmethod  # TODO: Test
     def get_by_id(cls, ado_client: "AdoClient", release_id: str) -> "Release":
         return super()._get_by_url(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/releases/{release_id}?api-version=7.1",
         )
 
-    @classmethod  # TO-DO: Test
+    @classmethod  # TODO: Test
     def create(
         cls, ado_client: "AdoClient", definition_id: str, description: str = "Made with the ado_wrapper Python library"
     ) -> "Release":
@@ -121,7 +121,7 @@ class Release(StateManagedResource):
             {"definitionId": definition_id, "description": description},
         )
 
-    @classmethod  # TO-DO: Test
+    @classmethod  # TODO: Test
     def delete_by_id(cls, ado_client: "AdoClient", release_id: str) -> None:
         return super()._delete_by_id(
             ado_client,
@@ -194,7 +194,9 @@ class ReleaseDefinition(StateManagedResource):
         )
 
     @classmethod
-    def create(cls, ado_client: "AdoClient", name: str, variable_group_ids: list[int], agent_pool_id: str) -> "ReleaseDefinition":
+    def create(
+        cls, ado_client: "AdoClient", name: str, variable_group_ids: list[int] | None = None, agent_pool_id: str | None = None
+    ) -> "ReleaseDefinition":
         """Takes a list of variable group ids to include, and an agent_pool_id"""
         return super()._create(
             ado_client,

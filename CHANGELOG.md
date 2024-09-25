@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.26.0
+
+### Added
+
+- Can now create an empty branch, so it will no longer point you to Commit.create instead.
+- Creating a build_definition without passing in agent_pool_id will use the Azure AgentPools
+- Creating a release without passing in agent_pool_id will use the Azure AgentPools
+- Groups are now creatable, and deletable and won't raise NotImplementedError
+- AdoUsers now have a few more utility functions, like getting by id, or search string.
+- VariableGroups can now be fetched by value, using `get_variable_group_contents`, but this takes 20-60 seconds to run.
+- Runs now have a function which is ran with the current run everytime the run is polled (which can be used for logging or dispatching)
+
+### Changed
+
+- Improved functions which call the Hierarchy endpoints to use a new builder, making that code better
+- Optimised client startup time (don't fetch org anymore, or perms, but now fetch project pipeline settings)
+- When calling Build.get_build_log_content with invalid stages, it now tells you the possible options
+- Build's `get_root_stage_names` is now also in Runs.
+
+---
+
 ## v1.25.0
 
 ### Added
@@ -22,6 +43,7 @@
 - Build.create no longer takes the `permit_use_of_var_groups` argument.
 - Build's `approve_environment_for_pipeline` now has better error messages.
 - `ansi_re_pattern` and `datetime_re_pattern` have been renamed to `ANSI_RE_PATTERN` and `DATETIME_RE_PATTERN` respectively.
+- If search is not enabled for a project, it'll now error when trying to do a new search.
 
 ---
 

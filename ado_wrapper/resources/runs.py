@@ -1,13 +1,13 @@
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, NotRequired
+from typing import TYPE_CHECKING, Callable, Literal, TypedDict, NotRequired, Any
 
-from ado_wrapper.errors import ResourceNotFound
 from ado_wrapper.resources.builds import Build
 from ado_wrapper.resources.build_definitions import BuildDefinition
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import from_ado_date_string, recursively_find_or_none
+from ado_wrapper.errors import ResourceNotFound, ConfigurationError
+from ado_wrapper.utils import from_ado_date_string, recursively_find_or_none, requires_initialisation
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -52,10 +52,10 @@ class Run(StateManagedResource):
                    data["state"], data.get("result", "unknown"), data["templateParameters"])  # fmt: skip
 
     @classmethod
-    def get_by_id(cls, ado_client: "AdoClient", pipeline_id: str, run_id: str) -> "Run":
+    def get_by_id(cls, ado_client: "AdoClient", build_definition_id: str, run_id: str) -> "Run":
         return super()._get_by_url(
             ado_client,
-            f"/{ado_client.ado_project_name}/_apis/pipelines/{pipeline_id}/runs/{run_id}?api-version=7.1-preview.1",
+            f"/{ado_client.ado_project_name}/_apis/pipelines/{build_definition_id}/runs/{run_id}?api-version=7.1-preview.1",
         )
 
     @classmethod
@@ -64,10 +64,13 @@ class Run(StateManagedResource):
         run_variables: dict[str, Any] | None = None, branch_name: str = "main", stages_to_run: list[str] | None = None  # fmt: skip
     ) -> "Run":
         """Creates a `Run` in ADO and returns the object. If stages_to_run isn't set (or is set to None), all stages will be run."""
-
+        if run_variables is not None:
+            requires_initialisation(ado_client)  # Because ado_project_pipeline_settings is set in initialisation
+            if ado_client.ado_project_pipeline_settings["enforceSettableVar"]:
+                raise ConfigurationError("Run-time variables are disable project wide, please enable them to set run variables.")
         PAYLOAD: dict[str, Any] = {
             "templateParameters": template_parameters or {},
-            "variables": run_variables or {},
+            "variables": {key: {"value": value} for key, value in run_variables.items()} if run_variables is not None else {},
             "resources": {"repositories": {"self": {"refName": f"refs/heads/{branch_name}"}}},
         }
         if stages_to_run is not None:
@@ -90,7 +93,16 @@ class Run(StateManagedResource):
                 PAYLOAD,
             )
         except ValueError as e:
-            # TODO: Json parse and extract this properly?
+            # {"$id":"1","innerException":null,"message":"See https://aka.ms/AzPipelines/SettingVariablesAtQueueTime - You can't set the following variables (my_var). If you want to be able to set these variables, then edit the pipeline and select Settable at queue time on the variables tab of the pipeline editor.","typeName":"Microsoft.Azure.Pipelines.WebApi.PipelineValidationException, Microsoft.Azure.Pipelines.WebApi","typeKey":"PipelineValidationException","errorCode":0,"eventId":3000}
+            # raise ValueError(str(e))
+            # try:
+            #     data = json.loads(str(e))
+            #     raise ValueError(
+            #         e
+            #     )
+            # except:
+            #     print(e)
+            # TODO: Properly parse this message with json
             raise ValueError(
                 f"A template parameter inputted is not allowed! {str(e).split('message')[1][3:].removesuffix(':').split('.')[0]}"  # fmt: skip
             ) from e
@@ -116,22 +128,26 @@ class Run(StateManagedResource):
 
     @classmethod
     def run_and_wait_until_completion(
-        cls, ado_client: "AdoClient", definition_id: str, template_parameters: dict[str, Any] | None = None, run_variables: dict[str, Any] | None = None,
-        branch_name: str = "main", stages_to_run: list[str] | None = None, max_timeout_seconds: int | None = 900  # fmt: skip
+        cls, ado_client: "AdoClient", definition_id: str, template_parameters: dict[str, Any] | None = None,
+        run_variables: dict[str, Any] | None = None, branch_name: str = "main",
+        stages_to_run: list[str] | None = None, max_timeout_seconds: int | None = 900,
+        send_updates_function: Callable[["Run"], None] = lambda run: None,  # fmt: skip
     ) -> "Run":
         """Creates a run and waits until it is completed, or raises a TimeoutError if it takes too long.
-        WARNING: This is a blocking operation, it will not return until the run is completed or the timeout (default 15 mins) is reached."""
+        WARNING: This is a blocking operation, it will not return until the run is completed or the timeout (default 15 mins) is reached.
+        Send updates function is for dispatching events every time the build is fetched to check completion"""
         data: dict[str, RunAllDictionary] = {
             definition_id: {
                 "template_parameters": template_parameters, "run_variables": run_variables,
                 "branch_name": branch_name, "stages_to_run": stages_to_run
             }  # fmt: skip
         }
-        return cls.run_all_and_capture_results_simultaneously(ado_client, data, max_timeout_seconds)[definition_id]
+        return cls.run_all_and_capture_results_simultaneously(ado_client, data, max_timeout_seconds, send_updates_function)[definition_id]
 
     @classmethod
     def run_all_and_capture_results_sequentially(
-        cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800
+        cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800,
+        send_updates_function: Callable[["Run"], None] = lambda run: None,
     ) -> dict[str, "Run"]:
         """Takes a mapping of definition_id -> {template_parameters, run_variables, branch_name, stages_to_run}
         Once done, returns a mapping of definition_id -> `Run` object"""
@@ -139,18 +155,32 @@ class Run(StateManagedResource):
         for definition_id, run_data in data.items():
             run = cls.run_and_wait_until_completion(
                 ado_client, definition_id, run_data.get("template_parameters", {}), run_data.get("run_variables", {}),
-                run_data.get("branch_name", "main"), run_data.get("stages_to_run"), max_timeout_seconds  # fmt: skip
+                run_data.get("branch_name", "main"), run_data.get("stages_to_run"), max_timeout_seconds,
+                send_updates_function,  # fmt: skip
             )
             return_values[definition_id] = run
         return return_values
 
     @classmethod
     def run_all_and_capture_results_simultaneously(
-        cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800
+        cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800,
+        send_updates_function: Callable[["Run"], None] = lambda run: None,
     ) -> dict[str, "Run"]:
         """Takes a mapping of definition_id -> {template_parameters, run_variables, branch_name, stages_to_run}
         Once done, returns a mapping of definition_id -> `Run` object"""
         # Get a mapping of definition_id -> Run()
+        """
+        data = response.json()
+        state, name = data["state"], data["pipeline"]["name"]
+        result = data["result"] if state == "completed" else None
+
+        logger.info(f"Name: {name}, State: {state}, Result: {result}")
+
+        2024-09-25 06:38:30,144 - root - INFO - Name: cep-account-global, State: inProgress, Result: None
+        2024-09-25 06:39:00,336 - root - INFO - Name: cep-account-global, State: inProgress, Result: None
+        2024-09-25 06:39:30,496 - root - INFO - Name: cep-account-global, State: completed, Result: succeeded
+        2024-09-25 06:39:30,640 - root - INFO - Name: cep-account-global, State: completed, Result: succeeded
+        """
         runs: dict[str, Run] = {}
         for definition_id, run_data in data.items():
             run = cls.create(
@@ -164,6 +194,7 @@ class Run(StateManagedResource):
         while runs:
             for definition_id, run_obj in dict(runs.items()).items():
                 run = Run.get_by_id(ado_client, definition_id, run_obj.run_id)
+                send_updates_function(run)
                 if run.status == "completed":
                     return_values[definition_id] = run
                     del runs[definition_id]
@@ -185,7 +216,6 @@ class Run(StateManagedResource):
         request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build/results?view=results&buildId={build_id}&__rt=fps&__ver=2",
         )
-        assert request.status_code == 200
         data = request.json()["fps"]["dataProviders"]["data"].get("ms.vss-build-web.run-details-data-provider")
         if data is None:
             raise ResourceNotFound("Could not find that build!")
@@ -201,7 +231,7 @@ class Run(StateManagedResource):
         cls, ado_client: "AdoClient", build_id: str, task_id: str
     ) -> tuple[str, str, str, str, str, str]:  # fmt: skip
         """Returns the task's parent stage name & id, the task's parent job name & id, as well as the task itself's name & id
-        e.g. my_stage, abc, my_job, def, my_task, ghi
+        e.g. my_stage, abc, my_job, def, my_task, ghi\n
         N.b, They return the display names of the tasks, not the internal_names"""
         stages_jobs_tasks = Run.get_stages_jobs_tasks(ado_client, build_id)
         for stage_name, stage_data in stages_jobs_tasks.items():  # Try get the task's stage, job and own name
@@ -216,6 +246,7 @@ class Run(StateManagedResource):
     get_stages_jobs_tasks = Build.get_stages_jobs_tasks
     _get_all_logs_ids = Build._get_all_logs_ids  # pylint: disable=protected-access
     get_run_log_content = Build.get_build_log_content
+    get_root_stage_names = Build.get_root_stage_names
 
 
 # ============================================================================================== #

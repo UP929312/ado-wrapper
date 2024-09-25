@@ -31,12 +31,20 @@ class Group(StateManagedResource):
         )
 
     @classmethod
-    def create(cls, ado_client: "AdoClient", name: str) -> "Group":
-        raise NotImplementedError
+    def create(cls, ado_client: "AdoClient", name: str, description: str = "ado_wrapper created group") -> "Group":
+        return super()._create(
+            ado_client,
+            f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/graph/groups?api-version=7.1-preview.1",
+            payload={"displayName": name, "description": description, "specialType": "Generic"}
+        )
 
     @classmethod
-    def delete_by_id(cls, ado_client: "AdoClient", group_id: str) -> None:
-        raise NotImplementedError
+    def delete_by_id(cls, ado_client: "AdoClient", group_descriptor: str) -> None:
+        return super()._delete_by_id(
+            ado_client,
+            f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/graph/groups/{group_descriptor}?api-version=7.1-preview.1",
+            group_descriptor,
+        )
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient") -> list["Group"]:

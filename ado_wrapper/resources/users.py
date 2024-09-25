@@ -77,9 +77,61 @@ class AdoUser(StateManagedResource):
         return user
 
     @classmethod
-    def get_by_name(cls, ado_client: "AdoClient", member_name: str) -> "AdoUser | None":
-        return cls._get_by_abstract_filter(ado_client, lambda user: user.display_name == member_name)
+    def get_by_name(cls, ado_client: "AdoClient", name: str) -> "AdoUser | None":
+        return cls._get_by_abstract_filter(ado_client, lambda user: user.display_name == name)
 
+    @classmethod
+    def get_by_descriptor_id(cls, ado_client: "AdoClient", descriptor_id: str) -> "AdoUser | None":
+        return cls._get_by_abstract_filter(ado_client, lambda user: user.descriptor_id == descriptor_id)
+
+    @classmethod
+    def get_by_origin_id(cls, ado_client: "AdoClient", origin_id: str) -> "AdoUser | None":
+        return cls._get_by_abstract_filter(ado_client, lambda user: user.origin_id == origin_id)
+
+    @classmethod
+    def search_by_query(cls, ado_client: "AdoClient", query: str) -> dict[str, str]:
+        """Returns a user to identity, query is email, first name, etc Essentially when using a search bar, what you'll get in return."""
+        PROPERTIES = ["DisplayName", "ScopeName", "SamAccountName", "Active", "SubjectDescriptor", "Department", "JobTitle", "Mail", "MailNickname", "SignInAddress"]
+        PAYLOAD = {"query": query, "identityTypes": ["user", "group"], "operationScopes": ["ims", "source"],
+                   "options": {"MinResults": 5, "MaxResults": 25}, "properties": PROPERTIES}  # fmt: skip
+        request = ado_client.session.post(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/IdentityPicker/Identities?api-version=7.0-preview.1",
+            json=PAYLOAD
+        ).json()
+        return request["results"][0]["identities"][0]  # type: ignore[no-any-return]
+
+    @staticmethod
+    def _convert_local_ids_to_origin_ids(ado_client: "AdoClient", local_ids: list[str]) -> dict[str, str]:
+        """Converts a mapping of local_ids to origin_ids"""
+        local_to_descriptor = {}
+        for local_id in local_ids:
+            request = ado_client.session.get(
+                f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/graph/descriptors/{local_id}?api-version=7.0-preview.1"
+            ).json()
+            local_to_descriptor[local_id] = request["value"]
+        # Now get a mapping of local_ids to origin_ids
+        mapping = {}
+        for local_id, descriptor_id in local_to_descriptor.items():
+            mapping[local_id] = AdoUser.get_by_descriptor_id(ado_client, descriptor_id).origin_id  # type: ignore[union-attr]
+        return mapping
+
+    @staticmethod
+    def _convert_origin_ids_to_local_ids(ado_client: "AdoClient", origin_ids: list[str]) -> dict[str, str]:
+        """Converts a mapping of origin_ids to local_ids"""
+        user_objects: list[AdoUser] = [AdoUser.get_by_origin_id(ado_client, x) for x in origin_ids]  # type: ignore[misc]
+        return {identity.origin_id: AdoUser.search_by_query(ado_client, identity.email)["localId"] for identity in user_objects}
+
+    # @staticmethod
+    # def _convert_descriptor_ids_to_local_ids(ado_client: "AdoClient", descriptor_ids: list[str]) -> dict[str, str]:
+    #     """Converts a mapping of descriptor_ids to local_ids"""
+    #     user_objects: list[AdoUser] = [AdoUser.get_by_descriptor_id(ado_client, x) for x in descriptor_ids]  # type: ignore[assignment]
+    #     return {identity.descriptor_id: AdoUser.search_by_query(ado_client, identity.email)["localId"] for identity in user_objects}
+
+    # @classmethod
+    # def convert_origin_id_to_descriptors(cls, ado_client: "AdoClient", origin_ids: list[str]) -> dict[str, str]:
+    #     all_users = cls.get_all(ado_client)
+    #     mapping = {user.origin_id: user.descriptor_id for user in all_users if user.origin_id in origin_ids}
+    #     return mapping
 
 # ======================================================================================================= #
 # ------------------------------------------------------------------------------------------------------- #

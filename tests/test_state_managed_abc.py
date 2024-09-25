@@ -1,9 +1,6 @@
 from datetime import datetime
 
-from ado_wrapper.state_managed_abc import (
-    recursively_convert_from_json,
-    recursively_convert_to_json,
-)
+from ado_wrapper.state_managed_abc import recursively_convert_from_json, recursively_convert_to_json
 
 
 class TestStateManagedABCs:

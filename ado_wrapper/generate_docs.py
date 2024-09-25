@@ -1,6 +1,9 @@
 import inspect
 import re
 
+if __name__ == "__main__":
+    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+
 from ado_wrapper.resources import *  # pylint: disable=W0401,W0614  # noqa: F401,F403
 
 # This reference to ado_wrapper is wrong, it uses the installed package, not the local copy.

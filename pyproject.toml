@@ -2,7 +2,7 @@
 name = "ado_wrapper"
 description = "A high level wrapper around the AzureDevops API including OOP principals and state management"
 authors = ["Ben Skerritt"]
-version = "1.24.0"
+version = "1.25.0"
 license = "Proprietary"
 readme = "README.md"
 packages = [{include = "ado_wrapper"}]
@@ -50,6 +50,7 @@ disable = [
     "too-many-instance-attributes",
     "too-many-arguments",
 
+    "wrong-import-position",
     "duplicate-code",
     "unused-argument",
     "fixme",
@@ -69,6 +70,7 @@ disable = [
 ]
 
 [tool.pytest.ini_options]
+testpaths = ["tests", ]
 log_cli = true
 markers = [
     "wip: mark test as a work in progress",
@@ -78,7 +80,9 @@ markers = [
     "get_by_id: Tests which are used to get resources by their ID",
     "get_all: Tests which are used to get all resources",
     "get_all_by_name: Tests which are used to get resources by their name",
+    "get_contents: Tests which get the contents of things, e.g. variable group variables",
     "integrations: Tests which are used to test full integrations of multiple resources",
+    "hierarchy: Tests which use unofficial hierarchy calls",
 ]
 
 [tool.black]
@@ -94,9 +98,11 @@ omit = [
     ".pytest_cache/*",
     ".ruff_cache/*",
     ".vscode/*",
-    "tests/*",
+    "ado_wrapper_logs/*",
     "dist/*",
     "htmlcov/*",
+    "tests/*",
+    "/opt/*",
 ]
 
 [tool.bandit]
@@ -117,4 +123,4 @@ select = [
     "SIM",  # flake8-simplify
     "I",  # isort
 ]
-ignore = ["F401", "F403", "E501", "SIM105", "I001", "SIM118"]
+ignore = ["F401", "F403", "E501", "I001", "SIM105", "SIM118"]

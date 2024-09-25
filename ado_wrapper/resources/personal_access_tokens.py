@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 from datetime import datetime
 
+from ado_wrapper.resources.organisations import Organisation
 from ado_wrapper.utils import from_ado_date_string, requires_initialisation
 
 
@@ -92,7 +93,7 @@ class PersonalAccessToken:
         #     json=PAYLOAD,
         #     cookies=cookies,
         # )
-        # assert request.status_code == 200
+        # ssert request.status_code == 200
         # print(request.status_code)
         # print(request.json())
         # return None  # type: ignore
@@ -102,8 +103,9 @@ class PersonalAccessToken:
 
     @classmethod
     def get_access_tokens(
-        cls, ado_client: "AdoClient", include_different_orgs: bool = False, include_expired_tokens: bool = False
+        cls, ado_client: "AdoClient", org_id: str | None = None, include_different_orgs: bool = False, include_expired_tokens: bool = False
     ) -> list["PersonalAccessToken"]:  # fmt: skip
+
         requires_initialisation(ado_client)
         now = datetime.now()
         # Sun, 14 Jul 2024 18:14:24 GMT
@@ -111,13 +113,15 @@ class PersonalAccessToken:
         request = ado_client.session.get(
             f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/Token/SessionTokens?displayFilterOption=1&createdByOption=3&sortByOption=2&isSortAscending=true&startRowNumber=1&pageSize=1000&pageRequestTimeStamp={page_request_timestamp}&api-version=5.0-preview.1"
         ).json()
+        if org_id is None:
+            org_id = Organisation.get_by_name(ado_client, ado_client.ado_org_name).organisation_id  # type: ignore[union-attr]
         return [cls.from_request_payload(x) for x in request["sessionTokens"]
                 if (include_expired_tokens or from_ado_date_string(x["validTo"]) > datetime.now())
-                and (include_different_orgs or x["targetAccounts"] == [ado_client.ado_org_id])]  # fmt: skip
+                and (include_different_orgs or x["targetAccounts"] == [org_id])]  # fmt: skip
 
     @classmethod
-    def get_access_token_by_name(cls, ado_client: "AdoClient", display_name: str) -> "PersonalAccessToken | None":
-        return [x for x in cls.get_access_tokens(ado_client, include_different_orgs=True, include_expired_tokens=True)
+    def get_access_token_by_name(cls, ado_client: "AdoClient", display_name: str, org_id: str | None = None) -> "PersonalAccessToken | None":
+        return [x for x in cls.get_access_tokens(ado_client, org_id, include_different_orgs=True, include_expired_tokens=True)
                 if x.display_name == display_name][0]  # fmt: skip
 
     # @staticmethod

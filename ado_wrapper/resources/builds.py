@@ -10,8 +10,8 @@ from ado_wrapper.resources.repo import BuildRepository
 from ado_wrapper.resources.users import Member
 from ado_wrapper.resources.build_timeline import BuildTimeline, BuildTimelineGenericItem, BuildTimelineItemTypeType
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.errors import ConfigurationError
-from ado_wrapper.utils import from_ado_date_string, ansi_re_pattern, datetime_re_pattern
+from ado_wrapper.errors import ConfigurationError, UnknownError
+from ado_wrapper.utils import from_ado_date_string, remove_ansi_codes, build_hierarchy_payload, DATETIME_RE_PATTERN
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -45,6 +45,7 @@ class Build(StateManagedResource):
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Build":
         from ado_wrapper.resources.build_definitions import BuildDefinition
+
         requested_by = Member.from_request_payload(data["requestedBy"])
         build_repo = BuildRepository.from_request_payload(data["repository"])
         build_definition = BuildDefinition.from_request_payload(data["definition"]) if "definition" in data else None
@@ -61,16 +62,7 @@ class Build(StateManagedResource):
         )
 
     @classmethod
-    def create(
-        cls, ado_client: "AdoClient", definition_id: str, source_branch: str = "refs/heads/main", permit_use_of_var_groups: bool = False,  # fmt: skip
-    ) -> "Build":
-        """`permit_var_groups` defines whether the variable group will be automatically allowed for the build or need manual approval."""
-        # if permit_use_of_var_groups:
-        #     rint(f"Variable Groups: {BuildDefinition.get_by_id(ado_client, definition_id).variable_groups}")
-        #     for var_group_id in BuildDefinition.get_by_id(ado_client, definition_id).variable_groups:
-        #         request = ado_client.session.patch(f"https://dev.azure.com/{ado_client.ado_org_name}/{definition_id}/_apis/pipelines/pipelinePermissions/variablegroup/{var_group_id}")  # fmt: skip
-        #         rint(request.text, request.status_code)
-        #         assert request.status_code <= 204
+    def create(cls, ado_client: "AdoClient", definition_id: str, source_branch: str = "refs/heads/main") -> "Build":
         return super()._create(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/builds?definitionId={definition_id}&api-version=7.1",
@@ -109,7 +101,7 @@ class Build(StateManagedResource):
                                          max_timeout_seconds: int = 300) -> "Build":  # fmt: skip
         """Creates a build and waits until it is completed, or raises a TimeoutError if it takes too long.
         WARNING: This is a blocking operation, it will not return until the build is completed or the timeout is reached."""
-        build = cls.create(ado_client, definition_id, branch_name, True)
+        build = cls.create(ado_client, definition_id, branch_name)
         start_time = datetime.now()
         while True:
             build = Build.get_by_id(ado_client, build.build_id)
@@ -127,7 +119,7 @@ class Build(StateManagedResource):
         )
         if leases_request.status_code != 200:
             if not ado_client.suppress_warnings:
-                print(f"Could not delete leases, {leases_request.status_code}")
+                print(f"[ADO_WRAPPER] Could not delete leases, {leases_request.status_code}")
             return
         leases = leases_request.json()["value"]
         for lease in leases:
@@ -156,10 +148,11 @@ class Build(StateManagedResource):
 
     @staticmethod
     def get_stages_jobs_tasks(
-        ado_client: "AdoClient", build_id: str,
+        ado_client: "AdoClient", build_id: str
     ) -> dict[str, dict[str, dict[str, dict[str, dict[str, str]]]]]:  # This is really ridiculous...
-        """Returns a nested dictionary of stages -> stage_id+jobs -> job_id+tasks -> list[task_id], with each key being the name, and each value
-        containing both a list of childen (e.g. stages has jobs, jobs has tasks) and an "id" key/value.
+        """Returns a nested dictionary of stages -> stage_id+jobs -> job_id+tasks -> task_name -> task_id,
+        with each key being the name, and each value containing both a list of childen
+        (e.g. stages has jobs, jobs has tasks) and an "id" key/value.
         The items are returned by their display name, not their internal name)"""
         items: dict[BuildTimelineItemTypeType, list[BuildTimelineGenericItem]] = BuildTimeline.get_all_by_types(
             ado_client, build_id, ["Stage", "Phase", "Job", "Task"]
@@ -201,43 +194,54 @@ class Build(StateManagedResource):
         log_id = mapping.get(f"{stage_name}/{job_name}/{task_name}")
         if log_id is None:
             raise ConfigurationError(
-                f"Wrong stage name or job name combination (case sensitive), recieved {stage_name}/{job_name}/{task_name}"
+                f"Wrong stage name or job name combination (case sensitive), received {stage_name}/{job_name}/{task_name}" +
+                f"Options were {', '.join(list(mapping.keys()))}"
             )
         request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/build/builds/{build_id}/logs/{log_id}"
         ).text
         if remove_colours:
-            request = ansi_re_pattern.sub("", request)
+            request = remove_ansi_codes(request)
         if remove_prefixed_timestamp:
-            request = "\n".join([datetime_re_pattern.sub("", line) for line in request.split("\n")])  # TODO: Do what we do above???
+            request = "\n".join([DATETIME_RE_PATTERN.sub("", line) for line in request.split("\n")])  # TODO: Do what we do above???
         return request
 
     @staticmethod
     def get_root_stage_names(ado_client: "AdoClient", build_id: str) -> list[str]:
         """Returns a list of display names of stages that `don't` have previous dependencies"""
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/Platform/_build/results?buildId={build_id}&view=results"
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_id}/_build/results?buildId={build_id}&view=results"
         ).text
-        json_raw = request.split('"ms.vss-build-web.run-details-data-provider":')[1].split('"ms.vss-web.proof-of-presence-config-data":')[0].removesuffix(",")
+        json_raw = request.split('"ms.vss-build-web.run-details-data-provider":')[1].split('"ms.vss-web.proof-of-presence-config-data":')[0].removesuffix(",")  # fmt: skip
         json_data = json.loads(json_raw)
         return [x["name"] for x in json_data["stages"] if not x.get("dependsOn")]
+
+    @classmethod
+    def _get_all_checks(cls, ado_client: "AdoClient", build_id: str) -> list[dict[str, Any]]:
+        """Internal function for returning all of an "Approve Environment" and "Approve Variable Group"
+        for a build"""
+        non_dependant_stages = cls.get_root_stage_names(ado_client, build_id)
+        stage_ids: list[str] = [
+            stage_data["id"]  # type: ignore[misc]
+            for stage_name, stage_data in Build.get_stages_jobs_tasks(ado_client, build_id).items()
+            if stage_name in non_dependant_stages
+        ]
+        PAYLOAD = build_hierarchy_payload(
+            ado_client, "build-web.checks-panel-data-provider", "build-web.ci-results-hub-route", additional_properties={"buildId": build_id, "stageIds": ",".join(stage_ids)}
+        )  # fmt: skip
+        request = ado_client.session.post(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=6.1-preview",
+            json=PAYLOAD,
+        ).json()
+        data: list[dict[str, Any]] = request["dataProviders"]["ms.vss-build-web.checks-panel-data-provider"]
+        return data
 
     @classmethod
     def get_environment_approvals(cls, ado_client: "AdoClient", build_id: str) -> dict[str, str]:
         """Returns a mapping for the stage approvals for a build\n
         Returns {stage_name: approval_id}\n
         NOTE: This is the stage's display name, not it's internal name"""
-        non_dependant_stages = cls.get_root_stage_names(ado_client, build_id)
-        stage_ids: list[str] = [stage_data["id"] for stage_name, stage_data in Build.get_stages_jobs_tasks(ado_client, build_id).items()  # type: ignore[misc]
-                                if stage_name in non_dependant_stages]
-        PAYLOAD = {"contributionIds": ["ms.vss-build-web.checks-panel-data-provider"], "dataProviderContext": {"properties": {
-            "buildId": build_id, "stageIds": ",".join(stage_ids), "sourcePage": {"routeId": "ms.vss-build-web.ci-results-hub-route", "routeValues": {"project": ado_client.ado_project_name}}
-        }}}  # fmt: skip
-        request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=6.1-preview",
-            json=PAYLOAD,
-        ).json()
-        data: list[dict[str, Any]] = request["dataProviders"]["ms.vss-build-web.checks-panel-data-provider"]
+        data = cls._get_all_checks(ado_client, build_id)
         # Already approved ones are here, but with no "approvals"
         return {approval["stageName"]: approval["approvals"][0]["id"] for approval in data if approval.get("approvals")}
 
@@ -248,13 +252,16 @@ class Build(StateManagedResource):
         approval_ids = cls.get_environment_approvals(ado_client, build_id)
         if stage_name not in approval_ids:
             raise IndexError(
-                "Stage name not found for those approvals, potentially because it was already approved, or you passed in the internal name, not the display name?"
+                "Stage name not found for those approvals, potentially because it was already approved, or you passed in the internal name, rather than the display name?"
+                + f"\nInputted stage name: {stage_name}"
+                + f"\nPossible stage names: {list(approval_ids.keys())}"
             )
         PAYLOAD = [{"approvalId": approval_ids[stage_name], "status": 4, "comment": "", "deferredTo": None}]
         request = ado_client.session.patch(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/approvals?api-version=6.1-preview",
             json=PAYLOAD,
         )
-        assert request.status_code == 200
+        if request.status_code != 200:
+            raise UnknownError(f"Approving that environment raised an error: {request.status_code}, {request.text}")
 
 # ========================================================================================================

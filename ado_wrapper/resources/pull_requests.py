@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Member, Reviewer
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import from_ado_date_string, requires_initialisation
+from ado_wrapper.utils import from_ado_date_string, build_hierarchy_payload
 from ado_wrapper.errors import ConfigurationError, UnknownError
 
 if TYPE_CHECKING:
@@ -135,7 +135,8 @@ class PullRequest(StateManagedResource):
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/reviewers/{reviewer_id}?api-version=7.1",
             json={"vote": "0", "isRequired": "true"},
         )
-        assert request.status_code < 300
+        if request.status_code >= 300:
+            raise UnknownError(f"Error! Cannot add reviewer to that pull request! {request.status_code}, {request.text}")
 
     def close(self, ado_client: "AdoClient") -> None:
         self.update(ado_client, "merge_status", "abandoned")
@@ -161,7 +162,7 @@ class PullRequest(StateManagedResource):
             )  # pyright: ignore[reportReturnType]
         except KeyError:
             if not ado_client.suppress_warnings:
-                print(f"Repo with id `{repo_id}` was disabled, or you had no access.")
+                print(f"[ADO_WRAPPER] Repo with id `{repo_id}` was disabled, or you had no access.")
             return []
 
     @classmethod
@@ -170,9 +171,8 @@ class PullRequest(StateManagedResource):
 
     @classmethod
     def get_my_pull_requests(cls, ado_client: "AdoClient") -> list["PullRequest"]:
-        PAYLOAD = {"contributionIds": ["ms.vss-code-web.prs-list-data-provider"], "dataProviderContext": {"properties":
-            {"queryIds": ["AssignedToMyTeams"], "sourcePage": {"routeId": "ms.vss-code-web.my-pullrequests-me-page-route"}}}  # noqa: E128
-        }  # fmt: skip
+        PAYLOAD = build_hierarchy_payload(ado_client, "code-web.prs-list-data-provider", route_id="code-web.my-pullrequests-me-page-route")
+        PAYLOAD |= {"queryIds": ["AssignedToMyTeams"]}
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview",
             json=PAYLOAD,
@@ -192,7 +192,6 @@ class PullRequest(StateManagedResource):
         not including (or setting to None) any of
         `target_branch`, `created_in_last_x_days`, `updated_in_last_x_days` or `completed_in_last_x_days`
         will remove any filtering based on this argument"""
-        requires_initialisation(ado_client)
         # ==========================================================================================================================================
         # GET REQUEST VERIFICATION TOKEN
         request = ado_client.session.get(f"https://dev.azure.com/{ado_client.ado_org_name}/_pulls")

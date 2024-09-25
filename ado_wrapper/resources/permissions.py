@@ -143,6 +143,7 @@ permissions: dict[PermissionGroupLiteral, PermissionType] = {
 namespace_id_to_group: dict[str, PermissionGroupLiteral] = {
     value["namespaceId"]: key for key, value in permissions.items()
 }  # fmt: skip
+
 namespace_id_to_perm: dict[tuple[str, int], PermissionActionType] = {  # Mapping of `(sec_namespace, bit)` to `action`
     (value["namespaceId"], action["bit"]): action for value in permissions.values()
     for action in value["actions"]

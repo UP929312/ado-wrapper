@@ -8,10 +8,14 @@ dist/
 htmlcov/
 .DS_STORE
 .ruff_cache
+ado_wrapper_logs/
 
 *.state
 tests/test_data.txt
+tests/test_data_old.txt
 
 script.py
 dev_testing.py
 credentials.txt
+credentials_old.txt
+

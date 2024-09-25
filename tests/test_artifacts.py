@@ -1,22 +1,16 @@
 import pytest
 
-# from ado_wrapper.resources.builds import Build, BuildDefinition
+if __name__ == "__main__":
+    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+
+# from ado_wrapper.resources.builds import Build
+# from ado_wrapper.resources.build_definitions import BuildDefinition
 from ado_wrapper.resources.artifact import BuildArtifact
-
 # from ado_wrapper.resources.commits import Commit
-# from tests.setup_client import RepoContextManager, email, existing_agent_pool_id, setup_client  # fmt: skip
+
 from tests.setup_client import setup_client
-
-BUILD_YAML_FILE = """---
-trigger:
-  - main
-
-pool:
-  vmImage: ubuntu-latest
-
-steps:
-  - script: echo Hello, world!
-    displayName: 'Run a one-line script'"""
+# from tests.setup_client import RepoContextManager, email, setup_client  # fmt: skip
+# from tests.build_definition_templates import MOST_BASIC_BUILD_YAML_FILE
 
 
 class TestBuildArtifact:
@@ -49,10 +43,25 @@ class TestBuildArtifact:
     # @pytest.mark.create_delete
     # def test_create_artifact(self) -> None:
     #     with RepoContextManager(self.ado_client, "create-artifact") as repo:
-    #         Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Update")
+    #         Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "Update")
     #         build_definition = BuildDefinition.create(
     #             self.ado_client, "ado_wrapper-test-build-for-create-artifact", repo.repo_id, repo.name, "build.yaml",
-    #             f"Please contact {email} if you see this build definition!", existing_agent_pool_id, "my-branch",  # fmt: skip
+    #             f"Please contact {email} if you see this build definition!", branch_name="my-branch",  # fmt: skip
+    #         )
+    #         build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
+    #         with pytest.raises(NotImplementedError):
+    #             artifact = BuildArtifact.create(
+    #                 self.ado_client, build.build_id, "my_test_artifact.txt", # /test/
+    #             )
+    #             print(artifact)
+
+    # @pytest.mark.create_delete
+    # def test_create_artifact(self) -> None:
+    #     with RepoContextManager(self.ado_client, "create-artifact") as repo:
+    #         Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "Update")
+    #         build_definition = BuildDefinition.create(
+    #             self.ado_client, "ado_wrapper-test-build-for-create-artifact", repo.repo_id, repo.name, "build.yaml",
+    #             f"Please contact {email} if you see this build definition!", my_branch="my-branch",  # fmt: skip
     #         )
     #         build = Build.create(self.ado_client, build_definition.build_definition_id, "my-branch")
     #         artifact = BuildArtifact.create(
@@ -62,3 +71,8 @@ class TestBuildArtifact:
 
     #         build_definition.delete(self.ado_client)
     #         build.delete(self.ado_client)
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-s", "-vvvv"])
+    # pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

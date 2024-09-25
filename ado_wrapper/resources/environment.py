@@ -123,6 +123,7 @@ class PipelineAuthorisation:
         request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/pipelinePermissions/environment/{environment_id}",
         ).json()
+        # Can't use super()._get_by_id becauwe we need to pass in in the environment_id
         return [cls.from_request_payload(x, request["resource"]["id"]) for x in request["pipelines"]]
 
     @classmethod

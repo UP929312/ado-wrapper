@@ -10,3 +10,13 @@ It also includes a solution for managing resources created by this script, which
 To delete all resources created by this, run the main module with the "--delete-everything" flag.
 
 If you're reading this readme not from the code, here's a link to the [github repo](https://github.com/UP929312/ado-wrapper)
+
+## Commands Used To Ensure Quality
+
+pylint .  
+mypy . --strict  
+flake8 --ignore=E501,E126,E121,W503,W504,PBP --exclude=script.py  
+bandit -c pyproject.toml -r .  
+ruff check  
+black . --line-length 140  
+python3.11 -m pytest tests/ -vvvv -s  

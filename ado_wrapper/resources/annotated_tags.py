@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
+from ado_wrapper.errors import UnknownError
 from ado_wrapper.resources.users import Member
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import from_ado_date_string
@@ -74,9 +75,10 @@ class AnnotatedTag(StateManagedResource):
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{repo_id}/tags/?api-version=7.1-preview.1"
         )
-        assert request.status_code == 200
-        second_half = request.text.split("ms.vss-code-web.git-tags-data-provider")[1].removeprefix('":')
-        trimmed_second_half = second_half.split("ms.vss-code-web.navigation-data-provider")[0].removesuffix(',"')
+        if request.status_code != 200:
+            raise UnknownError(f"Error! Unknown error when trying to get all tags for repo! {request.status_code}, {request.text}")
+        second_half = request.text.split('ms.vss-code-web.git-tags-data-provider":')[1]
+        trimmed_second_half = second_half.split(',"ms.vss-code-web.navigation-data-provider')[0]
         json_data = json.loads(trimmed_second_half)["tags"]
         # ===
         return [
@@ -88,6 +90,7 @@ class AnnotatedTag(StateManagedResource):
 
     @classmethod
     def get_by_name(cls, ado_client: "AdoClient", repo_id: str, tag_name: str) -> "AnnotatedTag | None":
+        # return super()._get_by_abstract_filter(ado_client, lambda tag: tag.name == tag_name)  # Can't use get all, since we can't use get_all()
         for tag in cls.get_all_by_repo(ado_client, repo_id):
             if tag.name == tag_name:
                 return tag

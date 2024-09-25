@@ -3,11 +3,12 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
 
 
+from ado_wrapper.errors import ConfigurationError, UnknownError
 from ado_wrapper.resources.repo import BuildRepository
 from ado_wrapper.resources.users import Member
 from ado_wrapper.resources.builds import Build
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import from_ado_date_string, requires_initialisation
+from ado_wrapper.utils import from_ado_date_string, build_hierarchy_payload
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -17,15 +18,15 @@ BuildDefinitionEditableAttribute = Literal["name", "description"]
 # ========================================================================================================
 
 
-def get_build_definition(
-    name: str, repo_id: str, repo_name: str, path_to_pipeline: str, description: str, project: str, agent_pool_id: str, branch_name: str = "main"  # fmt: skip
+def create_build_definition_payload(
+    name: str, repo_id: str, path_to_pipeline: str, description: str, project: str,
+    agent_pool_id: str | None = None, branch_name: str = "main"  # fmt: skip
 ) -> dict[str, Any]:
     return {
         "name": f"{name}",
         "description": description,
         "repository": {
             "id": repo_id,
-            "name": repo_name,
             "type": "TfsGit",
             "defaultBranch": f"refs/heads/{branch_name}",
         },
@@ -78,11 +79,12 @@ class BuildDefinition(StateManagedResource):
 
     @classmethod
     def create(
-        cls, ado_client: "AdoClient", name: str, repo_id: str, repo_name: str, path_to_pipeline: str,
-        description: str, agent_pool_id: str, branch_name: str = "main",  # fmt: skip
+        cls, ado_client: "AdoClient", name: str, repo_id: str, path_to_pipeline: str,
+        description: str = "", agent_pool_id: str | None = None, branch_name: str = "main",  # fmt: skip
     ) -> "BuildDefinition":
-        payload = get_build_definition(name, repo_id, repo_name, path_to_pipeline, description,
-                                       ado_client.ado_project_name, agent_pool_id, branch_name)  # fmt: skip
+        """Passing in no agent_pool_id will mean that the official Azure Agents will be used."""
+        payload = create_build_definition_payload(name, repo_id, path_to_pipeline, description,
+                                                  ado_client.ado_project_name, agent_pool_id, branch_name)  # fmt: skip
         return super()._create(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/definitions?api-version=7.0",
@@ -108,7 +110,10 @@ class BuildDefinition(StateManagedResource):
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", resource_id: str) -> None:
         for build in Build.get_all_by_definition(ado_client, resource_id):
-            build.delete(ado_client)  # Can't remove from state because retention policies etc.
+            build.delete(ado_client)  # Can't just remove from state because retention policies etc.
+        # from ado_wrapper.resources.runs import Run  # Doesn't work, annoyingly
+        # for run in Run.get_all_by_definition(ado_client, resource_id):
+        #     ado_client.state_manager.remove_resource_from_state("Run", run.run_id)  # TODO: Not sure about this
         return super()._delete_by_id(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/definitions/{resource_id}?forceDelete=true&api-version=7.1",
@@ -152,40 +157,104 @@ class BuildDefinition(StateManagedResource):
     ) -> list["BuildDefinitionStage"]:  # fmt: skip
         """Fetches a list of BuildDefinitionStage's, does not return the tasks results.
         Pass in custom template parameters as override key value pairs, or ignore this field to use the defaults."""
-        requires_initialisation(ado_client)
         # ================================================================================================================================
         # Fetch default template parameters, if the user doesn't pass them in, for the next stage.
-        TEMPLATE_PAYLOAD = {
-            "contributionIds": ["ms.vss-build-web.pipeline-run-parameters-data-provider"], "dataProviderContext": {"properties": {
-                    "pipelineId": int(definition_id), "sourceBranch": f"refs/heads/{branch_name}",
-                    "sourcePage": {"routeId": "ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project_name}}
-                }
-            },
-        }  # fmt: skip
-        default_template_parameters_request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_id}?api-version=7.0-preview",
+        TEMPLATE_PAYLOAD = build_hierarchy_payload(
+            ado_client, "build-web.pipeline-run-parameters-data-provider", route_id="build-web.pipeline-details-route",
+            additional_properties={"pipelineId": int(definition_id), "sourceBranch": f"refs/heads/{branch_name}", "sourcePage": {"routeValues": {"viewname": "details"}}}
+        )
+        default_template_params_request = ado_client.session.post(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=7.0-preview",
             json=TEMPLATE_PAYLOAD,
-        ).json()["dataProviders"]["ms.vss-build-web.pipeline-run-parameters-data-provider"]["templateParameters"]
-        default_template_parameters = {x["name"]: x["default"] for x in default_template_parameters_request}
+        ).json()
+        error_message = default_template_params_request.get("dataProviderExceptions", {}).get("ms.vss-build-web.pipeline-run-parameters-data-provider", {}).get("message", "")
+        if error_message == "Value cannot be null.\r\nParameter name: obj":
+            raise UnknownError(
+                "ERROR: There is a bug with ADO which means that build definitions created with the official API (and therefor through BuildDefinition.create())" +
+                "will not work with stages_to_run as part for `Run.create()`, nor will they work with this function, `get_all_stages()`. " +
+                "The current only way is to create the build definition through `BuildDefiniton.create_with_hierarchy()`." +
+                "I spent a long time trying to fix this, and couldn't. Additionally, human made BuildDefinitions use the hierarchy method, so will also work."
+            )
+        if error_message.startswith("not found in repository"):
+            raise ConfigurationError("Could not find the yaml file in the repo! Perhaps it's on a branch?")
+        default_template_params_request_body = default_template_params_request["dataProviders"]["ms.vss-build-web.pipeline-run-parameters-data-provider"]["templateParameters"]
+        default_template_parameters = {x["name"]: x["default"] for x in default_template_params_request_body}
         # ================================================================================================================================
-        PAYLOAD = {
-            "contributionIds": ["ms.vss-build-web.pipeline-run-parameters-data-provider"], "dataProviderContext": {"properties": {
-                "pipelineId": definition_id, "sourceBranch": f"refs/heads/{branch_name}", "templateParameters": default_template_parameters,
-                "sourcePage": {"routeId": "ms.vss-build-web.pipeline-details-route", "routeValues": {"project": ado_client.ado_project_name}},
-            }},
-        }  # fmt: skip
+        PAYLOAD = build_hierarchy_payload(
+            ado_client, "build-web.pipeline-run-parameters-data-provider", route_id="build-web.pipeline-details-route",
+            additional_properties={"pipelineId": definition_id, "sourceBranch": f"refs/heads/{branch_name}", "templateParameters": default_template_parameters}
+        )
         if template_parameters is not None:
-            PAYLOAD["dataProviderContext"]["properties"]["templateParameters"] |= template_parameters  # type: ignore[index]
+            PAYLOAD["dataProviderContext"]["properties"]["templateParameters"] |= template_parameters
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_id}?api-version=7.0-preview",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=7.0-preview",
             json=PAYLOAD,
         )
         assert request.status_code == 200
         stages_list = request.json()["dataProviders"]["ms.vss-build-web.pipeline-run-parameters-data-provider"]["stages"]
         return [BuildDefinitionStage.from_request_payload(x) for x in stages_list]
 
+    def allow_variable_group(self, ado_client: "AdoClient", variable_group_id: str) -> None:
+        request = ado_client.session.patch(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/pipelinePermissions/variablegroup/{variable_group_id}?api-version=6.0-preview.1",
+            json={"pipelines": [{"id": self.build_definition_id, "authorized": True}]}
+        )
+        if request.status_code != 200:
+            raise UnknownError(
+                f"Could not permit variable group with id {variable_group_id} on this build definition!\n" +
+                "- Sometimes, this is because it was run instantly after the build/run was created, try a time.sleep()?"
+            )
+
+    @staticmethod
+    def create_with_hierarchy(
+        ado_client: "AdoClient", repo_id: str, repo_name: str, file_path: str,
+        branch_name: str = "main", agent_pool_id: str | None = None
+    ) -> "HierarchyCreatedBuildDefinition":
+        return HierarchyCreatedBuildDefinition.create(ado_client, repo_id, repo_name, file_path, branch_name, agent_pool_id)
 
 # ========================================================================================================
+
+
+@dataclass
+class HierarchyCreatedBuildDefinition(StateManagedResource):
+    build_definition_id: str = field(metadata={"is_id_field": True})
+    name: str
+
+    @classmethod
+    def from_request_payload(cls, data: dict[str, Any]) -> "HierarchyCreatedBuildDefinition":
+        return cls(str(data["id"]), data["name"])
+
+    @classmethod
+    def create(
+        cls, ado_client: "AdoClient", repo_id: str, repo_name: str, file_path: str, branch_name: str = "main", agent_pool_id: str | None = None
+    ) -> "HierarchyCreatedBuildDefinition":
+        PAYLOAD = build_hierarchy_payload(
+            ado_client, "build-web.create-and-run-pipeline-data-provider", route_id="build-web.ci-definition-designer-route", additional_properties={
+                "createOnly": True, "sourceProvider": "tfsgit",  # CreateOnly=False means run it as well
+                "repositoryId": repo_id, "repositoryName": repo_name, "sourceBranch": branch_name,
+                "filePath": file_path, "queue": agent_pool_id or "Azure Pipelines",
+            }
+        )
+        request = ado_client.session.post(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=6.1-preview",
+            json=PAYLOAD,
+        ).json()
+        data = request["dataProviders"]["ms.vss-build-web.create-and-run-pipeline-data-provider"]["pipeline"]  # id, name, queueName
+        instance = cls.from_request_payload(data)
+        ado_client.state_manager.add_resource_to_state(cls.__name__, data["id"], instance.to_json())  # type: ignore[arg-type]
+        return instance
+
+    @classmethod
+    def get_by_id(cls, ado_client: "AdoClient", build_definition_id: str) -> "HierarchyCreatedBuildDefinition":
+        return super()._get_by_url(
+            ado_client,
+            f"/{ado_client.ado_project_name}/_apis/build/definitions/{build_definition_id}?api-version=7.1",
+        )
+
+    @classmethod
+    def delete_by_id(cls, ado_client: "AdoClient", build_defintion_id: str) -> None:
+        BuildDefinition.delete_by_id(ado_client, build_defintion_id)
+        ado_client.state_manager.remove_resource_from_state(cls.__name__, build_defintion_id)  # type: ignore[arg-type]
 
 
 @dataclass

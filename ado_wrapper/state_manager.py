@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 from uuid import uuid4
 
-from ado_wrapper.utils import ResourceType, get_resource_variables
+from ado_wrapper.utils import ResourceType, get_resource_variables, extract_id
 from ado_wrapper.errors import DeletionFailed
 
 if TYPE_CHECKING:
@@ -92,7 +92,7 @@ class StateManager:
             class_reference.delete_by_id(self.ado_client, resource_id)  # type: ignore[attr-defined]
         except DeletionFailed as exc:
             if not self.ado_client.suppress_warnings:
-                print(str(exc))
+                print(f"[ADO_WRAPPER], {exc}")
         except (NotImplementedError, TypeError):
             if not self.ado_client.suppress_warnings:
                 print(
@@ -131,9 +131,10 @@ class StateManager:
         ALL_RESOURCES = get_resource_variables()
         all_states = self.load_state()
         for resource_type in all_states["resources"]:
-            if resource_type == "Run":
+            if resource_type == "Run":  # TODO: Make this not required
                 continue
             for resource_id in all_states["resources"][resource_type]:
+                # rint(f"{resource_type}, {resource_id}")
                 # The child will have this VVV
                 instance = ALL_RESOURCES[resource_type].get_by_id(self.ado_client, resource_id)  # type: ignore[attr-defined]
                 if instance.to_json() != all_states["resources"][resource_type][resource_id]["data"]:
@@ -141,24 +142,11 @@ class StateManager:
         return all_states
 
     def load_all_resources_with_prefix_into_state(self, prefix: str) -> None:
-        from ado_wrapper.resources import BuildDefinition, ReleaseDefinition, Repo, ServiceEndpoint, VariableGroup  # fmt: skip
-
-        for repo in Repo.get_all(self.ado_client):
-            if repo.name.startswith(prefix):
-                self.ado_client.state_manager.import_into_state("Repo", repo.repo_id)
-
-        for variable_group in VariableGroup.get_all(self.ado_client):
-            if variable_group.name.startswith(prefix):
-                self.ado_client.state_manager.import_into_state("VariableGroup", variable_group.variable_group_id)
-
-        for release_definition in ReleaseDefinition.get_all(self.ado_client):
-            if release_definition.name.startswith(prefix):
-                self.ado_client.state_manager.import_into_state("ReleaseDefinition", release_definition.release_definition_id)
-
-        for build_definition in BuildDefinition.get_all(self.ado_client):
-            if build_definition.name.startswith(prefix):
-                self.ado_client.state_manager.import_into_state("BuildDefinition", build_definition.build_definition_id)
-
-        for service_endpoint in ServiceEndpoint.get_all(self.ado_client):
-            if service_endpoint.name.startswith(prefix):
-                self.ado_client.state_manager.import_into_state("ServiceEndpoint", service_endpoint.service_endpoint_id)
+        from ado_wrapper.resources import (  # pylint: disable=possibly-unused-variable  # noqa: F401
+            AgentPool, BuildDefinition, Environment, Project, ReleaseDefinition, Repo, ServiceEndpoint, VariableGroup
+        )  # fmt: skip
+        for resource_type in [value for key, value in locals().items() if key not in ("self", "prefix")]:
+            for resource in resource_type.get_all(self.ado_client):
+                if resource.name.startswith(prefix):
+                    print(f"Loading in {resource=}")
+                    self.ado_client.state_manager.import_into_state(resource_type.__name__, extract_id(resource))

@@ -31,11 +31,6 @@ def main() -> None:  # pylint: disable=too-many-branches, too-many-statements
     update_group.add_argument(
         "--refresh-resources-on-startup", help="Decides whether to update ADO resources (from state)", action="store_true", dest="refresh_resources_on_startup", default=False,  # fmt: skip
     )
-    action_group = parser.add_mutually_exclusive_group()
-    action_group.add_argument(
-        "--plan", help="Runs a plan for the resources, rather than making them", action="store_true", default=False, dest="plan"
-    )
-    action_group.add_argument("--apply", help="Applies the plan to the resources", action="store_true", default=False, dest="apply")
     parser.add_argument(
         "--purge-state", "--wipe-state-", help="Deletes everything in the state file", action="store_true", default=False, dest="purge_state"  # fmt: skip
     )
@@ -98,10 +93,6 @@ def main() -> None:  # pylint: disable=too-many-branches, too-many-statements
                         print(f"____The {resource_type}'s `{internal_attribute_name}` value has been updated to {attribute_value}")
                     internal_state["resources"][resource_type][resource_id] = instance.to_json()
         ado_client.state_manager.write_state_file(internal_state)
-
-    if args.plan:
-        print("[ADO_WRAPPER] Running plan for resources:")
-        # Plan for resources
 
 
 if __name__ == "__main__":

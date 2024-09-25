@@ -86,10 +86,8 @@ class StateManagedResource:
         # if cls.get_by_id(ado_client, extract_unique_name(payload)):
         #     raise ResourceAlreadyExists(f"The {cls.__name__} with that identifier already exist!")
         #     <update the resource>
-        # if ado_client.plan_mode:
-        #     return PlannedStateManagedResource.create(cls, ado_client, url, payload)
         if not url.startswith("https://"):
-            url = f"https://dev.azure.com/{ado_client.ado_org_name}" + url
+            url = f"https://dev.azure.com/{ado_client.ado_org_name}{url}"
         request = ado_client.session.post(url, json=payload or {})  # Create a brand new dict
         if request.status_code >= 300:
             if request.status_code in [401, 403]:
@@ -104,7 +102,7 @@ class StateManagedResource:
             raise ValueError(f"Error creating {cls.__name__}: {request.status_code} - {request.text}")
         resource = cls.from_request_payload(request.json())
         if refetch:
-            resource = cls._get_by_id(ado_client, extract_id(resource))
+            resource = cls.get_by_id(ado_client, extract_id(resource))  # type: ignore[attr-defined] # pylint: disable=no-member
         ado_client.state_manager.add_resource_to_state(cls.__name__, extract_id(resource), resource.to_json())  # type: ignore[arg-type]
         return resource  # [return-value]
 
@@ -131,9 +129,6 @@ class StateManagedResource:
         if attribute_name not in get_internal_field_names(self.__class__):
             raise ValueError(f"The attribute `{attribute_name}` is not editable!  Editable attributes are: {list(interal_names.keys())}")
         params |= {interal_names[attribute_name]: attribute_value}
-
-        # if ado_client.plan_mode:
-        #    return PlannedStateManagedResource.update(self, ado_client, url, attribute_name, attribute_value, params)
 
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org_name}{url}"

@@ -72,6 +72,22 @@ BRANCH_DUMP = {
     "url": "https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/git/repositories/<repo_id>/refs?filter=heads%2Ftest-branch",
 }
 
+BRANCH_CREATE_DUMP = {
+    'value': [
+        {
+            'repositoryId': 'eb1db59a-325a-4111-b2c4-09c9f74e02ed',
+            'name': 'refs/heads/test-branch',
+            'oldObjectId': '0000000000000000000000000000000000000000',
+            'newObjectId': '3277815d22bebee867474ea4ab0fb8a500c82b21',
+            'isLocked': False,
+            'updateStatus':
+            'succeeded',
+            'success': True
+        }
+    ],
+    'count': 1
+}
+
 BUILD_DUMP = {
     "_links": {"self": {"href": "https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/build/Builds/93458"}, "web": {"href": "https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_build/results?buildId=93458"}, "sourceVersionDisplayUri": {"href": "https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/build/builds/{build_id}/sources"}, "timeline": {"href": "https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/build/builds/{build_id}/Timeline"}, "badge": {"href": "https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/build/status/{build_def_id}"}},
     "properties": {},
@@ -129,6 +145,17 @@ BUILD_DEFINITION_DUMP = {
     "revision": 1,
     "createdDate": "2024-03-17T11:03:28.943Z",
     "project": {"id": "{ado_client.project_id}", "name": "{ado_client.project}", "url": "https://dev.azure.com/{ado_client.org}/_apis/projects/{ado_client.project_id}", "state": "wellFormed", "revision": 399, "visibility": "private", "lastUpdateTime": "2024-02-06T14:14:30.36Z"}
+}
+
+BUILD_DEFINITION_HIERARCHY_CREATE_DUMP = {
+    'dataProviderSharedData': {},
+    'dataProviders': {
+        'ms.vss-web.component-data': {},
+        'ms.vss-web.shared-data': None,
+        'ms.vss-build-web.create-and-run-pipeline-data-provider': {
+            'pipeline': {'id': '<build_def_id>', 'name': '<build_def_name>', 'queueName': 'Azure Pipelines'}
+        }
+    }
 }
 
 COMMIT_DUMP = {
@@ -303,5 +330,7 @@ VARIABLE_GROUP_DUMP = {
         {"projectReference": {"id": "{ado_client.project_id}", "name": "<project_name"}, "name": "{repo_name}", "description": "{description}"}
     ]
 }
+
+URL_FOR_YAML_VALIDATOR = "https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apps/hub/ms.vss-build-web.ci-designer-hub?pipelineId={definition_id}"
 
 # fmt: on

@@ -30,6 +30,9 @@ ado_user.delete_by_id(ado_client, <member_id>)
 # Get All
 ado_users = AdoUser.get_all(ado_client)
 
+# Get By Descriptor Id
+ado_user = AdoUser.get_by_descriptor_id(ado_client, <descriptor_id>)
+
 # Get By Email
 ado_user = AdoUser.get_by_email(ado_client, <member_email>)
 
@@ -37,7 +40,13 @@ ado_user = AdoUser.get_by_email(ado_client, <member_email>)
 ado_user = AdoUser.get_by_id(ado_client, <descriptor_id>)
 
 # Get By Name
-ado_user = AdoUser.get_by_name(ado_client, <member_name>)
+ado_user = AdoUser.get_by_name(ado_client, <name>)
+
+# Get By Origin Id
+ado_user = AdoUser.get_by_origin_id(ado_client, <origin_id>)
+
+# Search By Query
+dictionary = AdoUser.search_by_query(ado_client, <query>)
 ```
 </details>
 
@@ -62,7 +71,7 @@ agent_pools = AgentPool.get_all(ado_client)
 agent_pool = AgentPool.get_by_id(ado_client, <agent_pool_id>)
 
 # Get By Name
-agent_pool = AgentPool.get_by_name(ado_client, <agent_pool_id>)
+agent_pool = AgentPool.get_by_name(ado_client, <agent_pool_name>)
 ```
 </details>
 
@@ -96,6 +105,9 @@ annotated_tag = AnnotatedTag.get_by_name(ado_client, <repo_id>, <tag_name>)
 <details>
 
 ```py
+# Create
+build_artifact = Artifact.create(ado_client, <build_id>, <artifact_name>)
+
 # Delete
 artifact.delete(ado_client)
 
@@ -135,7 +147,7 @@ audit_logs = AuditLog.get_all_by_scope_type(ado_client, <scope_type>, <start_tim
 
 ```py
 # Create
-branch = Branch.create(ado_client, <repo_id>, <branch_name>, <source_branch>)
+branch = Branch.create(ado_client, <repo_id>, <branch_name>, <default_branch_name>)
 
 # Delete
 branch.delete(ado_client)
@@ -172,7 +184,7 @@ pipeline_authorisation = Build.allow_on_environment(ado_client, <definition_id>,
 build.approve_environment_for_pipeline(ado_client, <build_id>, <stage_name>)
 
 # Create
-build = Build.create(ado_client, <definition_id>, <source_branch>, <permit_use_of_var_groups>)
+build = Build.create(ado_client, <definition_id>, <source_branch>)
 
 # Create And Wait Until Completion
 build = Build.create_and_wait_until_completion(ado_client, <definition_id>, <branch_name>, <max_timeout_seconds>)
@@ -220,8 +232,14 @@ build.update(ado_client, <attribute_name>, <attribute_value>)
 <details>
 
 ```py
+# Allow Variable Group
+build_definition.allow_variable_group(ado_client, <variable_group_id>)
+
 # Create
-build_definition = BuildDefinition.create(ado_client, <name>, <repo_id>, <repo_name>, <path_to_pipeline>, <description>, <agent_pool_id>, <branch_name>)
+build_definition = BuildDefinition.create(ado_client, <name>, <repo_id>, <path_to_pipeline>, <description>, <agent_pool_id>, <branch_name>)
+
+# Create With Hierarchy
+hierarchy_created_build_definition = BuildDefinition.create_with_hierarchy(ado_client, <repo_id>, <repo_name>, <file_path>, <branch_name>, <agent_pool_id>)
 
 # Delete
 build_definition.delete(ado_client)
@@ -298,8 +316,14 @@ code_searchs = CodeSearch.get_by_search_string(ado_client, <search_text>, <resul
 <details>
 
 ```py
+# Add Git Ignore Template
+commit = Commit.add_git_ignore_template(ado_client, <repo_id>, <git_ignore_template>)
+
 # Add Initial Readme
 commit = Commit.add_initial_readme(ado_client, <repo_id>)
+
+# Add Readme And Gitignore
+commit = Commit.add_readme_and_gitignore(ado_client, <repo_id>, <git_ignore_template>)
 
 # Create
 commit = Commit.create(ado_client, <repo_id>, <from_branch_name>, <to_branch_name>, <updates>, <change_type>, <commit_message>)
@@ -364,13 +388,13 @@ environment.update(ado_client, <attribute_name>, <attribute_value>)
 
 ```py
 # Create
-group = Group.create(ado_client, <name>)
+group = Group.create(ado_client, <name>, <description>)
 
 # Delete
 group.delete(ado_client)
 
 # Delete By Id
-group.delete_by_id(ado_client, <group_id>)
+group.delete_by_id(ado_client, <group_descriptor>)
 
 # Get All
 groups = Group.get_all(ado_client)
@@ -380,6 +404,25 @@ group = Group.get_by_id(ado_client, <group_descriptor>)
 
 # Get By Name
 group = Group.get_by_name(ado_client, <group_name>)
+```
+</details>
+
+-----
+# HierarchyCreatedBuildDefinition
+<details>
+
+```py
+# Create
+hierarchy_created_build_definition = HierarchyCreatedBuildDefinition.create(ado_client, <repo_id>, <repo_name>, <file_path>, <branch_name>, <agent_pool_id>)
+
+# Delete
+hierarchy_created_build_definition.delete(ado_client)
+
+# Delete By Id
+hierarchy_created_build_definition.delete_by_id(ado_client, <build_defintion_id>)
+
+# Get By Id
+hierarchy_created_build_definition = HierarchyCreatedBuildDefinition.get_by_id(ado_client, <build_definition_id>)
 ```
 </details>
 
@@ -424,7 +467,7 @@ merge_branch_policy.set_branch_policy(ado_client, <repo_id>, <minimum_approver_c
 
 ```py
 # Add Default Reviewer
-merge_policies.add_default_reviewer(ado_client, <repo_id>, <reviewer_id>, <is_required>, <branch_name>)
+merge_policies.add_default_reviewer(ado_client, <repo_id>, <reviewer_origin_id>, <is_required>, <branch_name>)
 
 # Delete
 merge_policies.delete(ado_client)
@@ -464,7 +507,7 @@ merge_policies.set_branch_policy(ado_client, <repo_id>, <minimum_approver_count>
 
 ```py
 # Add Default Reviewer
-merge_policy_default_reviewer.add_default_reviewer(ado_client, <repo_id>, <reviewer_id>, <is_required>, <branch_name>)
+merge_policy_default_reviewer.add_default_reviewer(ado_client, <repo_id>, <reviewer_origin_id>, <is_required>, <branch_name>)
 
 # Delete
 merge_policy_default_reviewer.delete(ado_client)
@@ -537,10 +580,10 @@ permission.print_perms(ado_client)
 personal_access_token.create_personal_access_token(ado_client, <display_name>)
 
 # Get Access Token By Name
-personal_access_token = PersonalAccessToken.get_access_token_by_name(ado_client, <display_name>)
+personal_access_token = PersonalAccessToken.get_access_token_by_name(ado_client, <display_name>, <org_id>)
 
 # Get Access Tokens
-personal_access_tokens = PersonalAccessToken.get_access_tokens(ado_client, <include_different_orgs>, <include_expired_tokens>)
+personal_access_tokens = PersonalAccessToken.get_access_tokens(ado_client, <org_id>, <include_different_orgs>, <include_expired_tokens>)
 ```
 </details>
 
@@ -569,10 +612,13 @@ pipeline_authorisation.update(ado_client, <authorized>)
 
 ```py
 # Create
-project = Project.create(ado_client, <project_name>, <project_description>)
+project = Project.create(ado_client, <project_name>, <project_description>, <template_type>)
 
 # Delete
 project.delete(ado_client)
+
+# Delete By Id
+project.delete_by_id(ado_client, <project_id>)
 
 # Get All
 projects = Project.get_all(ado_client)
@@ -582,6 +628,28 @@ project = Project.get_by_id(ado_client, <project_id>)
 
 # Get By Name
 project = Project.get_by_name(ado_client, <project_name>)
+
+# Get Pipeline Settings
+dictionary = Project.get_pipeline_settings(ado_client, <project_name>)
+
+# Get Repository Settings
+dictionary = Project.get_repository_settings(ado_client, <project_name>)
+```
+</details>
+
+-----
+# ProjectRepositorySettings
+<details>
+
+```py
+# Get By Project
+dictionary = ProjectRepositorySettings.get_by_project(ado_client, <project_name>)
+
+# Set Project Repository Setting
+project_repository_settings.set_project_repository_setting(ado_client, <repository_setting>, <state>, <project_name>)
+
+# Update Default Branch Name
+project_repository_settings.update_default_branch_name(ado_client, <new_default_branch_name>, <project_name>)
 ```
 </details>
 
@@ -600,7 +668,7 @@ pull_request.add_reviewer_static(ado_client, <repo_id>, <pull_request_id>, <revi
 pull_request.close(ado_client)
 
 # Create
-pull_request = PullRequest.create(ado_client, <repo_id>, <from_branch_name>, <pull_request_title>, <pull_request_description>, <is_draft>)
+pull_request = PullRequest.create(ado_client, <repo_id>, <pull_request_title>, <pull_request_description>, <from_branch_name>, <to_branch_name>, <is_draft>)
 
 # Delete
 pull_request.delete(ado_client)
@@ -708,10 +776,10 @@ release_definition.update(ado_client, <attribute_name>, <attribute_value>)
 
 ```py
 # Create
-repo = Repo.create(ado_client, <name>, <include_readme>)
+repo = Repo.create(ado_client, <name>, <include_readme>, <git_ignore_template>)
 
 # Create Pull Request
-pull_request = Repo.create_pull_request(ado_client, <branch_name>, <pull_request_title>, <pull_request_description>)
+pull_request = Repo.create_pull_request(ado_client, <branch_name>, <pull_request_title>, <pull_request_description>, <to_branch_name>, <is_draft>)
 
 # Delete
 repo.delete(ado_client)
@@ -834,10 +902,13 @@ run.delete_by_id(ado_client, <run_id>)
 runs = Run.get_all_by_definition(ado_client, <pipeline_id>)
 
 # Get By Id
-run = Run.get_by_id(ado_client, <pipeline_id>, <run_id>)
+run = Run.get_by_id(ado_client, <build_definition_id>, <run_id>)
 
 # Get Latest
 run = Run.get_latest(ado_client, <definition_id>)
+
+# Get Root Stage Names
+strs = Run.get_root_stage_names(ado_client, <build_id>)
 
 # Get Run Log Content
 string_var = Run.get_run_log_content(ado_client, <build_id>, <stage_name>, <job_name>, <task_name>, <remove_prefixed_timestamp>, <remove_colours>)
@@ -968,7 +1039,7 @@ user_permission.set_by_user_email(ado_client, <repo_id>, <email>, <action>, <per
 
 ```py
 # Create
-variable_group = VariableGroup.create(ado_client, <variable_group_name>, <variable_group_description>, <variables>)
+variable_group = VariableGroup.create(ado_client, <variable_group_name>, <variables>, <variable_group_description>)
 
 # Delete
 variable_group.delete(ado_client)
@@ -984,6 +1055,9 @@ variable_group = VariableGroup.get_by_id(ado_client, <variable_group_id>)
 
 # Get By Name
 variable_group = VariableGroup.get_by_name(ado_client, <name>)
+
+# Get Variable Group Contents
+dictionary = VariableGroup.get_variable_group_contents(ado_client, <variable_group_name>)
 
 # Update
 variable_group.update(ado_client, <attribute_name>, <attribute_value>)

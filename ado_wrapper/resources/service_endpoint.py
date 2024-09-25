@@ -71,6 +71,7 @@ class ServiceEndpoint(StateManagedResource):
 
     def update(self, ado_client: "AdoClient", attribute_name: ServiceEndpointEditableAttribute, attribute_value: Any) -> None:
         raise NotImplementedError
+        # TODO: Implemenent
         # self._raw_data[attribute_name] = attribute_value
         # return super().update(
         #     ado_client, "put",

@@ -18,6 +18,7 @@ class Organisation(StateManagedResource):
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient") -> list["Organisation"]:
+        # This is sketchy hierarchy stuff, so we can't use super()
         org_id_request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=5.0-preview.1",
             json={"contributionIds": ["ms.vss-features.my-organizations-data-provider"]},

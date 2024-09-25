@@ -4,6 +4,9 @@ from ado_wrapper.resources.annotated_tags import AnnotatedTag
 from ado_wrapper.resources.commits import Commit
 from tests.setup_client import RepoContextManager, setup_client
 
+if __name__ == "__main__":
+    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+
 
 class TestAnnotatedTags:
     def setup_method(self) -> None:
@@ -55,3 +58,8 @@ class TestAnnotatedTags:
             assert len(tags) == 2
             for tag in tags:
                 tag.delete(self.ado_client)
+
+
+if __name__ == "__main__":
+    # pytest.main([__file__, "-s", "-vvvv"])
+    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

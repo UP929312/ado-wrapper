@@ -1,5 +1,30 @@
 # Changelog
 
+## v1.25.0
+
+### Added
+
+- `remove_ansi_codes`, a utils function to removr all ansi colour codes from a string, uses `ANSI_RE_PATTERN`.
+- Project's now have `visibility` and `creation_status` when fetching by id or name.
+- Improved StateManger.load_all_resources_with_prefix_into_state to include more resources, and work over all better
+- Added the ability to allow a variable group to be used for a build build_definition
+- Added the ability to create a build definition with Hierarchy, which allows additional functionality.
+- Added HierarchyCreatedBuildDefinition to corrospond with the informaton above
+- Projects are now creatable, and deletable.
+- You can also get and set a project's pipeline settings
+- Also able to get and set a project's repository settings
+
+### Changed
+
+- `Removed` all plan logic, this was never fully implemented and was making things more complicated.
+- Fixed `StateManagedResource._create`'s refetch argument.
+- BuildDefinition.get_all_stages() now has better errors for creation without Hierarchy mode.
+- Build.create no longer takes the `permit_use_of_var_groups` argument.
+- Build's `approve_environment_for_pipeline` now has better error messages.
+- `ansi_re_pattern` and `datetime_re_pattern` have been renamed to `ANSI_RE_PATTERN` and `DATETIME_RE_PATTERN` respectively.
+
+---
+
 ## v1.24.0
 
 ### Added

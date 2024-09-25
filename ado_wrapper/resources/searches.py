@@ -49,13 +49,15 @@ class CodeSearch:
             "includeFacets": "true",
             "includeSnippet": "true",
             "searchText": search_text,
-            # "$skip": 0,  # Probably add this later for getting the next page, it should probably be page_number * result_count
+            # "$skip": 0,  # TODO Probably add this later for getting the next page, it should probably be page_number * result_count
         }
         data = ado_client.session.post(
             f"https://almsearch.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/search/codesearchresults?api-version=7.0",
             json=body,
-        ).json()["results"]
-        return [cls.from_request_payload(x) for x in data]
+        ).json()
+        if data.get("message") == "The extension ms.vss-code-search is not installed.":
+            raise ConfigurationError(data["message"])
+        return [cls.from_request_payload(x) for x in data["results"]]
 
 
 @dataclass

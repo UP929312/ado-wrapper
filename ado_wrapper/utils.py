@@ -1,9 +1,9 @@
 import re
 from dataclasses import fields
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Literal, Callable, TypeVar, Type, ParamSpec, overload, Any
+from typing import TYPE_CHECKING, Literal, TypeVar, ParamSpec, overload, Any
 
-from ado_wrapper.errors import ConfigurationError, InvalidPermissionsError
+from ado_wrapper.errors import ConfigurationError
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 P = ParamSpec("P")
 
-ansi_re_pattern = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-datetime_re_pattern = re.compile(r"^20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{7}Z")
+ANSI_RE_PATTERN = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+DATETIME_RE_PATTERN = re.compile(r"^20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{7}Z")
 
 ANSI_GREY = "\x1B[90m"
 ANSI_GRAY = ANSI_GREY
@@ -30,6 +30,10 @@ ANSI_BLACK = "\x1B[30m"
 ANSI_UNDERLINE = "\x1b[4m"
 ANSI_BOLD = "\x1B[1m"
 ANSI_RESET = "\x1B[0m"
+
+
+def remove_ansi_codes(string: str) -> str:
+    return ANSI_RE_PATTERN.sub("", string)
 
 
 @overload
@@ -135,23 +139,38 @@ def recursively_find_or_none(data: dict[str, Any], indexes: list[str]) -> Any:
     return current
 
 
-def requires_perms(required_perms: list[str] | str) -> Callable[[Callable[P, T]], Callable[P, T]]:
-    """This wraps a call (with ado_client as second arg) with a list of required permissions,
-    will raise an error if the client doesn't have them"""
+def build_hierarchy_payload(
+    ado_client: "AdoClient", contribution_id: str, route_id: str | None = None, additional_properties: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    requires_initialisation(ado_client)
+    data: dict[str, Any] = {"dataProviderContext": {"properties": {"sourcePage": {"routeValues": {}}}}}
+    if additional_properties:
+        data["dataProviderContext"]["properties"] |= additional_properties
+    if route_id:
+        data["dataProviderContext"]["properties"]["sourcePage"]["routeId"] = f"ms.vss-{route_id}"
+    data["contributionIds"] = [f"ms.vss-{contribution_id}"]
+    data["dataProviderContext"]["properties"]["sourcePage"]["routeValues"]["projectId"] = ado_client.ado_project_id
+    data["dataProviderContext"]["properties"]["sourcePage"]["routeValues"]["project"] = ado_client.ado_project_name
+    return data
 
-    def decorator(func: Callable[P, T]) -> Callable[P, T]:
-        def wrapper(cls: Type[Any], ado_client: "AdoClient", *args: P.args, **kwargs: P.kwargs) -> T:
-            if ado_client.perms is not None:
-                for required_perm_name in required_perms if isinstance(required_perms, list) else [required_perms]:
-                    if required_perm_name not in [f"{x.group}/{x.name}" for x in ado_client.perms if x.has_permission]:
-                        raise InvalidPermissionsError(f"Error! The client tried to make a call to a service with invalid permissions! Didn't have {required_perm_name}")  # fmt: skip
-            elif not ado_client.suppress_warnings:
-                print("Warning, could not verify the authenticated PAT has the right perms.")
-            return func(cls, ado_client, *args, **kwargs)  # type: ignore[arg-type]
 
-        return wrapper  # type: ignore[return-value]
+# def requires_perms(required_perms: list[str] | str) -> Callable[[Callable[P, T]], Callable[P, T]]:
+#     """This wraps a call (with ado_client as second arg) with a list of required permissions,
+#     will raise an error if the client doesn't have them"""
 
-    return decorator
+#     def decorator(func: Callable[P, T]) -> Callable[P, T]:
+#         def wrapper(cls: Type[Any], ado_client: "AdoClient", *args: P.args, **kwargs: P.kwargs) -> T:
+#             if ado_client.perms is not None:
+#                 for required_perm_name in required_perms if isinstance(required_perms, list) else [required_perms]:
+#                     if required_perm_name not in [f"{x.group}/{x.name}" for x in ado_client.perms if x.has_permission]:
+#                         raise InvalidPermissionsError(f"Error! The client tried to make a call to a service with invalid permissions! Didn't have {required_perm_name}")  # fmt: skip
+#             elif not ado_client.suppress_warnings:
+#                 print("[ADO_WRAPPER] Warning, could not verify the authenticated PAT has the right perms.")
+#             return func(cls, ado_client, *args, **kwargs)  # type: ignore[arg-type]
+
+#         return wrapper  # type: ignore[return-value]
+
+#     return decorator
 
 
 # ============================================================================================== #
@@ -170,14 +189,14 @@ def binary_data_to_file_dictionary(binary_data: bytes, file_types: list[str] | N
             x for x in zip_ref.namelist()
             if file_types is None or (f"{x.split('.')[-1]}" in file_types or f".{x.split('.')[-1]}" in file_types)  # fmt: skip
         ]:
-            if path.endswith("/"):
+            if path.endswith("/"):  # Ignore directories
                 continue
             data = zip_ref.read(path)
             try:
                 files[path] = data.decode("utf-8", errors="ignore")
             except UnicodeDecodeError:
                 if not suppress_warnings:
-                    print(f"Could not decode {path}, leaving it as bytes instead.")
+                    print(f"[ADO_WRAPPER] Could not decode {path}, leaving it as bytes instead.")
                     files[path] = data  # type: ignore[assignment]
 
     bytes_io.close()
@@ -190,9 +209,9 @@ def binary_data_to_file_dictionary(binary_data: bytes, file_types: list[str] | N
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this whole func to avoid circular imports
     """This returns a mapping of resource name (str) to the class type of the resource. This is used to dynamically create instances of resources."""
     from ado_wrapper.resources import (  # pylint: disable=possibly-unused-variable  # noqa: F401
-        AgentPool, AnnotatedTag, Artifact, AuditLog, Branch, BuildTimeline, Build, BuildDefinition, Commit, Environment, Group,
+        AgentPool, AnnotatedTag, Artifact, AuditLog, Branch, BuildTimeline, Build, BuildDefinition, HierarchyCreatedBuildDefinition, Commit, Environment, Group,
         MergePolicies, MergeBranchPolicy, MergePolicyDefaultReviewer, MergeTypeRestrictionPolicy, Organisation, PersonalAccessToken, Permission,
-        Project, PullRequest, Release, ReleaseDefinition, Repo, Run, BuildRepository, Team, AdoUser, Member, ServiceEndpoint,
+        Project, ProjectRepositorySettings, PullRequest, Release, ReleaseDefinition, Repo, Run, BuildRepository, Team, AdoUser, Member, ServiceEndpoint,
         Reviewer, VariableGroup,  # fmt: skip
     )
 
@@ -200,8 +219,8 @@ def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We d
 
 
 ResourceType = Literal[
-    "AgentPool", "AnnotatedTag", "Artifact", "AuditLog", "Branch", "BuildTimeline", "Build", "BuildDefinition", "Commit", "Environment", "Group",
-    "MergePolicies", "MergeBranchPolicy", "MergePolicyDefaultReviewer", "MergeTypeRestrictionPolicy", "Organisation", "PersonalAccessToken",
-    "Permission", "Project", "PullRequest", "Release", "ReleaseDefinition", "Repo", "Run", "Team", "AdoUser", "Member", "ServiceEndpoint",
-    "Reviewer", "VariableGroup"  # fmt: skip
+    "AgentPool", "AnnotatedTag", "Artifact", "AuditLog", "Branch", "BuildTimeline", "Build", "BuildDefinition", "HierarchyCreatedBuildDefinition",
+    "Commit", "Environment", "Group", "MergePolicies", "MergeBranchPolicy", "MergePolicyDefaultReviewer", "MergeTypeRestrictionPolicy",
+    "Organisation", "PersonalAccessToken", "Permission", "Project", "ProjectRepositorySettings", "PullRequest", "Release", "ReleaseDefinition",
+    "Repo", "Run", "Team", "AdoUser", "Member", "ServiceEndpoint", "Reviewer", "VariableGroup"  # fmt: skip
 ]

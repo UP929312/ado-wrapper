@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Member
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.errors import InvalidPermissionsError
+from ado_wrapper.errors import ConfigurationError, InvalidPermissionsError
 from ado_wrapper.utils import from_ado_date_string
 
 # from ado_wrapper.resources.branches import Branch
@@ -13,7 +13,22 @@ if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 
 CommitChangeType = Literal["edit", "add", "delete"]
-FIRST_COMMIT_ID = "0000000000000000000000000000000000000000"  # I don't know why this works, but it does, please leave it.
+FIRST_COMMIT_ID = "0000000000000000000000000000000000000000"  # This is the initial id
+
+GitIgnoreTemplateType = Literal[
+    'Actionscript', 'Ada', 'Agda', 'Android', 'AppceleratorTitanium', 'AppEngine', 'ArchLinuxPackages', 'Autotools', 'C++', 'C',
+    'CakePHP', 'CFWheels', 'ChefCookbook', 'Clojure', 'CMake', 'CodeIgniter', 'CommonLisp', 'Composer', 'Concrete5', 'Coq', 'CraftCMS',
+    'CUDA', 'D', 'Dart', 'Delphi', 'DM', 'Drupal', 'Eagle', 'Elisp', 'Elixir', 'Elm', 'EPiServer', 'Erlang', 'ExpressionEngine', 'ExtJs',
+    'Fancy', 'Finale', 'ForceDotCom', 'Fortran', 'FuelPHP', 'gcov', 'GitBook', 'Go', 'Godot', 'Gradle', 'Grails', 'GWT', 'Haskell',
+    'Idris', 'IGORPro', 'Java', 'Jboss', 'Jekyll', 'JENKINS_HOME', 'Joomla', 'Julia', 'KiCAD', 'Kohana', 'Kotlin', 'LabVIEW', 'Laravel',
+    'Leiningen', 'LemonStand', 'Lilypond', 'Lithium', 'Lua', 'Magento', 'Maven', 'Mercury', 'MetaProgrammingSystem', 'nanoc', 'Nim', 'Node',
+    'Objective-C', 'OCaml', 'Opa', 'opencart', 'OracleForms', 'Packer', 'Perl', 'Phalcon', 'PlayFramework', 'Plone', 'Prestashop', 'Processing',
+    'PureScript', 'Python', 'Qooxdoo', 'Qt', 'R', 'Rails', 'Raku', 'RhodesRhomobile', 'ROS', 'Ruby', 'Rust', 'Sass', 'Scala', 'Scheme', 'SCons',
+    'Scrivener', 'Sdcc', 'SeamGen', 'SketchUp', 'Smalltalk', 'stella', 'SugarCRM', 'Swift', 'Symfony', 'SymphonyCMS', 'Terraform', 'TeX',
+    'Textpattern', 'TurboGears2', 'Typo3', 'Umbraco', 'Unity', 'UnrealEngine', 'VisualStudio', 'VVVV', 'Waf', 'WordPress', 'Xojo', 'Yeoman',
+    'Yii', 'ZendFramework', 'Zephir'  # fmt: skip
+]
+README_PAYLOAD = {"changeType": 1, "item": {"path": "/README.md"}, "newContentTemplate": {"name": "README.md", "type": "readme"}}
 
 
 def get_commit_body_template(
@@ -76,13 +91,13 @@ class Commit(StateManagedResource):
 
     @classmethod
     def create(
-        cls, ado_client: "AdoClient", repo_id: str, from_branch_name: str, to_branch_name: str, updates: dict[str, str], change_type: CommitChangeType, commit_message: str,  # fmt: skip
+        cls, ado_client: "AdoClient", repo_id: str, from_branch_name: str, to_branch_name: str,
+        updates: dict[str, str], change_type: CommitChangeType = "add", commit_message: str = "New Commit",  # fmt: skip
     ) -> "Commit":
         """Creates a commit in the given repository with the given updates and returns the commit object.
         Takes a branch to get the latest commit from (and to update), and a to_branch to fork to."""
-        assert not (
-            from_branch_name.startswith("refs/heads/") or to_branch_name.startswith("refs/heads/")
-        ), "Branch names should not start with 'refs/heads/'"
+        if from_branch_name.startswith("refs/heads/") or to_branch_name.startswith("refs/heads/"):
+            raise ConfigurationError("Branch names should not start with 'refs/heads/'")
         #
         # existing_branches = Branch.get_all_by_repo(ado_client, repo_id)
         # if to_branch_name not in [x.name for x in existing_branches]:
@@ -127,21 +142,52 @@ class Commit(StateManagedResource):
             f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/commits?{extra_query}api-version=7.1",
         )  # pyright: ignore[reportReturnType]
 
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
     @classmethod
     def add_initial_readme(cls, ado_client: "AdoClient", repo_id: str) -> "Commit":
         default_commit_body = get_commit_body_template(None, {}, "main", "add", "")
+        default_commit_body["commits"] = [{"comment": "Add README.md", "changes": [README_PAYLOAD]}]  # fmt: skip
+        request = ado_client.session.post(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pushes?api-version=7.1",
+            json=default_commit_body,
+        ).json()
+        return cls.from_request_payload(request["commits"][0])
+
+    @classmethod
+    def add_git_ignore_template(cls, ado_client: "AdoClient", repo_id: str, git_ignore_template: GitIgnoreTemplateType) -> "Commit":
+        default_commit_body = get_commit_body_template(None, {}, "main", "add", "")
         default_commit_body["commits"] = [{
-            "comment": "Add README.md",
+            "comment": f"Added .gitignore ({git_ignore_template})",
             "changes": [{
-                "changeType": 1, "item": {"path": "/README.md"},
-                "newContentTemplate": {"name": "README.md", "type": "readme"}
+                "changeType": 1, "item": {"path": "/.gitignore"},
+                "newContentTemplate": {"name": f"{git_ignore_template}.gitignore", "type": "gitignore"}
             }],
         }]  # fmt: skip
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pushes?api-version=7.1",
             json=default_commit_body,
-        )
-        return cls.from_request_payload(request.json()["commits"][0])
+        ).json()
+        return cls.from_request_payload(request["commits"][0])
+
+    @classmethod
+    def add_readme_and_gitignore(cls, ado_client: "AdoClient", repo_id: str, git_ignore_template: GitIgnoreTemplateType) -> "Commit":
+        default_commit_body = get_commit_body_template(None, {}, "main", "add", "")
+        default_commit_body["commits"] = [{
+            "comment": f"Added README.md, .gitignore ({git_ignore_template}) files",
+            "changes": [
+                README_PAYLOAD,
+                {
+                    "changeType": 1, "item": {"path": "/.gitignore"},
+                    "newContentTemplate": {"name": f"{git_ignore_template}.gitignore", "type": "gitignore"}
+                },
+            ],
+        }]  # fmt: skip
+        request = ado_client.session.post(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pushes?api-version=7.1",
+            json=default_commit_body,
+        ).json()
+        return cls.from_request_payload(request["commits"][0])
 
     # @classmethod
     # def roll_back_to_commit(cls, ado_client: "AdoClient", repo_id: str, commit_id: str, branch_name: str) -> None:

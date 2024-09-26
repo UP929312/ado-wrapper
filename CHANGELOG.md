@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.27.0
+
+### Added
+
+- AgentPools.create are now creatable and no longer raises NotImplementedError, as does delete_by_id.
+- Added all the gitignore templates to Commits, and also to repo creation as a new argument.
+- MergePolicyDefaultReviewer now converts from origin_ids to local_ids, which internally means it'll work on side projects/orgs.
+- When creating a run with run variables, it'll now warn you if the projects repo settings prevents runtime vars.
+- Teams can not be created and deleted rather than raising NotImplementedError (and are state manageable).
+
+### Changed
+
+- AgentPool.get_by_name now works properly, and doesn't filter by id anymore.
+- Commit.create now defaults to "Add" change_type, and a default commit message.
+- More assert statements have been replaced with full error handling and messages.
+
+---
+
 ## v1.26.0
 
 ### Added

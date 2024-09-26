@@ -6,22 +6,20 @@ from typing import TYPE_CHECKING, Any, Literal
 import requests
 import yaml
 
-
 # from ado_wrapper.resources.branches import Branch
-from ado_wrapper.resources.commits import Commit
+from ado_wrapper.resources.commits import Commit, GitIgnoreTemplateType
 from ado_wrapper.resources.merge_policies import MergePolicies, MergePolicyDefaultReviewer
 from ado_wrapper.resources.pull_requests import PullRequest, PullRequestStatus
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.errors import ResourceNotFound, UnknownError
-from ado_wrapper.utils import binary_data_to_file_dictionary
-
-# from ado_wrapper.utils import requires_perms
+from ado_wrapper.utils import binary_data_to_file_dictionary  # requires_perms
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
     from ado_wrapper.resources.merge_policies import MergeBranchPolicy, WhenChangesArePushed
 
 RepoEditableAttribute = Literal["name", "default_branch", "is_disabled"]
+
 
 # ====================================================================
 
@@ -53,14 +51,21 @@ class Repo(StateManagedResource):
 
     @classmethod
     # @requires_perms("Git Repositories/Create repository")
-    def create(cls, ado_client: "AdoClient", name: str, include_readme: bool = True) -> "Repo":
+    def create(
+        cls, ado_client: "AdoClient", name: str, include_readme: bool = True,
+        git_ignore_template: GitIgnoreTemplateType | None = None,  # fmt: skip
+    ) -> "Repo":
         repo: Repo = super()._create(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/git/repositories?api-version=7.1",
             {"name": name},
         )
-        if include_readme:
+        if include_readme and git_ignore_template is not None:
+            Commit.add_readme_and_gitignore(ado_client, repo.repo_id, git_ignore_template)
+        elif include_readme:
             Commit.add_initial_readme(ado_client, repo.repo_id)
+        elif git_ignore_template is not None:
+            Commit.add_git_ignore_template(ado_client, repo.repo_id, git_ignore_template)
         return repo
 
     def update(self, ado_client: "AdoClient", attribute_name: RepoEditableAttribute, attribute_value: Any) -> None:
@@ -127,28 +132,30 @@ class Repo(StateManagedResource):
             )
         except requests.exceptions.ConnectionError:
             if not ado_client.suppress_warnings:
-                print(f"=== Connection error, failed to download {self.repo_id}")
+                print(f"[ADO_WRAPPER] Connection error, failed to download {self.repo_id}")
             return {}
         if request.status_code == 404:
             raise ResourceNotFound(f"Repo {self.repo_id} does not have any branches or content!")
         if request.status_code != 200:
             if not ado_client.suppress_warnings:
-                print(f"Error getting repo contents for {self.name} ({self.repo_id}):", request.text)
+                print(f"[ADO_WRAPPER] Error getting repo contents for {self.name} ({self.repo_id}):", request.text)
             return {}
 
         try:
             files = binary_data_to_file_dictionary(request.content, file_types, ado_client.suppress_warnings)
         except zipfile.BadZipFile as e:
             if not ado_client.suppress_warnings:
-                print(f"{self.name} ({self.repo_id}) couldn't be unzipped:", e)
+                print(f"[ADO_WRAPPER] {self.name} ({self.repo_id}) couldn't be unzipped:", e)
         return files
 
     def create_pull_request(
-            self, ado_client: "AdoClient", branch_name: str, pull_request_title: str, pull_request_description: str,
-            to_branch_name: str = "main", is_draft: bool = False
+        self, ado_client: "AdoClient", branch_name: str, pull_request_title: str, pull_request_description: str,
+        to_branch_name: str = "main", is_draft: bool = False
     ) -> PullRequest:  # fmt: skip
         """Helper function which redirects to the PullRequest class to make a PR"""
-        return PullRequest.create(ado_client, self.repo_id, pull_request_title, pull_request_description, branch_name, to_branch_name, is_draft)
+        return PullRequest.create(
+            ado_client, self.repo_id, pull_request_title, pull_request_description, branch_name, to_branch_name, is_draft
+        )
 
     @staticmethod
     def get_all_pull_requests(ado_client: "AdoClient", repo_id: str, status: PullRequestStatus = "all") -> list[PullRequest]:

@@ -2,8 +2,11 @@ from datetime import datetime
 
 import pytest
 
+if __name__ == "__main__":
+    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+
 from ado_wrapper.resources.agent_pools import AgentPool
-from tests.setup_client import setup_client, existing_agent_pool_id
+from tests.setup_client import setup_client
 
 
 class TestAgentPool:
@@ -45,9 +48,8 @@ class TestAgentPool:
 
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
-        with pytest.raises(NotImplementedError):
-            agent_pool = AgentPool.create(self.ado_client, "ado_wrapper-test-agent_pool", None, True, True, True, False, 10, None)
-            agent_pool.delete(self.ado_client)
+        agent_pool = AgentPool.create(self.ado_client, "ado_wrapper-test-agent-pool", None, True, True, True, False, 10, None)
+        agent_pool.delete(self.ado_client)
 
     # @pytest.mark.skip(reason="This test is flakey, and randomly fails, even with no changes")
     # @pytest.mark.update
@@ -66,8 +68,10 @@ class TestAgentPool:
 
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
-        agent_pool = AgentPool.get_by_id(self.ado_client, existing_agent_pool_id)
-        assert agent_pool.agent_pool_id == existing_agent_pool_id
+        agent_pool_created = AgentPool.create(self.ado_client, "ado_wrapper_test_agent_pool", None, True, True, True, False, 1, 1)
+        agent_pool = AgentPool.get_by_id(self.ado_client, agent_pool_created.agent_pool_id)
+        assert agent_pool_created.agent_pool_id == agent_pool.agent_pool_id
+        agent_pool_created.delete(self.ado_client)
 
     @pytest.mark.get_all
     def test_get_all(self) -> None:
@@ -75,11 +79,16 @@ class TestAgentPool:
         assert len(agent_pools) >= 1
         assert all(isinstance(agent_pool, AgentPool) for agent_pool in agent_pools)
 
-    # @pytest.mark.get_all_by_name
-    # def test_get_by_name(self) -> None:
-    #     agent_pool_created = AgentPool.create(self.ado_client, "ado_wrapper-test-for-get-by-name", "my_description", {"a": "b"})
-    #     agent_pool = AgentPool.get_by_name(self.ado_client, "ado_wrapper-test-for-get-by-name")
-    #     agent_pool_created.delete(self.ado_client)
-    #     assert agent_pool is not None
-    #     assert agent_pool.agent_pool_id == agent_pool_created.agent_pool_id
-    #     assert agent_pool.name == agent_pool_created.name
+    @pytest.mark.get_all_by_name
+    def test_get_by_name(self) -> None:
+        agent_pool_created = AgentPool.create(self.ado_client, "ado_wrapper-test-for-get-by-name")
+        agent_pool = AgentPool.get_by_name(self.ado_client, agent_pool_created.name)
+        agent_pool_created.delete(self.ado_client)
+        assert agent_pool is not None
+        assert agent_pool.agent_pool_id == agent_pool_created.agent_pool_id
+        assert agent_pool.name == agent_pool_created.name
+
+
+if __name__ == "__main__":
+    # pytest.main([__file__, "-s", "-vvvv"])
+    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

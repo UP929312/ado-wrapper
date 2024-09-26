@@ -190,7 +190,8 @@ class BuildDefinition(StateManagedResource):
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=7.0-preview",
             json=PAYLOAD,
         )
-        assert request.status_code == 200
+        if request.status_code != 200:
+            raise UnknownError(f"Error! Could not fetch all stages! {request.status_code}, {request.text}")
         stages_list = request.json()["dataProviders"]["ms.vss-build-web.pipeline-run-parameters-data-provider"]["stages"]
         return [BuildDefinitionStage.from_request_payload(x) for x in stages_list]
 

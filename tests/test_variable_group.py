@@ -1,5 +1,8 @@
 import pytest
 
+if __name__ == "__main__":
+    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+
 from ado_wrapper.resources.variable_groups import VariableGroup
 from tests.setup_client import setup_client
 
@@ -32,7 +35,7 @@ class TestVariableGroup:
 
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
-        variable_group = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-create-delete", "my_description", {"a": "b"})
+        variable_group = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-create-delete", {"a": "b"})
         variable_group.delete(self.ado_client)
         assert variable_group.variables == {"a": "b"}
 
@@ -40,7 +43,7 @@ class TestVariableGroup:
     @pytest.mark.update
     def test_update(self) -> None:
         # Variable group updating is quite flakey, and randomly fails, even with no changes
-        variable_group = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-update", "my_description", {"a": "b"})
+        variable_group = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-update", {"a": "b"})
         changed_variables = {"b": "c"}
         # =====
         variable_group.update(self.ado_client, "variables", changed_variables)  # For some reason, this only sometimes works
@@ -53,14 +56,14 @@ class TestVariableGroup:
 
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
-        variable_group_created = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-get-by-id", "my_description", {"a": "b"})
+        variable_group_created = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-get-by-id", {"a": "b"})
         variable_group = VariableGroup.get_by_id(self.ado_client, variable_group_created.variable_group_id)
         variable_group_created.delete(self.ado_client)
         assert variable_group.variable_group_id == variable_group_created.variable_group_id
 
     @pytest.mark.get_all
     def test_get_all(self) -> None:
-        variable_group_created = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-get-all", "my_description", {"a": "b"})
+        variable_group_created = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-get-all", {"a": "b"})
         variable_groups = VariableGroup.get_all(self.ado_client)
         variable_group_created.delete(self.ado_client)
         assert len(variable_groups) >= 1
@@ -68,9 +71,23 @@ class TestVariableGroup:
 
     @pytest.mark.get_all_by_name
     def test_get_by_name(self) -> None:
-        variable_group_created = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-get-by-name", "my_description", {"a": "b"})
+        variable_group_created = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-get-by-name", {"a": "b"})
         variable_group = VariableGroup.get_by_name(self.ado_client, "ado_wrapper-test-for-get-by-name")
         variable_group_created.delete(self.ado_client)
         assert variable_group is not None
         assert variable_group.variable_group_id == variable_group_created.variable_group_id
         assert variable_group.name == variable_group_created.name
+
+    @pytest.mark.skip(reason="This test takes 25-60 seconds (requires a build)")
+    @pytest.mark.get_contents
+    def test_get_variable_group_contents(self) -> None:
+        mapping = {"a": "123", "b": "456"}
+        variable_group = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-get_variable_group_contents", mapping)
+        contents = VariableGroup.get_variable_group_contents(self.ado_client, variable_group.name)
+        variable_group.delete(self.ado_client)
+        assert contents == mapping
+
+
+if __name__ == "__main__":
+    # pytest.main([__file__, "-s", "-vvvv"])
+    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

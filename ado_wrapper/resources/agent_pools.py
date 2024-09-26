@@ -46,32 +46,29 @@ class AgentPool(StateManagedResource):
 
     @classmethod
     def create(
-        cls, ado_client: "AdoClient", name: str, agent_cloud_id: str | None, auto_provision: bool, auto_size: bool,
-        auto_update: bool, is_hosted: bool, size: int, target_size: int | None  # fmt: skip
+        cls, ado_client: "AdoClient", name: str, agent_cloud_id: str | None = None, auto_provision: bool = True, auto_size: bool = True,
+        auto_update: bool = True, is_hosted: bool = False, size: int = 1, target_size: int | None = None,  # fmt: skip
     ) -> "AgentPool":
-        raise NotImplementedError
-        # PAYLOAD = {
-        #     "name": name, "agentCloudId": agent_cloud_id, "autoProvision": auto_provision, "autoSize": auto_size,
-        #     "autoUpdate": auto_update, "isHosted": is_hosted, "size": size, "targetSize": target_size,
-        # }
-        # return super().create(
-        #     ado_client,
-        #     "/_apis/distributedtask/pools?api-version=7.1-preview.1",
-        #     payload=PAYLOAD,
-        # )
+        PAYLOAD = {
+            "name": name, "agentCloudId": agent_cloud_id, "autoProvision": auto_provision, "autoSize": auto_size,
+            "autoUpdate": auto_update, "isHosted": is_hosted, "size": size, "targetSize": target_size,
+        }
+        return super()._create(
+            ado_client,
+            "/_apis/distributedtask/pools?api-version=7.1-preview.1",
+            payload=PAYLOAD,
+        )
 
     # def update(self) -> None:
-    #     raise NotImplementedError
     #     # PATCH https://dev.azure.com/{organization}/_apis/distributedtask/pools/{poolId}?api-version=7.1-preview.1
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", agent_pool_id: str) -> None:
-        raise NotImplementedError
-        # return super().delete_by_id(
-        #     ado_client,
-        #     f"/_apis/distributedtask/pools/{agent_pool_id}?api-version=7.1-preview.1",
-        #     agent_pool_id
-        # )
+        return super()._delete_by_id(
+            ado_client,
+            f"/_apis/distributedtask/pools/{agent_pool_id}?api-version=7.1-preview.1",
+            agent_pool_id
+        )
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient") -> list["AgentPool"]:
@@ -85,5 +82,5 @@ class AgentPool(StateManagedResource):
     # =============== Start of additional methods included with class ===================== #
 
     @classmethod
-    def get_by_name(cls, ado_client: "AdoClient", agent_pool_id: str) -> "AgentPool | None":
-        return cls._get_by_abstract_filter(ado_client, lambda agent_pool: agent_pool.agent_pool_id == agent_pool_id)
+    def get_by_name(cls, ado_client: "AdoClient", agent_pool_name: str) -> "AgentPool | None":
+        return cls._get_by_abstract_filter(ado_client, lambda agent_pool: agent_pool.name == agent_pool_name)

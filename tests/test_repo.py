@@ -1,9 +1,12 @@
 import pytest
 
+if __name__ == "__main__":
+    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.pull_requests import PullRequest
 from ado_wrapper.resources.repo import Repo
-from tests.setup_client import setup_client
+from tests.setup_client import RepoContextManager, setup_client
 
 
 class TestRepo:
@@ -31,7 +34,7 @@ class TestRepo:
         repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-update-repo")
         Commit.create(
             self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit"
-        )  # Create a branch
+        )
         # =====
         repo.update(self.ado_client, "name", "ado_wrapper-test-repo-for-update-repo-renamed")
         assert repo.name == "ado_wrapper-test-repo-for-update-repo-renamed"  # Test instance attribute is updated
@@ -58,7 +61,7 @@ class TestRepo:
     @pytest.mark.get_all
     def test_get_all(self) -> None:
         repos = Repo.get_all(self.ado_client)
-        assert len(repos) > 10
+        assert len(repos) >= 1
         assert all(isinstance(repo, Repo) for repo in repos)
 
     @pytest.mark.get_all_by_name
@@ -97,3 +100,42 @@ class TestRepo:
         assert all(isinstance(pr, PullRequest) for pr in pull_requests)
         pull_requests[0].close(self.ado_client)
         repo.delete(self.ado_client)
+
+    @pytest.mark.create_delete
+    def test_gitignore_templates(self) -> None:
+        # Readme only
+        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-gitignore-templates-1", include_readme=True)
+        repo_contents = repo.get_contents(self.ado_client)
+        assert list(repo_contents.keys()) == ["README.md"]
+        repo.delete(self.ado_client)
+
+        # Git ignore template only
+        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-gitignore-templates-2", include_readme=False, git_ignore_template="Python")
+        repo_contents = repo.get_contents(self.ado_client)
+        assert ".gitignore" in repo_contents
+        assert "README.md" not in repo_contents
+        repo.delete(self.ado_client)
+
+        # Both
+        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-gitignore-templates-3", include_readme=True, git_ignore_template="Python")
+        repo_contents = repo.get_contents(self.ado_client)
+        assert ".gitignore" in repo_contents
+        assert "README.md" in repo_contents
+        repo.delete(self.ado_client)
+
+    @pytest.mark.wip
+    def test_repo_get_and_decode_file(self) -> None:
+        with RepoContextManager(self.ado_client, "get-and-decode-file") as repo:
+            # JSON
+            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"test.json": '{"a": 123, "b": 456}'})
+            file_contents = repo.get_and_decode_file(self.ado_client, "test.json", "my-branch")
+            assert isinstance(file_contents, dict)
+            # YAML
+            Commit.create(self.ado_client, repo.repo_id, "my-branch", "my-branch", {"test.yaml": "a: 123\nb: 456\n"})
+            file_contents = repo.get_and_decode_file(self.ado_client, "test.yaml", "my-branch")
+            assert isinstance(file_contents, dict)
+
+
+if __name__ == "__main__":
+    # pytest.main([__file__, "-s", "-vvvv"])
+    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

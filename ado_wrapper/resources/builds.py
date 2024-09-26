@@ -119,14 +119,15 @@ class Build(StateManagedResource):
         )
         if leases_request.status_code != 200:
             if not ado_client.suppress_warnings:
-                print(f"[ADO_WRAPPER] Could not delete leases, {leases_request.status_code}")
+                print(f"[ADO_WRAPPER] Could not get a list of leases to delete!, {leases_request.status_code}, {leases_request.text}")
             return
         leases = leases_request.json()["value"]
         for lease in leases:
-            lease_response = ado_client.session.delete(
+            lease_response = ado_client.session.delete(  # TODO: Rename "lease_response" to something better.
                 f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/build/retention/leases?ids={lease['leaseId']}&api-version=6.1",
             )
-            assert lease_response.status_code <= 204
+            if lease_response.status_code >= 300:  # 204?
+                print(f"[ADO_WRAPPER] Could not delete lease {lease['leaseId']}! {lease_response.status_code}, {lease_response.text}")
 
     @classmethod
     def get_all_by_definition(cls, ado_client: "AdoClient", definition_id: str) -> "list[Build]":

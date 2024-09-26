@@ -36,13 +36,19 @@ class Team(StateManagedResource):
 
     @classmethod
     def create(cls, ado_client: "AdoClient", name: str, description: str) -> "Team":
-        raise NotImplementedError
-        # request = ado_client.session.post(f"/_apis/teams?api-version=7.1", json={"name": name, "description": description}).json()
-        # return cls.from_request_payload(request)
+        return super()._create(
+            ado_client,
+            f"/_apis/projects/{ado_client.ado_project_name}/teams?api-version=7.1",
+            {"name": name, "description": description}
+        )
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", team_id: str) -> None:
-        raise NotImplementedError
+        return super()._delete_by_id(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/projects/{ado_client.ado_project_name}/teams/{team_id}?api-version=7.1",
+            team_id,
+        )
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient") -> list["Team"]:

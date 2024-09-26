@@ -1,6 +1,9 @@
 import pytest
 
-from ado_wrapper.resources.merge_policies import MergePolicies
+if __name__ == "__main__":
+    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+
+from ado_wrapper.resources.merge_policies import MergePolicies, MergeBranchPolicy, MergeTypeRestrictionPolicy
 from tests.setup_client import RepoContextManager, existing_user_id, setup_client
 
 
@@ -37,6 +40,7 @@ class TestMergePolicy:
             assert updated_policy.allow_completion_with_rejects
             assert updated_policy.when_new_changes_are_pushed == "require_revote_on_each_iteration"
 
+    @pytest.mark.hierarchy
     @pytest.mark.create_delete
     def test_create_default_reviewer(self) -> None:
         with RepoContextManager(self.ado_client, "create-default-reviewer") as repo:
@@ -53,7 +57,6 @@ class TestMergePolicy:
             MergePolicies.remove_default_reviewer(self.ado_client, repo.repo_id, existing_user_id)
             default_reviewers = MergePolicies.get_default_reviewers(self.ado_client, repo.repo_id)
             assert not default_reviewers
-
             # We also need to do way more work with the "inheritedPolicies" field, currently, "currentScopePolicies" is None for many, this
             # Might not actually be a problem though, idk
 
@@ -69,3 +72,18 @@ class TestMergePolicy:
             assert not allowed_merge_types.allow_squash
             assert allowed_merge_types.allow_rebase_and_fast_forward
             assert not allowed_merge_types.allow_rebase_with_merge_commit
+
+    @pytest.mark.wip
+    def test_get_all_repo_policies(self) -> None:
+        with RepoContextManager(self.ado_client, "get-all-repo-policies") as repo:
+            policies = MergePolicies.get_all_repo_policies(self.ado_client, repo.repo_id)
+            assert isinstance(policies, tuple)
+            assert len(policies) == 3
+            assert isinstance(policies[0], list)
+            assert isinstance(policies[1], (MergeBranchPolicy, type(None)))
+            assert isinstance(policies[2], (MergeTypeRestrictionPolicy, type(None)))
+
+
+if __name__ == "__main__":
+    # pytest.main([__file__, "-s", "-vvvv"])
+    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

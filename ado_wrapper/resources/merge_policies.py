@@ -2,9 +2,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
 
-from ado_wrapper.resources.users import Reviewer
+from ado_wrapper.resources.users import AdoUser, Reviewer
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import from_ado_date_string, requires_initialisation
+from ado_wrapper.utils import from_ado_date_string, build_hierarchy_payload
 from ado_wrapper.errors import ConfigurationError
 
 if TYPE_CHECKING:
@@ -35,7 +35,6 @@ def _get_type_id(ado_client: "AdoClient", action_type: str) -> str:
     request = ado_client.session.get(
         f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/policy/types?api-version=6.0"
     )
-    # rint([(x["displayName"], x["id"]) for x in request.json()["value"]])
     return str([x for x in request.json()["value"] if x["displayName"] == action_type][0]["id"])
 
 
@@ -51,20 +50,21 @@ class MergePolicyDefaultReviewer(StateManagedResource):
     def from_request_payload(cls, data: dict[str, Any]) -> "MergePolicyDefaultReviewer":
         return cls(data["id"], data["settings"]["requiredReviewerIds"][0], data["isBlocking"])
 
-    @staticmethod
-    def get_default_reviewers(ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> list[Reviewer]:
-        requires_initialisation(ado_client)
-        payload = {"contributionIds": ["ms.vss-code-web.branch-policies-data-provider"],
-                   "dataProviderContext": {"properties": {"projectId": ado_client.ado_project_id, "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}"}}}  # fmt: skip
+    @classmethod
+    def get_default_reviewers(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> list[Reviewer]:
+        PAYLOAD = build_hierarchy_payload(
+            ado_client, "code-web.branch-policies-data-provider",
+            additional_properties={"repositoryId": repo_id, "refName": f"refs/heads/{branch_name}"},
+        )  # fmt: skip
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.1-preview.1",
-            json=payload,
+            json=PAYLOAD,
         ).json()
         if request is None:
             return []
         if "ms.vss-code-web.branch-policies-data-provider" not in request["dataProviders"]:
             if not ado_client.suppress_warnings:
-                print(f"No default reviewers found for repo {repo_id}! Most likely it's disabled.")
+                print(f"[ADO_WRAPPER] No default reviewers found for repo {repo_id}! Most likely it's disabled.")
             return []
         identities = request["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["identities"]
         # === # Maybe switch ["id"] to ["descriptor"]?
@@ -77,19 +77,26 @@ class MergePolicyDefaultReviewer(StateManagedResource):
                 reviewers = policy_group["currentScopePolicies"][0]["settings"]["requiredReviewerIds"]
                 for reviewer_id in reviewers:
                     [x for x in all_reviewers if x.member_id == reviewer_id][0].is_required = True
+        # =====================================================================================
+        # Fix local_ids (convert them to origin_ids)
+        local_ids_to_origin_ids = AdoUser._convert_local_ids_to_origin_ids(ado_client, [x.member_id for x in all_reviewers])  # pylint: disable=protected-access
+        for reviewer in [x for x in all_reviewers if x.member_id is not None]:
+            reviewer.member_id = local_ids_to_origin_ids[reviewer.member_id]
+        # =====================================================================================
         return all_reviewers
 
     @classmethod
-    def add_default_reviewer(cls, ado_client: "AdoClient", repo_id: str, reviewer_id: str, is_required: bool, branch_name: str = "main") -> None:  # fmt: skip
-        """If the reviewer is a group, use the Group.origin_id attribute, for users, use their regular user id"""
-        if reviewer_id in [x.member_id for x in cls.get_default_reviewers(ado_client, repo_id, branch_name)]:
+    def add_default_reviewer(cls, ado_client: "AdoClient", repo_id: str, reviewer_origin_id: str, is_required: bool, branch_name: str = "main") -> None:  # fmt: skip
+        if reviewer_origin_id in [x.member_id for x in cls.get_default_reviewers(ado_client, repo_id, branch_name)]:
             raise ValueError("Reviewer already exists! To update, please remove the reviewer first.")
+        local_id = AdoUser._convert_origin_ids_to_local_ids(ado_client, [reviewer_origin_id])[reviewer_origin_id]  # pylint: disable=protected-access
         payload = {
             "type": {"id": _get_type_id(ado_client, "Required reviewers")},
             "isBlocking": is_required,
             "isEnabled": True,
             "settings": {
-                "requiredReviewerIds": [reviewer_id],
+                # We have to convert the origin id to local id for this to work ):
+                "requiredReviewerIds": [local_id],
                 "scope": [{"repositoryId": repo_id, "refName": f"refs/heads/{branch_name}", "matchKind": "Exact"}],
             },
         }
@@ -103,15 +110,16 @@ class MergePolicyDefaultReviewer(StateManagedResource):
 
     @staticmethod
     def remove_default_reviewer(ado_client: "AdoClient", repo_id: str, reviewer_id: str, branch_name: str = "main") -> None:
+        # We can't use get_default_reviewers since we need to delete the policy, not the reviewer
+        local_id = AdoUser._convert_origin_ids_to_local_ids(ado_client, [reviewer_id])[reviewer_id]  # pylint: disable=protected-access
         policies = MergePolicies.get_all_by_repo_id(ado_client, repo_id, branch_name)
         default_reviewer_policy = (
             [x for x in policies if isinstance(x, MergePolicyDefaultReviewer)]  # pylint: disable=not-an-iterable
-            if policies is not None
-            else None
+            if policies is not None else None  # fmt: skip
         )
         if default_reviewer_policy is None:
             return
-        policy_id = [x for x in default_reviewer_policy if x.required_reviewer_id == reviewer_id][0].policy_id  # fmt: skip
+        policy_id = [x for x in default_reviewer_policy if x.required_reviewer_id == local_id][0].policy_id  # fmt: skip
         request = ado_client.session.delete(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/policy/configurations/{policy_id}?api-version=7.1",
         )
@@ -278,7 +286,7 @@ class MergePolicies(StateManagedResource):
                     #     new_policy.inherited_policies = [MergeBranchPolicy.from_request_payload(x) for x in policy_group["inheritedPolicies"]]
                     all_policies.append(new_policy)
                 else:
-                    print("Unknown policy type: ", policy)
+                    print("[ADO_WRAPPER] Unknown policy type: ", policy)
 
             # for inherited_policy in policy_group["inheritedPolicies"] or []:
             #     all_policies.append(MergeBranchPolicy.from_request_payload(inherited_policy, True))
@@ -287,13 +295,13 @@ class MergePolicies(StateManagedResource):
 
     @classmethod
     def get_all_by_repo_id(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> list[MergePolicyDefaultReviewer | MergeBranchPolicy | MergeTypeRestrictionPolicy] | None:  # fmt: skip
+        # TODO: Make this use the utils.build_hierarchy_payload
         payload = {"contributionIds": ["ms.vss-code-web.branch-policies-data-provider"], "dataProviderContext": {"properties": {
             "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}", "sourcePage": {"routeValues": {"project": ado_client.ado_project_name}}}}}  # fmt: skip
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview.1",
             json=payload,
         ).json()
-        # print(request)
         return cls.from_request_payload(request)
 
     # ======================= Combined ====================== #
@@ -317,9 +325,8 @@ class MergePolicies(StateManagedResource):
         )
 
     @staticmethod
-    def add_default_reviewer(ado_client: "AdoClient", repo_id: str, reviewer_id: str, is_required: bool, branch_name: str = "main") -> None:
-        """If the reviewer is a group, use the Group.origin_id attribute, for users, use their regular user id"""
-        return MergePolicyDefaultReviewer.add_default_reviewer(ado_client, repo_id, reviewer_id, is_required, branch_name)
+    def add_default_reviewer(ado_client: "AdoClient", repo_id: str, reviewer_origin_id: str, is_required: bool, branch_name: str = "main") -> None:
+        return MergePolicyDefaultReviewer.add_default_reviewer(ado_client, repo_id, reviewer_origin_id, is_required, branch_name)
 
     @staticmethod
     def get_default_reviewers(ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> list[Reviewer]:

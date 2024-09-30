@@ -3,7 +3,7 @@ import time
 import pytest
 
 if __name__ == "__main__":
-    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+    __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
 
 from ado_wrapper.errors import ConfigurationError, UnknownError
 from ado_wrapper.resources.runs import Run
@@ -88,8 +88,12 @@ class TestRun:
                 self.ado_client, "ado_wrapper-test-run-for-wait-until-completion_with_printing", repo.repo_id, "run.yaml",
                 f"Please contact {email} if you see this run definition!", branch_name="my-branch",  # fmt: skip
             )
-            run = Run.run_and_wait_until_completion(self.ado_client, run_definition.build_definition_id, branch_name="my-branch",
-                                                    send_updates_function=lambda run: print(f"Status={run.status}, Result={run.result}"))
+            run = Run.run_and_wait_until_completion(
+                self.ado_client,
+                run_definition.build_definition_id,
+                branch_name="my-branch",
+                send_updates_function=lambda run: print(f"Status={run.status}, Result={run.result}"),
+            )
             run_definition.delete(self.ado_client)  # Can't delete run_definitions without deleting runs first
             run.delete(self.ado_client)
 
@@ -123,11 +127,18 @@ class TestRun:
     @pytest.mark.create_delete
     def test_create_delete_multiple_stages(self) -> None:
         with RepoContextManager(self.ado_client, "create-delete-multiple-stages") as repo:
-            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": MULTIPLE_STAGES_BUILD_YAML_FILE}, "add", "Update")
+            Commit.create(
+                self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": MULTIPLE_STAGES_BUILD_YAML_FILE}, "add", "Update"
+            )
             build_definition = BuildDefinition.create_with_hierarchy(
                 self.ado_client, repo.repo_id, repo.name, "run.yaml", branch_name="my-branch"
             )
-            run = Run.create(self.ado_client, build_definition.build_definition_id, branch_name="my-branch", stages_to_run=["StageOne",])
+            run = Run.create(
+                self.ado_client,
+                build_definition.build_definition_id,
+                branch_name="my-branch",
+                stages_to_run=["StageOne"],
+            )
             time.sleep(2)
             results = run.get_run_stage_results(self.ado_client, run.run_id)
             assert results[0].jobs[0].result == "Skipped" or results[1].jobs[0].result
@@ -138,7 +149,9 @@ class TestRun:
     @pytest.mark.create_delete
     def test_run_with_stages_only_working_with_hierarchy_built_build_defs(self) -> None:
         with RepoContextManager(self.ado_client, "-with-stages-only-sometimes-working") as repo:
-            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": MULTIPLE_STAGES_BUILD_YAML_FILE}, "add", "Update")
+            Commit.create(
+                self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": MULTIPLE_STAGES_BUILD_YAML_FILE}, "add", "Update"
+            )
             # =============================================================================
             # Make both build defs
             build_def_regular = BuildDefinition.create(
@@ -150,7 +163,9 @@ class TestRun:
             )
             # Regular way fails
             with pytest.raises(UnknownError):
-                run = Run.create(self.ado_client, build_def_regular.build_definition_id, stages_to_run=["StageOne"], branch_name="my-branch")
+                run = Run.create(
+                    self.ado_client, build_def_regular.build_definition_id, stages_to_run=["StageOne"], branch_name="my-branch"
+                )
                 run.delete(self.ado_client)
 
             # Normal way doesn't...
@@ -183,9 +198,7 @@ class TestRun:
     def test_create_run_with_template_variables(self) -> None:
         with RepoContextManager(self.ado_client, "create_run_with_template_variables", delete_on_exit=False) as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": TEMPLATE_VARIABLES_YAML_FILE}, "add", "Update")
-            build_definition = BuildDefinition.create(
-                self.ado_client, repo.name, repo.repo_id, "run.yaml", branch_name="my-branch"
-            )
+            build_definition = BuildDefinition.create(self.ado_client, repo.name, repo.repo_id, "run.yaml", branch_name="my-branch")
             with pytest.raises(ConfigurationError):
                 run = Run.run_and_wait_until_completion(
                     self.ado_client, build_definition.build_definition_id, run_variables={"my_var": "bbb"}, branch_name="my-branch"
@@ -199,7 +212,9 @@ class TestRun:
     @pytest.mark.hierarchy
     def test_run_stage_results(self) -> None:
         with RepoContextManager(self.ado_client, "run-stage-results") as repo:
-            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": MULTIPLE_STAGES_BUILD_YAML_FILE}, "add", "Update")
+            Commit.create(
+                self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": MULTIPLE_STAGES_BUILD_YAML_FILE}, "add", "Update"
+            )
             build_definition = BuildDefinition.create_with_hierarchy(
                 self.ado_client, repo.repo_id, repo.name, "run.yaml", branch_name="my-branch"
             )
@@ -213,13 +228,16 @@ class TestRun:
     @pytest.mark.hierarchy
     def test_get_task_parents(self) -> None:
         with RepoContextManager(self.ado_client, "get-task-parents") as repo:
-            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": MULTIPLE_STAGES_BUILD_YAML_FILE}, "add", "Update")
+            Commit.create(
+                self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": MULTIPLE_STAGES_BUILD_YAML_FILE}, "add", "Update"
+            )
             build_definition = BuildDefinition.create_with_hierarchy(
                 self.ado_client, repo.repo_id, repo.name, "run.yaml", branch_name="my-branch"
             )
             run = Run.run_and_wait_until_completion(self.ado_client, build_definition.build_definition_id, branch_name="my-branch")
             stages_jobs_steps = Run.get_stages_jobs_tasks(self.ado_client, run.run_id)
-            task_parent_stage, _, task_parent_job, _, _, _ = run.get_task_parents(self.ado_client, run.run_id, stages_jobs_steps["StageOne"]["jobs"]["JobOne"]["tasks"]["Task1"])
+            task_id = stages_jobs_steps["StageOne"]["jobs"]["JobOne"]["tasks"]["Task1"]
+            task_parent_stage, _, task_parent_job, _, _, _ = run.get_task_parents(self.ado_client, run.run_id, task_id)
             assert task_parent_stage == "StageOne"
             assert task_parent_job == "JobOne"
             run.delete(self.ado_client)
@@ -229,7 +247,9 @@ class TestRun:
     @pytest.mark.hierarchy
     def test_get_build_log_contents(self) -> None:
         with RepoContextManager(self.ado_client, "get-build-log-contents") as repo:
-            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": MULTIPLE_STAGES_BUILD_YAML_FILE}, "add", "Update")
+            Commit.create(
+                self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": MULTIPLE_STAGES_BUILD_YAML_FILE}, "add", "Update"
+            )
             build_definition = BuildDefinition.create_with_hierarchy(
                 self.ado_client, repo.repo_id, repo.name, "run.yaml", branch_name="my-branch"
             )
@@ -244,8 +264,9 @@ class TestRun:
     def test_get_root_stage_names(self) -> None:
         with RepoContextManager(self.ado_client, "get-root-stage-names") as repo:
             Commit.create(
-                self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": MULTIPLE_STAGES_WITH_DEPENDENCIES_BUILD_YAML_FILE}, "add", "Update"
-            )
+                self.ado_client, repo.repo_id, "main", "my-branch",
+                {"run.yaml": MULTIPLE_STAGES_WITH_DEPENDENCIES_BUILD_YAML_FILE}, "add", "Update",
+            )  # fmt: skip
             build_definition = BuildDefinition.create_with_hierarchy(self.ado_client, repo.repo_id, repo.name, "run.yaml", "my-branch")
             run = Run.run_and_wait_until_completion(self.ado_client, build_definition.build_definition_id, branch_name="my-branch")
             root_stage_name = Run.get_root_stage_names(self.ado_client, run.run_id)

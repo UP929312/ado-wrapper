@@ -39,7 +39,7 @@ class Team(StateManagedResource):
         return super()._create(
             ado_client,
             f"/_apis/projects/{ado_client.ado_project_name}/teams?api-version=7.1",
-            {"name": name, "description": description}
+            {"name": name, "description": description},
         )
 
     @classmethod

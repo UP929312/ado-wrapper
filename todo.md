@@ -86,12 +86,8 @@ Never test get_environment_approvals
 
 [ADO_WRAPPER] Deleted Group vssgp.Uy0xLTktMTU1MTM3NDI0NS0yNTMxNjkyMTc5LTQwMTE1NTg5NzctMjI0MjA5MjA2OS0zOTU1NzcyNDQ5LTEtNDA5MDI0NTEyOC0xMjM3OTU4OTg2LTIzMDA1NzY1MzgtNTY2Nzg4MjEz from ADO
 
-with ado_client.elevated_privileges for deleting projects and orgs and such? ElevatedPrivileges
-
 rather than "requires initialisation", maybe make .ado_project_id a property and put it there?
 Perhaps have some system relating to intents? Which pre-loads a bunch of stuff (e.g, pat_author)
-
-Now we allow multiple projects, maybe we can do ado_client.assume_project? Just sets ado_project_id and name?
 
 Retry system, if any of the requests raise ConnectionError, retry somehow?
 Have it call a generic _request(type) func, which has the retry logic
@@ -99,6 +95,8 @@ Have it call a generic _request(type) func, which has the retry logic
 Could we make ado_client.session a property? Which just passes on the session, but also does logging?
 Maybe we can do some clever stuff with the StateManagedResource which trackes which functions takes how long?
 Might help tests, detecting calls, etc
+
+Actual logging...
 
 from enum import Flag
 
@@ -112,7 +110,17 @@ PullRequest.set_my_pull_requests_included_teams?
 
 PullRequest -> Organisations -> Variable Groups
 
-For polling requests, set a global ado_client polling_interval.
+Add more changelog messages for the older versions
+
+with ado_client.elevated_privileges for deleting projects and orgs and such?  
+ElevatedPrivileges - Done, just need to put it function side.
+
+Add testing for assume_role
+
+Tests for build timelines
+Test utils
+
+When using BuildTimelines, could we perhaps automatically add task's parent Job and stage?
 
 -----  
 
@@ -127,6 +135,8 @@ coverage html && open htmlcov/index.html
 coverage run -m pytest && coverage html && open htmlcov/index.html  
 
 python3.11 -m pip install ado_wrapper --upgrade  
+
+python3.11 -m pytest tests/ -vvvv -s  
 
 mypy . --strict && flake8 --ignore=E501,E126,E121,W503,W504,PBP --exclude=script.py && ruff check && pylint .
 bandit -c pyproject.toml -r .  

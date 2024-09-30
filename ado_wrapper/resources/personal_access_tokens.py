@@ -120,7 +120,9 @@ class PersonalAccessToken:
                 and (include_different_orgs or x["targetAccounts"] == [org_id])]  # fmt: skip
 
     @classmethod
-    def get_access_token_by_name(cls, ado_client: "AdoClient", display_name: str, org_id: str | None = None) -> "PersonalAccessToken | None":
+    def get_access_token_by_name(
+        cls, ado_client: "AdoClient", display_name: str, org_id: str | None = None
+    ) -> "PersonalAccessToken | None":
         return [x for x in cls.get_access_tokens(ado_client, org_id, include_different_orgs=True, include_expired_tokens=True)
                 if x.display_name == display_name][0]  # fmt: skip
 

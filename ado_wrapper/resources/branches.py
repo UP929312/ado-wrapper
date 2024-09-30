@@ -51,7 +51,9 @@ class Branch(StateManagedResource):
             json=[{"name": f"refs/heads/{branch_name}", "newObjectId": commit_id, "oldObjectId": FIRST_COMMIT_ID}],
         ).json()["value"][0]
         # TODO: Maybe make this use super()._create?
-        return Branch(request["newObjectId"], branch_name, repo_id, Member.from_request_payload({"displayName": "UNKNOWN", "id": "UNKNOWN"}))
+        return Branch(
+            request["newObjectId"], branch_name, repo_id, Member.from_request_payload({"displayName": "UNKNOWN", "id": "UNKNOWN"})
+        )
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", branch_name: str, repo_id: str) -> None:
@@ -68,7 +70,9 @@ class Branch(StateManagedResource):
             json=PAYLOAD,
         )
         if request.status_code != 200:
-            raise ConfigurationError(f"Error, something went wrong when trying to delete that branch: {request.status_code}, {request.text}")
+            raise ConfigurationError(
+                f"Error, something went wrong when trying to delete that branch: {request.status_code}, {request.text}"
+            )
         ado_client.state_manager.remove_resource_from_state("Branch", branch_name)
 
     # ============ End of requirement set by all state managed resources ================== #

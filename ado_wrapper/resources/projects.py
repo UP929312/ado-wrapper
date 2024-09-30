@@ -58,13 +58,13 @@ class Project(StateManagedResource):
         return super()._create(
             ado_client,
             "/_apis/projects?api-version=7.1",
-            {
+            payload={
                 "name": project_name, "description": project_description, "visibility": "private",
                 "capabilities": {
                     "versioncontrol": {"sourceControlType": "Git"},
-                    "processTemplate": {"templateTypeId": template_types_mapping[template_type]}
-                }
-            },
+                    "processTemplate": {"templateTypeId": template_types_mapping[template_type]},
+                },
+            },  # fmt: skip
         )
 
     @classmethod
@@ -97,7 +97,9 @@ class Project(StateManagedResource):
 
     @staticmethod
     def get_pipeline_settings(ado_client: "AdoClient", project_name: str | None = None) -> dict[str, bool]:
-        PAYLOAD = build_hierarchy_payload(ado_client, "build-web.pipelines-general-settings-data-provider", route_id="admin-web.project-admin-hub-route")
+        PAYLOAD = build_hierarchy_payload(
+            ado_client, "build-web.pipelines-general-settings-data-provider", route_id="admin-web.project-admin-hub-route"
+        )
         PAYLOAD["dataProviderContext"]["properties"]["sourcePage"]["routeValues"]["project"] = project_name or ado_client.ado_project_name
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview",
@@ -133,10 +135,10 @@ class ProjectRepositorySettings:
     def _get_request_verification_code(ado_client: "AdoClient", project_name: str | None = None) -> str:
         request_verification_token_body = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{project_name or ado_client.ado_project_name}/_settings/repositories?_a=settings",
-        ).text.split("\n")
-        line_prefix = "<input type=\"hidden\" name=\"__RequestVerificationToken\" value=\""
-        line = [x for x in request_verification_token_body if line_prefix in x][0]
-        request_verification_token = line.strip(" ").removeprefix(line_prefix).split("\"")[0]
+        ).text
+        LINE_PREFIX = '<input type="hidden" name="__RequestVerificationToken" value="'
+        line = [x for x in request_verification_token_body.split("\n") if LINE_PREFIX in x][0]
+        request_verification_token = line.strip(" ").removeprefix(LINE_PREFIX).split('"')[0]
         return request_verification_token
 
     @classmethod
@@ -150,7 +152,9 @@ class ProjectRepositorySettings:
         return {setting.programmatic_name: setting for setting in list_of_settings}
 
     @classmethod
-    def update_default_branch_name(cls, ado_client: "AdoClient", new_default_branch_name: str, project_name: str | None = None, ) -> None:
+    def update_default_branch_name(
+        cls, ado_client: "AdoClient", new_default_branch_name: str, project_name: str | None = None,  # fmt: skip
+    ) -> None:
         request_verification_token = cls._get_request_verification_code(ado_client, project_name)
         body = {
             "repositoryId": "00000000-0000-0000-0000-000000000000",
@@ -171,7 +175,7 @@ class ProjectRepositorySettings:
         request_verification_token = cls._get_request_verification_code(ado_client, project_name)
         body = {
             "repositoryId": "00000000-0000-0000-0000-000000000000",
-            "option": json.dumps({"key": project_repository_settings_mapping_reversed[repository_setting], "value": state, "textValue": None}),
+            "option": json.dumps({"key": project_repository_settings_mapping_reversed[repository_setting], "value": state, "textValue": None}),  # fmt: skip
             "__RequestVerificationToken": request_verification_token,
         }
         request = ado_client.session.post(

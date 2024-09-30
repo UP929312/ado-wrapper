@@ -51,6 +51,7 @@ class BuildArtifact(StateManagedResource):
     @classmethod
     def create(cls, ado_client: "AdoClient", build_id: str, artifact_name: str) -> "BuildArtifact":
         raise NotImplementedError
+
     #     """https://learn.microsoft.com/en-us/rest/api/azure/devops/build/artifacts/create"""
     #     """https://stackoverflow.com/questions/74193228/artifacts-create-azure-devops-rest-api"""
     #     artifact_metadata = {

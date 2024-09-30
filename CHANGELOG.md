@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.28.0
+
+### Added
+
+- `BuildTimeline.get_tasks_by_name(ado_client, <build_id>, <task_name>)` which returns all tasks with that task name.
+- The polling interval for runs via run_and_wait_until_complete and sibling functions is now configurable by passing in a new arg to the ado_client object (run_polling_interval_seconds)
+- The polling rate for a run can be temporarily changed using the new context manager, ado_client.temporary_polling_interval(<interval_in_seconds>)
+- ado_client.assume_project(<project_name>) which can be used to assume a different ADO project, changing where function calls are made.
+
+### Changed
+
+- `BuildTimeline`s now hide a lot more of it's attributes in strs/reprs.
+- `examples.md` now show dictionary types, and unpacks tuples for you.
+- `BuildTimeline` now has a new alias, `get_by_build_id`.
+- Slightly optimised `BuildTime.get_all_by_types()`
+
+---
+
 ## v1.27.0
 
 ### Added

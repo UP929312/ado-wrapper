@@ -5,7 +5,7 @@ from ado_wrapper.resources.commits import Commit
 from tests.setup_client import RepoContextManager, setup_client
 
 if __name__ == "__main__":
-    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+    __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
 
 
 class TestAnnotatedTags:

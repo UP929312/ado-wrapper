@@ -1,7 +1,7 @@
 import pytest
 
 if __name__ == "__main__":
-    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+    __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
 
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.pull_requests import PullRequest
@@ -32,9 +32,7 @@ class TestRepo:
     @pytest.mark.update
     def test_update(self) -> None:
         repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-update-repo")
-        Commit.create(
-            self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit"
-        )
+        Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
         # =====
         repo.update(self.ado_client, "name", "ado_wrapper-test-repo-for-update-repo-renamed")
         assert repo.name == "ado_wrapper-test-repo-for-update-repo-renamed"  # Test instance attribute is updated
@@ -110,14 +108,18 @@ class TestRepo:
         repo.delete(self.ado_client)
 
         # Git ignore template only
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-gitignore-templates-2", include_readme=False, git_ignore_template="Python")
+        repo = Repo.create(
+            self.ado_client, "ado_wrapper-test-repo-for-gitignore-templates-2", include_readme=False, git_ignore_template="Python"
+        )
         repo_contents = repo.get_contents(self.ado_client)
         assert ".gitignore" in repo_contents
         assert "README.md" not in repo_contents
         repo.delete(self.ado_client)
 
         # Both
-        repo = Repo.create(self.ado_client, "ado_wrapper-test-repo-for-gitignore-templates-3", include_readme=True, git_ignore_template="Python")
+        repo = Repo.create(
+            self.ado_client, "ado_wrapper-test-repo-for-gitignore-templates-3", include_readme=True, git_ignore_template="Python"
+        )
         repo_contents = repo.get_contents(self.ado_client)
         assert ".gitignore" in repo_contents
         assert "README.md" in repo_contents

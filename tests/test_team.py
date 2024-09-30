@@ -1,7 +1,7 @@
 import pytest
 
 if __name__ == "__main__":
-    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+    __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
 
 from ado_wrapper.resources.teams import Team
 from ado_wrapper.resources.users import TeamMember

@@ -35,7 +35,7 @@ class Group(StateManagedResource):
         return super()._create(
             ado_client,
             f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/graph/groups?api-version=7.1-preview.1",
-            payload={"displayName": name, "description": description, "specialType": "Generic"}
+            payload={"displayName": name, "description": description, "specialType": "Generic"},
         )
 
     @classmethod

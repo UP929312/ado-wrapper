@@ -160,29 +160,37 @@ class BuildDefinition(StateManagedResource):
         # ================================================================================================================================
         # Fetch default template parameters, if the user doesn't pass them in, for the next stage.
         TEMPLATE_PAYLOAD = build_hierarchy_payload(
-            ado_client, "build-web.pipeline-run-parameters-data-provider", route_id="build-web.pipeline-details-route",
-            additional_properties={"pipelineId": int(definition_id), "sourceBranch": f"refs/heads/{branch_name}", "sourcePage": {"routeValues": {"viewname": "details"}}}
+            ado_client, "build-web.pipeline-run-parameters-data-provider", route_id="build-web.pipeline-details-route", additional_properties={
+                "pipelineId": int(definition_id),
+                "sourceBranch": f"refs/heads/{branch_name}",
+                "sourcePage": {"routeValues": {"viewname": "details"}},
+            },  # fmt: skip
         )
         default_template_params_request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=7.0-preview",
             json=TEMPLATE_PAYLOAD,
         ).json()
-        error_message = default_template_params_request.get("dataProviderExceptions", {}).get("ms.vss-build-web.pipeline-run-parameters-data-provider", {}).get("message", "")
+        error_message = (
+            default_template_params_request.get("dataProviderExceptions", {}).get("ms.vss-build-web.pipeline-run-parameters-data-provider", {}).get("message", "")
+        )  # fmt: skip
         if error_message == "Value cannot be null.\r\nParameter name: obj":
             raise UnknownError(
-                "ERROR: There is a bug with ADO which means that build definitions created with the official API (and therefor through BuildDefinition.create())" +
-                "will not work with stages_to_run as part for `Run.create()`, nor will they work with this function, `get_all_stages()`. " +
-                "The current only way is to create the build definition through `BuildDefiniton.create_with_hierarchy()`." +
-                "I spent a long time trying to fix this, and couldn't. Additionally, human made BuildDefinitions use the hierarchy method, so will also work."
+                "ERROR: There is a bug with ADO which means that build definitions created with the official API (and therefor through BuildDefinition.create())"
+                + "will not work with stages_to_run as part for `Run.create()`, nor will they work with this function, `get_all_stages()`. "
+                + "The current only way is to create the build definition through `BuildDefiniton.create_with_hierarchy()`."
+                + "I spent a long time trying to fix this, and couldn't. Additionally, human made BuildDefinitions use the hierarchy method, so will also work."
             )
         if error_message.startswith("not found in repository"):
             raise ConfigurationError("Could not find the yaml file in the repo! Perhaps it's on a branch?")
-        default_template_params_request_body = default_template_params_request["dataProviders"]["ms.vss-build-web.pipeline-run-parameters-data-provider"]["templateParameters"]
+        default_template_params_request_body = default_template_params_request["dataProviders"]["ms.vss-build-web.pipeline-run-parameters-data-provider"]["templateParameters"]  # fmt: skip
         default_template_parameters = {x["name"]: x["default"] for x in default_template_params_request_body}
         # ================================================================================================================================
         PAYLOAD = build_hierarchy_payload(
-            ado_client, "build-web.pipeline-run-parameters-data-provider", route_id="build-web.pipeline-details-route",
-            additional_properties={"pipelineId": definition_id, "sourceBranch": f"refs/heads/{branch_name}", "templateParameters": default_template_parameters}
+            ado_client, "build-web.pipeline-run-parameters-data-provider", route_id="build-web.pipeline-details-route", additional_properties={
+                "pipelineId": definition_id,
+                "sourceBranch": f"refs/heads/{branch_name}",
+                "templateParameters": default_template_parameters,
+            },  # fmt: skip
         )
         if template_parameters is not None:
             PAYLOAD["dataProviderContext"]["properties"]["templateParameters"] |= template_parameters
@@ -198,20 +206,20 @@ class BuildDefinition(StateManagedResource):
     def allow_variable_group(self, ado_client: "AdoClient", variable_group_id: str) -> None:
         request = ado_client.session.patch(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/pipelinePermissions/variablegroup/{variable_group_id}?api-version=6.0-preview.1",
-            json={"pipelines": [{"id": self.build_definition_id, "authorized": True}]}
+            json={"pipelines": [{"id": self.build_definition_id, "authorized": True}]},
         )
         if request.status_code != 200:
             raise UnknownError(
-                f"Could not permit variable group with id {variable_group_id} on this build definition!\n" +
-                "- Sometimes, this is because it was run instantly after the build/run was created, try a time.sleep()?"
+                f"Could not permit variable group with id {variable_group_id} on this build definition!\n"
+                + "- Sometimes, this is because it was run instantly after the build/run was created, try a time.sleep()?"
             )
 
     @staticmethod
     def create_with_hierarchy(
-        ado_client: "AdoClient", repo_id: str, repo_name: str, file_path: str,
-        branch_name: str = "main", agent_pool_id: str | None = None
+        ado_client: "AdoClient", repo_id: str, repo_name: str, file_path: str, branch_name: str = "main", agent_pool_id: str | None = None
     ) -> "HierarchyCreatedBuildDefinition":
         return HierarchyCreatedBuildDefinition.create(ado_client, repo_id, repo_name, file_path, branch_name, agent_pool_id)
+
 
 # ========================================================================================================
 
@@ -227,14 +235,14 @@ class HierarchyCreatedBuildDefinition(StateManagedResource):
 
     @classmethod
     def create(
-        cls, ado_client: "AdoClient", repo_id: str, repo_name: str, file_path: str, branch_name: str = "main", agent_pool_id: str | None = None
+        cls, ado_client: "AdoClient", repo_id: str, repo_name: str, file_path: str, branch_name: str = "main", agent_pool_id: str | None = None,  # fmt: skip
     ) -> "HierarchyCreatedBuildDefinition":
         PAYLOAD = build_hierarchy_payload(
             ado_client, "build-web.create-and-run-pipeline-data-provider", route_id="build-web.ci-definition-designer-route", additional_properties={
-                "createOnly": True, "sourceProvider": "tfsgit",  # CreateOnly=False means run it as well
-                "repositoryId": repo_id, "repositoryName": repo_name, "sourceBranch": branch_name,
-                "filePath": file_path, "queue": agent_pool_id or "Azure Pipelines",
-            }
+                "createOnly": True,  # createOnly=False means run it as well
+                "sourceProvider": "tfsgit", "repositoryId": repo_id, "repositoryName": repo_name,
+                "sourceBranch": branch_name, "filePath": file_path, "queue": agent_pool_id or "Azure Pipelines",
+            },  # fmt: skip
         )
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=6.1-preview",

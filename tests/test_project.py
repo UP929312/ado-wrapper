@@ -3,7 +3,7 @@ import time
 import pytest
 
 if __name__ == "__main__":
-    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+    __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
 
 from ado_wrapper.resources.projects import Project, ProjectRepositorySettings
 from tests.setup_client import setup_client
@@ -22,7 +22,7 @@ class TestProject:
                 "description": "test-description",
                 "visibility": "private",
                 "state": "wellFormed",
-                "lastUpdateTime": "2023-06-09T09:19:36.993Z"
+                "lastUpdateTime": "2023-06-09T09:19:36.993Z",
             }
         )
         assert isinstance(project, Project)

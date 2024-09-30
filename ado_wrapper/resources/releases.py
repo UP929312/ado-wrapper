@@ -19,7 +19,7 @@ ReleaseStatus = Literal["active", "abandoned", "draft", "undefined"]
 
 
 def get_release_definition(
-    ado_client: "AdoClient", name: str, variable_group_ids: list[int] | None, agent_pool_id: str | None = None, revision: str = "1", _id: str = ""
+    ado_client: "AdoClient", name: str, variable_group_ids: list[int] | None, agent_pool_id: str | None = None, revision: str = "1", _id: str = "",  # fmt: skip
 ) -> dict[str, Any]:
     return {
         "name": name,

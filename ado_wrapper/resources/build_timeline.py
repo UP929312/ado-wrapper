@@ -44,6 +44,7 @@ class BuildTimeline(StateManagedResource):
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", build_id: str) -> None:
+        # Can't remove this because calling .delete() will call this.
         raise NotImplementedError
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -54,10 +55,9 @@ class BuildTimeline(StateManagedResource):
     def get_build_timeline(cls, ado_client: "AdoClient", build_id: str, fetch_retries: bool = False) -> "BuildTimeline":
         """Fetches the whole base timeline, fetch_retries converts the list of timeline ids into BuildTimeline instances
         WARNING: Fetching replies is an incredibly expensive operation, especially if there are many retried items."""
-        # 1695144
         base_build_timeline = super()._get_by_url(
             ado_client,
-            f"/{ado_client.ado_project_name}/_apis/build/builds/{build_id}/timeline?api-version=7.1-preview.2",
+            f"/{ado_client.ado_project_name}/_apis/build/builds/{build_id}/Timeline?api-version=7.1-preview.2",
         )
         if fetch_retries:
             for item_index, item in enumerate(base_build_timeline.records):
@@ -79,29 +79,36 @@ class BuildTimeline(StateManagedResource):
     def get_all_by_types(
         cls, ado_client: "AdoClient", build_id: str, item_types: list[BuildTimelineItemTypeType], fetch_retries: bool = False
     ) -> dict[BuildTimelineItemTypeType, list["BuildTimelineGenericItem"]]:
-        timeline = cls.get_build_timeline(ado_client, build_id, fetch_retries)
-        item_types_mapping: dict[BuildTimelineItemTypeType, list[BuildTimelineGenericItem]] = {item_type: [] for item_type in item_types}
-        for item in timeline.records:
-            if item.item_type in item_types:
-                item_types_mapping[item.item_type].append(item)
+        timeline_records = cls.get_build_timeline(ado_client, build_id, fetch_retries).records
+        item_types_mapping: dict[BuildTimelineItemTypeType, list[BuildTimelineGenericItem]] = {
+            item_type: [item for item in timeline_records if item.item_type == item_type]
+            for item_type in item_types  # fmt: skip
+        }
         return item_types_mapping
 
+    @classmethod
+    def get_tasks_by_name(cls, ado_client: "AdoClient", build_id: str, task_name: str) -> list["BuildTimelineGenericItem"]:
+        return [x for x in cls.get_all_by_type(ado_client, build_id, "Task").records if x.name == task_name]
+
     get_build_timeline_by_id = get_by_id
+    get_by_build_id = get_build_timeline
 
 
 # ========================================================================================================
 
 
 class TaskType(TypedDict):
-    id: str
-    name: str
-    version: str
+    """Certain pre-made tasks have this set, e.g. using bash or Python"""
+
+    id: str  # e.g. 33c63b11-352b-45a2-ba1b-54cb568a29ca == UsePythonVersion
+    name: str  # e.g. UsePythonVersion
+    version: str  # e.g. 0.245.1
 
 
 class LogType(TypedDict):
-    id: int
-    type: str
-    url: str
+    id: int  # Local id of the container, incremented (e.g. 5)
+    type: str  # e.g. container
+    url: str  # Url of the container or log destination type
 
 
 class PreviousAttemptType(TypedDict):
@@ -129,25 +136,26 @@ class BuildTimelineGenericItem:
     previous_attempts: list[PreviousAttemptType]
     parent_id: str | None
     name: str
-    start_time: datetime
-    end_time: datetime
-    current_operation: str | None  # Maybe?
-    percent_complete: int | None
+    start_time: datetime = field(repr=False)
+    end_time: datetime = field(repr=False)
+    current_operation: str | None = field(repr=False)  # Maybe?
+    percent_complete: int | None = field(repr=False)
     state: "RunState"
     result: "RunResult"
-    result_code: str | None  # E.g. Evaluating: ne(variables['input_variables.apply_flag'], False)\nExpanded: ne('false', False)\nResult: False\n
-    change_id: int
-    last_modified: datetime
-    worker_name: str | None
+    # V E.g. Evaluating: ne(variables['input_variables.apply_flag'], False)\nExpanded: ne('false', False)\nResult: False\n
+    result_code: str | None = field(repr=False)
+    change_id: int = field(repr=False)
+    last_modified: datetime = field(repr=False)
+    worker_name: str | None = field(repr=False)
     order: int | None
-    defaults: None  # Not sure
+    defaults: None = field(repr=False)  # Not sure
     error_count: int
     warning_count: int
-    url: str | None  # Also not sure
-    log: LogType | None
-    task: TaskType | None
+    url: str | None = field(repr=False)  # Also not sure
+    log: LogType | None = field(repr=False)
+    task: TaskType | None = field(repr=False)
     attempt: int
-    internal_name: str  # Previously identifier
+    internal_name: str = field(repr=False)  # Previously identifier
     issues: list[IssueType]
 
     @classmethod

@@ -6,6 +6,11 @@ from ado_wrapper.state_managed_abc import StateManagedResource
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 
+PROPERTIES_FOR_SEARCH = [
+    "DisplayName", "ScopeName", "SamAccountName", "Active", "SubjectDescriptor", "Department",
+    "JobTitle", "Mail", "MailNickname", "SignInAddress",
+]  # fmt: skip
+
 VOTE_ID_TO_TYPE = {
     10: "approved",
     5: "approved with suggestions",
@@ -91,12 +96,11 @@ class AdoUser(StateManagedResource):
     @classmethod
     def search_by_query(cls, ado_client: "AdoClient", query: str) -> dict[str, str]:
         """Returns a user to identity, query is email, first name, etc Essentially when using a search bar, what you'll get in return."""
-        PROPERTIES = ["DisplayName", "ScopeName", "SamAccountName", "Active", "SubjectDescriptor", "Department", "JobTitle", "Mail", "MailNickname", "SignInAddress"]
         PAYLOAD = {"query": query, "identityTypes": ["user", "group"], "operationScopes": ["ims", "source"],
-                   "options": {"MinResults": 5, "MaxResults": 25}, "properties": PROPERTIES}  # fmt: skip
+                   "options": {"MinResults": 5, "MaxResults": 25}, "properties": PROPERTIES_FOR_SEARCH}  # fmt: skip
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/IdentityPicker/Identities?api-version=7.0-preview.1",
-            json=PAYLOAD
+            json=PAYLOAD,
         ).json()
         return request["results"][0]["identities"][0]  # type: ignore[no-any-return]
 
@@ -119,7 +123,8 @@ class AdoUser(StateManagedResource):
     def _convert_origin_ids_to_local_ids(ado_client: "AdoClient", origin_ids: list[str]) -> dict[str, str]:
         """Converts a mapping of origin_ids to local_ids"""
         user_objects: list[AdoUser] = [AdoUser.get_by_origin_id(ado_client, x) for x in origin_ids]  # type: ignore[misc]
-        return {identity.origin_id: AdoUser.search_by_query(ado_client, identity.email)["localId"] for identity in user_objects}
+        return {identity.origin_id: AdoUser.search_by_query(ado_client, identity.email)["localId"]
+                for identity in user_objects}  # fmt: skip
 
     # @staticmethod
     # def _convert_descriptor_ids_to_local_ids(ado_client: "AdoClient", descriptor_ids: list[str]) -> dict[str, str]:
@@ -132,6 +137,7 @@ class AdoUser(StateManagedResource):
     #     all_users = cls.get_all(ado_client)
     #     mapping = {user.origin_id: user.descriptor_id for user in all_users if user.origin_id in origin_ids}
     #     return mapping
+
 
 # ======================================================================================================= #
 # ------------------------------------------------------------------------------------------------------- #
@@ -193,10 +199,7 @@ class TeamMember(Member):
 
     def to_json(self) -> dict[str, Any]:
         return {
-            "name": self.name,
-            "email": self.email,
-            "id": self.member_id,
-            "is_team_admin": self.is_team_admin,
+            "name": self.name, "email": self.email, "id": self.member_id, "is_team_admin": self.is_team_admin,  # fmt: skip
         }
 
     @classmethod

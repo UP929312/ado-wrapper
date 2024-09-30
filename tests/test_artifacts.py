@@ -1,14 +1,16 @@
 import pytest
 
 if __name__ == "__main__":
-    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+    __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
 
 # from ado_wrapper.resources.builds import Build
 # from ado_wrapper.resources.build_definitions import BuildDefinition
 from ado_wrapper.resources.artifact import BuildArtifact
+
 # from ado_wrapper.resources.commits import Commit
 
 from tests.setup_client import setup_client
+
 # from tests.setup_client import RepoContextManager, email, setup_client  # fmt: skip
 # from tests.build_definition_templates import MOST_BASIC_BUILD_YAML_FILE
 

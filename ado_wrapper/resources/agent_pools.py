@@ -52,7 +52,7 @@ class AgentPool(StateManagedResource):
         PAYLOAD = {
             "name": name, "agentCloudId": agent_cloud_id, "autoProvision": auto_provision, "autoSize": auto_size,
             "autoUpdate": auto_update, "isHosted": is_hosted, "size": size, "targetSize": target_size,
-        }
+        }  # fmt: skip
         return super()._create(
             ado_client,
             "/_apis/distributedtask/pools?api-version=7.1-preview.1",
@@ -67,7 +67,7 @@ class AgentPool(StateManagedResource):
         return super()._delete_by_id(
             ado_client,
             f"/_apis/distributedtask/pools/{agent_pool_id}?api-version=7.1-preview.1",
-            agent_pool_id
+            agent_pool_id,
         )
 
     @classmethod

@@ -1,7 +1,7 @@
 import pytest
 
 if __name__ == "__main__":
-    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+    __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
 
 from ado_wrapper.resources.repo_user_permission import RepoUserPermissions, UserPermission, RepoPermissionType, RepoPermsActionType
 from ado_wrapper.resources.groups import Group
@@ -140,7 +140,8 @@ class TestRepoUserPerms:
             perms = RepoUserPermissions.get_by_subject_descriptor(self.ado_client, repo.repo_id, group.group_descriptor)
             assert isinstance(perms, list)
             assert all(isinstance(x, UserPermission) for x in perms)
-            assert [x for x in perms if x.programmatic_name == "contribute"][0].permission_display_string in ["Not set", "Allow", "Allow (inherited)"]
+            accepted = ["Not set", "Allow", "Allow (inherited)"]
+            assert [x for x in perms if x.programmatic_name == "contribute"][0].permission_display_string in accepted
 
 
 if __name__ == "__main__":

@@ -29,16 +29,3 @@ class RepoContextManager:
     def __exit__(self, *_: Any) -> None:
         if self.delete_on_exit:
             self.repo.delete(self.ado_client)
-
-
-class ElevatedPrivileges:
-    """A context manager which raises the privileges of the client (to do dangerous things like delete projects)"""
-
-    def __init__(self, ado_client: AdoClient):
-        self.ado_client = ado_client
-
-    def __enter__(self) -> None:
-        self.ado_client.elevated_privileges = True
-
-    def __exit__(self, *_: Any) -> None:
-        self.ado_client.elevated_privileges = False

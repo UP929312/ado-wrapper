@@ -12,6 +12,8 @@ from ado_wrapper.utils import from_ado_date_string, recursively_find_or_none, re
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 
+DEFAULT_TIMEOUT_FOR_BUILD = 900
+
 RunResult = Literal["canceled", "failed", "succeeded", "unknown", "skipped"]
 RunState = Literal["canceling", "completed", "inProgress", "unknown"]
 
@@ -130,7 +132,7 @@ class Run(StateManagedResource):
     def run_and_wait_until_completion(
         cls, ado_client: "AdoClient", definition_id: str, template_parameters: dict[str, Any] | None = None,
         run_variables: dict[str, Any] | None = None, branch_name: str = "main",
-        stages_to_run: list[str] | None = None, max_timeout_seconds: int | None = 900,
+        stages_to_run: list[str] | None = None, max_timeout_seconds: int | None = DEFAULT_TIMEOUT_FOR_BUILD,
         send_updates_function: Callable[["Run"], None] = lambda run: None,  # fmt: skip
     ) -> "Run":
         """Creates a run and waits until it is completed, or raises a TimeoutError if it takes too long.
@@ -146,7 +148,10 @@ class Run(StateManagedResource):
 
     @classmethod
     def run_all_and_capture_results_sequentially(
-        cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800,
+        cls,
+        ado_client: "AdoClient",
+        data: dict[str, RunAllDictionary],
+        max_timeout_seconds: int | None = DEFAULT_TIMEOUT_FOR_BUILD,
         send_updates_function: Callable[["Run"], None] = lambda run: None,
     ) -> dict[str, "Run"]:
         """Takes a mapping of definition_id -> {template_parameters, run_variables, branch_name, stages_to_run}
@@ -163,24 +168,15 @@ class Run(StateManagedResource):
 
     @classmethod
     def run_all_and_capture_results_simultaneously(
-        cls, ado_client: "AdoClient", data: dict[str, RunAllDictionary], max_timeout_seconds: int | None = 1800,
+        cls,
+        ado_client: "AdoClient",
+        data: dict[str, RunAllDictionary],
+        max_timeout_seconds: int | None = DEFAULT_TIMEOUT_FOR_BUILD,
         send_updates_function: Callable[["Run"], None] = lambda run: None,
     ) -> dict[str, "Run"]:
         """Takes a mapping of definition_id -> {template_parameters, run_variables, branch_name, stages_to_run}
         Once done, returns a mapping of definition_id -> `Run` object"""
         # Get a mapping of definition_id -> Run()
-        """
-        data = response.json()
-        state, name = data["state"], data["pipeline"]["name"]
-        result = data["result"] if state == "completed" else None
-
-        logger.info(f"Name: {name}, State: {state}, Result: {result}")
-
-        2024-09-25 06:38:30,144 - root - INFO - Name: cep-account-global, State: inProgress, Result: None
-        2024-09-25 06:39:00,336 - root - INFO - Name: cep-account-global, State: inProgress, Result: None
-        2024-09-25 06:39:30,496 - root - INFO - Name: cep-account-global, State: completed, Result: succeeded
-        2024-09-25 06:39:30,640 - root - INFO - Name: cep-account-global, State: completed, Result: succeeded
-        """
         runs: dict[str, Run] = {}
         for definition_id, run_data in data.items():
             run = cls.create(
@@ -200,7 +196,7 @@ class Run(StateManagedResource):
                     del runs[definition_id]
                 if max_timeout_seconds is not None and (datetime.now() - start_time).seconds > max_timeout_seconds:
                     raise TimeoutError(f"The run did not complete within {max_timeout_seconds} seconds ({max_timeout_seconds//60} minutes)")
-                time.sleep(5)
+                time.sleep(ado_client.run_polling_interval_seconds)
         # Returning a mapping of definition_id -> finished Run()
         return return_values
 

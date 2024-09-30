@@ -79,17 +79,19 @@ class MergePolicyDefaultReviewer(StateManagedResource):
                     [x for x in all_reviewers if x.member_id == reviewer_id][0].is_required = True
         # =====================================================================================
         # Fix local_ids (convert them to origin_ids)
-        local_ids_to_origin_ids = AdoUser._convert_local_ids_to_origin_ids(ado_client, [x.member_id for x in all_reviewers])  # pylint: disable=protected-access
+        local_ids_to_origin_ids = AdoUser._convert_local_ids_to_origin_ids(ado_client, [x.member_id for x in all_reviewers])
         for reviewer in [x for x in all_reviewers if x.member_id is not None]:
             reviewer.member_id = local_ids_to_origin_ids[reviewer.member_id]
         # =====================================================================================
         return all_reviewers
 
     @classmethod
-    def add_default_reviewer(cls, ado_client: "AdoClient", repo_id: str, reviewer_origin_id: str, is_required: bool, branch_name: str = "main") -> None:  # fmt: skip
+    def add_default_reviewer(
+        cls, ado_client: "AdoClient", repo_id: str, reviewer_origin_id: str, is_required: bool = True, branch_name: str = "main"  # fmt: skip
+    ) -> None:
         if reviewer_origin_id in [x.member_id for x in cls.get_default_reviewers(ado_client, repo_id, branch_name)]:
             raise ValueError("Reviewer already exists! To update, please remove the reviewer first.")
-        local_id = AdoUser._convert_origin_ids_to_local_ids(ado_client, [reviewer_origin_id])[reviewer_origin_id]  # pylint: disable=protected-access
+        local_id = AdoUser._convert_origin_ids_to_local_ids(ado_client, [reviewer_origin_id])[reviewer_origin_id]
         payload = {
             "type": {"id": _get_type_id(ado_client, "Required reviewers")},
             "isBlocking": is_required,
@@ -325,7 +327,9 @@ class MergePolicies(StateManagedResource):
         )
 
     @staticmethod
-    def add_default_reviewer(ado_client: "AdoClient", repo_id: str, reviewer_origin_id: str, is_required: bool, branch_name: str = "main") -> None:
+    def add_default_reviewer(
+        ado_client: "AdoClient", repo_id: str, reviewer_origin_id: str, is_required: bool = True, branch_name: str = "main"
+    ) -> None:  # fmt: skip
         return MergePolicyDefaultReviewer.add_default_reviewer(ado_client, repo_id, reviewer_origin_id, is_required, branch_name)
 
     @staticmethod

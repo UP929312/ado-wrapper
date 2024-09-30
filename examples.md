@@ -1,5 +1,5 @@
-
-
+<!-- markdownlint-disable MD022 MD031 MD033 -->
+<!-- MD022 = Heading should be surrounded by blank lines, MD031 codeblocks should be surrounded by blank lines, MD033 no inline HTML -->
 # Examples
 
 All these examples assume an already created AdoClient, perhaps similar to this:
@@ -14,7 +14,8 @@ ado_client = AdoClient(email, ado_access_token, ado_org_name, ado_project)
 ```
 
 -----
-# AdoUser
+
+## AdoUser
 <details>
 
 ```py
@@ -46,12 +47,13 @@ ado_user = AdoUser.get_by_name(ado_client, <name>)
 ado_user = AdoUser.get_by_origin_id(ado_client, <origin_id>)
 
 # Search By Query
-dictionary = AdoUser.search_by_query(ado_client, <query>)
+dictionary: dict[str, str] = AdoUser.search_by_query(ado_client, <query>)
 ```
 </details>
 
 -----
-# AgentPool
+
+## AgentPool
 <details>
 
 ```py
@@ -76,7 +78,8 @@ agent_pool = AgentPool.get_by_name(ado_client, <agent_pool_name>)
 </details>
 
 -----
-# AnnotatedTag
+
+## AnnotatedTag
 <details>
 
 ```py
@@ -101,7 +104,8 @@ annotated_tag = AnnotatedTag.get_by_name(ado_client, <repo_id>, <tag_name>)
 </details>
 
 -----
-# Artifact
+
+## Artifact
 <details>
 
 ```py
@@ -112,7 +116,7 @@ build_artifact = Artifact.create(ado_client, <build_id>, <artifact_name>)
 artifact.delete(ado_client)
 
 # Download Artifact
-dictionary = Artifact.download_artifact(ado_client, <download_url>)
+dictionary: dict[str, str] = Artifact.download_artifact(ado_client, <download_url>)
 
 # Get All By Build Id
 build_artifacts = Artifact.get_all_by_build_id(ado_client, <build_id>)
@@ -123,7 +127,8 @@ build_artifact = Artifact.get_by_name(ado_client, <build_id>, <artifact_name>)
 </details>
 
 -----
-# AuditLog
+
+## AuditLog
 <details>
 
 ```py
@@ -142,7 +147,8 @@ audit_logs = AuditLog.get_all_by_scope_type(ado_client, <scope_type>, <start_tim
 </details>
 
 -----
-# Branch
+
+## Branch
 <details>
 
 ```py
@@ -173,7 +179,8 @@ branch = Branch.get_main_branch(ado_client, <repo_id>)
 </details>
 
 -----
-# Build
+
+## Build
 <details>
 
 ```py
@@ -211,7 +218,7 @@ string_var = Build.get_build_log_content(ado_client, <build_id>, <stage_name>, <
 build = Build.get_by_id(ado_client, <build_id>)
 
 # Get Environment Approvals
-dictionary = Build.get_environment_approvals(ado_client, <build_id>)
+dictionary: dict[str, str] = Build.get_environment_approvals(ado_client, <build_id>)
 
 # Get Latest
 build = Build.get_latest(ado_client, <definition_id>)
@@ -228,7 +235,8 @@ build.update(ado_client, <attribute_name>, <attribute_value>)
 </details>
 
 -----
-# BuildDefinition
+
+## BuildDefinition
 <details>
 
 ```py
@@ -274,7 +282,8 @@ build_definition.update(ado_client, <attribute_name>, <attribute_value>)
 </details>
 
 -----
-# BuildTimeline
+
+## BuildTimeline
 <details>
 
 ```py
@@ -296,13 +305,20 @@ build_timeline = BuildTimeline.get_build_timeline(ado_client, <build_id>, <fetch
 # Get Build Timeline By Id
 build_timeline = BuildTimeline.get_build_timeline_by_id(ado_client, <build_id>, <timeline_id>)
 
+# Get By Build Id
+build_timeline = BuildTimeline.get_by_build_id(ado_client, <build_id>, <fetch_retries>)
+
 # Get By Id
 build_timeline = BuildTimeline.get_by_id(ado_client, <build_id>, <timeline_id>)
+
+# Get Tasks By Name
+build_timeline_generic_items = BuildTimeline.get_tasks_by_name(ado_client, <build_id>, <task_name>)
 ```
 </details>
 
 -----
-# CodeSearch
+
+## CodeSearch
 <details>
 
 ```py
@@ -312,7 +328,8 @@ code_searchs = CodeSearch.get_by_search_string(ado_client, <search_text>, <resul
 </details>
 
 -----
-# Commit
+
+## Commit
 <details>
 
 ```py
@@ -346,7 +363,8 @@ commit = Commit.get_latest_by_repo(ado_client, <repo_id>, <branch_name>)
 </details>
 
 -----
-# Environment
+
+## Environment
 <details>
 
 ```py
@@ -383,7 +401,8 @@ environment.update(ado_client, <attribute_name>, <attribute_value>)
 </details>
 
 -----
-# Group
+
+## Group
 <details>
 
 ```py
@@ -408,7 +427,8 @@ group = Group.get_by_name(ado_client, <group_name>)
 </details>
 
 -----
-# HierarchyCreatedBuildDefinition
+
+## HierarchyCreatedBuildDefinition
 <details>
 
 ```py
@@ -427,7 +447,8 @@ hierarchy_created_build_definition = HierarchyCreatedBuildDefinition.get_by_id(a
 </details>
 
 -----
-# Member
+
+## Member
 <details>
 
 ```py
@@ -446,7 +467,8 @@ member = Member.get_by_id(ado_client, <member_id>)
 </details>
 
 -----
-# MergeBranchPolicy
+
+## MergeBranchPolicy
 <details>
 
 ```py
@@ -462,7 +484,8 @@ merge_branch_policy.set_branch_policy(ado_client, <repo_id>, <minimum_approver_c
 </details>
 
 -----
-# MergePolicies
+
+## MergePolicies
 <details>
 
 ```py
@@ -473,10 +496,10 @@ merge_policies.add_default_reviewer(ado_client, <repo_id>, <reviewer_origin_id>,
 merge_policies.delete(ado_client)
 
 # Get All By Repo Id
-merge_policy_default_reviewer = MergePolicies.get_all_by_repo_id(ado_client, <repo_id>, <branch_name>)
+merge_policy_default_reviewers = MergePolicies.get_all_by_repo_id(ado_client, <repo_id>, <branch_name>)
 
 # Get All Repo Policies
-merge_branch_policys = MergePolicies.get_all_repo_policies(ado_client, <repo_id>, <branch_name>)
+reviewers, merge_branch_policy, merge_type_restriction_policy = MergePolicies.get_all_repo_policies(ado_client, <repo_id>, <branch_name>)
 
 # Get Allowed Merge Types
 merge_type_restriction_policy = MergePolicies.get_allowed_merge_types(ado_client, <repo_id>, <branch_name>)
@@ -502,7 +525,8 @@ merge_policies.set_branch_policy(ado_client, <repo_id>, <minimum_approver_count>
 </details>
 
 -----
-# MergePolicyDefaultReviewer
+
+## MergePolicyDefaultReviewer
 <details>
 
 ```py
@@ -521,7 +545,8 @@ merge_policy_default_reviewer.remove_default_reviewer(ado_client, <repo_id>, <re
 </details>
 
 -----
-# MergeTypeRestrictionPolicy
+
+## MergeTypeRestrictionPolicy
 <details>
 
 ```py
@@ -537,7 +562,8 @@ merge_type_restriction_policy.set_allowed_merge_types(ado_client, <repo_id>, <al
 </details>
 
 -----
-# Organisation
+
+## Organisation
 <details>
 
 ```py
@@ -556,7 +582,8 @@ organisation = Organisation.get_by_name(ado_client, <organisation_name>)
 </details>
 
 -----
-# Permission
+
+## Permission
 <details>
 
 ```py
@@ -572,7 +599,8 @@ permission.print_perms(ado_client)
 </details>
 
 -----
-# PersonalAccessToken
+
+## PersonalAccessToken
 <details>
 
 ```py
@@ -588,7 +616,8 @@ personal_access_tokens = PersonalAccessToken.get_access_tokens(ado_client, <org_
 </details>
 
 -----
-# PipelineAuthorisation
+
+## PipelineAuthorisation
 <details>
 
 ```py
@@ -607,7 +636,8 @@ pipeline_authorisation.update(ado_client, <authorized>)
 </details>
 
 -----
-# Project
+
+## Project
 <details>
 
 ```py
@@ -630,7 +660,7 @@ project = Project.get_by_id(ado_client, <project_id>)
 project = Project.get_by_name(ado_client, <project_name>)
 
 # Get Pipeline Settings
-dictionary = Project.get_pipeline_settings(ado_client, <project_name>)
+dictionary: dict[str, bool] = Project.get_pipeline_settings(ado_client, <project_name>)
 
 # Get Repository Settings
 dictionary = Project.get_repository_settings(ado_client, <project_name>)
@@ -638,7 +668,8 @@ dictionary = Project.get_repository_settings(ado_client, <project_name>)
 </details>
 
 -----
-# ProjectRepositorySettings
+
+## ProjectRepositorySettings
 <details>
 
 ```py
@@ -654,7 +685,8 @@ project_repository_settings.update_default_branch_name(ado_client, <new_default_
 </details>
 
 -----
-# PullRequest
+
+## PullRequest
 <details>
 
 ```py
@@ -718,7 +750,8 @@ pull_request.update(ado_client, <attribute_name>, <attribute_value>)
 </details>
 
 -----
-# Release
+
+## Release
 <details>
 
 ```py
@@ -740,7 +773,8 @@ release = Release.get_by_id(ado_client, <release_id>)
 </details>
 
 -----
-# ReleaseDefinition
+
+## ReleaseDefinition
 <details>
 
 ```py
@@ -771,7 +805,8 @@ release_definition.update(ado_client, <attribute_name>, <attribute_value>)
 </details>
 
 -----
-# Repo
+
+## Repo
 <details>
 
 ```py
@@ -797,7 +832,7 @@ pull_requests = Repo.get_all_pull_requests(ado_client, <repo_id>, <status>)
 repos = Repo.get_all_repos_with_required_reviewer(ado_client, <reviewer_email>)
 
 # Get And Decode File
-dictionary = Repo.get_and_decode_file(ado_client, <file_path>, <branch_name>)
+dictionary: dict[str, Any] = Repo.get_and_decode_file(ado_client, <file_path>, <branch_name>)
 
 # Get Branch Merge Policy
 merge_branch_policy = Repo.get_branch_merge_policy(ado_client, <repo_id>, <branch_name>)
@@ -809,10 +844,10 @@ repo = Repo.get_by_id(ado_client, <repo_id>)
 repo = Repo.get_by_name(ado_client, <repo_name>)
 
 # Get Content Static
-dictionary = Repo.get_content_static(ado_client, <repo_id>, <file_types>, <branch_name>)
+dictionary: dict[str, str] = Repo.get_content_static(ado_client, <repo_id>, <file_types>, <branch_name>)
 
 # Get Contents
-dictionary = Repo.get_contents(ado_client, <file_types>, <branch_name>)
+dictionary: dict[str, str] = Repo.get_contents(ado_client, <file_types>, <branch_name>)
 
 # Get File
 string_var = Repo.get_file(ado_client, <file_path>, <branch_name>)
@@ -826,7 +861,8 @@ repo.update(ado_client, <attribute_name>, <attribute_value>)
 </details>
 
 -----
-# RepoUserPermissions
+
+## RepoUserPermissions
 <details>
 
 ```py
@@ -840,7 +876,7 @@ string_var = RepoUserPermissions.display_output(<permissions>)
 string_var = RepoUserPermissions.display_output_for_repo(<mapping>)
 
 # Get All By Repo Id
-user_permissions = RepoUserPermissions.get_all_by_repo_id(ado_client, <repo_id>, <users_only>, <ignore_inherits>, <remove_not_set>)
+dictionary: user_permission] = RepoUserPermissions.get_all_by_repo_id(ado_client, <repo_id>, <users_only>, <ignore_inherits>, <remove_not_set>)
 
 # Get By Subject Descriptor
 user_permissions = RepoUserPermissions.get_by_subject_descriptor(ado_client, <repo_id>, <subject_descriptor>)
@@ -866,7 +902,8 @@ repo_user_permissions.set_by_user_email_batch(ado_client, <repo_id>, <subject_em
 </details>
 
 -----
-# Reviewer
+
+## Reviewer
 <details>
 
 ```py
@@ -885,7 +922,8 @@ member = Reviewer.get_by_id(ado_client, <member_id>)
 </details>
 
 -----
-# Run
+
+## Run
 <details>
 
 ```py
@@ -920,16 +958,16 @@ run_stage_results = Run.get_run_stage_results(ado_client, <build_id>)
 dictionary = Run.get_stages_jobs_tasks(ado_client, <build_id>)
 
 # Get Task Parents
-tuple[str, str, str, str, str, strs = Run.get_task_parents(ado_client, <build_id>, <task_id>)
+string_var, string_var, string_var, string_var, string_var, string_var = Run.get_task_parents(ado_client, <build_id>, <task_id>)
 
 # Run All And Capture Results Sequentially
-dictionary = Run.run_all_and_capture_results_sequentially(ado_client, <data>, <max_timeout_seconds>)
+dictionary: dict[str, run] = Run.run_all_and_capture_results_sequentially(ado_client, <data>, <max_timeout_seconds>, <send_updates_function>)
 
 # Run All And Capture Results Simultaneously
-dictionary = Run.run_all_and_capture_results_simultaneously(ado_client, <data>, <max_timeout_seconds>)
+dictionary: dict[str, run] = Run.run_all_and_capture_results_simultaneously(ado_client, <data>, <max_timeout_seconds>, <send_updates_function>)
 
 # Run And Wait Until Completion
-run = Run.run_and_wait_until_completion(ado_client, <definition_id>, <template_parameters>, <run_variables>, <branch_name>, <stages_to_run>, <max_timeout_seconds>)
+run = Run.run_and_wait_until_completion(ado_client, <definition_id>, <template_parameters>, <run_variables>, <branch_name>, <stages_to_run>, <max_timeout_seconds>, <send_updates_function>)
 
 # Update
 run.update(ado_client, <attribute_name>, <attribute_value>)
@@ -937,7 +975,8 @@ run.update(ado_client, <attribute_name>, <attribute_value>)
 </details>
 
 -----
-# ServiceEndpoint
+
+## ServiceEndpoint
 <details>
 
 ```py
@@ -963,12 +1002,13 @@ service_endpoint = ServiceEndpoint.get_by_name(ado_client, <name>)
 service_endpoint.update(ado_client, <attribute_name>, <attribute_value>)
 
 # Update Pipeline Perms
-dictionary = ServiceEndpoint.update_pipeline_perms(ado_client, <pipeline_id>)
+dictionary: dict[str, Any] = ServiceEndpoint.update_pipeline_perms(ado_client, <pipeline_id>)
 ```
 </details>
 
 -----
-# Team
+
+## Team
 <details>
 
 ```py
@@ -996,7 +1036,8 @@ team_members = Team.get_members(ado_client)
 </details>
 
 -----
-# TeamMember
+
+## TeamMember
 <details>
 
 ```py
@@ -1015,7 +1056,8 @@ member = TeamMember.get_by_id(ado_client, <member_id>)
 </details>
 
 -----
-# UserPermission
+
+## UserPermission
 <details>
 
 ```py
@@ -1034,7 +1076,8 @@ user_permission.set_by_user_email(ado_client, <repo_id>, <email>, <action>, <per
 </details>
 
 -----
-# VariableGroup
+
+## VariableGroup
 <details>
 
 ```py
@@ -1057,10 +1100,9 @@ variable_group = VariableGroup.get_by_id(ado_client, <variable_group_id>)
 variable_group = VariableGroup.get_by_name(ado_client, <name>)
 
 # Get Variable Group Contents
-dictionary = VariableGroup.get_variable_group_contents(ado_client, <variable_group_name>)
+dictionary: dict[str, Any] = VariableGroup.get_variable_group_contents(ado_client, <variable_group_name>)
 
 # Update
 variable_group.update(ado_client, <attribute_name>, <attribute_value>)
 ```
 </details>
-

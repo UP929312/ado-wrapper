@@ -2,16 +2,16 @@ import inspect
 import re
 
 if __name__ == "__main__":
-    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+    __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
 
 from ado_wrapper.resources import *  # pylint: disable=W0401,W0614  # noqa: F401,F403
 
-# This reference to ado_wrapper is wrong, it uses the installed package, not the local copy.
+# TODO: Do replacements, e.g. branchs -> branches
 
 pattern = re.compile(r"(?<!^)(?=[A-Z])")
 ignored_functions = ["to_json", "from_json", "from_request_payload", "set_lifecycle_policy"]
-string = """
-
+string = """<!-- markdownlint-disable MD022 MD031 MD033 -->
+<!-- MD022 = Heading should be surrounded by blank lines, MD031 codeblocks should be surrounded by blank lines, MD033 no inline HTML -->
 # Examples
 
 All these examples assume an already created AdoClient, perhaps similar to this:
@@ -29,27 +29,31 @@ ado_client = AdoClient(email, ado_access_token, ado_org_name, ado_project)
 
 
 def pascal_to_snake(string: str) -> str:
-    return pattern.sub("_", string.replace("'", "").strip()).lower().removeprefix("_").replace(" _", " ")
+    raw_snake_case = pattern.sub("_", string.replace("'", "").strip()).lower()
+    return raw_snake_case.removeprefix("_").replace(" _", " ").replace("._", ".").replace("[_", "[")  # Do cleanup
 
 
-def format_return_type(return_type: str) -> str | None:
+def format_return_type(return_type_input: str) -> str:
     """Returns the value, formatted, and = if it's not None, makes list[`object`] also be called `objects`"""
-    return_type = pascal_to_snake(return_type.split(" | ")[0])
-    # print(f"return_type_to_snake = {return_type}")
-    is_list = "]" in return_type
-    if "." in return_type:
-        return_type = return_type.split(".")[-1].removesuffix(">").removeprefix("_")  # Will remove list[] stuffs as well
-        # print(f"return_type_with_dot = {return_type}")
-    if return_type == "<class str>":
+    if return_type_input.startswith("tuple"):
+        components = [
+            format_return_type(x).removesuffix(" = ") for x in return_type_input.removeprefix("tuple[").removesuffix("]").split(",")
+        ]
+        return f"{', '.join(components)} = "
+    first_option = return_type_input.split(" | ")[0]  # Get first option (often removes `| None`)
+    snake_case = pascal_to_snake(first_option)
+    # This converts things like "ado_wrapper.resources.merge_policies.merge_branch_policy" into just merge_branch_policy
+    return_type = snake_case.split(".")[-1].removesuffix(">")  # Will remove list[] stuffs as well
+    if return_type in ["<class str", "str"]:
         return "string_var = "
-    if return_type.startswith("dict"):
-        return "dictionary = "
+    if return_type_input.startswith("dict["):
+        # Replace ]] -> ] for 'dict[str, list[ado_wrapper.resources.repo_user_permission.UserPermission]]'
+        type_hint = ": " + return_type.replace("any", "Any").replace("]]", "]") if len(return_type_input.split(",")) < 3 else ""
+        return f"dictionary{type_hint} = "
     if return_type.startswith("none"):
         return ""
-    if is_list:
-        return_type = return_type.removeprefix("list[").rstrip("]").lstrip("_") + "s"
-    if "]" in return_type and "[" not in return_type:
-        return_type = return_type.rstrip("]")
+    if return_type_input.startswith("list"):
+        return_type = return_type.removeprefix("list[").rstrip("]") + "s"
     return f"{return_type} = "
 
 
@@ -60,18 +64,14 @@ def dataclass_attributes(cls) -> list[str]:  # type: ignore[no-untyped-def]
 sorted_pairs = dict(sorted({string: value for string, value in globals().items() if string[0].isupper()}.items()))
 
 for class_name, value in sorted_pairs.items():
-    # print(class_name)
-    # if class_name != "MergePolicyDefaultReviewer":
-    #     continue
     function_data = {
         key: value for key, value in dict(inspect.getmembers(value)).items()
         if not key.startswith("_") and key not in ignored_functions and
         key not in dataclass_attributes(globals()[class_name])  # fmt: skip
     }
-    # print(function_data)
     if not function_data:
         continue
-    string += f"-----\n# {class_name}\n<details>\n\n```py\n"
+    string += f"-----\n\n## {class_name}\n<details>\n\n```py\n"
     for function_name, function_args in function_data.items():  # fmt: skip
         try:
             signature = inspect.signature(function_args)
@@ -84,8 +84,6 @@ for class_name, value in sorted_pairs.items():
         #     continue
         # print(f"Func={function_name}, Args={function_args}, Return Anno={signature.return_annotation}")
         return_type = format_return_type(str(signature.return_annotation).replace("typing.", ""))
-        # print(f"{return_type=}")
-        # print("\n")
         if return_type is None:
             continue
         #
@@ -97,6 +95,6 @@ for class_name, value in sorted_pairs.items():
     string += "\n```\n</details>\n\n"
 
 with open("examples.md", "w", encoding="utf-8") as file:
-    file.write(string.replace("\n\n\n", "\n"))
+    file.write(string.replace("\n\n\n", "\n").rstrip("\n") + "\n")
 
 # All the functions which have NotImplementedError

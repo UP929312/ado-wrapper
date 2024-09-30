@@ -1,7 +1,7 @@
 import pytest
 
 if __name__ == "__main__":
-    __import__('sys').path.insert(0, __import__('os').path.abspath(__import__('os').path.dirname(__file__) + '/..'))
+    __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
 
 from ado_wrapper.resources.service_endpoint import ServiceEndpoint
 from tests.setup_client import setup_client
@@ -106,7 +106,12 @@ class TestServiceEndpoints:
     @pytest.mark.get_all_by_name
     def test_get_by_name(self) -> None:
         service_endpoint_created = ServiceEndpoint.create(
-            self.ado_client, "ado_wrapper-test-service-endpoint-get-by-name", "github", "https://github.com", "test-username", "test-password"
+            self.ado_client,
+            "ado_wrapper-test-service-endpoint-get-by-name",
+            "github",
+            "https://github.com",
+            "test-username",
+            "test-password",
         )
         service_endpoint = ServiceEndpoint.get_by_name(self.ado_client, "ado_wrapper-test-service-endpoint-get-by-name")
         assert service_endpoint.name == service_endpoint_created.name

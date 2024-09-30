@@ -79,7 +79,9 @@ class TestEnvironment:
 
     def test_pipeline_perms(self) -> None:
         with RepoContextManager(self.ado_client, "pipeline_perms") as repo:
-            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "test commit")
+            Commit.create(
+                self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "test commit"
+            )
             build_def = BuildDefinition.create(
                 self.ado_client, repo.name, repo.repo_id, repo.name, "build.yaml", "", branch_name="my-branch"
             )  # fmt: skip

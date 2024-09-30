@@ -85,7 +85,7 @@ class UserPermission:
                 "subjectDescriptor": subject_descriptor,
                 "permissionSetId": PERMISSION_SET_ID,
                 "permissionSetToken": f"repoV2/{ado_client.ado_project_id}/{repo_id}",
-            }
+            },  # fmt: skip
         )
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=5.0-preview.1",
@@ -100,9 +100,10 @@ class UserPermission:
         requires_initialisation(ado_client)
         IDENTITY_PAYLOAD = build_hierarchy_payload(
             ado_client, "admin-web.security-view-permissions-data-provider", additional_properties={
-                "subjectDescriptor": group_descriptor, "permissionSetId": PERMISSION_SET_ID,
+                "subjectDescriptor": group_descriptor,
+                "permissionSetId": PERMISSION_SET_ID,
                 "permissionSetToken": f"repoV2/{ado_client.ado_project_id}/{repo_id}",
-            }
+            },  # fmt: skip
         )
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview.1",

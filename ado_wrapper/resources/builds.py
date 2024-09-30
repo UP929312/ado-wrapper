@@ -109,7 +109,7 @@ class Build(StateManagedResource):
                 break
             if (datetime.now() - start_time).seconds > max_timeout_seconds:
                 raise TimeoutError(f"The build did not complete within {max_timeout_seconds} seconds ({max_timeout_seconds//60} minutes)")
-            time.sleep(3)
+            time.sleep(ado_client.run_polling_interval_seconds)
         return build
 
     @staticmethod
@@ -195,8 +195,8 @@ class Build(StateManagedResource):
         log_id = mapping.get(f"{stage_name}/{job_name}/{task_name}")
         if log_id is None:
             raise ConfigurationError(
-                f"Wrong stage name or job name combination (case sensitive), received {stage_name}/{job_name}/{task_name}" +
-                f"Options were {', '.join(list(mapping.keys()))}"
+                f"Wrong stage name or job name combination (case sensitive), received {stage_name}/{job_name}/{task_name}"
+                + f"Options were {', '.join(list(mapping.keys()))}"
             )
         request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/build/builds/{build_id}/logs/{log_id}"
@@ -264,5 +264,6 @@ class Build(StateManagedResource):
         )
         if request.status_code != 200:
             raise UnknownError(f"Approving that environment raised an error: {request.status_code}, {request.text}")
+
 
 # ========================================================================================================

@@ -1,5 +1,6 @@
 import time
 
+from ado_wrapper.resources.build_timeline import BuildTimeline
 import pytest
 
 if __name__ == "__main__":
@@ -226,20 +227,14 @@ class TestRun:
 
     @pytest.mark.skip("Requires a run")
     @pytest.mark.hierarchy
-    def test_get_task_parents(self) -> None:
+    def test_get_stages_jobs_tasks(self) -> None:
         with RepoContextManager(self.ado_client, "get-task-parents") as repo:
-            Commit.create(
-                self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": MULTIPLE_STAGES_BUILD_YAML_FILE}, "add", "Update"
-            )
-            build_definition = BuildDefinition.create_with_hierarchy(
-                self.ado_client, repo.repo_id, repo.name, "run.yaml", branch_name="my-branch"
-            )
+            Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"run.yaml": MULTIPLE_STAGES_BUILD_YAML_FILE}, "add", "Update")  # fmt: skip
+            build_definition = BuildDefinition.create_with_hierarchy(self.ado_client, repo.repo_id, repo.name, "run.yaml", "my-branch")
             run = Run.run_and_wait_until_completion(self.ado_client, build_definition.build_definition_id, branch_name="my-branch")
             stages_jobs_steps = Run.get_stages_jobs_tasks(self.ado_client, run.run_id)
-            task_id = stages_jobs_steps["StageOne"]["jobs"]["JobOne"]["tasks"]["Task1"]
-            task_parent_stage, _, task_parent_job, _, _, _ = run.get_task_parents(self.ado_client, run.run_id, task_id)
-            assert task_parent_stage == "StageOne"
-            assert task_parent_job == "JobOne"
+            task_id = stages_jobs_steps["StageOne"]["jobs"]["JobOne"]["tasks"]["Task1"]  # Check nesting
+            assert task_id
             run.delete(self.ado_client)
             build_definition.delete(self.ado_client)
 

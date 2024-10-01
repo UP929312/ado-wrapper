@@ -189,7 +189,11 @@ class Run(StateManagedResource):
         return_values: dict[str, Run] = {}
         while runs:
             for definition_id, run_obj in dict(runs.items()).items():
-                run = Run.get_by_id(ado_client, definition_id, run_obj.run_id)
+                try:
+                    run = Run.get_by_id(ado_client, definition_id, run_obj.run_id)  # TODO: Error handling on this, incase it fails (will ruin all runs)
+                except:
+                    print(f"Failed to fetch run with id: {run_obj.run_id}")
+                    continue
                 send_updates_function(run)
                 if run.status == "completed":
                     return_values[definition_id] = run
@@ -222,20 +226,6 @@ class Run(StateManagedResource):
             stages[job["stageId"]].jobs.append(RunJobResult.from_request_payload(job))
         return list(stages.values())
 
-    @classmethod
-    def get_task_parents(
-        cls, ado_client: "AdoClient", build_id: str, task_id: str
-    ) -> tuple[str, str, str, str, str, str]:  # fmt: skip
-        """Returns the task's parent stage name & id, the task's parent job name & id, as well as the task itself's name & id
-        e.g. my_stage, abc, my_job, def, my_task, ghi\n
-        N.b, They return the display names of the tasks, not the internal_names"""
-        stages_jobs_tasks = Run.get_stages_jobs_tasks(ado_client, build_id)
-        for stage_name, stage_data in stages_jobs_tasks.items():  # Try get the task's stage, job and own name
-            for job_name, job_data in stage_data["jobs"].items():
-                for task_name, fetched_task_id in job_data["tasks"].items():
-                    if fetched_task_id == task_id:
-                        return stage_name, stage_data["id"], job_name, job_data["id"], task_name, fetched_task_id  # type: ignore
-        raise ResourceNotFound("Error, cannot find this task's parents")
 
     # ==================================================
 

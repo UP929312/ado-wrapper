@@ -84,8 +84,6 @@ More random stuff like this: <https://dev.azure.com/VFCloudEngineering/Platform/
 
 Never test get_environment_approvals
 
-[ADO_WRAPPER] Deleted Group vssgp.Uy0xLTktMTU1MTM3NDI0NS0yNTMxNjkyMTc5LTQwMTE1NTg5NzctMjI0MjA5MjA2OS0zOTU1NzcyNDQ5LTEtNDA5MDI0NTEyOC0xMjM3OTU4OTg2LTIzMDA1NzY1MzgtNTY2Nzg4MjEz from ADO
-
 rather than "requires initialisation", maybe make .ado_project_id a property and put it there?
 Perhaps have some system relating to intents? Which pre-loads a bunch of stuff (e.g, pat_author)
 
@@ -112,15 +110,10 @@ PullRequest -> Organisations -> Variable Groups
 
 Add more changelog messages for the older versions
 
-with ado_client.elevated_privileges for deleting projects and orgs and such?  
-ElevatedPrivileges - Done, just need to put it function side.
-
 Add testing for assume_role
 
 Tests for build timelines
 Test utils
-
-When using BuildTimelines, could we perhaps automatically add task's parent Job and stage?
 
 -----  
 

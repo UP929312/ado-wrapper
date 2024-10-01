@@ -3,6 +3,8 @@ import pytest
 if __name__ == "__main__":
     __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
 
+from ado_wrapper.resources.projects import Project
+from ado_wrapper.errors import NoElevatedPrivilegesError
 
 from tests.setup_client import setup_client
 
@@ -22,6 +24,11 @@ class TestStateManager:
         with self.ado_client.elevated_privileges():
             assert self.ado_client.has_elevate_privileges
         assert not self.ado_client.has_elevate_privileges
+
+    def test_elevated_privileges_actual(self) -> None:
+        self.ado_client.has_elevate_privileges = False
+        with pytest.raises(NoElevatedPrivilegesError):
+            Project.create(self.ado_client, "abc", "abc", "Agile")
 
 
 if __name__ == "__main__":

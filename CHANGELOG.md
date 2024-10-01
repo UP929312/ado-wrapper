@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.29.0
+
+### Added
+
+- The requirement to elevate privileges through a new context manager `with ado_client.elevated_privileges():` for creation and deletion of projects.
+- When using `BuildTimeline`s, the parent job and stages (where appropriate)'s id and name are automatically added to the item's attributes.
+
+### Changed
+
+- `Run.run_and_wait_until_completion()` and it's sibling functions will now capture the error if it fails to fetch, rather than killing all the runs.
+- `ProjectVisibilityType, TemplateTypes, ProjectStatus, ProjectRepositorySettingType` are all added to typing_info.py
+- `VoteOptions` is also added to typing_info.py.
+- Remove `Run`'s `get_task_parents` in favour of using `.parent_job_name` and such.
+
+---
+
 ## v1.28.0
 
 ### Added
@@ -381,5 +397,129 @@
 ### Changed
 
 - `Group`s `group_id` has been remapped to `domain` to align better with the official API.
+
+---
+
+## v1.6.0
+
+### Added
+
+-
+
+### Changed
+
+-
+
+---
+
+## v1.5.0
+
+### Added
+
+-
+
+### Changed
+
+-
+
+---
+
+## v1.4.0
+
+### Added
+
+-
+
+### Changed
+
+-
+
+---
+
+## v1.3.0
+
+### Added
+
+-
+
+### Changed
+
+-
+
+---
+
+## v1.3.0
+
+### Added
+
+-
+
+### Changed
+
+-
+
+---
+
+## v1.2.0
+
+### Added
+
+-
+
+### Changed
+
+-
+
+---
+
+## v1.1.3
+
+- <https://github.com/UP929312/ado-wrapper/commits/master/?before=0e09dd48ea51735b10d91b800e8381af9dd14c14+70>
+
+### Changed
+
+- `MergePolicy.get_branch_policy()` now returns None if no branch policy is set.
+
+---
+
+## v1.1.2
+
+### Added
+
+- StateManageResources "create" now has a refetch, for resources that don't return proper values when creating and need a `.get_by_id`
+
+### Changed
+
+- Trying to fetch contents from an empty repo now raises a proper error message.
+- Fixed a bug with allowing merging with policies (ignored for now)
+
+---
+
+## v1.1.0
+
+### Added
+
+- Added `Environments`.
+
+### Changed
+
+- Fixed the AnnotatedTags test name from Test -> TestAnnotatedTags.
+
+---
+
+## v1.0.0
+
+### Added
+
+- `AnnotatedTag`s, which are repo's Tags for versioning.
+- Better error handling for > 300 error codes when creating resources.
+
+### Changed
+
+- Removed `description` from the repr for `PullRequest`s.
+- `PullRequest.get_all_by_repo_id()` now uses the super() method.
+- Remove `Group`s override for __str__
+- Removed `requested_by`, `build_repo`, `parameters`, `start_time`, `end_time` from Build's repr.
+- Removed `is_main`, `is_protected`, `is_deleted` from branches attributes, they were buggy/not always present so removed.
 
 ---

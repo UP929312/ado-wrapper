@@ -27,12 +27,12 @@ class BuildTimeline(StateManagedResource):
     last_changed_on: datetime
     change_id: int = field(repr=False)
     url: str = field(repr=False)
-    # "type": "(?!Checkpoint|Task|Container|Job|Phase|Stage)
-    # "order": "(?!null)
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "BuildTimeline":
         records = [BuildTimelineGenericItem.from_request_payload(x) for x in data["records"]]
+        for record in records:
+            record.add_parents(records)
         return cls(data["id"], records, data["lastChangedBy"], from_ado_date_string(data["lastChangedOn"]), data["changeId"], data["url"])
 
     @classmethod
@@ -157,6 +157,13 @@ class BuildTimelineGenericItem:
     attempt: int
     internal_name: str = field(repr=False)  # Previously identifier
     issues: list[IssueType]
+    # These are set after:
+    parent_job_name:   str | None = None
+    parent_job_id:     str | None = None
+    parent_stage_name: str | None = None
+    parent_stage_id:   str | None = None
+    # "type": "(?!Checkpoint|Task|Container|Job|Phase|Stage)
+    # "order": "(?!null)
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "BuildTimelineGenericItem":
@@ -165,5 +172,28 @@ class BuildTimelineGenericItem:
             from_ado_date_string(data["finishTime"]), data["currentOperation"], data["percentComplete"], data["state"],
             data["result"], data["resultCode"], data["changeId"], from_ado_date_string(data["lastModified"]), data["workerName"],
             data.get("order"), None, data.get("error_count", 0), data.get("warning_count", 0), data["url"], data["log"], data["task"],
-            data["attempt"], data["identifier"], data.get("issues", [])
+            data["attempt"], data["identifier"], data.get("issues", []), None, None, None, None,
         )  # fmt: skip
+
+    @staticmethod
+    def get_parent_item(item: "BuildTimelineGenericItem", all_items: list["BuildTimelineGenericItem"]) -> "BuildTimelineGenericItem":
+        return [x for x in all_items if x.item_id == item.parent_id][0]
+
+    def add_parents(self, all_items: list["BuildTimelineGenericItem"]) -> None:
+        if self.parent_id is None:
+            return
+        if self.item_type == "Job":
+            parent_phase = BuildTimelineGenericItem.get_parent_item(self, all_items)  # Job -> Phase
+            parent_stage = BuildTimelineGenericItem.get_parent_item(parent_phase, all_items)  # Phase -> Stage
+            self.parent_stage_id = parent_stage.item_id
+            self.parent_stage_name = parent_stage.name
+        if self.item_type == "Task":
+            parent_job = BuildTimelineGenericItem.get_parent_item(self, all_items)  # Task -> Job
+            self.parent_job_id = parent_job.item_id
+            self.parent_job_name = parent_job.name
+
+            if parent_job.parent_id is not None:
+                parent_phase = BuildTimelineGenericItem.get_parent_item(parent_job, all_items)  # Job -> Phase
+                parent_stage = BuildTimelineGenericItem.get_parent_item(parent_phase, all_items)  # Phase -> Stage
+                self.parent_stage_id = parent_stage.item_id
+                self.parent_stage_name = parent_stage.name

@@ -15,8 +15,8 @@ class AdoClient:
         run_polling_interval_seconds: int = 30, bypass_initialisation: bool = False,  # fmt: skip
     ) -> None:
         """Takes an email, PAT, org, project, and state file name. The state file name is optional, and if not provided,
-        state will be stored in "main.state" (can be disabled using None)
-        Run polling interval is how often a run will be checked when using run_and_wait_until_complete and it's sibling functions.
+        state will be stored in "main.state" (can be disabled using `None`)\n
+        Run polling interval is how often a run will be checked when using run_and_wait_until_complete and it's sibling functions.\n
         Bypass initialisation means the client won't fetch certain info on startup and therefor some functions won't work."""
 
         self.ado_email = ado_email

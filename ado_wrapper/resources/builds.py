@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from ado_wrapper.resources.environment import Environment, PipelineAuthorisation
 from ado_wrapper.resources.repo import BuildRepository
 from ado_wrapper.resources.users import Member
-from ado_wrapper.resources.build_timeline import BuildTimeline, BuildTimelineGenericItem, BuildTimelineItemTypeType
+from ado_wrapper.resources.build_timeline import BuildTimeline
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.errors import ConfigurationError, UnknownError
 from ado_wrapper.utils import from_ado_date_string, remove_ansi_codes, build_hierarchy_payload, DATETIME_RE_PATTERN
@@ -155,27 +155,19 @@ class Build(StateManagedResource):
         with each key being the name, and each value containing both a list of childen
         (e.g. stages has jobs, jobs has tasks) and an "id" key/value.
         The items are returned by their display name, not their internal name)"""
-        items: dict[BuildTimelineItemTypeType, list[BuildTimelineGenericItem]] = BuildTimeline.get_all_by_types(
-            ado_client, build_id, ["Stage", "Phase", "Job", "Task"]
-        )
-        # Used to go straight from Job -> Stage without needing the Phase
-        phases_mapping = {phase.item_id: phase.parent_id for phase in items["Phase"]}
-
+        items = BuildTimeline.get_all_by_types(ado_client, build_id, ["Stage", "Phase", "Job", "Task"])
         mapping = {stage.name: {"id": stage.item_id, "jobs": {}} for stage in items["Stage"]}
         for job in [x for x in items["Job"] if x.parent_id]:
-            stage_name = [stage_name for stage_name, stage_values in mapping.items() if stage_values["id"] == phases_mapping[job.parent_id]][0]  # type: ignore[index]
-            mapping[stage_name]["jobs"][job.name] = {"id": job.item_id, "tasks": {}}  # type: ignore[index]
+            mapping[job.parent_stage_name]["jobs"][job.name] = {"id": job.item_id, "tasks": {}}  # type: ignore[index]
         for task in [x for x in items["Task"] if x.worker_name]:
-            relating_job: BuildTimelineGenericItem = [job for job in items["Job"] if job.item_id == task.parent_id][0]
-            relating_stage_name = [stage_name for stage_name, stage_values in mapping.items() if stage_values["id"] == phases_mapping[relating_job.parent_id]][0]  # type: ignore[index]
-            mapping[relating_stage_name]["jobs"][relating_job.name]["tasks"][task.name] = task.item_id  # type: ignore[index]
+            mapping[task.parent_stage_name]["jobs"][task.parent_job_name]["tasks"][task.name] = task.item_id  # type: ignore[index]
         return mapping  # type: ignore[return-value]
 
     @classmethod
     def _get_all_logs_ids(cls, ado_client: "AdoClient", build_id: str) -> dict[str, str]:
         """Returns a mapping of stage_name/job_name/task_name: log_id"""
         # Get all the individual task -> log_id mapping
-        tasks: list[BuildTimelineGenericItem] = [
+        tasks = [
             x for x in BuildTimeline.get_all_by_type(ado_client, build_id, "Task").records
             if x.log  # All the ones with logs (removes skipped tasks)
         ]  # fmt: skip

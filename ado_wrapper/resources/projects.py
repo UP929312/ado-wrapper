@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
 
-from ado_wrapper.errors import DeletionFailed, UnknownError
+from ado_wrapper.errors import DeletionFailed, NoElevatedPrivilegesError, UnknownError
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.utils import build_hierarchy_payload
 
@@ -55,6 +55,10 @@ class Project(StateManagedResource):
 
     @classmethod
     def create(cls, ado_client: "AdoClient", project_name: str, project_description: str, template_type: TemplateTypes) -> "Project":
+        if not ado_client.has_elevate_privileges:
+            raise NoElevatedPrivilegesError(
+                "To create a project, you must raise your privileges using with the ado_client.elevated_privileges() context manager!"
+            )
         return super()._create(
             ado_client,
             "/_apis/projects?api-version=7.1",
@@ -69,6 +73,10 @@ class Project(StateManagedResource):
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", project_id: str) -> None:
+        if not ado_client.has_elevate_privileges:
+            raise NoElevatedPrivilegesError(
+                "To delete a project, you must raise your privileges using with the ado_client.elevated_privileges() context manager!"
+            )
         try:
             return super()._delete_by_id(
                 ado_client,

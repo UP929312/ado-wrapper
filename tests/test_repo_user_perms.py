@@ -138,6 +138,7 @@ class TestRepoUserPerms:
             group = Group.create(self.ado_client, "ado_wrapper-set-by-user-descriptor")
             RepoUserPermissions.set_by_group_descriptor(self.ado_client, repo.repo_id, group.group_descriptor, "Allow", "contribute")
             perms = RepoUserPermissions.get_by_subject_descriptor(self.ado_client, repo.repo_id, group.group_descriptor)
+            group.delete(self.ado_client)
             assert isinstance(perms, list)
             assert all(isinstance(x, UserPermission) for x in perms)
             accepted = ["Not set", "Allow", "Allow (inherited)"]

@@ -32,3 +32,7 @@ class AuthenticationError(AdoWrapperException):
 
 class ConfigurationError(AdoWrapperException):
     pass
+
+
+class NoElevatedPrivilegesError(AdoWrapperException):
+    pass

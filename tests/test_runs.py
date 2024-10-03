@@ -1,6 +1,5 @@
 import time
 
-from ado_wrapper.resources.build_timeline import BuildTimeline
 import pytest
 
 if __name__ == "__main__":

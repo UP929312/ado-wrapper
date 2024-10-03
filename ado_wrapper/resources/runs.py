@@ -190,8 +190,9 @@ class Run(StateManagedResource):
         while runs:
             for definition_id, run_obj in dict(runs.items()).items():
                 try:
-                    run = Run.get_by_id(ado_client, definition_id, run_obj.run_id)  # TODO: Error handling on this, incase it fails (will ruin all runs)
-                except:
+                    # TODO: Error handling on this, incase it fails (will ruin all runs)
+                    run = Run.get_by_id(ado_client, definition_id, run_obj.run_id)
+                except Exception:
                     print(f"Failed to fetch run with id: {run_obj.run_id}")
                     continue
                 send_updates_function(run)
@@ -225,7 +226,6 @@ class Run(StateManagedResource):
                 stages[job["stageId"]] = RunStageResult(job["stageId"], job["stageName"], [])
             stages[job["stageId"]].jobs.append(RunJobResult.from_request_payload(job))
         return list(stages.values())
-
 
     # ==================================================
 

@@ -60,7 +60,8 @@ class AdoClient:
             # self.perms = Permission.get_project_perms(self)
 
     def assume_project(self, project_name: str) -> None:
-        """Assumes a different project, meaning that subsequent function calls will use that project."""
+        """Assumes a different project, meaning that subsequent function calls will use that project.
+        As Personal Access Tokens are per organisation, not per project, this will work automatically."""
         from ado_wrapper.resources.projects import Project
 
         self.ado_project_name = project_name

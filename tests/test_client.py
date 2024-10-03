@@ -6,7 +6,7 @@ if __name__ == "__main__":
 from ado_wrapper.resources.projects import Project
 from ado_wrapper.errors import NoElevatedPrivilegesError
 
-from tests.setup_client import setup_client
+from tests.setup_client import setup_client, ado_project_name, secondary_project_name
 
 
 class TestStateManager:
@@ -29,6 +29,12 @@ class TestStateManager:
         self.ado_client.has_elevate_privileges = False
         with pytest.raises(NoElevatedPrivilegesError):
             Project.create(self.ado_client, "abc", "abc", "Agile")
+
+    def test_assume_role(self) -> None:
+        assert self.ado_client.ado_project_name == ado_project_name
+        self.ado_client.assume_project(secondary_project_name)
+        assert self.ado_client.ado_project_name == secondary_project_name
+        self.ado_client.assume_project(ado_project_name)
 
 
 if __name__ == "__main__":

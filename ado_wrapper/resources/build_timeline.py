@@ -37,10 +37,11 @@ class BuildTimeline(StateManagedResource):
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", build_id: str, timeline_id: str) -> "BuildTimeline":
-        return super()._get_by_url(
+        build_timeline = super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/builds/{build_id}/timeline/{timeline_id}?api-version=7.1-preview.2",
         )
+        return build_timeline
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", build_id: str) -> None:
@@ -158,10 +159,10 @@ class BuildTimelineGenericItem:
     internal_name: str = field(repr=False)  # Previously identifier
     issues: list[IssueType]
     # These are set after:
-    parent_job_name:   str | None = None
-    parent_job_id:     str | None = None
+    parent_job_name: str | None = None
+    parent_job_id: str | None = None
     parent_stage_name: str | None = None
-    parent_stage_id:   str | None = None
+    parent_stage_id: str | None = None
     # "type": "(?!Checkpoint|Task|Container|Job|Phase|Stage)
     # "order": "(?!null)
 
@@ -192,8 +193,19 @@ class BuildTimelineGenericItem:
             self.parent_job_id = parent_job.item_id
             self.parent_job_name = parent_job.name
 
-            if parent_job.parent_id is not None:
+            if parent_job.parent_id is not None:  # TODO: Try parent_job.add_parents?
                 parent_phase = BuildTimelineGenericItem.get_parent_item(parent_job, all_items)  # Job -> Phase
                 parent_stage = BuildTimelineGenericItem.get_parent_item(parent_phase, all_items)  # Phase -> Stage
                 self.parent_stage_id = parent_stage.item_id
                 self.parent_stage_name = parent_stage.name
+
+    def get_log_content(self, ado_client: "AdoClient", build_id: str, remove_prefixed_timestamp: bool = True, remove_colours: bool = False) -> str:  # fmt: skip
+        """Utility function to get a tasks function without needing to pass in the tasks parent job and stage, and it's own name."""
+        from ado_wrapper.resources.runs import Run  # To prevent circular imports
+
+        if self.item_type != "Task":
+            raise TypeError("Error! This can only be run on Tasks, not any other item type!")
+        assert self.parent_stage_name is not None and self.parent_job_name is not None
+        return Run.get_run_log_content(
+            ado_client, build_id, self.parent_stage_name, self.parent_job_name, self.name, remove_prefixed_timestamp, remove_colours
+        )

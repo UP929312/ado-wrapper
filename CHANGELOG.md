@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.30.0
+
+### Added
+
+- `Task.get_log_content()` which mirrors `Run.get_run_log_content()`, but almost acting as an alias
+- The ability to get the amount of free and purchased parallel jobs and hosted agents for a project, using `Project.get_build_queue_settings()`
+- The ability to get the retention for builds and releases for a project, using `Project.get_retention_policy_settings()`
+
+---
+
 ## v1.29.0
 
 ### Added
@@ -12,7 +22,7 @@
 - `Run.run_and_wait_until_completion()` and it's sibling functions will now capture the error if it fails to fetch, rather than killing all the runs.
 - `ProjectVisibilityType, TemplateTypes, ProjectStatus, ProjectRepositorySettingType` are all added to typing_info.py
 - `VoteOptions` is also added to typing_info.py.
-- Remove `Run`'s `get_task_parents` in favour of using `.parent_job_name` and such.
+- Remove `Run`'s `get_task_parents` in favour of using `.parent_job_name` and `parent_stage_name` (as properties, less fetches).
 
 ---
 
@@ -23,7 +33,7 @@
 - `BuildTimeline.get_tasks_by_name(ado_client, <build_id>, <task_name>)` which returns all tasks with that task name.
 - The polling interval for runs via run_and_wait_until_complete and sibling functions is now configurable by passing in a new arg to the ado_client object (run_polling_interval_seconds)
 - The polling rate for a run can be temporarily changed using the new context manager, ado_client.temporary_polling_interval(<interval_in_seconds>)
-- ado_client.assume_project(<project_name>) which can be used to assume a different ADO project, changing where function calls are made.
+- ado_client.assume_project(<project_name>) which can be used to assume a different ADO project, changing where function calls are made from.
 
 ### Changed
 

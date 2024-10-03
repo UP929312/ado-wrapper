@@ -106,11 +106,11 @@ PullRequest.get_reviewers
 PullRequest.get_my_pull_requests
 PullRequest.set_my_pull_requests_included_teams?
 
+Project -> get_build_queue_settings, get_retention_policy_settings
+
 PullRequest -> Organisations -> Variable Groups
 
 Add more changelog messages for the older versions
-
-Add testing for assume_role
 
 Tests for build timelines
 Test utils

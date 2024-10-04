@@ -188,7 +188,7 @@ class Build(StateManagedResource):
         if log_id is None:
             raise ConfigurationError(
                 f"Wrong stage name or job name combination (case sensitive), received {stage_name}/{job_name}/{task_name}"
-                + f"Options were {', '.join(list(mapping.keys()))}"
+                + "\nOptions were:\n" + "\n".join(list(mapping.keys()))  # fmt: skip
             )
         request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/build/builds/{build_id}/logs/{log_id}"

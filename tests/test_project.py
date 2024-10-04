@@ -5,7 +5,8 @@ import pytest
 if __name__ == "__main__":
     __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
 
-from ado_wrapper.resources.projects import Project, ProjectRepositorySettings
+from ado_wrapper.resources.projects import Project
+from ado_wrapper.resources.project_settings import ProjectRepositorySettings
 from tests.setup_client import setup_client
 
 

@@ -130,6 +130,7 @@ coverage run -m pytest && coverage html && open htmlcov/index.html
 python3.11 -m pip install ado_wrapper --upgrade  
 
 python3.11 -m pytest tests/ -vvvv -s  
+black . --line-length 140  
 
 mypy . --strict && flake8 --ignore=E501,E126,E121,W503,W504,PBP --exclude=script.py && ruff check && pylint .
 bandit -c pyproject.toml -r .  

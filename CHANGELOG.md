@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.31.0
+
+### Added
+
+- The ability to get Project-wide repository policies, e.g. commit author validation using `Project.get_repository_policies()`. In the future, it's planned to be able to set these programmatically, using `Project.set_repository_policies()`.
+- `RepoPolicyProgrammaticName` and `RepoPolicyDisplayTypes` to `typing_info.py`.
+
+### Changed
+
+- `Run.run_all_and_capture_results_simultaneously()` and `Run.run_all_and_capture_results_sequentially()` now return lists of `Run`s, not dictionaries, to allow multiple of the same build definition to be run at once. They are listed in the order they complete.
+- Project repository settings and the new repository policies have been moved out of projects.py and into project_settings.py.
+
+---
+
 ## v1.30.0
 
 ### Added

@@ -1,10 +1,10 @@
-import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
 
-from ado_wrapper.errors import DeletionFailed, NoElevatedPrivilegesError, UnknownError
+from ado_wrapper.errors import DeletionFailed, NoElevatedPrivilegesError
 from ado_wrapper.state_managed_abc import StateManagedResource
+from ado_wrapper.resources.project_settings import ProjectRepositorySettings, ProjectRepositoryPolicies, ProjectRepositorySettingType
 from ado_wrapper.utils import build_hierarchy_payload
 
 if TYPE_CHECKING:
@@ -19,16 +19,6 @@ template_types_mapping: dict[TemplateTypes, str] = {
     "Basic": "27450541-8e31-4150-9947-dc59f998fc01",  # (same as CMMI, but used for a simpler version)
 }
 ProjectStatus = Literal["all", "createPending", "deleted", "deleting", "new", "unchanged", "wellFormed", "notSet"]  # notSet is sketchy?
-# ====
-ProjectRepositorySettingType = Literal["default_branch_name", "disable_tfvc_repositories",
-                                       "new_repos_created_branches_manage_permissions_enabled", "pull_request_as_draft_by_default"]  # fmt: skip
-project_repository_settings_mapping = {
-    "DefaultBranchName": "default_branch_name",
-    "DisableTfvcRepositories": "disable_tfvc_repositories",
-    "NewReposCreatedBranchesManagePermissionsEnabled": "new_repos_created_branches_manage_permissions_enabled",
-    "PullRequestAsDraftByDefault": "pull_request_as_draft_by_default",
-}
-project_repository_settings_mapping_reversed = {value: key for key, value in project_repository_settings_mapping.items()}
 
 
 @dataclass
@@ -105,6 +95,7 @@ class Project(StateManagedResource):
 
     @staticmethod
     def get_pipeline_settings(ado_client: "AdoClient", project_name: str | None = None) -> dict[str, bool]:
+        """Returns the values from https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_settings/settings"""
         PAYLOAD = build_hierarchy_payload(
             ado_client, "build-web.pipelines-general-settings-data-provider", route_id="admin-web.project-admin-hub-route"
         )
@@ -191,74 +182,6 @@ class Project(StateManagedResource):
     ) -> dict[ProjectRepositorySettingType, "ProjectRepositorySettings"]:  # fmt: skip
         return ProjectRepositorySettings.get_by_project(ado_client, project_name)
 
-
-@dataclass
-class ProjectRepositorySettings:
-    programmatic_name: ProjectRepositorySettingType
-    internal_name: str = field(repr=False)  # Internal key, e.g. DefaultBranchName
-    title: str
-    description: str = field(repr=False)
-    setting_enabled: bool  # If this setting is taking effect
-    disabled_by_inheritence: bool  # If this setting cannot be enabled because of inherited settings
-    override_string_value: str | None  # For default_branch_name, an override string value
-    default_value: str | None = field(repr=False)  # For default_branch_name, equal to "main"
-
-    @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "ProjectRepositorySettings":
-        return cls(project_repository_settings_mapping[data["key"]], data["key"], data["title"], data["displayHtml"],  # type: ignore[arg-type]
-                   data["value"], data.get("isDisabled", False), data["textValue"], data["defaultTextValue"])  # fmt: skip
-
     @staticmethod
-    def _get_request_verification_code(ado_client: "AdoClient", project_name: str | None = None) -> str:
-        request_verification_token_body = ado_client.session.get(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/{project_name or ado_client.ado_project_name}/_settings/repositories?_a=settings",
-        ).text
-        LINE_PREFIX = '<input type="hidden" name="__RequestVerificationToken" value="'
-        line = [x for x in request_verification_token_body.split("\n") if LINE_PREFIX in x][0]
-        request_verification_token = line.strip(" ").removeprefix(LINE_PREFIX).split('"')[0]
-        return request_verification_token
-
-    @classmethod
-    def get_by_project(
-        cls, ado_client: "AdoClient", project_name: str | None = None
-    ) -> dict[ProjectRepositorySettingType, "ProjectRepositorySettings"]:  # fmt: skip
-        request = ado_client.session.get(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/{project_name or ado_client.ado_project_name}/_api/_versioncontrol/AllGitRepositoriesOptions?__v=5"
-        ).json()
-        list_of_settings = [cls.from_request_payload(x) for x in request["__wrappedArray"]]
-        return {setting.programmatic_name: setting for setting in list_of_settings}
-
-    @classmethod
-    def update_default_branch_name(
-        cls, ado_client: "AdoClient", new_default_branch_name: str, project_name: str | None = None,  # fmt: skip
-    ) -> None:
-        request_verification_token = cls._get_request_verification_code(ado_client, project_name)
-        body = {
-            "repositoryId": "00000000-0000-0000-0000-000000000000",
-            "option": json.dumps({"key": "DefaultBranchName", "value": True, "textValue": new_default_branch_name}),
-            "__RequestVerificationToken": request_verification_token,
-        }
-        request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/{project_name or ado_client.ado_project_name}/_api/_versioncontrol/UpdateRepositoryOption?__v=5&repositoryId=00000000-0000-0000-0000-000000000000",
-            data=body,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-        )
-        if request.status_code != 200:
-            raise UnknownError(f"Error, updating the default branch name failed! {request.status_code}, {request.text}")
-
-    @classmethod
-    def set_project_repository_setting(cls, ado_client: "AdoClient", repository_setting: ProjectRepositorySettingType,
-                                       state: bool, project_name: str | None = None, ) -> None:  # fmt: skip
-        request_verification_token = cls._get_request_verification_code(ado_client, project_name)
-        body = {
-            "repositoryId": "00000000-0000-0000-0000-000000000000",
-            "option": json.dumps({"key": project_repository_settings_mapping_reversed[repository_setting], "value": state, "textValue": None}),  # fmt: skip
-            "__RequestVerificationToken": request_verification_token,
-        }
-        request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/{project_name or ado_client.ado_project_name}/_api/_versioncontrol/UpdateRepositoryOption?__v=5&repositoryId=00000000-0000-0000-0000-000000000000",
-            data=body,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-        )
-        if request.status_code != 200:
-            raise UnknownError(f"Error, updating that repo setting failed! {request.status_code}, {request.text}")
+    def get_repository_policies(ado_client: "AdoClient") -> list["ProjectRepositoryPolicies"]:
+        return ProjectRepositoryPolicies.get_by_project(ado_client)

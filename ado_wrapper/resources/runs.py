@@ -17,6 +17,7 @@ DEFAULT_TIMEOUT_FOR_BUILD = 900
 RunResult = Literal["canceled", "failed", "succeeded", "unknown", "skipped"]
 RunState = Literal["canceling", "completed", "inProgress", "unknown"]
 
+# TODO: Should this include succeededWithErrors? VVV
 JobResultLiteral = Literal["Queued", "Successful", "Warning", "Failed", "Cancelled", "Skipped"]
 JobStateLiteral = Literal["Queued", "In-Progress", "Complete"]
 
@@ -144,7 +145,7 @@ class Run(StateManagedResource):
                 "branch_name": branch_name, "stages_to_run": stages_to_run
             }  # fmt: skip
         }
-        return cls.run_all_and_capture_results_simultaneously(ado_client, data, max_timeout_seconds, send_updates_function)[definition_id]
+        return cls.run_all_and_capture_results_simultaneously(ado_client, data, max_timeout_seconds, send_updates_function)[0]
 
     @classmethod
     def run_all_and_capture_results_sequentially(
@@ -153,17 +154,17 @@ class Run(StateManagedResource):
         data: dict[str, RunAllDictionary],
         max_timeout_seconds: int | None = DEFAULT_TIMEOUT_FOR_BUILD,
         send_updates_function: Callable[["Run"], None] = lambda run: None,
-    ) -> dict[str, "Run"]:
+    ) -> list["Run"]:
         """Takes a mapping of definition_id -> {template_parameters, run_variables, branch_name, stages_to_run}
-        Once done, returns a mapping of definition_id -> `Run` object"""
-        return_values = {}
+        Once done, returns a list of `Run` objects, in the order they completed."""
+        return_values: list[Run] = []
         for definition_id, run_data in data.items():
             run = cls.run_and_wait_until_completion(
                 ado_client, definition_id, run_data.get("template_parameters", {}), run_data.get("run_variables", {}),
                 run_data.get("branch_name", "main"), run_data.get("stages_to_run"), max_timeout_seconds,
                 send_updates_function,  # fmt: skip
             )
-            return_values[definition_id] = run
+            return_values.append(run)
         return return_values
 
     @classmethod
@@ -173,36 +174,34 @@ class Run(StateManagedResource):
         data: dict[str, RunAllDictionary],
         max_timeout_seconds: int | None = DEFAULT_TIMEOUT_FOR_BUILD,
         send_updates_function: Callable[["Run"], None] = lambda run: None,
-    ) -> dict[str, "Run"]:
+    ) -> list["Run"]:
         """Takes a mapping of definition_id -> {template_parameters, run_variables, branch_name, stages_to_run}
-        Once done, returns a mapping of definition_id -> `Run` object"""
-        # Get a mapping of definition_id -> Run()
-        runs: dict[str, Run] = {}
-        for definition_id, run_data in data.items():
-            run = cls.create(
+        Once done, returns a list of `Run` objects, in the order they completed."""
+        return_values: list[Run] = []
+        runs: list[Run] = [
+            cls.create(
                 ado_client, definition_id, run_data.get("template_parameters", {}), run_data.get("run_variables", {}),
                 run_data.get("branch_name", "main"), run_data.get("stages_to_run"),  # fmt: skip
             )
-            runs[definition_id] = run
-        # Then, slowly check on them, and remove the ones that are done
+            for definition_id, run_data in data.items()
+        ]
         start_time = datetime.now()
-        return_values: dict[str, Run] = {}
+        # Then, slowly check on them, and remove the ones that are done
         while runs:
-            for definition_id, run_obj in dict(runs.items()).items():
+            for planned_run_obj in runs[:]:  # We do this to make a copy of the list
                 try:
-                    # TODO: Error handling on this, incase it fails (will ruin all runs)
-                    run = Run.get_by_id(ado_client, definition_id, run_obj.run_id)
+                    run = Run.get_by_id(ado_client, planned_run_obj.build_definition_id, planned_run_obj.run_id)  # type: ignore[arg-type]
                 except Exception:
-                    print(f"Failed to fetch run with id: {run_obj.run_id}")
-                    continue
+                    print(f"Failed to fetch run with id: {planned_run_obj.run_id}")
+                    continue  # TODO: Error handling on this, in case it fails (will ruin all runs)
                 send_updates_function(run)
                 if run.status == "completed":
-                    return_values[definition_id] = run
-                    del runs[definition_id]
+                    return_values.append(run)
+                    runs = [x for x in runs if x.run_id != run.run_id]  # Remove the run from the list of ones to check
                 if max_timeout_seconds is not None and (datetime.now() - start_time).seconds > max_timeout_seconds:
+                    # TODO: What if only one run failed, maybe put the max_timeout_seconds in the run_data?
                     raise TimeoutError(f"The run did not complete within {max_timeout_seconds} seconds ({max_timeout_seconds//60} minutes)")
                 time.sleep(ado_client.run_polling_interval_seconds)
-        # Returning a mapping of definition_id -> finished Run()
         return return_values
 
     @classmethod

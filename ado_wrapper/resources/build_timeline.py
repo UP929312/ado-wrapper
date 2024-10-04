@@ -126,8 +126,8 @@ class IssueDataType(TypedDict):
 class IssueType(TypedDict):
     type: Literal["error", "warning"]
     category: str  # Maybe Literal["General"]
-    message: str
-    data: IssueDataType
+    message: str  # Reason for failure, e.g. `'message': "Error: The process '/usr/bin/bash' failed with exit code 1"`
+    data: IssueDataType  # E.g. 'data': {'type': 'error', 'logFileLineNumber': '133'}
 
 
 @dataclass

@@ -116,11 +116,11 @@ class TestRun:
                     run_definition_2.build_definition_id: {"branch_name": "my-branch"},
                 },
             )
-            assert runs[run_definition_1.build_definition_id].status == "completed"
-            assert runs[run_definition_2.build_definition_id].status == "completed"
+            assert [x for x in runs if x.build_definition_id == run_definition_1.build_definition_id][0].status == "completed"
+            assert [x for x in runs if x.build_definition_id == run_definition_2.build_definition_id][0].status == "completed"
             run_definition_1.delete(self.ado_client)  # Can't delete run_definitions without deleting runs first
             run_definition_2.delete(self.ado_client)  # Can't delete run_definitions without deleting runs first
-            for run_obj in runs.values():
+            for run_obj in runs:
                 run_obj.delete(self.ado_client)
 
     @pytest.mark.hierarchy

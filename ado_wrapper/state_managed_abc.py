@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Literal, Type, TypeVar
 
 from ado_wrapper.errors import DeletionFailed, ResourceAlreadyExists, ResourceNotFound, UnknownError, UpdateFailed, InvalidPermissionsError  # fmt: skip
-from ado_wrapper.utils import extract_id, get_internal_field_names, get_resource_variables
+from ado_wrapper.utils import extract_id, get_internal_field_names, get_resource_variables  # , get_editable_fields
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -105,6 +105,38 @@ class StateManagedResource:
             resource = cls.get_by_id(ado_client, extract_id(resource))  # type: ignore[attr-defined] # pylint: disable=no-member
         ado_client.state_manager.add_resource_to_state(cls.__name__, extract_id(resource), resource.to_json())  # type: ignore[arg-type]
         return resource  # [return-value]
+
+    # @classmethod
+    # def _maintain(cls: Type[T], ado_client: "AdoClient", *args, **kwargs) -> T:  # url: str, payload: dict[str, Any]
+    #     # To be able to get the existing one, we need to be able to fetch it by name
+    #     # We can assume that all the resources have a cls._get_by_name(ado_client, payload["name"])
+    #     # We do, however, have to be able to compare a ado_wrapper resource to a payload, that's much tricker...
+    #     # Perhaps we can use the editable resources, since if we can't edit it, what's the point in "maintaining" it?
+    #     # Also have to be able to update a resource based on the ado_wrapper attributes.
+    #     # Another problem is things running in this class, need to be able to call Resource._create, not StateManagedResource.create
+    #     # Since this might call create, we don't have the payload...
+
+    #     # To be able to get the attributes, we need to format an object, but this isn't going to work.
+    #     # Instead, I suppose we could add a new function, which takes the input args and creates an object#
+    #     # From that data, basically a mapping of input params -> object (fake), then we can do getattr(x) get_internal_field_names
+
+    #     existing_case = cls.get_by_name(ado_client, args[0])  # type: ignore[abc]  All maintainable resources have this.
+    #     print(f"1. {existing_case=}")
+    #     if existing_case:
+    #         print("2. Existing case is Truthy, detecting changes")
+    #         existing_dictionary = [getattr(cls, x) for x in get_editable_fields(cls)]
+    #         if existing_case.json() != cls(abc, defg):
+    #             print("3. Changes detected, updating resource")
+    #             good_resource = cls._update(self, ado_client, "put", some_url, <all_the_attributes>, <attribute_values>, {})
+    #         else:
+    #             print("3. No differences detected, doing nothing.")
+    #             good_resource = existing_case
+    #     else:
+    #         print("2. Existing case is Falsey, creating")
+    #         good_resource = cls.create(ado_client, url, payload)  # type: ignore
+    #     print("4. Returning")
+    #     return good_resource
+
 
     @classmethod
     def _delete_by_id(cls: Type[T], ado_client: "AdoClient", url: str, resource_id: str) -> None:

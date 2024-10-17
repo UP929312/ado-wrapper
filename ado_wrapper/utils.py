@@ -96,7 +96,6 @@ def get_id_field_name(cls: type["StateManagedResource"]) -> str:
     """Returns the name of the field that is marked as the id field. If no id field is found, a ValueError is raised."""
     for field_name, metadata in get_fields_metadata(cls).items():
         if metadata.get("is_id_field", False):
-            # if field_name.endswith("_id"):
             return field_name
     raise ValueError(f"No id field found for {cls.__name__}!")
 
@@ -112,7 +111,9 @@ def get_editable_fields(cls: type["StateManagedResource"]) -> list[str]:
     return [field_obj.name for field_obj in cls.__dataclass_fields__.values() if field_obj.metadata.get("editable", False)]
 
 
-def get_internal_field_names(cls: type["StateManagedResource"], field_names: list[str] | None = None, reverse: bool = False) -> dict[str, str]:  # fmt: skip
+def get_internal_field_names(
+        cls: type["StateManagedResource"], field_names: list[str] | None = None, reverse: bool = False
+    ) -> dict[str, str]:  # fmt: skip
     """Returns a mapping of field names to their internal names. If no internal name is set, the field name is used."""
     if field_names is None:
         field_names = get_editable_fields(cls)
@@ -142,6 +143,7 @@ def recursively_find_or_none(data: dict[str, Any], indexes: list[str]) -> Any:
 def build_hierarchy_payload(
     ado_client: "AdoClient", contribution_id: str, route_id: str | None = None, additional_properties: dict[str, Any] | None = None
 ) -> dict[str, Any]:
+    """Additional properties are put into `dataProviderContext/properties`"""
     requires_initialisation(ado_client)
     data: dict[str, Any] = {"dataProviderContext": {"properties": {"sourcePage": {"routeValues": {}}}}}
     if additional_properties:
@@ -209,9 +211,9 @@ def binary_data_to_file_dictionary(binary_data: bytes, file_types: list[str] | N
 def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We do this whole func to avoid circular imports
     """This returns a mapping of resource name (str) to the class type of the resource. This is used to dynamically create instances of resources."""
     from ado_wrapper.resources import (  # pylint: disable=possibly-unused-variable  # noqa: F401
-        AgentPool, AnnotatedTag, Artifact, AuditLog, Branch, BuildTimeline, Build, BuildDefinition, HierarchyCreatedBuildDefinition, Commit, Environment, Group,
-        MergePolicies, MergeBranchPolicy, MergePolicyDefaultReviewer, MergeTypeRestrictionPolicy, Organisation, PersonalAccessToken, Permission,
-        Project, ProjectRepositorySettings, PullRequest, Release, ReleaseDefinition, Repo, Run, BuildRepository, Team, AdoUser, Member, ServiceEndpoint,
+        AgentPool, AnnotatedTag, Artifact, AuditLog, Branch, BuildTimeline, Build, BuildDefinition, HierarchyCreatedBuildDefinition, Commit, Environment,
+        Group, MergePolicies, MergeBranchPolicy, MergePolicyDefaultReviewer, MergeTypeRestrictionPolicy, Organisation, PersonalAccessToken, Permission,
+        Project, PullRequest, Release, ReleaseDefinition, Repo, Run, BuildRepository, Team, AdoUser, Member, ServiceEndpoint,
         Reviewer, VariableGroup,  # fmt: skip
     )
 
@@ -221,6 +223,6 @@ def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We d
 ResourceType = Literal[
     "AgentPool", "AnnotatedTag", "Artifact", "AuditLog", "Branch", "BuildTimeline", "Build", "BuildDefinition", "HierarchyCreatedBuildDefinition",
     "Commit", "Environment", "Group", "MergePolicies", "MergeBranchPolicy", "MergePolicyDefaultReviewer", "MergeTypeRestrictionPolicy",
-    "Organisation", "PersonalAccessToken", "Permission", "Project", "ProjectRepositorySettings", "PullRequest", "Release", "ReleaseDefinition",
-    "Repo", "Run", "Team", "AdoUser", "Member", "ServiceEndpoint", "Reviewer", "VariableGroup"  # fmt: skip
-]
+    "Organisation", "PersonalAccessToken", "Permission", "Project",
+    "PullRequest", "Release", "ReleaseDefinition", "Repo", "Run", "Team", "AdoUser", "Member", "ServiceEndpoint", "Reviewer", "VariableGroup",
+]  # fmt: skip

@@ -1,5 +1,22 @@
 # Changelog
 
+
+## v1.32.0
+
+### Added
+
+- Added all the project settings, including `get_build_queue_settings, get_retention_policy_setting, get_pipeline_settings, get_artifact_storage_settings, get_test_retention_settings, get_project_overview_settings` and `set_test_retention_settings`.
+- `ProjectRepositorySettingDisplayType` and `ProjectServicesType` to typing_info.py
+
+### Changed
+
+- Fixed the ID for creating projects with Methodology `Basic`.
+- The key word argument for creating projects and variable groups has been renamed to just "name", rather than project_name and variable_group_name respectively (to better be in parity with the other creation functions).
+- Internally, lots of aliases have been cleaned up in Project Settings (from functions to just bindings)
+- ProjectRepositorySettings.get_by_project() has been remapped to `.get_repository_settings()` to better fit the other functions
+
+---
+
 ## v1.31.0
 
 ### Added

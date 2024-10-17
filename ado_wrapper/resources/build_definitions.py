@@ -23,7 +23,7 @@ def create_build_definition_payload(
     agent_pool_id: str | None = None, branch_name: str = "main"  # fmt: skip
 ) -> dict[str, Any]:
     return {
-        "name": f"{name}",
+        "name": name,
         "description": description,
         "repository": {
             "id": repo_id,
@@ -83,8 +83,9 @@ class BuildDefinition(StateManagedResource):
         description: str = "", agent_pool_id: str | None = None, branch_name: str = "main",  # fmt: skip
     ) -> "BuildDefinition":
         """Passing in no agent_pool_id will mean that the official Azure Agents will be used."""
-        payload = create_build_definition_payload(name, repo_id, path_to_pipeline, description,
-                                                  ado_client.ado_project_name, agent_pool_id, branch_name)  # fmt: skip
+        payload = create_build_definition_payload(
+            name, repo_id, path_to_pipeline, description, ado_client.ado_project_name, agent_pool_id, branch_name,
+        )  # fmt: skip
         return super()._create(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/definitions?api-version=7.0",
@@ -275,9 +276,4 @@ class BuildDefinitionStage:
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "BuildDefinitionStage":
-        return cls(
-            data["name"],
-            data["refName"],
-            data["isSkippable"],
-            data["dependsOn"],
-        )
+        return cls(data["name"], data["refName"], data["isSkippable"], data["dependsOn"])

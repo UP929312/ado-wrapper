@@ -71,9 +71,10 @@ class TestProject:
     @pytest.mark.skip("This requires initialisation, which can take 10 minutes.")
     @pytest.mark.get_all_by_name
     def test_project_settings(self) -> None:
+        # TODO: Maybe try setting them as well?
         project_created = Project.create(self.ado_client, "ado_wrapper-test_project_settings", "description", "Agile")
         time.sleep(60 * 10)  # Wait 10 minutes
-        settings = ProjectRepositorySettings.get_by_project(self.ado_client, project_created.name)
+        settings = ProjectRepositorySettings.get_repository_settings(self.ado_client, project_created.name)
         assert not settings["default_branch_name"].setting_enabled
         assert not settings["pull_request_as_draft_by_default"].setting_enabled
         project_created.delete(self.ado_client)

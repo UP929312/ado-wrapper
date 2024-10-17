@@ -99,17 +99,17 @@ class VariableGroup(StateManagedResource):
 
     @classmethod
     def create(
-        cls, ado_client: "AdoClient", variable_group_name: str,
+        cls, ado_client: "AdoClient", name: str,
         variables: dict[str, str], variable_group_description: str = "Variable Group created by ado_wrapper",  # fmt: skip
     ) -> "VariableGroup":
         payload = {
-            "name": variable_group_name,
+            "name": name,
             "variables": variables,
             "type": "Vsts",
             "variableGroupProjectReferences": [
                 {
                     "description": variable_group_description,
-                    "name": variable_group_name,
+                    "name": name,
                     "projectReference": {"name": ado_client.ado_project_name},
                 }
             ],

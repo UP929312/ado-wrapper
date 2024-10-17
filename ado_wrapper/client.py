@@ -37,9 +37,6 @@ class AdoClient:
         if not bypass_initialisation:
             from ado_wrapper.resources.users import AdoUser  # Stop circular imports
 
-            # from ado_wrapper.resources.organisations import Organisation
-            # from ado_wrapper.resources.permissions import Permission
-
             # Verify Token is working (helps with setup for first time users):
             request = self.session.get(f"https://dev.azure.com/{self.ado_org_name}/_apis/projects?api-version=7.1")
             if request.status_code != 200:

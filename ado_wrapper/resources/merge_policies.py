@@ -79,7 +79,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
                     [x for x in all_reviewers if x.member_id == reviewer_id][0].is_required = True
         # =====================================================================================
         # Fix local_ids (convert them to origin_ids)
-        local_ids_to_origin_ids = AdoUser._convert_local_ids_to_origin_ids(
+        local_ids_to_origin_ids = AdoUser._convert_local_ids_to_origin_ids(  # pylint: disable=protected-access
             ado_client, [x.member_id for x in all_reviewers]
         )  # pylint: disable=protected-access
         for reviewer in [x for x in all_reviewers if x.member_id is not None]:
@@ -93,9 +93,9 @@ class MergePolicyDefaultReviewer(StateManagedResource):
     ) -> None:
         if reviewer_origin_id in [x.member_id for x in cls.get_default_reviewers(ado_client, repo_id, branch_name)]:
             raise ValueError("Reviewer already exists! To update, please remove the reviewer first.")
-        local_id = AdoUser._convert_origin_ids_to_local_ids(ado_client, [reviewer_origin_id])[
+        local_id = AdoUser._convert_origin_ids_to_local_ids(ado_client, [reviewer_origin_id])[  # pylint: disable=protected-access
             reviewer_origin_id
-        ]  # pylint: disable=protected-access
+        ]
         payload = {
             "type": {"id": _get_type_id(ado_client, "Required reviewers")},
             "isBlocking": is_required,
@@ -330,46 +330,14 @@ class MergePolicies(StateManagedResource):
             else None
         )
 
-    @staticmethod
-    def add_default_reviewer(
-        ado_client: "AdoClient", repo_id: str, reviewer_origin_id: str, is_required: bool = True, branch_name: str = "main"
-    ) -> None:  # fmt: skip
-        return MergePolicyDefaultReviewer.add_default_reviewer(ado_client, repo_id, reviewer_origin_id, is_required, branch_name)
-
-    @staticmethod
-    def get_default_reviewers(ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> list[Reviewer]:
-        return MergePolicyDefaultReviewer.get_default_reviewers(ado_client, repo_id, branch_name)
-
-    @staticmethod
-    def remove_default_reviewer(ado_client: "AdoClient", repo_id: str, reviewer_id: str, branch_name: str = "main") -> None:
-        return MergePolicyDefaultReviewer.remove_default_reviewer(ado_client, repo_id, reviewer_id, branch_name)
+    add_default_reviewer = MergePolicyDefaultReviewer.add_default_reviewer
+    get_default_reviewers = MergePolicyDefaultReviewer.get_default_reviewers
+    remove_default_reviewer = MergePolicyDefaultReviewer.remove_default_reviewer
 
     # ================== Branch Policies ================== #
-    @staticmethod
-    def set_branch_policy(ado_client: "AdoClient", repo_id: str, minimum_approver_count: int,
-                          creator_vote_counts: bool, prohibit_last_pushers_vote: bool, allow_completion_with_rejects: bool,
-                          when_new_changes_are_pushed: WhenChangesArePushed, branch_name: str = "main") -> None:  # fmt: skip
-        return MergeBranchPolicy.set_branch_policy(ado_client, repo_id, minimum_approver_count, creator_vote_counts,
-                                                   prohibit_last_pushers_vote, allow_completion_with_rejects,
-                                                   when_new_changes_are_pushed, branch_name)  # fmt: skip
-
-    @staticmethod
-    def get_branch_policy(ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "MergeBranchPolicy | None":
-        return MergeBranchPolicy.get_branch_policy(ado_client, repo_id, branch_name)
+    get_branch_policy = MergeBranchPolicy.get_branch_policy
+    set_branch_policy = MergeBranchPolicy.set_branch_policy
 
     # ================= Merge Type Policy ================= #
-
-    @staticmethod
-    def set_allowed_merge_types(
-        ado_client: "AdoClient", repo_id: str,
-        allow_basic_no_fast_forwards: bool, allow_squash: bool, allow_rebase_and_fast_forward: bool, allow_rebase_with_merge_commit: bool,
-        branch_name: str = "main",  # fmt: skip
-    ) -> "MergeTypeRestrictionPolicy | None":
-        return MergeTypeRestrictionPolicy.set_allowed_merge_types(
-            ado_client, repo_id, allow_basic_no_fast_forwards, allow_squash,
-            allow_rebase_and_fast_forward, allow_rebase_with_merge_commit, branch_name,  # fmt: skip
-        )
-
-    @staticmethod
-    def get_allowed_merge_types(ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "MergeTypeRestrictionPolicy | None":
-        return MergeTypeRestrictionPolicy.get_allowed_merge_types(ado_client, repo_id, branch_name)
+    set_allowed_merge_types = MergeTypeRestrictionPolicy.set_allowed_merge_types
+    get_allowed_merge_types = MergeTypeRestrictionPolicy.get_allowed_merge_types

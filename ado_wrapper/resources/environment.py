@@ -152,6 +152,7 @@ class PipelineAuthorisation:
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", environment_id: str, pipeline_authorisation_id: str) -> None:
+        # TODO: What is this again?
         try:
             cls.create(ado_client, environment_id, pipeline_authorisation_id, False)
         except ValueError:

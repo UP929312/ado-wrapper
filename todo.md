@@ -66,7 +66,7 @@ Docs have functions which raise NotImplemented, inspect and remove if they do?
 
 Pat token stuffs, commit rollback, artifact stuffs
 
-Somehow detect expired tokens? simple_http???
+Somehow detect expired tokens? simple_ado???
 simple_ado.exceptions.ADOHTTPException: ADO returned a non-200 status code, configuration=<simple_ado.http_client.ADOHTTPClient object at 0x1025de310>, status_code=401, text=Access Denied: The Personal Access Token used has expired.
 
 UNSURE HOW TO DO ABOVE
@@ -79,8 +79,6 @@ For each test file, have a zzz_cleanup() function which empties state?
 Maybe each test could inherit from a parent class which has this?
 
 When creating variable groups, deciding if they're secret or not?
-
-More random stuff like this: <https://dev.azure.com/VFCloudEngineering/Platform/_settings/settings>
 
 Never test get_environment_approvals
 
@@ -99,7 +97,6 @@ Actual logging...
 from enum import Flag
 
 ProjectRepositorySettings settings - MEHHH, Project creation sucks
-Organisations are mega untested
 PullRequest.delete_by_id is untested.
 PullRequest.add_reviewer
 PullRequest.get_reviewers
@@ -114,6 +111,9 @@ Add more changelog messages for the older versions
 
 Tests for build timelines
 Test utils
+
+- <All the Org settings>
+- `OrgRepoSettingsProgrammaticNamesTypes` and `OrgRepoSettingsInternalNamesTypes` to typing_info.py
 
 -----  
 

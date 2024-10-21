@@ -5,7 +5,9 @@ if __name__ == "__main__":
 
 # from ado_wrapper.resources.variable_groups import VariableGroup
 # from ado_wrapper.resources.service_endpoint import ServiceEndpoint
-from tests.setup_client import RepoContextManager, setup_client
+from ado_wrapper.resources.repo import Repo
+from ado_wrapper.utils import TemporaryResource
+from tests.setup_client import setup_client, REPO_PREFIX
 
 
 class TestStateManager:
@@ -15,7 +17,7 @@ class TestStateManager:
     def test_load_all_resources_with_prefix(self) -> None:
         state_manager = self.ado_client.state_manager
 
-        with RepoContextManager(self.ado_client, "test_load_all_resources_with_prefix") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "test-load-all-resources-with-prefix") as repo:
             state_manager.remove_resource_from_state("Repo", repo.repo_id)
             # variable_group = VariableGroup.create(self.ado_client, "ado_wrapper-test_load_all_resources_with_prefix", "test", {"a": "123"})
             # service_endpoint = ServiceEndpoint.create(self.ado_client, "ado_wrapper-test_load_all_resources_with_prefix",
@@ -31,14 +33,14 @@ class TestStateManager:
     def test_generate_in_memory_state(self) -> None:
         state_manager = self.ado_client.state_manager
 
-        with RepoContextManager(self.ado_client, "test_generate_in_memory_state") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "test-generate-in-memory-state") as repo:
             state_manager.generate_in_memory_state()
             assert state_manager.load_state()["resources"]["Repo"][repo.repo_id]["data"] == repo.to_json()
 
     def test_import_into_state(self) -> None:
         state_manager = self.ado_client.state_manager
 
-        with RepoContextManager(self.ado_client, "test_import_into_state") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "test-imoport-into-state") as repo:
             state_manager.remove_resource_from_state("Repo", repo.repo_id)
             state_manager.import_into_state("Repo", repo.repo_id)
             assert state_manager.load_state()["resources"]["Repo"][repo.repo_id]["data"] == repo.to_json()

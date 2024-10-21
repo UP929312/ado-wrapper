@@ -46,6 +46,7 @@ class TestAgentPool:
 
         assert agent_pool.to_json() == AgentPool.from_json(agent_pool.to_json()).to_json()
 
+    @pytest.mark.wip
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
         agent_pool = AgentPool.create(self.ado_client, "ado_wrapper-test-agent-pool", None, True, True, True, False, 10, None)

@@ -1,7 +1,7 @@
 import re
 from dataclasses import fields
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Literal, TypeVar, ParamSpec, overload, Any
+from typing import TYPE_CHECKING, Literal, TypeVar, ParamSpec, overload, Any, Type, Generic
 
 from ado_wrapper.errors import ConfigurationError
 
@@ -112,8 +112,8 @@ def get_editable_fields(cls: type["StateManagedResource"]) -> list[str]:
 
 
 def get_internal_field_names(
-        cls: type["StateManagedResource"], field_names: list[str] | None = None, reverse: bool = False
-    ) -> dict[str, str]:  # fmt: skip
+    cls: type["StateManagedResource"], field_names: list[str] | None = None, reverse: bool = False
+) -> dict[str, str]:  # fmt: skip
     """Returns a mapping of field names to their internal names. If no internal name is set, the field name is used."""
     if field_names is None:
         field_names = get_editable_fields(cls)
@@ -173,6 +173,27 @@ def build_hierarchy_payload(
 #         return wrapper  # type: ignore[return-value]
 
 #     return decorator
+
+
+class TemporaryResource(Generic[T]):
+    """A context manager which creates and (always) deletes a resource"""
+
+    def __init__(self, ado_client: "AdoClient", cls: Type[T], *args, **kwargs):  # type: ignore[no-untyped-def]
+        self.ado_client = ado_client
+        self.cls = cls
+        self.args = args
+        self.delete_after = False
+        if "delete_after" in kwargs:
+            self.delete_after = kwargs.pop("delete_after")
+        self.kwargs = kwargs
+
+    def __enter__(self) -> T:
+        self.resource: T = self.cls.create(self.ado_client, *self.args, **self.kwargs)  # type: ignore[attr-defined]
+        return self.resource
+
+    def __exit__(self, *_: Any) -> None:
+        if self.delete_after:
+            self.resource.delete(self.ado_client)  # type: ignore[attr-defined]
 
 
 # ============================================================================================== #

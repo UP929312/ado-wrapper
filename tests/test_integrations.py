@@ -7,21 +7,8 @@ from ado_wrapper.resources.repo import Repo
 
 # from ado_wrapper.resources.variable_groups import VariableGroup
 
+from tests.build_definition_templates import INTEGRATIONS_TEST_YAML_FILE
 from tests.setup_client import setup_client
-
-BUILD_YAML_FILE = """---
-trigger:
-  - main
-
-pool:
-  vmImage: ubuntu-latest
-
-variables:
-  - group: ado_wrapper-test-for-integrations
-
-steps:
-  - script: echo Hello, world!
-    displayName: 'Integrations Testing'"""
 
 
 class TestIntegrations:
@@ -35,7 +22,9 @@ class TestIntegrations:
         # then runs the build, waits for it to complete, then clears up
         # variable_group = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-integrations", "my_description", {"a": "b"})
         repo = Repo.create(self.ado_client, "ado_wrapper-test-for-integrations-repo")
-        Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": BUILD_YAML_FILE}, "add", "Initial commit")
+        Commit.create(
+            self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": INTEGRATIONS_TEST_YAML_FILE}, "add", "Initial commit"
+        )
         build_definition = BuildDefinition.create(self.ado_client, "ado_wrapper-test-for-integrations-build-definition", repo.repo_id, repo.name,
                                                   "build.yaml", "Desc", branch_name="my-branch")  # fmt: skip
         build = Build.create_and_wait_until_completion(self.ado_client, build_definition.build_definition_id, "my-branch")

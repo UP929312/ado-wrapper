@@ -5,7 +5,10 @@ if __name__ == "__main__":
 
 from ado_wrapper.resources.repo_user_permission import RepoUserPermissions, UserPermission, RepoPermissionType, RepoPermsActionType
 from ado_wrapper.resources.groups import Group
-from tests.setup_client import setup_client, RepoContextManager, email, existing_user_name
+from ado_wrapper.resources.repo import Repo
+from ado_wrapper.utils import TemporaryResource
+
+from tests.setup_client import setup_client, REPO_PREFIX, email, existing_user_name
 
 
 class TestRepoUserPerms:
@@ -37,7 +40,7 @@ class TestRepoUserPerms:
 
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
-        with RepoContextManager(self.ado_client, "create-repo-user-perms") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-repo-user-perms") as repo:
             RepoUserPermissions.set_by_user_email(self.ado_client, repo.repo_id, email, "Allow", "contribute")
             perms = RepoUserPermissions.get_by_user_email(self.ado_client, repo.repo_id, email)
             assert isinstance(perms, list)
@@ -46,7 +49,7 @@ class TestRepoUserPerms:
 
     @pytest.mark.get_all
     def test_get_all(self) -> None:
-        with RepoContextManager(self.ado_client, "create-get-all-user-perms") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-get-all-user-perms") as repo:
             RepoUserPermissions.set_by_user_email(self.ado_client, repo.repo_id, email, "Allow", "contribute")
             all_perms = RepoUserPermissions.get_all_by_repo_id(self.ado_client, repo.repo_id)
             assert existing_user_name in all_perms
@@ -54,7 +57,7 @@ class TestRepoUserPerms:
             assert [x for x in all_perms[existing_user_name] if x.programmatic_name == "contribute"][0].permission_display_string == "Allow"
 
     def test_set_by_user_email_batch(self) -> None:
-        with RepoContextManager(self.ado_client, "set-by-user-email-batch") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "set-by-user-email-batch") as repo:
             input_perms: dict[RepoPermissionType, RepoPermsActionType] = {
                 "manage_and_dismiss_alerts": "Allow",
                 "manage_settings": "Allow",
@@ -80,7 +83,7 @@ class TestRepoUserPerms:
             assert perms_formatted == input_perms
 
     def test_set_all_permissions_for_repo(self) -> None:
-        with RepoContextManager(self.ado_client, "set-by-user-email-batch") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "set-by-user-email-batch") as repo:
             input_perms: dict[str, dict[RepoPermissionType, RepoPermsActionType]] = {
                 email: {
                     "manage_and_dismiss_alerts": "Allow",
@@ -99,7 +102,7 @@ class TestRepoUserPerms:
                     "manage_permissions": "Allow",
                     "read": "Allow",
                     "remove_others_locks": "Deny",
-                    "rename_repository": "Deny",
+                    "rename_repository": "Allow",
                 }
             }
             RepoUserPermissions.set_all_permissions_for_repo(self.ado_client, repo.repo_id, input_perms)
@@ -112,7 +115,7 @@ class TestRepoUserPerms:
             # {'remove_others_locks': 'Allow'} != {'remove_others_locks': 'Deny'}  # TODO Fix this?
 
     def test_remove_perms(self) -> None:
-        with RepoContextManager(self.ado_client, "remove-perms") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "remove-perms") as repo:
             RepoUserPermissions.set_by_user_email(self.ado_client, repo.repo_id, email, "Allow", "contribute")
             perms = RepoUserPermissions.get_by_user_email(self.ado_client, repo.repo_id, email)
             assert isinstance(perms, list)
@@ -124,7 +127,7 @@ class TestRepoUserPerms:
             assert email not in updated_perms
 
     def test_with_filters(self) -> None:
-        with RepoContextManager(self.ado_client, "user-perms-with_filters") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "user-perms-with-filters") as repo:
             RepoUserPermissions.set_by_user_email(self.ado_client, repo.repo_id, email, "Allow", "contribute")
             all_perms = RepoUserPermissions.get_all_by_repo_id(self.ado_client, repo.repo_id, users_only=False, ignore_inherits=False)
             only_users = RepoUserPermissions.get_all_by_repo_id(self.ado_client, repo.repo_id, users_only=True, ignore_inherits=False)
@@ -134,7 +137,7 @@ class TestRepoUserPerms:
 
     @pytest.mark.hierarchy
     def test_set_by_user_descriptor(self) -> None:
-        with RepoContextManager(self.ado_client, "create-repo-user-perms") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-repo-user-perms") as repo:
             group = Group.create(self.ado_client, "ado_wrapper-set-by-user-descriptor")
             RepoUserPermissions.set_by_group_descriptor(self.ado_client, repo.repo_id, group.group_descriptor, "Allow", "contribute")
             perms = RepoUserPermissions.get_by_subject_descriptor(self.ado_client, repo.repo_id, group.group_descriptor)

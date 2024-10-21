@@ -2,11 +2,17 @@ from datetime import datetime
 
 import pytest
 
+if __name__ == "__main__":
+    __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
+
 from ado_wrapper.resources.build_definitions import BuildDefinition
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.environment import Environment
+from ado_wrapper.resources.repo import Repo
 from ado_wrapper.resources.users import Member
-from tests.setup_client import RepoContextManager, setup_client
+from ado_wrapper.utils import TemporaryResource
+
+from tests.setup_client import setup_client, REPO_PREFIX
 from tests.build_definition_templates import MOST_BASIC_BUILD_YAML_FILE
 
 
@@ -78,7 +84,7 @@ class TestEnvironment:
         environment.delete(self.ado_client)
 
     def test_pipeline_perms(self) -> None:
-        with RepoContextManager(self.ado_client, "pipeline_perms") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "pipeline-perms") as repo:
             Commit.create(
                 self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "test commit"
             )
@@ -99,3 +105,8 @@ class TestEnvironment:
         # ---
         build_def.delete(self.ado_client)
         environment.delete(self.ado_client)
+
+
+if __name__ == "__main__":
+    # pytest.main([__file__, "-s", "-vvvv"])
+    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

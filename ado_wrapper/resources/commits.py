@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Member
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.errors import ConfigurationError, InvalidPermissionsError
+from ado_wrapper.errors import ConfigurationError, InvalidPermissionsError  # , UnknownError
 from ado_wrapper.utils import from_ado_date_string
 
 # from ado_wrapper.resources.branches import Branch
@@ -190,26 +190,53 @@ class Commit(StateManagedResource):
         return cls.from_request_payload(request["commits"][0])
 
     # @classmethod
-    # def roll_back_to_commit(cls, ado_client: "AdoClient", repo_id: str, commit_id: str, branch_name: str) -> None:
+    # def roll_back_latest_commit(cls, ado_client: "AdoClient", repo_id: str, branch_name: str) -> None:
+    #     from ado_wrapper.resources.repo import Repo
+
+    #     latest_commit = Commit.get_latest_by_repo(ado_client, repo_id, branch_name)
+    #     repo_name = Repo.get_by_id(ado_client, repo_id).name
+    #     generated_ref_name = f"refs/heads/{latest_commit}[:8]-revert-from-{branch_name}"
     #     PAYLOAD = {
-    #         "generatedRefName": f"refs/heads/{commit_id}[:8]-revert-from-main",
+    #         "generatedRefName": generated_ref_name,
     #         "ontoRefName": f"refs/heads/{branch_name}",
-    #         "source": {"commitList": [{"commitId": commit_id}]}}
-    #         # "repository": {
-    #         #     "id": repo_id,
-    #         #     "name": "repo_name",
-    #         #     "project": {"id": ado_client.ado_project_id, "name": ado_client.ado_project_name, "state": 1, "revision":399,
-    #         #                 "visibility":0,"lastUpdateTime":"2024-02-06T14:14:30.360Z"
-    #         #     },
-    #         # },
-    #     request = ado_client.session.post(
+    #         "source": {"commitList": [{"commitId": latest_commit}]},
+    #         "repository": {
+    #             "id": repo_id,
+    #             "name": repo_name,
+    #             "project": {"id": ado_client.ado_project_id, "name": ado_client.ado_project_name, "state": 1, "revision":399,
+    #                         "visibility":0,"lastUpdateTime":"2024-02-06T14:14:30.360Z"},
+    #             },
+    #         },
+    #     pr_ref_request = ado_client.session.post(
     #         f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_id}/_apis/git/repositories/{repo_id}/reverts",
     #         json=PAYLOAD
     #     )
-    #     if request.status_code != 201:
-    #         raise UnknownError("Could not rollback commit.")
-    #     revert_get_request = ado_client.session.get(
-    #         f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_id}/_apis/git/repositories/{repo_id}/reverts/{request.json()['revertId']}"
-    #     ).json()
-    #     if revert_get_request["status"] == 4 or revert_get_request["detailedStatus"]["conflict"]:
-    #         raise UnknownError("Error, there was a detected conflict and therefore could not complete.")
+    #     if pr_ref_request.status_code != 201:
+    #         raise UnknownError(f"Could not rollback commit pull request reference. Error: {pr_ref_request.text}")
+    #     # CREATE THE PULL REQUEST REF ^
+    #     ## =======
+    #     extra_params = {
+    #         "sourceRef": generated_ref_name,
+    #         "targetRef": branch_name,
+    #         "sourceRepositoryId": repo_id,
+    #         "targetRepositoryId": repo_id,
+    #         "revertCommit": latest_commit.commit_id,
+    #         "__rt": "fps",
+    #         "__ver": 2,
+    #     }
+    #     pull_request_create_request = ado_client.session.post(
+    #         f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{repo_name}/pullrequestcreate?api-version=7.1-preview.1&{'&'.join(extra_params)}",
+    #     )
+    #     if pull_request_create_request.status_code != 201:
+    #         raise UnknownError(f"Could not rollback commit pull request. Error: {pull_request_create_request.text}")
+    #     # ====
+    #     PAYLOAD = {"description":"Revert \"Test commit 3\"\n\nReverted commit `a2a177ea`.","isDraft": False,"labels":[],"reviewers":[],"sourceRefName":"refs/heads/a2a177e3-revert-from-new-branch","targetRefName":"refs/heads/new-branch","title":"Revert \"Test commit 3\""}
+    #     accept_create_pr_request = ado_client.session.post(
+    #         f"https://dev.azure.com/benskerritt/cc1e50e7-580c-43bc-8589-1e4d134ad61b/_apis/git/repositories/16db8bc8-4956-4748-b845-d1f41ded2640/pullRequests?supportsIterations=true",
+    #         json=PAYLOAD,
+    # )
+    # revert_get_request = ado_client.session.get(
+    #     f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_id}/_apis/git/repositories/{repo_id}/reverts/{request.json()['revertId']}"
+    # ).json()
+    # if revert_get_request["status"] == 4 or revert_get_request["detailedStatus"]["conflict"]:
+    #     raise UnknownError("Error, there was a detected conflict and therefore could not complete.")

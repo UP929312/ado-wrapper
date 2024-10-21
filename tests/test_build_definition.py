@@ -7,9 +7,11 @@ if __name__ == "__main__":
 
 from ado_wrapper.resources.build_definitions import BuildDefinition, HierarchyCreatedBuildDefinition
 from ado_wrapper.resources.commits import Commit
+from ado_wrapper.resources.repo import Repo
 from ado_wrapper.resources.users import Member
+from ado_wrapper.utils import TemporaryResource
 from tests.build_definition_templates import MOST_BASIC_BUILD_YAML_FILE
-from tests.setup_client import RepoContextManager, email, setup_client  # fmt: skip
+from tests.setup_client import setup_client, REPO_PREFIX, email
 
 
 # ======================================================================================================================
@@ -43,7 +45,7 @@ class TestBuildDefinition:
 
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
-        with RepoContextManager(self.ado_client, "create-delete-build-defs") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-delete-build-defs") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-create-delete", repo.repo_id, "build.yaml",
@@ -54,7 +56,7 @@ class TestBuildDefinition:
 
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
-        with RepoContextManager(self.ado_client, "get-build-defs-by-id") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "get-build-defs-by-id") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-get-by-id", repo.repo_id, "build.yaml",
@@ -66,7 +68,7 @@ class TestBuildDefinition:
 
     @pytest.mark.get_by_id
     def test_get_all_by_repo_id(self) -> None:
-        with RepoContextManager(self.ado_client, "get-all-build-defs-by-repo-id") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "get-all-build-defs-by-repo-id") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-get-all-by-repo", repo.repo_id, "build.yaml",
@@ -79,7 +81,7 @@ class TestBuildDefinition:
 
     @pytest.mark.update
     def test_update(self) -> None:
-        with RepoContextManager(self.ado_client, "update-build-defs") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "update-build-defs") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-update", repo.repo_id, "build.yaml",
@@ -99,7 +101,7 @@ class TestBuildDefinition:
 
     @pytest.mark.create_delete
     def test_create_delete_with_hierarchy(self) -> None:
-        with RepoContextManager(self.ado_client, "create-delete-def-with-hierarchy") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-delete-def-with-hierarchy") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "Update")
             hierarchy_created_build_definition = BuildDefinition.create_with_hierarchy(
                 self.ado_client, repo.repo_id, repo.name, "build.yaml", branch_name="test-branch"

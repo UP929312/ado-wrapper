@@ -5,7 +5,9 @@ if __name__ == "__main__":
 
 from ado_wrapper.resources.branches import Branch
 from ado_wrapper.resources.commits import Commit
-from tests.setup_client import RepoContextManager, setup_client
+from ado_wrapper.resources.repo import Repo
+from ado_wrapper.utils import TemporaryResource
+from tests.setup_client import setup_client, REPO_PREFIX
 
 
 class TestBranch:
@@ -27,20 +29,20 @@ class TestBranch:
 
     @pytest.mark.create_delete
     def test_create_delete_branch(self) -> None:
-        with RepoContextManager(self.ado_client, "create-delete-branch") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-delete-branch") as repo:
             branch = Branch.create(self.ado_client, repo.repo_id, "test-branch")
             Branch.delete_by_id(self.ado_client, branch.name, repo.repo_id)
 
     @pytest.mark.create_delete
     def test_create_delete_multiple_branches(self) -> None:
-        with RepoContextManager(self.ado_client, "create-delete-multiple-branches") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-delete-multiple-branches") as repo:
             branch1 = Branch.create(self.ado_client, repo.repo_id, "test-branch")
             branch2 = Branch.create(self.ado_client, repo.repo_id, "test-branch2")
             Branch.delete_by_id(self.ado_client, branch1.name, repo.repo_id)
             Branch.delete_by_id(self.ado_client, branch2.name, repo.repo_id)
 
     def test_get_certain_branches(self) -> None:
-        with RepoContextManager(self.ado_client, "get-certain-branches") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "get-certain-branches") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch-1", {"text.txt": "Contents"}, "add", "Commmit 1")
             branch = Branch.get_by_name(self.ado_client, repo.repo_id, "test-branch-1")
             assert branch is not None

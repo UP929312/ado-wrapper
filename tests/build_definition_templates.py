@@ -118,3 +118,17 @@ stages:
               echo "Pipeline variable value: $(my_var)"
             displayName: "Print Pipeline Variable"
 """
+
+INTEGRATIONS_TEST_YAML_FILE = """---
+trigger:
+  - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: ado_wrapper-test-for-integrations
+
+steps:
+  - script: echo Hello, world!
+    displayName: 'Integrations Testing'"""

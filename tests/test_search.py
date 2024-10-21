@@ -6,7 +6,10 @@ if __name__ == "__main__":
 from ado_wrapper.errors import ConfigurationError
 from ado_wrapper.resources.searches import CodeSearch, CodeSearchHit
 from ado_wrapper.resources.commits import Commit
-from tests.setup_client import RepoContextManager, setup_client  # fmt: skip
+from ado_wrapper.resources.repo import Repo
+from ado_wrapper.utils import TemporaryResource
+
+from tests.setup_client import setup_client, REPO_PREFIX
 
 
 class TestCodeSearch:
@@ -47,7 +50,7 @@ class TestCodeSearch:
     @pytest.mark.from_request_payload
     def test_create_delete(self) -> None:
         TEXT = "abcdef123456"
-        with RepoContextManager(self.ado_client, "code-search") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "code-search") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"text.txt": TEXT}, "add", "Add initial")
             Commit.create(self.ado_client, repo.repo_id, "my-branch", "my-branch", {"text2.txt": TEXT}, "add", "Add initial 2")
             with pytest.raises(ConfigurationError):

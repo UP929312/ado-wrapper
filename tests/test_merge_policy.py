@@ -4,7 +4,10 @@ if __name__ == "__main__":
     __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
 
 from ado_wrapper.resources.merge_policies import MergePolicies, MergeBranchPolicy, MergeTypeRestrictionPolicy
-from tests.setup_client import RepoContextManager, existing_user_id, setup_client
+from ado_wrapper.resources.repo import Repo
+from ado_wrapper.utils import TemporaryResource
+
+from tests.setup_client import setup_client, REPO_PREFIX, existing_user_id
 
 
 class TestMergePolicy:
@@ -13,7 +16,7 @@ class TestMergePolicy:
 
     @pytest.mark.create_delete
     def test_create_branch_policy(self) -> None:
-        with RepoContextManager(self.ado_client, "create-branch-policy") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-branch-policy") as repo:
             MergePolicies.set_branch_policy(self.ado_client, repo.repo_id, 3, False, False, False, "do_nothing")
             policy = MergePolicies.get_branch_policy(self.ado_client, repo.repo_id)
             assert policy is not None
@@ -25,7 +28,7 @@ class TestMergePolicy:
 
     @pytest.mark.update
     def test_update_branch_policy(self) -> None:
-        with RepoContextManager(self.ado_client, "update-branch-policy") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "update-branch-policy") as repo:
             MergePolicies.set_branch_policy(self.ado_client, repo.repo_id, 3, False, False, False, "do_nothing")
 
             policy = MergePolicies.get_branch_policy(self.ado_client, repo.repo_id)
@@ -43,7 +46,7 @@ class TestMergePolicy:
     @pytest.mark.hierarchy
     @pytest.mark.create_delete
     def test_create_default_reviewer(self) -> None:
-        with RepoContextManager(self.ado_client, "create-default-reviewer") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-default-reviewer") as repo:
             MergePolicies.add_default_reviewer(self.ado_client, repo.repo_id, existing_user_id, False)
             default_reviewers = MergePolicies.get_default_reviewers(self.ado_client, repo.repo_id)
             assert default_reviewers is not None
@@ -62,7 +65,7 @@ class TestMergePolicy:
 
     @pytest.mark.create_delete
     def test_create_merge_type_restriction_policy(self) -> None:
-        with RepoContextManager(self.ado_client, "create-delete-merge-type-restriction") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-delete-merge-type-restriction") as repo:
             no_policy = MergePolicies.get_allowed_merge_types(self.ado_client, repo.repo_id)
             assert no_policy is None
             MergePolicies.set_allowed_merge_types(self.ado_client, repo.repo_id, True, False, True, False)
@@ -75,7 +78,7 @@ class TestMergePolicy:
 
     @pytest.mark.wip
     def test_get_all_repo_policies(self) -> None:
-        with RepoContextManager(self.ado_client, "get-all-repo-policies") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "get-all-repo-policies") as repo:
             policies = MergePolicies.get_all_repo_policies(self.ado_client, repo.repo_id)
             assert isinstance(policies, tuple)
             assert len(policies) == 3

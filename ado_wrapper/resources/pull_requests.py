@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Member, Reviewer
-from ado_wrapper.state_managed_abc import StateManagedResource
+from ado_wrapper.state_managed_abc import StateManagedResource, recursively_convert_from_json
 from ado_wrapper.utils import from_ado_date_string, build_hierarchy_payload
 from ado_wrapper.errors import ConfigurationError, UnknownError
 
@@ -115,10 +115,25 @@ class PullRequest(StateManagedResource):
         )
 
     @classmethod
-    def get_all(cls, ado_client: "AdoClient", status: PullRequestStatus = "all") -> list["PullRequest"]:
+    def get_all(
+        cls, ado_client: "AdoClient", status: PullRequestStatus = "all",
+        start: datetime | None = None, end: datetime | None = None,
+        limit: int = 1000,  # fmt: skip
+    ) -> list["PullRequest"]:
+        """`start` and `end` are for creation date, leaving them as `None` ignores those filters."""
+        params = {
+            "searchCriteria.status": status,
+            "searchCriteria.minTime": start.isoformat() if start is not None else None,
+            "searchCriteria.maxTime": end.isoformat() if end is not None else None,
+            "searchCriteria.queryTimeRangeType": "created",
+            "searchCriteria.includeLinks": False,  # Small optimisation
+            "$top": limit,
+        }
+        # TODO: Limit cannot be more than 1000, paginate for more.
+        extra_params_string = "".join([f"&{key}={value}" for key, value in params.items()])
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project_name}/_apis/git/pullrequests?searchCriteria.status={status}&api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/git/pullrequests?api-version=7.1" + extra_params_string,
         )  # pyright: ignore[reportReturnType]
 
     # ============ End of requirement set by all state managed resources ================== #
@@ -321,3 +336,9 @@ class PullRequestComment:
         liked_users = [Member.from_request_payload(user) for user in data.get("usersLiked", [])]
         return cls(str(data["id"]), str(data["parentCommentId"]), data.get("content"), author, from_ado_date_string(data["publishedDate"]),
                    data.get("commentType", "regular"), data.get("isDeleted", False), liked_users)  # fmt: skip
+
+    to_json = StateManagedResource.to_json
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> "PullRequestComment":
+        return PullRequestComment(**recursively_convert_from_json(data))

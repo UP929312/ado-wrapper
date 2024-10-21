@@ -517,7 +517,7 @@ reviewers = MergePolicies.get_default_reviewers(ado_client, <repo_id>, <branch_n
 merge_policies.remove_default_reviewer(ado_client, <repo_id>, <reviewer_id>, <branch_name>)
 
 # Set Allowed Merge Types
-merge_type_restriction_policy = MergePolicies.set_allowed_merge_types(ado_client, <repo_id>, <allow_basic_no_fast_forwards>, <allow_squash>, <allow_rebase_and_fast_forward>, <allow_rebase_with_merge_commit>, <branch_name>)
+merge_policies.set_allowed_merge_types(ado_client, <repo_id>, <allow_basic_no_fast_forwards>, <allow_squash>, <allow_rebase_and_fast_forward>, <allow_rebase_with_merge_commit>, <branch_name>)
 
 # Set Branch Policy
 merge_policies.set_branch_policy(ado_client, <repo_id>, <minimum_approver_count>, <creator_vote_counts>, <prohibit_last_pushers_vote>, <allow_completion_with_rejects>, <when_new_changes_are_pushed>, <branch_name>)
@@ -578,6 +578,24 @@ organisation = Organisation.get_by_id(ado_client, <organisation_id>)
 
 # Get By Name
 organisation = Organisation.get_by_name(ado_client, <organisation_name>)
+
+# Get Organisation Board Process Settings
+dictionary: dict[str, int] = Organisation.get_organisation_board_process_settings(ado_client)
+
+# Get Organisation Overview Settings
+dictionary = Organisation.get_organisation_overview_settings(ado_client)
+
+# Get Organisation Pipeline Settings
+dictionary: dict[str, bool] = Organisation.get_organisation_pipeline_settings(ado_client)
+
+# Get Organisation Repository Advanced Settings
+dictionary: dict[str, bool] = Organisation.get_organisation_repository_advanced_settings(ado_client)
+
+# Get Organisation Repository Settings
+organisation_repository_settingss = Organisation.get_organisation_repository_settings(ado_client)
+
+# Get Organisation Security Policy Settings
+dictionary = Organisation.get_organisation_security_policy_settings(ado_client)
 ```
 </details>
 
@@ -642,7 +660,7 @@ pipeline_authorisation.update(ado_client, <authorized>)
 
 ```py
 # Create
-project = Project.create(ado_client, <project_name>, <project_description>, <template_type>)
+project = Project.create(ado_client, <name>, <project_description>, <template_type>)
 
 # Delete
 project.delete(ado_client)
@@ -653,34 +671,38 @@ project.delete_by_id(ado_client, <project_id>)
 # Get All
 projects = Project.get_all(ado_client)
 
+# Get Artifact Storage Settings
+dictionary: dict[str, int = Project.get_artifact_storage_settings(ado_client)
+
+# Get Build Queue Settings
+dictionary: dict[str, Any] = Project.get_build_queue_settings(ado_client)
+
 # Get By Id
 project = Project.get_by_id(ado_client, <project_id>)
 
 # Get By Name
 project = Project.get_by_name(ado_client, <project_name>)
 
+# Get Overview Settings
+dictionary: dict[str, Any] = Project.get_overview_settings(ado_client)
+
 # Get Pipeline Settings
 dictionary: dict[str, bool] = Project.get_pipeline_settings(ado_client, <project_name>)
 
+# Get Repository Policy Settings
+project_repository_policy_settingss = Project.get_repository_policy_settings(ado_client)
+
 # Get Repository Settings
 dictionary = Project.get_repository_settings(ado_client, <project_name>)
-```
-</details>
 
------
+# Get Retention Policy Settings
+dictionary: dict[str, Any] = Project.get_retention_policy_settings(ado_client)
 
-## ProjectRepositorySettings
-<details>
+# Get Test Retention Settings
+dictionary: dict[str, int] = Project.get_test_retention_settings(ado_client)
 
-```py
-# Get By Project
-dictionary = ProjectRepositorySettings.get_by_project(ado_client, <project_name>)
-
-# Set Project Repository Setting
-project_repository_settings.set_project_repository_setting(ado_client, <repository_setting>, <state>, <project_name>)
-
-# Update Default Branch Name
-project_repository_settings.update_default_branch_name(ado_client, <new_default_branch_name>, <project_name>)
+# Set Test Retention Settings
+project.set_test_retention_settings(ado_client, <automated_result_retention_in_days>, <manual_result_retention_in_days>)
 ```
 </details>
 
@@ -709,7 +731,7 @@ pull_request.delete(ado_client)
 pull_request.delete_by_id(ado_client, <pull_request_id>)
 
 # Get All
-pull_requests = PullRequest.get_all(ado_client, <status>)
+pull_requests = PullRequest.get_all(ado_client, <status>, <start>, <end>, <limit>)
 
 # Get All By Author
 pull_requests = PullRequest.get_all_by_author(ado_client, <author_email>, <status>)
@@ -855,6 +877,9 @@ string_var = Repo.get_file(ado_client, <file_path>, <branch_name>)
 # Set Branch Merge Policy
 merge_policies = Repo.set_branch_merge_policy(ado_client, <repo_id>, <minimum_approver_count>, <creator_vote_counts>, <prohibit_last_pushers_vote>, <allow_completion_with_rejects>, <when_new_changes_are_pushed>, <branch_name>)
 
+# Set Default Branch
+repo.set_default_branch(ado_client, <new_default_branch_name>)
+
 # Update
 repo.update(ado_client, <attribute_name>, <attribute_value>)
 ```
@@ -957,14 +982,11 @@ run_stage_results = Run.get_run_stage_results(ado_client, <build_id>)
 # Get Stages Jobs Tasks
 dictionary = Run.get_stages_jobs_tasks(ado_client, <build_id>)
 
-# Get Task Parents
-string_var, string_var, string_var, string_var, string_var, string_var = Run.get_task_parents(ado_client, <build_id>, <task_id>)
-
 # Run All And Capture Results Sequentially
-dictionary: dict[str, run] = Run.run_all_and_capture_results_sequentially(ado_client, <data>, <max_timeout_seconds>, <send_updates_function>)
+runs = Run.run_all_and_capture_results_sequentially(ado_client, <data>, <max_timeout_seconds>, <send_updates_function>)
 
 # Run All And Capture Results Simultaneously
-dictionary: dict[str, run] = Run.run_all_and_capture_results_simultaneously(ado_client, <data>, <max_timeout_seconds>, <send_updates_function>)
+runs = Run.run_all_and_capture_results_simultaneously(ado_client, <data>, <max_timeout_seconds>, <send_updates_function>)
 
 # Run And Wait Until Completion
 run = Run.run_and_wait_until_completion(ado_client, <definition_id>, <template_parameters>, <run_variables>, <branch_name>, <stages_to_run>, <max_timeout_seconds>, <send_updates_function>)
@@ -1082,7 +1104,7 @@ user_permission.set_by_user_email(ado_client, <repo_id>, <email>, <action>, <per
 
 ```py
 # Create
-variable_group = VariableGroup.create(ado_client, <variable_group_name>, <variables>, <variable_group_description>)
+variable_group = VariableGroup.create(ado_client, <name>, <variables>, <variable_group_description>)
 
 # Delete
 variable_group.delete(ado_client)

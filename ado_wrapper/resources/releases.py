@@ -111,7 +111,7 @@ class Release(StateManagedResource):
             f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/releases/{release_id}?api-version=7.1",
         )
 
-    @classmethod  # TODO: Test
+    @classmethod  # TODO: Implement actual stuff here...
     def create(
         cls, ado_client: "AdoClient", definition_id: str, description: str = "Made with the ado_wrapper Python library"
     ) -> "Release":

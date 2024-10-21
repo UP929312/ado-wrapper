@@ -1,11 +1,13 @@
 import pytest
 
-from ado_wrapper.resources.annotated_tags import AnnotatedTag
-from ado_wrapper.resources.commits import Commit
-from tests.setup_client import RepoContextManager, setup_client
-
 if __name__ == "__main__":
     __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
+
+from ado_wrapper.resources.annotated_tags import AnnotatedTag
+from ado_wrapper.resources.commits import Commit
+from ado_wrapper.resources.repo import Repo
+from ado_wrapper.utils import TemporaryResource
+from tests.setup_client import setup_client, REPO_PREFIX
 
 
 class TestAnnotatedTags:
@@ -25,9 +27,10 @@ class TestAnnotatedTags:
         )
         assert tag.to_json() == AnnotatedTag.from_json(tag.to_json()).to_json()
 
+    @pytest.mark.wip
     @pytest.mark.create_delete
     def test_create_delete_tag(self) -> None:
-        with RepoContextManager(self.ado_client, "create-delete-tag") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-delete-tag") as repo:
             commit = Commit.create(self.ado_client, repo.repo_id, "main", "test-tag", {"text.txt": "Contents"}, "add", "Commmit 1")
             AnnotatedTag.create(self.ado_client, repo.repo_id, "test-tag", "Test tag message", commit.commit_id)
             tags = AnnotatedTag.get_all_by_repo(self.ado_client, repo.repo_id)
@@ -37,7 +40,7 @@ class TestAnnotatedTags:
             assert len(new_tags) == 0
 
     def test_get_certain_tages(self) -> None:
-        with RepoContextManager(self.ado_client, "get-certain-tags") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "get-certain-tags") as repo:
             commit1 = Commit.create(self.ado_client, repo.repo_id, "main", "test-tag-1", {"text.txt": "Contents"}, "add", "Commmit 1")
             commit2 = Commit.create(self.ado_client, repo.repo_id, "main", "test-tag-2", {"text2.txt": "Contents"}, "add", "Commmit 2")
             AnnotatedTag.create(self.ado_client, repo.repo_id, "test-tag-1", "Test tag message 1", commit1.commit_id)
@@ -49,7 +52,7 @@ class TestAnnotatedTags:
                 tag.delete(self.ado_client)
 
     def test_get_all_annonated_tags(self) -> None:
-        with RepoContextManager(self.ado_client, "get-all-annotated-tags") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "get-all-annotated-tags") as repo:
             commit1 = Commit.create(self.ado_client, repo.repo_id, "main", "test-tag-1", {"text.txt": "Contents"}, "add", "Commmit 1")
             commit2 = Commit.create(self.ado_client, repo.repo_id, "main", "test-tag-2", {"text2.txt": "Contents"}, "add", "Commmit 2")
             AnnotatedTag.create(self.ado_client, repo.repo_id, "test-tag-1", "Test tag message 1", commit1.commit_id)
@@ -61,5 +64,5 @@ class TestAnnotatedTags:
 
 
 if __name__ == "__main__":
-    # pytest.main([__file__, "-s", "-vvvv"])
-    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])
+    pytest.main([__file__, "-s", "-vvvv"])
+    # pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

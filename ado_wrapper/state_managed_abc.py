@@ -107,7 +107,7 @@ class StateManagedResource:
         return resource  # [return-value]
 
     # @classmethod
-    # def _maintain(cls: Type[T], ado_client: "AdoClient", *args, **kwargs) -> T:  # url: str, payload: dict[str, Any]
+    # def maintain(cls: Type[T], ado_client: "AdoClient", *args, **kwargs) -> T:  # url: str, payload: dict[str, Any]
     #     # To be able to get the existing one, we need to be able to fetch it by name
     #     # We can assume that all the resources have a cls._get_by_name(ado_client, payload["name"])
     #     # We do, however, have to be able to compare a ado_wrapper resource to a payload, that's much tricker...
@@ -124,10 +124,18 @@ class StateManagedResource:
     #     print(f"1. {existing_case=}")
     #     if existing_case:
     #         print("2. Existing case is Truthy, detecting changes")
-    #         existing_dictionary = [getattr(cls, x) for x in get_editable_fields(cls)]
-    #         if existing_case.json() != cls(abc, defg):
+    #         editable_attributes = get_editable_fields(existing_case)
+    #         existing_dictionary = {x: getattr(existing_case, x) for x in editable_attributes}
+    #         potenatial_resource = cls.from_create_args(*(args+kwargs.values()))  # type: ignore[abc]
+    #         potential_dictionary = {x: getattr(potenatial_resource, x) for x in editable_attributes}
+    #         differences = {key: potential_dictionary[key] for key in potential_dictionary
+    #                       if potential_dictionary[key] != existing_dictionary[key]}
+    #         if differences:
     #             print("3. Changes detected, updating resource")
-    #             good_resource = cls._update(self, ado_client, "put", some_url, <all_the_attributes>, <attribute_values>, {})
+    #             for key, value in differences.items():
+    #                 existing_case.update(ado_client, key, value)
+    #                 setattr(existing_case, key, value)
+    #             good_resource = existing_case
     #         else:
     #             print("3. No differences detected, doing nothing.")
     #             good_resource = existing_case
@@ -136,7 +144,6 @@ class StateManagedResource:
     #         good_resource = cls.create(ado_client, url, payload)  # type: ignore
     #     print("4. Returning")
     #     return good_resource
-
 
     @classmethod
     def _delete_by_id(cls: Type[T], ado_client: "AdoClient", url: str, resource_id: str) -> None:

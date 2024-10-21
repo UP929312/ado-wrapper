@@ -6,9 +6,11 @@ if __name__ == "__main__":
 from ado_wrapper.resources.build_definitions import BuildDefinition
 from ado_wrapper.resources.builds import Build
 from ado_wrapper.resources.commits import Commit
+from ado_wrapper.resources.repo import Repo
+from ado_wrapper.utils import TemporaryResource
 
 from tests.build_definition_templates import MOST_BASIC_BUILD_YAML_FILE
-from tests.setup_client import RepoContextManager, email, setup_client  # fmt: skip
+from tests.setup_client import email, setup_client, REPO_PREFIX
 
 
 class TestBuild:
@@ -40,7 +42,7 @@ class TestBuild:
 
     @pytest.mark.create_delete
     def test_create_delete_build(self) -> None:
-        with RepoContextManager(self.ado_client, "create-delete-builds") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-delete-builds") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-create-delete-build", repo.repo_id, "build.yaml",
@@ -55,7 +57,7 @@ class TestBuild:
 
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
-        with RepoContextManager(self.ado_client, "get-builds-by-id") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "get-builds-by-id") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-get-by-id", repo.repo_id, "build.yaml",
@@ -68,7 +70,7 @@ class TestBuild:
 
     @pytest.mark.update
     def test_update(self) -> None:
-        with RepoContextManager(self.ado_client, "update-builds") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "update-builds") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-update", repo.repo_id, "build.yaml",
@@ -86,7 +88,7 @@ class TestBuild:
 
     @pytest.mark.skip(reason="This requires waiting for build agents, and running a whole build")
     def test_create_and_wait_until_completion(self) -> None:
-        with RepoContextManager(self.ado_client, "create-and-wait-builds") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-and-wait-builds") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"build.yaml": MOST_BASIC_BUILD_YAML_FILE}, "add", "Update")
             build_definition = BuildDefinition.create(
                 self.ado_client, "ado_wrapper-test-build-for-wait-until-completion", repo.repo_id, "build.yaml",

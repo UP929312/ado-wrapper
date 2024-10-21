@@ -6,7 +6,9 @@ if __name__ == "__main__":
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.pull_requests import PullRequest
 from ado_wrapper.resources.repo import Repo
-from tests.setup_client import RepoContextManager, setup_client
+from ado_wrapper.utils import TemporaryResource
+
+from tests.setup_client import setup_client, REPO_PREFIX
 
 
 class TestRepo:
@@ -127,7 +129,7 @@ class TestRepo:
 
     @pytest.mark.wip
     def test_repo_get_and_decode_file(self) -> None:
-        with RepoContextManager(self.ado_client, "get-and-decode-file") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "get-and-decode-file") as repo:
             # JSON
             Commit.create(self.ado_client, repo.repo_id, "main", "my-branch", {"test.json": '{"a": 123, "b": 456}'})
             file_contents = repo.get_and_decode_file(self.ado_client, "test.json", "my-branch")

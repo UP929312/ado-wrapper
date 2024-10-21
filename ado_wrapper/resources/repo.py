@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import requests
 import yaml
 
-# from ado_wrapper.resources.branches import Branch
+from ado_wrapper.resources.branches import Branch
 from ado_wrapper.resources.commits import Commit, GitIgnoreTemplateType
 from ado_wrapper.resources.merge_policies import MergePolicies, MergePolicyDefaultReviewer
 from ado_wrapper.resources.pull_requests import PullRequest, PullRequestStatus
@@ -40,6 +40,10 @@ class Repo(StateManagedResource):
             data["id"], data["name"], data.get("defaultBranch", "main").removeprefix("refs/heads/"),
             bool(data.get("isDisabled", False))  # fmt: skip
         )
+
+    # @classmethod
+    # def from_create_args(cls, name: str, *_: list[Any]) -> "Repo":
+    #     return cls("id", name)
 
     @classmethod
     # @requires_perms("Git Repositories/Read")
@@ -194,6 +198,17 @@ class Repo(StateManagedResource):
             repo for repo in Repo.get_all(ado_client)
             if any(x.email.lower() == reviewer_email.lower() for x in MergePolicyDefaultReviewer.get_default_reviewers(ado_client, repo.repo_id))
         ]  # fmt: skip
+
+    def set_default_branch(self, ado_client: "AdoClient", new_default_branch_name: str) -> None:
+        branches = Branch.get_all_by_repo(ado_client, self.name)
+        if new_default_branch_name not in [x.name for x in branches]:
+            Branch.create(ado_client, self.repo_id, new_default_branch_name, self.default_branch)
+        request = ado_client.session.patch(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{self.repo_id}?api-version=6.0",
+            json={"defaultBranch": f"refs/heads/{new_default_branch_name}"},
+        )
+        if request.status_code != 200:
+            raise UnknownError("Error, failed to set the default branch for this repo!")
 
 
 # ====================================================================

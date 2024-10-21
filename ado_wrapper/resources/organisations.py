@@ -2,6 +2,10 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from ado_wrapper.state_managed_abc import StateManagedResource
+from ado_wrapper.resources.organisation_settings import (
+    OrganisatioOverviewSettings, OrganisationSecurityPolicySettings, OrganisationPipelineSettings,
+    OrganisationBoardProcessSettings, OrganisationRepositorySettings
+)  # fmt: skip
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -32,3 +36,10 @@ class Organisation(StateManagedResource):
     @classmethod
     def get_by_name(cls, ado_client: "AdoClient", organisation_name: str) -> "Organisation | None":
         return cls._get_by_abstract_filter(ado_client, lambda organisation: organisation.name == organisation_name)
+
+    get_organisation_overview_settings = OrganisatioOverviewSettings.get_overview_settings
+    get_organisation_security_policy_settings = OrganisationSecurityPolicySettings.get_organisation_security_policy_settings
+    get_organisation_repository_settings = OrganisationRepositorySettings.get_organisation_repository_settings
+    get_organisation_repository_advanced_settings = OrganisationRepositorySettings.get_organisation_repository_advanced_settings
+    get_organisation_pipeline_settings = OrganisationPipelineSettings.get_organisation_pipeline_settings
+    get_organisation_board_process_settings = OrganisationBoardProcessSettings.get_organisation_board_process_settings

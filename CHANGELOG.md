@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.33.0
+
+### Added
+
+- Added Organisation settings getters, including `get_organisation_overview_settings`, `get_organisation_security_policy_settings`, `get_organisation_repository_settings`, `get_organisation_repository_advanced_settings`, `get_organisation_pipeline_settings` and `get_organisation_board_process_settings`.
+- `OrgRepoSettingsProgrammaticNamesTypes` and `OrgRepoSettingsInternalNamesTypes` to typing_info.py
+- PullRequests.get_all() now has a filter for start and end time of PR creation, as well as a new limit (in the form of an int).
+- Added `Repo.set_default_branch(ado_client, <new_default_branch_name>)`, which sets the default branch name for a repo.
+- Added a new context manager, `TemporaryResource`, which takes a class and the same arguments as the class to create and delete after it's done.
+
+### Changed
+
+- PullRequests.get_all() now returns 1000 results, instead of 100.
+- PullRequestComment now has a `.to_json()` and a `from_json()` method.
+
+---
 
 ## v1.32.0
 

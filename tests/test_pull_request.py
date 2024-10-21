@@ -3,7 +3,9 @@ import pytest
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.pull_requests import PullRequest, PullRequestCommentThread
 from ado_wrapper.resources.repo import Repo
-from tests.setup_client import RepoContextManager, setup_client
+from ado_wrapper.utils import TemporaryResource
+
+from tests.setup_client import setup_client, REPO_PREFIX
 
 
 class TestPullRequest:
@@ -36,7 +38,7 @@ class TestPullRequest:
 
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
-        with RepoContextManager(self.ado_client, "create-delete-pull-request") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-delete-pull-request") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
             pull_request = PullRequest.create(self.ado_client, repo.repo_id, "Test PR for create-delete",
                                               "Test PR description", "test-branch", is_draft=True)  # fmt: skip
@@ -47,7 +49,7 @@ class TestPullRequest:
 
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
-        with RepoContextManager(self.ado_client, "repo-for-get-pull-request-by-id") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "repo-for-get-pull-request-by-id") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
             pull_request_created = PullRequest.create(
                 self.ado_client, repo.repo_id, "Test PR For Get PR By ID", "Test description", "test-branch"
@@ -58,7 +60,7 @@ class TestPullRequest:
 
     @pytest.mark.get_all
     def test_get_all(self) -> None:
-        with RepoContextManager(self.ado_client, "repo-for-get-pull-requests") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "repo-for-get-pull-requests") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch2", {"test2.txt": "This is one thing"}, "add", "Test commit 2")
             pull_request_1 = PullRequest.create(
@@ -73,7 +75,7 @@ class TestPullRequest:
             assert all(x.pull_request_id in [pull_request_1.pull_request_id, pull_request_2.pull_request_id] for x in all_pull_requests)
 
     def test_mark_as_draft(self) -> None:
-        with RepoContextManager(self.ado_client, "repo-for-mark-as-draft") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "repo-for-mark-as-draft") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
             pull_request = PullRequest.create(
                 self.ado_client, repo.repo_id, "Test PR for mark as drafk", "Test PR description", "test-branch"
@@ -89,7 +91,7 @@ class TestPullRequest:
 
     @pytest.mark.update
     def test_update(self) -> None:
-        with RepoContextManager(self.ado_client, "repo-for-update-pull-request") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "repo-for-update-pull-request") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
             pull_request = PullRequest.create(self.ado_client, repo.repo_id, "Test PR for Update", "Test PR description", "test-branch")
             # =====
@@ -109,7 +111,7 @@ class TestPullRequest:
 
     @pytest.mark.get_all
     def test_get_all_by_repo_id(self) -> None:
-        with RepoContextManager(self.ado_client, "repo-for-get-all-by-repo-id") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "repo-for-get-all-by-repo-id") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")
             pull_request_1 = PullRequest.create(
                 self.ado_client, repo.repo_id, "Test PR For Get Pull Requests 1", "Test description", "new-branch"
@@ -120,7 +122,7 @@ class TestPullRequest:
             assert all(x.pull_request_id in [pull_request_1.pull_request_id] for x in all_pull_requests)
 
     def test_post_comment(self) -> None:
-        with RepoContextManager(self.ado_client, "repo-for-post-comment") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "repo-for-post-comment") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "Change"}, "add", "Test commit")
             pull_request = PullRequest.create(self.ado_client, repo.repo_id, "Test PR For Post Comment", "", "new-branch")
             pull_request.post_comment(self.ado_client, "This is a test comment")
@@ -130,7 +132,7 @@ class TestPullRequest:
             pull_request.close(self.ado_client)
 
     def test_comment_thread(self) -> None:
-        with RepoContextManager(self.ado_client, "repo-for-comment-thread") as repo:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "repo-for-comment-thread") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "Change"}, "add", "Test commit")
             pull_request = PullRequest.create(self.ado_client, repo.repo_id, "Test PR For Comment Thread", "", "new-branch")
             pull_request.post_comment(self.ado_client, "This is a test comment")

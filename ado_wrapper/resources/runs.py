@@ -125,6 +125,9 @@ class Run(StateManagedResource):
             f"/{ado_client.ado_project_name}/_apis/pipelines/{pipeline_id}/runs?api-version=7.1-preview.1",
         )  # pyright: ignore[reportReturnType]
 
+    def link(self, ado_client: "AdoClient") -> str:
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build/results?buildId={self.run_id}"
+
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #

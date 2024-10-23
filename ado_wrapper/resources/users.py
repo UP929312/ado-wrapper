@@ -237,7 +237,7 @@ class Reviewer(Member):
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "Reviewer":
-        return cls(data["name"], data["email"], data["id"], data["vote"], data["isRequired"])
+        return cls(data["name"], data["email"], data["id"], data["vote"], data.get("isRequired", False))
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Reviewer":

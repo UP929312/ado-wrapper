@@ -14,12 +14,13 @@ from ado_wrapper.resources.organisations import Organisation
 from ado_wrapper.resources.permissions import Permission
 from ado_wrapper.resources.personal_access_tokens import PersonalAccessToken
 from ado_wrapper.resources.projects import Project
-from ado_wrapper.resources.pull_requests import PullRequest
+from ado_wrapper.resources.pull_requests import PullRequest, PullRequestComment
 from ado_wrapper.resources.releases import Release, ReleaseDefinition
 from ado_wrapper.resources.repo_user_permission import RepoUserPermissions, UserPermission
 from ado_wrapper.resources.repo import BuildRepository, Repo
 from ado_wrapper.resources.runs import Run
 from ado_wrapper.resources.searches import CodeSearch
+from ado_wrapper.resources.secure_files import SecureFile
 from ado_wrapper.resources.service_endpoint import ServiceEndpoint
 from ado_wrapper.resources.teams import Team
 from ado_wrapper.resources.users import AdoUser, Member, Reviewer, TeamMember
@@ -29,6 +30,6 @@ __all__ = [
     "AgentPool", "AnnotatedTag", "Artifact", "AuditLog", "Branch", "BuildTimeline", "Build", "BuildDefinition", "HierarchyCreatedBuildDefinition",
     "Commit", "Environment", "PipelineAuthorisation", "Group", "MergeBranchPolicy", "MergePolicies", "MergePolicyDefaultReviewer",
     "MergeTypeRestrictionPolicy", "Organisation", "Permission", "PersonalAccessToken", "Project",
-    "PullRequest", "Release", "ReleaseDefinition", "RepoUserPermissions", "UserPermission", "BuildRepository", "Repo", "Run", "CodeSearch",
-    "ServiceEndpoint", "Team", "AdoUser", "Member", "Reviewer", "TeamMember", "VariableGroup"  # fmt: skip
+    "PullRequest", "PullRequestComment", "Release", "ReleaseDefinition", "RepoUserPermissions", "UserPermission", "BuildRepository", "Repo", "Run",
+    "CodeSearch", "SecureFile", "ServiceEndpoint", "Team", "AdoUser", "Member", "Reviewer", "TeamMember", "VariableGroup"  # fmt: skip
 ]

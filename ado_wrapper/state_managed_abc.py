@@ -12,11 +12,16 @@ if TYPE_CHECKING:
 T = TypeVar("T", bound="StateManagedResource")
 
 
-def recursively_convert_to_json(attribute_name: str, attribute_value: Any) -> tuple[str, Any]:
+def recursively_convert_to_json(attribute_name: str, attribute_value: Any) -> tuple[str, Any]:  # pylint: disable=too-many-return-statements
     if isinstance(attribute_value, dict):
         return attribute_name, {key: recursively_convert_to_json("", value)[1] for key, value in attribute_value.items()}
     if isinstance(attribute_value, list):
-        return attribute_name, [recursively_convert_to_json(attribute_name, value)[1] for value in attribute_value]
+        if attribute_value:
+            list_type = attribute_value[0].__class__.__name__
+            if list_type in get_resource_variables():  # Custom variables, do special things to be able to convert.
+                return f"{attribute_name}::list[{list_type}]", [recursively_convert_to_json(attribute_name, value)[1] for value in attribute_value]
+            return attribute_name, [recursively_convert_to_json(attribute_name, value)[1] for value in attribute_value]
+        return attribute_name, []
     if isinstance(attribute_value, datetime):
         return f"{attribute_name}::datetime", attribute_value.isoformat()
     if type(attribute_value) in get_resource_variables().values():
@@ -25,17 +30,27 @@ def recursively_convert_to_json(attribute_name: str, attribute_value: Any) -> tu
     return attribute_name, str(attribute_value)
 
 
-def recursively_convert_from_json(dictionary: dict[str, Any]) -> Any:
+def convert_from_json(dictionary: dict[str, Any]) -> Any:
     data_copy = dict(dictionary.items())  # Deep copy
-    for key, value in dictionary.items():
-        if isinstance(key, str) and "::" in key and key.split("::")[-1] != "datetime":
-            instance_name, class_type = key.split("::")
-            class_ = get_resource_variables()[class_type]
-            del data_copy[key]
-            data_copy[instance_name] = class_.from_json(value)
-        elif isinstance(key, str) and key.endswith("::datetime"):
+    for key, value in dictionary.items():  # For each attribute
+        if key.endswith("::datetime"):
             del data_copy[key]
             data_copy[key.split("::")[0]] = datetime.fromisoformat(value)
+            continue
+        data_type = key.split("::")[-1]
+        custom_type = len(key.split("::")) == 2
+        is_list_of = data_type.startswith("list[")
+        if custom_type:
+            instance_name = key.removesuffix("::" + data_type)
+            if is_list_of:
+                data_type = data_type.removeprefix("list[").removesuffix("]")
+                class_ = get_resource_variables()[data_type]
+                del data_copy[key]
+                data_copy[instance_name] = [class_.from_json(x) for x in value]
+                continue
+            class_ = get_resource_variables()[data_type]
+            del data_copy[key]
+            data_copy[instance_name] = class_.from_json(value)
     return data_copy
 
 
@@ -50,7 +65,7 @@ class StateManagedResource:
 
     @classmethod
     def from_json(cls: Type[T], data: dict[str, Any]) -> T:
-        return cls(**recursively_convert_from_json(data))
+        return cls(**convert_from_json(data))
 
     def to_json(self) -> dict[str, Any]:
         attribute_names = [field_obj.name for field_obj in fields(self)]

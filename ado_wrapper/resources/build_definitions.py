@@ -129,6 +129,8 @@ class BuildDefinition(StateManagedResource):
             f"/{ado_client.ado_project_name}/_apis/build/definitions?api-version=7.1",
         )  # pyright: ignore[reportReturnType]
 
+    def link(self, ado_client: "AdoClient") -> str:
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build?definitionId={self.build_definition_id}"
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #

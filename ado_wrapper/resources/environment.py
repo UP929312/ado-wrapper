@@ -78,6 +78,9 @@ class Environment(StateManagedResource):
             f"/{ado_client.ado_project_name}/_apis/distributedtask/environments?api-version=7.1-preview.1&$top=10000",
         )  # pyright: ignore[reportReturnType]
 
+    def link(self, ado_client: "AdoClient") -> str:
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_environments/{self.environment_id}"
+
     # # ============ End of requirement set by all state managed resources ================== #
     # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # # =============== Start of additional methods included with class ===================== #
@@ -86,7 +89,7 @@ class Environment(StateManagedResource):
     def get_by_name(cls, ado_client: "AdoClient", name: str) -> "Environment | None":
         return cls._get_by_abstract_filter(ado_client, lambda x: x.name == name)
 
-    # # =============== Pipeline Permissions ===================== #
+    # =============== Pipeline Permissions ===================== #
 
     def get_pipeline_permissions(self, ado_client: "AdoClient") -> list["PipelineAuthorisation"]:
         return PipelineAuthorisation.get_all_for_environment(ado_client, self.environment_id)

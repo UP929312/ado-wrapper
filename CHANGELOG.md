@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.34.0
+
+### Added
+
+- Added `SecureFile`s, which are in a minimal state, only fetching, listing and getting by name are currently impelmented, the rest will be in the next version.
+- Added `.link(ado_client)` attribute to most resources, e.g. repo, variable group, run etc.
+
+### Changed
+
+- You can now import `PullRequestComment` directly from root
+- Fixed `Reviewer`s `from_json()` and `to_json()` sometimes not working properly.
+- lists of custom resources are now properly converted to and from json
+- delete_after parameter of `TemporaryResource`s now defaults to `True`, meaning things will be temporary after all.
+
+---
+
 ## v1.33.0
 
 ### Added

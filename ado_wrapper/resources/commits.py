@@ -73,6 +73,7 @@ class Commit(StateManagedResource):
     author: Member
     date: datetime
     message: str
+    # TODO: Add repo as param, somehow...
 
     def __str__(self) -> str:
         return f"{self.commit_id} by {self.author!s} on {self.date}\n{self.message}"
@@ -123,6 +124,9 @@ class Commit(StateManagedResource):
     @staticmethod
     def delete_by_id(ado_client: "AdoClient", commit_id: str) -> None:
         raise NotImplementedError
+
+    # def link(self, ado_client: "AdoClient") -> str:  # TODO: Work on this
+    #     return f"https://dev.azure.com/V{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo}commit/5ee3e8c7211d1c6cc08d1a577a565b690c0bab93?refName=refs%2Fheads%2Ffix%2Fstop-noise"
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

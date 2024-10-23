@@ -92,6 +92,9 @@ class Build(StateManagedResource):
             f"/{ado_client.ado_project_name}/_apis/build/builds?api-version=7.1&queryOrder=finishTimeDescending&$top={limit}&statusFilter={status}",
         )  # pyright: ignore[reportReturnType]
 
+    def link(self, ado_client: "AdoClient") -> str:
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}_build/results?buildId={self.build_id}"
+
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #

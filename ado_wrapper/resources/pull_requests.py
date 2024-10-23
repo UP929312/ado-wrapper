@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Member, Reviewer
-from ado_wrapper.state_managed_abc import StateManagedResource, recursively_convert_from_json
+from ado_wrapper.state_managed_abc import StateManagedResource, convert_from_json
 from ado_wrapper.utils import from_ado_date_string, build_hierarchy_payload
 from ado_wrapper.errors import ConfigurationError, UnknownError
 
@@ -135,6 +135,9 @@ class PullRequest(StateManagedResource):
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/git/pullrequests?api-version=7.1" + extra_params_string,
         )  # pyright: ignore[reportReturnType]
+
+    def link(self, ado_client: "AdoClient") -> str:
+        return f"https://dev.azure.com//{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo.name}/pullrequest/{self.pull_request_id}"
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -341,4 +344,4 @@ class PullRequestComment:
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "PullRequestComment":
-        return PullRequestComment(**recursively_convert_from_json(data))
+        return PullRequestComment(**convert_from_json(data))

@@ -148,6 +148,9 @@ class VariableGroup(StateManagedResource):
             f"/{ado_client.ado_project_name}/_apis/distributedtask/variablegroups?api-version=7.1",
         )  # pyright: ignore[reportReturnType]
 
+    def link(self, ado_client: "AdoClient") -> str:
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_library?itemType=VariableGroups&view=VariableGroupView&variableGroupId={self.variable_group_id}"
+
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #

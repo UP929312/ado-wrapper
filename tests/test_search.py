@@ -47,7 +47,7 @@ class TestCodeSearch:
         assert search.branch_name == "test-branch"
         assert search.matches == [CodeSearchHit(0, 1, 1, 1, None, "content")]
 
-    @pytest.mark.from_request_payload
+    @pytest.mark.create_delete
     def test_create_delete(self) -> None:
         TEXT = "abcdef123456"
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "code-search") as repo:

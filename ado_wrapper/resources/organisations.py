@@ -37,6 +37,9 @@ class Organisation(StateManagedResource):
     def get_by_name(cls, ado_client: "AdoClient", organisation_name: str) -> "Organisation | None":
         return cls._get_by_abstract_filter(ado_client, lambda organisation: organisation.name == organisation_name)
 
+    def link(self, ado_client: "AdoClient") -> str:
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/"
+
     get_organisation_overview_settings = OrganisatioOverviewSettings.get_overview_settings
     get_organisation_security_policy_settings = OrganisationSecurityPolicySettings.get_organisation_security_policy_settings
     get_organisation_repository_settings = OrganisationRepositorySettings.get_organisation_repository_settings

@@ -127,7 +127,7 @@ class TestRepo:
         assert "README.md" in repo_contents
         repo.delete(self.ado_client)
 
-    @pytest.mark.wip
+    # @pytest.mark.wip
     def test_repo_get_and_decode_file(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "get-and-decode-file") as repo:
             # JSON

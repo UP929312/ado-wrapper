@@ -46,6 +46,9 @@ class BuildArtifact(StateManagedResource):
         files = binary_data_to_file_dictionary(request.content, None, ado_client.suppress_warnings)
         return files
 
+    # def link(self, ado_client: "AdoClient") -> str:  # TODO: Find this?
+    #     return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build?definitionId={self.build_definition_id}"
+
     # ===================================================================================================
 
     @classmethod

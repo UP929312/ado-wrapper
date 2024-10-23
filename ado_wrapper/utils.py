@@ -182,7 +182,7 @@ class TemporaryResource(Generic[T]):
         self.ado_client = ado_client
         self.cls = cls
         self.args = args
-        self.delete_after = False
+        self.delete_after = True
         if "delete_after" in kwargs:
             self.delete_after = kwargs.pop("delete_after")
         self.kwargs = kwargs
@@ -234,7 +234,7 @@ def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We d
     from ado_wrapper.resources import (  # pylint: disable=possibly-unused-variable  # noqa: F401
         AgentPool, AnnotatedTag, Artifact, AuditLog, Branch, BuildTimeline, Build, BuildDefinition, HierarchyCreatedBuildDefinition, Commit, Environment,
         Group, MergePolicies, MergeBranchPolicy, MergePolicyDefaultReviewer, MergeTypeRestrictionPolicy, Organisation, PersonalAccessToken, Permission,
-        Project, PullRequest, Release, ReleaseDefinition, Repo, Run, BuildRepository, Team, AdoUser, Member, ServiceEndpoint,
+        Project, PullRequest, PullRequestComment, Release, ReleaseDefinition, Repo, Run, BuildRepository, Team, AdoUser, Member, SecureFile, ServiceEndpoint,
         Reviewer, VariableGroup,  # fmt: skip
     )
 
@@ -244,6 +244,6 @@ def get_resource_variables() -> dict[str, type["StateManagedResource"]]:  # We d
 ResourceType = Literal[
     "AgentPool", "AnnotatedTag", "Artifact", "AuditLog", "Branch", "BuildTimeline", "Build", "BuildDefinition", "HierarchyCreatedBuildDefinition",
     "Commit", "Environment", "Group", "MergePolicies", "MergeBranchPolicy", "MergePolicyDefaultReviewer", "MergeTypeRestrictionPolicy",
-    "Organisation", "PersonalAccessToken", "Permission", "Project",
-    "PullRequest", "Release", "ReleaseDefinition", "Repo", "Run", "Team", "AdoUser", "Member", "ServiceEndpoint", "Reviewer", "VariableGroup",
+    "Organisation", "PersonalAccessToken", "Permission", "Project", "PullRequest", "PullRequestComment", "Release", "ReleaseDefinition",
+    "Repo", "Run", "Team", "AdoUser", "Member", "SecureFile", "ServiceEndpoint", "Reviewer", "VariableGroup",
 ]  # fmt: skip

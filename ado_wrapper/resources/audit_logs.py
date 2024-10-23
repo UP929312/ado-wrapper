@@ -98,3 +98,6 @@ class AuditLog:
         cls, ado_client: "AdoClient", scope_type: ScopeTypeType, start_time: datetime | None = None, end_time: datetime | None = None
     ) -> list["AuditLog"]:
         return [x for x in cls.get_all(ado_client, start_time, end_time) if x.scope_type == scope_type]
+
+    # def link(self, ado_client: "AdoClient") -> str:  # TODO: Find this?
+    #     return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build?definitionId={self.build_definition_id}"

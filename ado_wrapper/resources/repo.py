@@ -81,11 +81,12 @@ class Repo(StateManagedResource):
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", repo_id: str) -> None:
-        # TODO: This never checks if it's disabled, so might error
         for pull_request in Repo.get_all_pull_requests(ado_client, repo_id, "all"):
             ado_client.state_manager.remove_resource_from_state("PullRequest", pull_request.pull_request_id)
         # for branch in Branch.get_all_by_repo(ado_client, repo_id):
         #     ado_client.state_manager.remove_resource_from_state("Branch", branch.name)
+        # TODO: Remove all tags from state as well, and whatever else repos have.
+        # TODO: This never checks if it's disabled, so might error
         return super()._delete_by_id(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}?api-version=7.1",

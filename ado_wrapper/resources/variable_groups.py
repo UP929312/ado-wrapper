@@ -68,6 +68,17 @@ def create_cipher_base(variable_group_name: str, variable_keys: list[str], shift
     )
 
 
+def shift_char(char: str, min_ascii: int, range_size: int, shift: int) -> str:
+    # Note: this was made with AI, I'm not that familiar with how it works...
+    return chr((ord(char) - min_ascii + shift) % range_size + min_ascii)
+
+
+def caesar_cipher(text: str, shift: int = -3) -> str:
+    min_ascii, max_ascii = 32, 126
+    range_size = max_ascii - min_ascii + 1
+    return "".join((shift_char(char, min_ascii, range_size, shift) if char != "\n" else "\n") for char in text)
+
+
 @dataclass
 class VariableGroup(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/distributedtask/variablegroups?view=azure-devops-rest-7.1"""
@@ -185,11 +196,6 @@ class VariableGroup(StateManagedResource):
         repo.delete(ado_client)
         ado_client.state_manager.remove_resource_from_state("Run", run.run_id)  # Instant, not an api call
         build_definition.delete(ado_client)
-
-        def caesar_cipher(text: str) -> str:
-            min_ascii, max_ascii, shift = 32, 126, -3
-            range_size = max_ascii - min_ascii + 1
-            return "".join(chr((ord(char) - min_ascii + shift) % range_size + min_ascii) for char in text)
 
         fixed_dict = {caesar_cipher(key): caesar_cipher(value) for key, value in my_dict.items()}
         return fixed_dict

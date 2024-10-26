@@ -130,7 +130,8 @@ class BuildDefinition(StateManagedResource):
         )  # pyright: ignore[reportReturnType]
 
     def link(self, ado_client: "AdoClient") -> str:
-        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build?definitionId={self.build_definition_id}"
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build?definitionId={self.build_definition_id}"  # fmt: skip
+
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #
@@ -214,6 +215,17 @@ class BuildDefinition(StateManagedResource):
         if request.status_code != 200:
             raise UnknownError(
                 f"Could not permit variable group with id {variable_group_id} on this build definition!\n"
+                + "- Sometimes, this is because it was run instantly after the build/run was created, try a time.sleep()?"
+            )
+
+    def allow_secure_file(self, ado_client: "AdoClient", secure_file_id: str) -> None:
+        request = ado_client.session.patch(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/pipelinePermissions/securefile/{secure_file_id}?api-version=6.0-preview.1",
+            json={"pipelines": [{"id": self.build_definition_id, "authorized": True}]},
+        )
+        if request.status_code != 200:
+            raise UnknownError(
+                f"Could not permit secure_file with id {secure_file_id} on this build definition!\n"
                 + "- Sometimes, this is because it was run instantly after the build/run was created, try a time.sleep()?"
             )
 

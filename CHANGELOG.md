@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.35.0
+
+### Added
+
+- `SecureFile`s can now be created and deleted using the appropriate functions
+- `BuildDefinition`s can now allow the use of `SecureFile`s, using `BuildDefinition.allow_secure_file()`
+- `SecureFiles` can now be downloaded (the contents), although like `VariableGroup.get_variable_group_contents()`, it's very slow (20-60 seconds)
+- `PullRequestComment`s & `PullRequestCommentThread`s now also include their parent pull request id and repo id for convenience.
+
+### Changed
+
+- `StateManager`s now also store the ADO `Organisation` and `Project`, preventing deletes of resources from different orgs/projects (solves a small bug)
+- `PullRequestCommentThread` are now StateManaged properly, and can be deleted, created, etc via state.
+
+---
+
 ## v1.34.0
 
 ### Added
@@ -11,8 +27,8 @@
 
 - You can now import `PullRequestComment` directly from root
 - Fixed `Reviewer`s `from_json()` and `to_json()` sometimes not working properly.
-- lists of custom resources are now properly converted to and from json
-- delete_after parameter of `TemporaryResource`s now defaults to `True`, meaning things will be temporary after all.
+- Lists of custom resources are now properly converted to and from json
+- `delete_after` parameter of `TemporaryResource`s now defaults to `True`, meaning things will be temporary after all.
 
 ---
 

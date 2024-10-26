@@ -1,5 +1,8 @@
 import pytest
 
+if __name__ == "__main__":
+    __import__("sys").path.insert(0, __import__("os").path.abspath(__import__("os").path.dirname(__file__) + "/.."))
+
 from ado_wrapper.resources.commits import Commit
 from ado_wrapper.resources.pull_requests import PullRequest, PullRequestCommentThread
 from ado_wrapper.resources.repo import Repo
@@ -142,3 +145,19 @@ class TestPullRequest:
             comment_thread = PullRequestCommentThread.get_all(self.ado_client, repo.repo_id, pull_request.pull_request_id)
             assert len(comment_thread[0].comments) == 1
             pull_request.close(self.ado_client)
+
+    def test_get_all_with_extra_attributes(self) -> None:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "repo-for-post-comment") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "Change"}, "add", "Test commit")
+            pull_request = PullRequest.create(self.ado_client, repo.repo_id, "Test PR For Post Comment", "", "new-branch")
+            pull_request.post_comment(self.ado_client, "This is a test comment")
+            pull_request_comments = pull_request.get_comments(self.ado_client, ignore_system_messages=True)
+
+            assert pull_request_comments[0].parent_pull_request_id == pull_request.pull_request_id
+            assert pull_request_comments[0].repo_id == repo.repo_id
+            pull_request.close(self.ado_client)
+
+
+if __name__ == "__main__":
+    # pytest.main([__file__, "-s", "-vvvv"])
+    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

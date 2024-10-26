@@ -14,7 +14,7 @@ from ado_wrapper.resources.organisations import Organisation
 from ado_wrapper.resources.permissions import Permission
 from ado_wrapper.resources.personal_access_tokens import PersonalAccessToken
 from ado_wrapper.resources.projects import Project
-from ado_wrapper.resources.pull_requests import PullRequest, PullRequestComment
+from ado_wrapper.resources.pull_requests import PullRequest, PullRequestCommentThread, PullRequestComment
 from ado_wrapper.resources.releases import Release, ReleaseDefinition
 from ado_wrapper.resources.repo_user_permission import RepoUserPermissions, UserPermission
 from ado_wrapper.resources.repo import BuildRepository, Repo
@@ -30,6 +30,6 @@ __all__ = [
     "AgentPool", "AnnotatedTag", "Artifact", "AuditLog", "Branch", "BuildTimeline", "Build", "BuildDefinition", "HierarchyCreatedBuildDefinition",
     "Commit", "Environment", "PipelineAuthorisation", "Group", "MergeBranchPolicy", "MergePolicies", "MergePolicyDefaultReviewer",
     "MergeTypeRestrictionPolicy", "Organisation", "Permission", "PersonalAccessToken", "Project",
-    "PullRequest", "PullRequestComment", "Release", "ReleaseDefinition", "RepoUserPermissions", "UserPermission", "BuildRepository", "Repo", "Run",
+    "PullRequest", "PullRequestCommentThread", "PullRequestComment", "Release", "ReleaseDefinition", "RepoUserPermissions", "UserPermission", "BuildRepository", "Repo", "Run",
     "CodeSearch", "SecureFile", "ServiceEndpoint", "Team", "AdoUser", "Member", "Reviewer", "TeamMember", "VariableGroup"  # fmt: skip
 ]

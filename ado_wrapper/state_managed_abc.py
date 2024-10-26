@@ -19,7 +19,7 @@ def recursively_convert_to_json(attribute_name: str, attribute_value: Any) -> tu
         if attribute_value:
             list_type = attribute_value[0].__class__.__name__
             if list_type in get_resource_variables():  # Custom variables, do special things to be able to convert.
-                return f"{attribute_name}::list[{list_type}]", [recursively_convert_to_json(attribute_name, value)[1] for value in attribute_value]
+                return f"{attribute_name}::list[{list_type}]", [recursively_convert_to_json(attribute_name, value)[1] for value in attribute_value]  # fmt: skip
             return attribute_name, [recursively_convert_to_json(attribute_name, value)[1] for value in attribute_value]
         return attribute_name, []
     if isinstance(attribute_value, datetime):
@@ -172,8 +172,10 @@ class StateManagedResource:
                     print("[ADO_WRAPPER] Resource not found, probably already deleted, removing from state")
             else:
                 if "message" in request.json():
-                    raise DeletionFailed(f"[ADO_WRAPPER] Error deleting {cls.__name__} ({resource_id}): {request.json()['message']}")
-                raise DeletionFailed(f"[ADO_WRAPPER] Error deleting {cls.__name__} ({resource_id}): {request.text}")
+                    raise DeletionFailed(
+                        f"[ADO_WRAPPER] Error deleting {cls.__name__} ({resource_id}), message: {request.json()['message']}"
+                    )
+                raise DeletionFailed(f"[ADO_WRAPPER] Error deleting {cls.__name__} ({resource_id}), text: {request.text}")
         ado_client.state_manager.remove_resource_from_state(cls.__name__, resource_id)  # type: ignore[arg-type]
 
     def _update(self, ado_client: "AdoClient", update_action: Literal["put", "patch"], url: str,  # pylint: disable=too-many-arguments

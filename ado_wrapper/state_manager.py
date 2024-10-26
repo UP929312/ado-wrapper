@@ -60,8 +60,13 @@ class StateManager:
             all_states["resources"][resource_type] = {}
         if resource_id in all_states["resources"][resource_type]:
             self.remove_resource_from_state(resource_type, resource_id)
-        metadata = {"created_datetime": datetime.now().isoformat(), "run_id": self.run_id}
-        all_data = {resource_id: {"data": resource_data, "metadata": metadata, "lifecycle-policy": {}}}
+        metadata = {
+            "created_datetime": datetime.now().isoformat(),
+            "run_id": self.run_id,
+            "organisation": self.ado_client.ado_org_name,
+            "project": self.ado_client.ado_project_name,
+        }
+        all_data = {resource_id: {"data": resource_data, "metadata": metadata}}  # , "lifecycle-policy": {}
         all_states["resources"][resource_type] |= all_data
         return self.write_state_file(all_states)
 
@@ -92,7 +97,7 @@ class StateManager:
             class_reference.delete_by_id(self.ado_client, resource_id)  # type: ignore[attr-defined]
         except DeletionFailed as exc:
             if not self.ado_client.suppress_warnings:
-                print(f"[ADO_WRAPPER], {exc}")
+                print(f"[ADO_WRAPPER] Deleting that resource failed!\nError: {exc}")
         except (NotImplementedError, TypeError):
             if not self.ado_client.suppress_warnings:
                 print(
@@ -110,7 +115,13 @@ class StateManager:
             else {resource_type_filter: self.load_state()["resources"][resource_type_filter]}
         )
         for resource_type, resources in all_resources.items():
-            for resource_id in resources:
+            for resource_id, resource_attributes in resources.items():
+                # If it's from a different project, skip it ================
+                if resource_attributes["metadata"]["project"] != self.ado_client.ado_project_name:
+                    if not self.ado_client.suppress_warnings:
+                        print(f"[ADO_WRAPPER] The chosen resource is from a different project, skipping delete {resource_type}, ({resource_id})")  # fmt: skip
+                    continue
+                # ==========================================================
                 try:
                     self.delete_resource(resource_type, resource_id)  # pyright: ignore[reportArgumentType]
                 except DeletionFailed as e:
@@ -143,7 +154,7 @@ class StateManager:
 
     def load_all_resources_with_prefix_into_state(self, prefix: str) -> None:
         from ado_wrapper.resources import (  # pylint: disable=possibly-unused-variable  # noqa: F401
-            AgentPool, BuildDefinition, Environment, Project, ReleaseDefinition, Repo, ServiceEndpoint, VariableGroup
+            AgentPool, BuildDefinition, Environment, Project, ReleaseDefinition, Repo, SecureFile, ServiceEndpoint, VariableGroup
         )  # fmt: skip
         for resource_type in [value for key, value in locals().items() if key not in ("self", "prefix")]:
             for resource in resource_type.get_all(self.ado_client):

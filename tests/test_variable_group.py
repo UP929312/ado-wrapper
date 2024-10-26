@@ -79,10 +79,11 @@ class TestVariableGroup:
         assert variable_group.name == variable_group_created.name
 
     @pytest.mark.skip(reason="This test takes 25-60 seconds (requires a build)")
+    # @pytest.mark.wip
     @pytest.mark.get_contents
     def test_get_variable_group_contents(self) -> None:
         mapping = {"a": "123", "b": "456"}
-        variable_group = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-get_variable_group_contents", mapping)
+        variable_group = VariableGroup.create(self.ado_client, "ado_wrapper-test-for-get-variable-group-contents", mapping)
         contents = VariableGroup.get_variable_group_contents(self.ado_client, variable_group.name)
         variable_group.delete(self.ado_client)
         assert contents == mapping

@@ -266,7 +266,7 @@ class PullRequest(StateManagedResource):
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{self.repo.repo_id}/pullRequests/{self.pull_request_id}/threads?api-version=7.1",
             json={"comments": [{"commentType": 1, "content": content}], "status": "1"},
         ).json()
-        return PullRequestComment.from_request_payload(request["comments"][0])
+        return PullRequestComment.from_request_payload(request["comments"][0], self.repo.repo_id, self.pull_request_id)
 
 
 @dataclass
@@ -277,26 +277,30 @@ class PullRequestCommentThread(StateManagedResource):
     thread_id: str
     status: str | None
     comments: list["PullRequestComment"]
+    repo_id: str | None = field(repr=False)
+    parent_pull_request_id: str | None = field(repr=False)
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "PullRequestCommentThread":
-        comments = [PullRequestComment.from_request_payload(comment) for comment in data["comments"]]
-        return cls(data["id"], data.get("status"), comments)
+    def from_request_payload(cls, data: dict[str, Any], repo_id: str, pull_request_id: str) -> "PullRequestCommentThread":  # type: ignore[override]
+        comments = [PullRequestComment.from_request_payload(comment, repo_id, pull_request_id) for comment in data["comments"]]
+        return cls(data["id"], data.get("status"), comments, repo_id, pull_request_id)
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", repo_id: str, pull_request_id: str, thread_id: str) -> "PullRequestCommentThread":
-        return super()._get_by_url(
-            ado_client,
+        request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads/{thread_id}?api-version=7.1",
-        )
+        ).json()
+        return cls.from_request_payload(request, repo_id, pull_request_id)  # Can't use _get_by_url because of the additional params
 
     @classmethod
     def create(cls, ado_client: "AdoClient", repo_id: str, pull_request_id: str, content: str) -> "PullRequestCommentThread":
-        return super()._create(
-            ado_client,
+        request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads?api-version=7.1",
-            {"comments": [{"commentType": 1, "content": content}]},
-        )
+            json={"comments": [{"commentType": 1, "content": content}]},
+        ).json()
+        pull_request_comment_thread = cls.from_request_payload(request, repo_id, pull_request_id)
+        ado_client.state_manager.add_resource_to_state("PullRequestCommentThread", pull_request_comment_thread.thread_id, pull_request_comment_thread.to_json())  # fmt: skip
+        return pull_request_comment_thread
 
     def delete_by_id(self, ado_client: "AdoClient", repo_id: str, pull_request_id: str, thread_id: str) -> None:
         return super()._delete_by_id(
@@ -307,16 +311,15 @@ class PullRequestCommentThread(StateManagedResource):
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient", repo_id: str, pull_request_id: str) -> list["PullRequestCommentThread"]:
-        return super()._get_all(
-            ado_client,
+        request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/threads?api-version=7.1",
-        )  # pyright: ignore[reportReturnType]
+        ).json()["value"]
+        return [cls.from_request_payload(x, repo_id, pull_request_id) for x in request]  # pyright: ignore[reportReturnType]
 
 
 @dataclass
 class PullRequestComment:
-    """https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-thread-comments/list?view=azure-devops-rest-7.1
-    Comments' content will be None if they've been deleted, or if they're system comments."""
+    """Comments' content will be None if they've been deleted, or if they're system comments."""
 
     comment_id: str
     parent_comment_id: str = field(repr=False)
@@ -327,18 +330,20 @@ class PullRequestComment:
     is_deleted: bool = field(repr=False)
     liked_users: list[Member] = field(repr=False)
 
-    def __str__(self) -> str:
-        return (
-            f"PullRequestComment(comment_id={self.comment_id}, author_email=`{self.author.email}`, content=`{self.content}`, "
-            f"creation_date={self.creation_date}, comment_type={self.comment_type}{', is_deleted=True' if self.is_deleted else ''})"
-        )
+    repo_id: str = field(repr=False)
+    parent_pull_request_id: str = field(repr=False)
 
     @classmethod
-    def from_request_payload(cls, data: dict[str, Any]) -> "PullRequestComment":
+    def from_request_payload(cls, data: dict[str, Any], repo_id: str, pull_request_id: str) -> "PullRequestComment":
+        """This is used by posting new comments, they return just a comment, not a thread."""
         author = Member.from_request_payload(data["author"])
         liked_users = [Member.from_request_payload(user) for user in data.get("usersLiked", [])]
-        return cls(str(data["id"]), str(data["parentCommentId"]), data.get("content"), author, from_ado_date_string(data["publishedDate"]),
-                   data.get("commentType", "regular"), data.get("isDeleted", False), liked_users)  # fmt: skip
+        return cls(
+            str(data["id"]), str(data["parentCommentId"]), data.get("content"), author,
+            data.get("commentType", "regular"), from_ado_date_string(data["publishedDate"]),
+            data.get("isDeleted", False), liked_users,
+            repo_id, pull_request_id,
+        )  # fmt: skip
 
     to_json = StateManagedResource.to_json
 

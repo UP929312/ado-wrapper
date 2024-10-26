@@ -158,7 +158,7 @@ class Member(StateManagedResource):
         # This gets returned slightly differently from different APIs
         return cls(
             data["displayName"],
-            data.get("uniqueName") or data.get("mailAddress", "UNKNOWN"),  # type: ignore[arg-type]
+            data.get("uniqueName") or data.get("email") or data.get("mailAddress", "UNKNOWN"),  # type: ignore[arg-type]
             data.get("id") or data["originId"],
         )  # fmt: skip
 

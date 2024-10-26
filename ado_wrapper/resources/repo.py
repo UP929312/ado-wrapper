@@ -9,14 +9,13 @@ import yaml
 from ado_wrapper.resources.branches import Branch
 from ado_wrapper.resources.commits import Commit, GitIgnoreTemplateType
 from ado_wrapper.resources.merge_policies import MergePolicies, MergePolicyDefaultReviewer
-from ado_wrapper.resources.pull_requests import PullRequest, PullRequestStatus
+from ado_wrapper.resources.pull_requests import PullRequest
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.errors import ResourceNotFound, UnknownError
 from ado_wrapper.utils import binary_data_to_file_dictionary  # requires_perms
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
-    from ado_wrapper.resources.merge_policies import MergeBranchPolicy, WhenChangesArePushed
 
 RepoEditableAttribute = Literal["name", "default_branch", "is_disabled"]
 
@@ -101,7 +100,7 @@ class Repo(StateManagedResource):
         )  # pyright: ignore[reportReturnType]
 
     def link(self, ado_client: "AdoClient") -> str:
-        return f"https://dev.azure.com//{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.name}"
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.name}"
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -165,36 +164,15 @@ class Repo(StateManagedResource):
             ado_client, self.repo_id, pull_request_title, pull_request_description, branch_name, to_branch_name, is_draft
         )
 
-    @staticmethod
-    def get_all_pull_requests(ado_client: "AdoClient", repo_id: str, status: PullRequestStatus = "all") -> list[PullRequest]:
-        return PullRequest.get_all_by_repo_id(ado_client, repo_id, status)
+    get_all_pull_requests = PullRequest.get_all_by_repo_id
 
     def delete(self, ado_client: "AdoClient") -> None:
         if self.is_disabled:
             self.update(ado_client, "is_disabled", False)
         self.delete_by_id(ado_client, self.repo_id)
 
-    @staticmethod
-    def get_content_static(
-        ado_client: "AdoClient", repo_id: str, file_types: list[str] | None = None, branch_name: str = "main"
-    ) -> dict[str, str]:
-        """Fetches the repo for you."""
-        repo = Repo.get_by_id(ado_client, repo_id)
-        return repo.get_contents(ado_client, file_types, branch_name)
-
-    @staticmethod
-    def get_branch_merge_policy(ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> "MergeBranchPolicy | None":
-        return MergePolicies.get_branch_policy(ado_client, repo_id, branch_name)
-
-    @staticmethod
-    def set_branch_merge_policy(
-        ado_client: "AdoClient", repo_id: str, minimum_approver_count: int,
-        creator_vote_counts: bool, prohibit_last_pushers_vote: bool, allow_completion_with_rejects: bool,
-        when_new_changes_are_pushed: "WhenChangesArePushed", branch_name: str = "main",  # fmt: skip
-    ) -> MergePolicies | None:
-        return MergePolicies.set_branch_policy(ado_client, repo_id, minimum_approver_count, creator_vote_counts,
-                                               prohibit_last_pushers_vote, allow_completion_with_rejects, when_new_changes_are_pushed,
-                                               branch_name)  # fmt: skip
+    get_branch_merge_policy = MergePolicies.get_branch_policy
+    set_branch_merge_policy = MergePolicies.set_branch_policy
 
     @classmethod
     def get_all_repos_with_required_reviewer(cls, ado_client: "AdoClient", reviewer_email: str) -> list["Repo"]:

@@ -98,7 +98,7 @@ class Environment(StateManagedResource):
         return PipelineAuthorisation.create(ado_client, self.environment_id, pipeline_id)
 
     def remove_pipeline_permissions(self, ado_client: "AdoClient", pipeline_id: str) -> None:
-        PipelineAuthorisation.delete_by_id(ado_client, self.environment_id, pipeline_id)
+        return PipelineAuthorisation.delete_by_id(ado_client, self.environment_id, pipeline_id)
 
 
 @dataclass

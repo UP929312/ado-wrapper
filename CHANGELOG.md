@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.37.0
+
+### Added
+
+- `PullRequest`s can now be (automatically) paginated, meaning you can fetch more than 100 (or 1000) results using `.get_all()`.
+- `Project`s `get_pipeline_settings()` function now returns the retention policy settings marked at the top as well.
+- Added `BuildTimeline.get_link()`.
+- `BuildTimeline`s now also store their `build_id`
+
+### Changed
+
+- Fixed `PullRequest.link()`, `PullRequestComment.link()` and `Repo.link()`
+- Reworked how `Repo.get_all_pull_requests()` works and it's underlying function.
+- Used aliases for a lot of `Repo`s functions, making it DRY-er and removing code duplication.
+- Removed `get_content_static()`, it was bloated code and should never have been included.
+- `Commit`s __str__ method has been removed and replaced by the auto generated one from dataclasses
+
+---
+
 ## v1.36.0
 
 ### Added

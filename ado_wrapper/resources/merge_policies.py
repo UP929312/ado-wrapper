@@ -53,9 +53,10 @@ class MergePolicyDefaultReviewer(StateManagedResource):
     @classmethod
     def get_default_reviewers(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> list[Reviewer]:
         PAYLOAD = build_hierarchy_payload(
-            ado_client, "code-web.branch-policies-data-provider",
-            additional_properties={"repositoryId": repo_id, "refName": f"refs/heads/{branch_name}"},
-        )  # fmt: skip
+            ado_client, "code-web.branch-policies-data-provider", additional_properties={
+                "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}"
+            }  # fmt: skip
+        )
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.1-preview.1",
             json=PAYLOAD,
@@ -301,12 +302,14 @@ class MergePolicies(StateManagedResource):
 
     @classmethod
     def get_all_by_repo_id(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> list[MergePolicyDefaultReviewer | MergeBranchPolicy | MergeTypeRestrictionPolicy] | None:  # fmt: skip
-        # TODO: Make this use the utils.build_hierarchy_payload
-        payload = {"contributionIds": ["ms.vss-code-web.branch-policies-data-provider"], "dataProviderContext": {"properties": {
-            "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}", "sourcePage": {"routeValues": {"project": ado_client.ado_project_name}}}}}  # fmt: skip
+        PAYLOAD = build_hierarchy_payload(
+            ado_client, "code-web.branch-policies-data-provider", additional_properties={
+                "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}"
+            }  # fmt: skip
+        )
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview.1",
-            json=payload,
+            json=PAYLOAD,
         ).json()
         return cls.from_request_payload(request)
 

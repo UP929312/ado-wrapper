@@ -119,26 +119,28 @@ class PullRequest(StateManagedResource):
     def get_all(
         cls, ado_client: "AdoClient", status: PullRequestStatus = "all",
         start: datetime | None = None, end: datetime | None = None,
-        limit: int = 1000,  # fmt: skip
+        limit: int | None = None, repo_id: str | None = None  # fmt: skip
     ) -> list["PullRequest"]:
-        """`start` and `end` are for creation date, leaving them as `None` ignores those filters."""
+        """`start` and `end` are for creation date, leaving them as `None` ignores those filters.
+        If no repo_id is passed in, get ALL pull requests."""
         params = {
             "searchCriteria.status": status,
             "searchCriteria.minTime": start.isoformat() if start is not None else None,
             "searchCriteria.maxTime": end.isoformat() if end is not None else None,
             "searchCriteria.queryTimeRangeType": "created",
             "searchCriteria.includeLinks": False,  # Small optimisation
-            "$top": limit,
+            "$top": limit or 1000,
         }
-        # TODO: Limit cannot be more than 1000, paginate for more.
         extra_params_string = "".join([f"&{key}={value}" for key, value in params.items()])
-        return super()._get_all(
+        infix = f"repositories/{repo_id}/" if repo_id else ""
+        return super()._get_all_paginated(
             ado_client,
-            f"/{ado_client.ado_project_name}/_apis/git/pullrequests?api-version=7.1" + extra_params_string,
+            f"/{ado_client.ado_project_name}/_apis/git/{infix}pullrequests?api-version=7.1" + extra_params_string,
+            limit=limit,
         )  # pyright: ignore[reportReturnType]
 
     def link(self, ado_client: "AdoClient") -> str:
-        return f"https://dev.azure.com//{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo.name}/pullrequest/{self.pull_request_id}"
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo.name}/pullrequest/{self.pull_request_id}"
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -175,10 +177,7 @@ class PullRequest(StateManagedResource):
     @classmethod
     def get_all_by_repo_id(cls, ado_client: "AdoClient", repo_id: str, status: PullRequestStatus = "all") -> list["PullRequest"]:
         try:
-            return super()._get_all(
-                ado_client,
-                f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullrequests?searchCriteria.status={status}&api-version=7.1",
-            )  # pyright: ignore[reportReturnType]
+            return cls.get_all(ado_client, status, start=None, end=None, limit=None, repo_id=repo_id)
         except KeyError:
             if not ado_client.suppress_warnings:
                 print(f"[ADO_WRAPPER] Repo with id `{repo_id}` was disabled, or you had no access.")
@@ -348,7 +347,7 @@ class PullRequestComment:
         )  # fmt: skip
 
     def link(self, ado_client: "AdoClient") -> str:
-        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo_id}/pullRequest/{self.parent_pull_request_id}#{self.comment_id}"
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo_id}/pullRequest/{self.parent_pull_request_id}#{self.creation_date.timestamp()}"
 
     to_json = StateManagedResource.to_json
 

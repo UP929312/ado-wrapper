@@ -117,8 +117,21 @@ class ProjectBuildQueueSettings:
 
 class ProjectPipelineSettings:
     @staticmethod
-    def get_pipeline_settings(ado_client: "AdoClient", project_name: str | None = None) -> dict[str, bool]:
+    def get_pipeline_settings(ado_client: "AdoClient", project_name: str | None = None) -> dict[str, dict[str, bool]]:
         """Returns the values from https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_settings/settings"""
+        # ============================================================
+        # RETENTION POLICY
+        PAYLOAD = build_hierarchy_payload(
+            ado_client, "build-web.pipelines-retention-data-provider", route_id="admin-web.project-admin-hub-route"
+        )
+        retention_policy_request = ado_client.session.post(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview",
+            json=PAYLOAD,
+        ).json()
+        retention_mappings: dict[str, Any] = retention_policy_request["dataProviders"]["ms.vss-build-web.pipelines-retention-data-provider"]
+        retention_policy_settings = {key: value["value"] for key, value in retention_mappings.items() if isinstance(value, dict)}
+        # ============================================================
+        # GENERAL
         PAYLOAD = build_hierarchy_payload(
             ado_client, "build-web.pipelines-general-settings-data-provider", route_id="admin-web.project-admin-hub-route"
         )
@@ -127,11 +140,10 @@ class ProjectPipelineSettings:
             f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview",
             json=PAYLOAD,
         ).json()
-        # TODO: Add Retention policies from
-        # https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_settings/settings
-        # At the top
         mapping: dict[str, Any] = request["dataProviders"]["ms.vss-build-web.pipelines-general-settings-data-provider"]
-        return {key: value["enabled"] for key, value in mapping.items() if isinstance(value, dict)}
+        general_settings = {key: value["enabled"] for key, value in mapping.items() if isinstance(value, dict)}
+        # ============================================================
+        return {"retention_policy": retention_policy_settings, "general": general_settings}
 
 
 class ProjectRetentionPolicySettings:

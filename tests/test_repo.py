@@ -95,7 +95,7 @@ class TestRepo:
             self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "This should be on the branch"}, "add", "Test commit"
         )
         repo.create_pull_request(self.ado_client, "test-branch", "Test PR", "Test PR description")
-        pull_requests = repo.get_all_pull_requests(self.ado_client, repo_id=repo.repo_id, status="all")
+        pull_requests = Repo.get_all_pull_requests(self.ado_client, repo_id=repo.repo_id, status="all")
         assert len(pull_requests) == 1
         assert all(isinstance(pr, PullRequest) for pr in pull_requests)
         pull_requests[0].close(self.ado_client)

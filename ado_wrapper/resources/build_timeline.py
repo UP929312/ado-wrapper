@@ -27,13 +27,16 @@ class BuildTimeline(StateManagedResource):
     last_changed_on: datetime
     change_id: int = field(repr=False)
     url: str = field(repr=False)
+    build_id: str = field(repr=False)
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "BuildTimeline":
+        build_id = data["url"].lower().split("_apis/build/builds/")[1].split("/timeline")[0]
         records = [BuildTimelineGenericItem.from_request_payload(x) for x in data["records"]]
         for record in records:
             record.add_parents(records)
-        return cls(data["id"], records, data["lastChangedBy"], from_ado_date_string(data["lastChangedOn"]), data["changeId"], data["url"])
+        return cls(data["id"], records, data["lastChangedBy"], from_ado_date_string(data["lastChangedOn"]),
+                   data["changeId"], data["url"], build_id)  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", build_id: str, timeline_id: str) -> "BuildTimeline":
@@ -48,8 +51,9 @@ class BuildTimeline(StateManagedResource):
         # Can't remove this because calling .delete() will call this.
         raise NotImplementedError
 
-    # def link(self, ado_client: "AdoClient") -> str:  # TODO: Find this?
-    #     return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build?definitionId={self.build_definition_id}"
+    def link(self, ado_client: "AdoClient") -> str:
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/build/builds/{self.build_id}/Timeline/{self.build_timeline_id}?api-version=7.1-preview.2"  # fmt: skip
+
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # =============== Start of additional methods included with class ===================== #

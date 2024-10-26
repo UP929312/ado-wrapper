@@ -161,11 +161,11 @@ BUILD_DEFINITION_HIERARCHY_CREATE_DUMP = {
 COMMIT_DUMP = {
     "commitId": "<commit_id>",
     "author": {"name": "<First Last>", "email": "<first.last@company.com>", "date": "2024-03-17T11:45:19Z"},
-    "committer": {"name": "<First Last>", "email": "<first.last@company.com>", "date": "2024-03-17T11:45:19Z"},
+    # "committer": {"name": "<First Last>", "email": "<first.last@company.com>", "date": "2024-03-17T11:45:19Z"},
     "comment": "Add README.md",
     "changeCounts": {"Add": 1, "Edit": 0, "Delete": 0},
     "url": "https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/git/repositories/<repo_id>/commits/<commit_id>",
-    "remoteUrl": "https://dev.azure.com/{ado_client.org}/{ado_client.project}/_git/ado_wrapper-test-repo-for-create-delete-builds/commit/<other_commit_id>",
+    "remoteUrl": "https://dev.azure.com/{ado_client.org}/{ado_client.project}/_git/ado_wrapper-test-repo-for-create-delete-builds/commit/<commit_id>",
 }
 
 GROUP_DUMP = {
@@ -262,6 +262,37 @@ REPO_POLICY_DUMP = {
                                                         'fd2167ab-b0be-447a-8ec8-39368250530e': {'currentScopePolicies': [{'createdBy': "<Member>", 'createdDate': '/Date(1712766957032)/', 'isEnabled': True, 'isBlocking': True, 'isDeleted': False, 'settings': {'requiredReviewerIds': ['ab35e0e5-b36d-46c4-8d91-714d413e4fae'], 'minimumApproverCount': 1, 'creatorVoteCounts': True, 'scope': [{'refName': 'refs/heads/main', 'matchKind': 'Exact', 'repositoryId': '1aa43e9c-ffca-4388-98b5-59b272a497b8'}]}, 'isEnterpriseManaged': False, '_links': {'self': {'href': 'https://dev.azure.com/{ado_org_name}/{repo_id}/_apis/policy/configurations/8179'}, 'policyType': {'href': 'https://dev.azure.com/{ado_org_name}/{repo_id}/_apis/policy/types/fd2167ab-b0be-447a-8ec8-39368250530e'}}, 'revision': 1, 'id': 8179, 'url': 'https://dev.azure.com/{ado_org_name}/{repo_id}/_apis/policy/configurations/8179', 'type': {'id': 'fd2167ab-b0be-447a-8ec8-39368250530e', 'url': 'https://dev.azure.com/{ado_org_name}/{repo_id}/_apis/policy/types/fd2167ab-b0be-447a-8ec8-39368250530e', 'displayName': 'Required reviewers'}}],
                                                                                                 'enterpriseManagedPolicies': None, 'inheritedPolicies': None}},
         }},
+}
+
+RETENTION_POLICY_DUMP = {
+    "dataProviderSharedData": {},
+    "dataProviders": {
+        "ms.vss-web.component-data": {},
+        "ms.vss-web.shared-data": None,
+        "ms.vss-build-web.pipelines-retention-data-provider": {
+            "viewOnlyPermissions": False,
+            "purgeAllArtifacts": {
+                "min": 1,
+                "max": 60,
+                "value": 30
+            },
+            "purgePullRequestRuns": {
+                "min": 1,
+                "max": 30,
+                "value": 10
+            },
+            "purgeRuns": {
+                "min": 30,
+                "max": 731,
+                "value": 30
+            },
+            "runsToRetainPerProtectedBranch": {
+                "min": 0,
+                "max": 50,
+                "value": 3
+            }
+        }
+    }
 }
 
 RUN_DUMP = {

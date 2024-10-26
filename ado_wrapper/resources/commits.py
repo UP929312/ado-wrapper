@@ -71,12 +71,9 @@ class Commit(StateManagedResource):
 
     commit_id: str = field(metadata={"is_id_field": True})  # None are editable
     author: Member
-    date: datetime
+    date: datetime = field(repr=False)
     message: str
-    repo_id: str
-
-    def __str__(self) -> str:
-        return f"{self.commit_id} by {self.author!s} on {self.date}\n{self.message}"
+    repo_id: str = field(repr=False)
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Commit":
@@ -140,11 +137,12 @@ class Commit(StateManagedResource):
     @classmethod
     def get_all_by_repo(cls, ado_client: "AdoClient", repo_id: str, branch_name: str | None = None) -> "list[Commit]":
         """Returns a list of all commits in the given repository."""
-        extra_query = (f"searchCriteria.itemVersion.version={branch_name}&searchCriteria.itemVersion.versionType={'branch'}&"
+        # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/commits/get-commits?view=azure-devops-rest-7.1&tabs=HTTP
+        extra_query = (f"&searchCriteria.itemVersion.version={branch_name}&searchCriteria.itemVersion.versionType={'branch'}&"
                        if branch_name is not None else "")  # fmt: skip
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/commits?{extra_query}api-version=7.1",
+            f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/commits?api-version=7.1{extra_query}",
         )  # pyright: ignore[reportReturnType]
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

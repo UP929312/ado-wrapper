@@ -112,7 +112,7 @@ class SecureFile(StateManagedResource):
         if request.status_code != 200:
             raise ConfigurationError("Could not create secure file, not sure why:", request.text)
         secure_file: SecureFile = SecureFile.get_by_name(ado_client, name)  # type: ignore[assignment]
-        ado_client.state_manager.add_resource_to_state("SecureFile", secure_file.secure_file_id, secure_file.to_json())
+        ado_client.state_manager.add_resource_to_state(secure_file)
         return secure_file
 
     @classmethod

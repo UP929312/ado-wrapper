@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.36.0
+
+### Added
+
+- StateManager.add_resource_to_state() now only takes the resource, rather than the id, type, etc, and extracts these itself now.
+- `BuildArtifact`s now have a `build_id` attribute.
+- `Commit`s now have the `repo_id` attribute.
+- `Artifact`s, `AuditLog`s, `Commit`s, `PersonalAccessToken`s, `PullRequestComment`s, `ReleaseDefinition`s & `Release`s now have proper .`link` methods.
+
+### Changed
+
+- Fixed a bug with `PullRequest`s `creation_date` and `comment_type` attributes being mixed up when using `from_request_payload`
+
+---
+
 ## v1.35.0
 
 ### Added

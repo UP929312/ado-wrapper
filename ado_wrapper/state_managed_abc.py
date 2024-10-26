@@ -118,7 +118,7 @@ class StateManagedResource:
         resource = cls.from_request_payload(request.json())
         if refetch:
             resource = cls.get_by_id(ado_client, extract_id(resource))  # type: ignore[attr-defined] # pylint: disable=no-member
-        ado_client.state_manager.add_resource_to_state(cls.__name__, extract_id(resource), resource.to_json())  # type: ignore[arg-type]
+        ado_client.state_manager.add_resource_to_state(resource)
         return resource  # [return-value]
 
     # @classmethod

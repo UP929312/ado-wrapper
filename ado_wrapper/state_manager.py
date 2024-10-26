@@ -9,6 +9,7 @@ from ado_wrapper.errors import DeletionFailed
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
+    from ado_wrapper.state_managed_abc import StateManagedResource
 
 STATE_FILE_VERSION = "1.8"
 
@@ -54,7 +55,9 @@ class StateManager:
 
     # =======================================================================================================
 
-    def add_resource_to_state(self, resource_type: ResourceType, resource_id: str, resource_data: dict[str, Any]) -> None:
+    def add_resource_to_state(self, resource: "StateManagedResource") -> None:
+        resource_type: ResourceType = resource.__class__.__name__  # type: ignore
+        resource_id = extract_id(resource)
         all_states = self.load_state()
         if resource_type not in all_states["resources"]:
             all_states["resources"][resource_type] = {}
@@ -66,7 +69,7 @@ class StateManager:
             "organisation": self.ado_client.ado_org_name,
             "project": self.ado_client.ado_project_name,
         }
-        all_data = {resource_id: {"data": resource_data, "metadata": metadata}}  # , "lifecycle-policy": {}
+        all_data = {resource_id: {"data": resource.to_json(), "metadata": metadata}}  # , "lifecycle-policy": {}
         all_states["resources"][resource_type] |= all_data
         return self.write_state_file(all_states)
 
@@ -131,8 +134,8 @@ class StateManager:
     def import_into_state(self, resource_type: ResourceType, resource_id: str) -> None:
         class_reference = get_resource_variables()[resource_type]
         # The child will have this VVV
-        data = class_reference.get_by_id(self.ado_client, resource_id).to_json()  # type: ignore[attr-defined]
-        self.add_resource_to_state(resource_type, resource_id, data)
+        resource = class_reference.get_by_id(self.ado_client, resource_id)  # type: ignore[attr-defined]
+        self.add_resource_to_state(resource)
 
     def wipe_state(self) -> None:
         self.write_state_file(EMPTY_STATE)

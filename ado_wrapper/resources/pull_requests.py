@@ -95,11 +95,12 @@ class PullRequest(StateManagedResource):
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullrequests?api-version=7.1",
             json=payload,
         ).json()
+        # TODO: Can we make this use super()?
         if request.get("message", "").startswith("TF401398"):
             raise ValueError("The branch you are trying to create a pull request from does not exist.")
-        obj = cls.from_request_payload(request)
-        ado_client.state_manager.add_resource_to_state("PullRequest", obj.pull_request_id, obj.to_json())
-        return obj
+        pull_request = cls.from_request_payload(request)
+        ado_client.state_manager.add_resource_to_state(pull_request)
+        return pull_request
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", pull_request_id: str) -> None:
@@ -299,7 +300,8 @@ class PullRequestCommentThread(StateManagedResource):
             json={"comments": [{"commentType": 1, "content": content}]},
         ).json()
         pull_request_comment_thread = cls.from_request_payload(request, repo_id, pull_request_id)
-        ado_client.state_manager.add_resource_to_state("PullRequestCommentThread", pull_request_comment_thread.thread_id, pull_request_comment_thread.to_json())  # fmt: skip
+        ado_client.state_manager.add_resource_to_state(pull_request_comment_thread)
+        # ado_client.state_manager.add_resource_to_state("PullRequestCommentThread", pull_request_comment_thread.thread_id, pull_request_comment_thread.to_json())  # fmt: skip
         return pull_request_comment_thread
 
     def delete_by_id(self, ado_client: "AdoClient", repo_id: str, pull_request_id: str, thread_id: str) -> None:
@@ -325,8 +327,8 @@ class PullRequestComment:
     parent_comment_id: str = field(repr=False)
     content: str | None
     author: Member
-    creation_date: datetime = field(repr=False)
     comment_type: CommentType
+    creation_date: datetime = field(repr=False)
     is_deleted: bool = field(repr=False)
     liked_users: list[Member] = field(repr=False)
 
@@ -344,6 +346,9 @@ class PullRequestComment:
             data.get("isDeleted", False), liked_users,
             repo_id, pull_request_id,
         )  # fmt: skip
+
+    def link(self, ado_client: "AdoClient") -> str:
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo_id}/pullRequest/{self.parent_pull_request_id}#{self.comment_id}"
 
     to_json = StateManagedResource.to_json
 

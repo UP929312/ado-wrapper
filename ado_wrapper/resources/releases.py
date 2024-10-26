@@ -136,8 +136,8 @@ class Release(StateManagedResource):
             f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/releases?api-version=7.1&definitionId={definition_id}",
         )  # pyright: ignore[reportReturnType]
 
-    # def link(self, ado_client: "AdoClient") -> str:  # TODO: DO
-    #     return f"https://dev.azure.com//{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo.name}/pullrequest/{self.pull_request_id}"
+    def link(self, ado_client: "AdoClient") -> str:
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_releaseProgress?_a=release-pipeline-progress&releaseId={self.release_id}"  # fmt: skip
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -232,6 +232,9 @@ class ReleaseDefinition(StateManagedResource):
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/definitions?api-version=7.1",
         )  # pyright: ignore[reportReturnType]
+
+    def link(self, ado_client: "AdoClient") -> str:
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_release?_a=releases&view=mine&definitionId={self.release_definition_id}"  # fmt: skip
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

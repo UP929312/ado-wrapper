@@ -99,5 +99,8 @@ class AuditLog:
     ) -> list["AuditLog"]:
         return [x for x in cls.get_all(ado_client, start_time, end_time) if x.scope_type == scope_type]
 
-    # def link(self, ado_client: "AdoClient") -> str:  # TODO: Find this?
-    #     return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build?definitionId={self.build_definition_id}"
+    def link(self, ado_client: "AdoClient") -> str:
+        FORMAT_FOR_DATETIME = "%Y-%m-%dT%H:%M:%S.%fZ"
+        from_string = datetime.strftime(self.created_on, FORMAT_FOR_DATETIME)  # 2024-10-14T13%3A00%3A00.000Z
+        to_string = datetime.strftime(self.created_on + timedelta(seconds=1), FORMAT_FOR_DATETIME)  # 2024-10-26T13%3A34%3A41.829Z
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/_settings/audit?logs-period={from_string}-{to_string}"

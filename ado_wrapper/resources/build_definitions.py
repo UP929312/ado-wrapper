@@ -264,9 +264,9 @@ class HierarchyCreatedBuildDefinition(StateManagedResource):
             json=PAYLOAD,
         ).json()
         data = request["dataProviders"]["ms.vss-build-web.create-and-run-pipeline-data-provider"]["pipeline"]  # id, name, queueName
-        instance = cls.from_request_payload(data)
-        ado_client.state_manager.add_resource_to_state(cls.__name__, data["id"], instance.to_json())  # type: ignore[arg-type]
-        return instance
+        hierarchy_build_Def = cls.from_request_payload(data)
+        ado_client.state_manager.add_resource_to_state(hierarchy_build_Def)
+        return hierarchy_build_Def
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", build_definition_id: str) -> "HierarchyCreatedBuildDefinition":

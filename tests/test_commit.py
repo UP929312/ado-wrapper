@@ -21,11 +21,13 @@ class TestCommit:
                 "commitId": "123",
                 "author": {"name": "test-author", "email": "test-email", "date": "2021-08-01T00:00:00Z"},
                 "comment": "Test commit",
+                "url": "https://dev.azure.com/{ado_client.org}/{ado_client.project_id}/_apis/git/repositories/my-repo/commits/123",
             }
         )
         assert commit.commit_id == "123"
         assert commit.author.name == "test-author"
         assert commit.message == "Test commit"
+        assert commit.repo_id == "my-repo"
         assert commit.to_json() == Commit.from_json(commit.to_json()).to_json()
 
     @pytest.mark.create_delete

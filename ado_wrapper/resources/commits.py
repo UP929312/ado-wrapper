@@ -73,15 +73,16 @@ class Commit(StateManagedResource):
     author: Member
     date: datetime
     message: str
-    # TODO: Add repo as param, somehow...
+    repo_id: str
 
     def __str__(self) -> str:
         return f"{self.commit_id} by {self.author!s} on {self.date}\n{self.message}"
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "Commit":
+        repo_id = data["url"].split("_apis/git/repositories/")[1].split("/commits/")[0]
         member = Member(data["author"]["name"], data["author"].get("email", "BOT USER"), "UNKNOWN")
-        return cls(data["commitId"], member, from_ado_date_string(data["author"]["date"]), data["comment"])
+        return cls(data["commitId"], member, from_ado_date_string(data["author"]["date"]), data["comment"], repo_id)
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", repo_id: str, commit_id: str) -> "Commit":
@@ -125,8 +126,8 @@ class Commit(StateManagedResource):
     def delete_by_id(ado_client: "AdoClient", commit_id: str) -> None:
         raise NotImplementedError
 
-    # def link(self, ado_client: "AdoClient") -> str:  # TODO: Work on this
-    #     return f"https://dev.azure.com/V{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo}commit/5ee3e8c7211d1c6cc08d1a577a565b690c0bab93?refName=refs%2Fheads%2Ffix%2Fstop-noise"
+    def link(self, ado_client: "AdoClient") -> str:
+        return f"https://dev.azure.com/V{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo_id}/commit/{self.commit_id}"
 
     # ============ End of requirement set by all state managed resources ================== #
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

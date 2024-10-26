@@ -18,16 +18,16 @@ class TestState:
         state_manager = self.ado_client.state_manager
 
         fake_repo = Repo("123", "test-repo", "master", False)
-        state_manager.add_resource_to_state("Repo", fake_repo.repo_id, fake_repo.to_json())
+        state_manager.add_resource_to_state(fake_repo)
         assert state_manager.load_state()["resources"]["Repo"]["123"]["data"] == fake_repo.to_json()
         state_manager.remove_resource_from_state("Repo", fake_repo.repo_id)
         assert state_manager.load_state()["resources"]["Repo"] == {}
 
-        state_manager.add_resource_to_state("Repo", fake_repo.repo_id, fake_repo.to_json())
+        state_manager.add_resource_to_state(fake_repo)
         state_manager.wipe_state()
         assert state_manager.load_state()["resources"]["Repo"] == {}
 
-        state_manager.add_resource_to_state("Repo", fake_repo.repo_id, fake_repo.to_json())
+        state_manager.add_resource_to_state(fake_repo)
         state_manager.update_resource_in_state("Repo", fake_repo.repo_id, fake_repo.to_json() | {"name": "new-name"})
         assert state_manager.load_state()["resources"]["Repo"]["123"]["data"] == fake_repo.to_json() | {"name": "new-name"}
 

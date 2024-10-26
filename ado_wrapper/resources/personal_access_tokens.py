@@ -126,6 +126,9 @@ class PersonalAccessToken:
         return [x for x in cls.get_access_tokens(ado_client, org_id, include_different_orgs=True, include_expired_tokens=True)
                 if x.display_name == display_name][0]  # fmt: skip
 
+    def link(self, ado_client: "AdoClient") -> str:
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/_usersSettings/tokens"
+
     # @staticmethod
     # def revoke_personal_access_token(ado_client: "AdoClient", pat_id: str) -> None:
     #     requires_initialisation(ado_client)

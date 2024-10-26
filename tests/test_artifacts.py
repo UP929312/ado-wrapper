@@ -27,6 +27,7 @@ class TestBuildArtifact:
                 "name": "test_artifact_name",
                 "source": "abcdefghi",  # The artifact source, which will be the ID of the job that produced this artifact. If an artifact is associated with multiple sources, this points to the first source.
                 "resource": {
+                    "url": "https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_id}/_apis/build/builds/9876/artifacts?artifactName={artifact_name}&api-version=7.1-preview.5",
                     "properties": {"localpath": "/home/vsts/work/1/s/abcde", "artifactsize": "12345"},
                     "downloadUrl": "https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_id}/_apis/build/builds/{build_id}/artifacts?artifactName={artifact_name}&api-version=7.1-preview.5&$format=zip",
                 },
@@ -41,6 +42,7 @@ class TestBuildArtifact:
             artifact.download_path
             == "https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_id}/_apis/build/builds/{build_id}/artifacts?artifactName={artifact_name}&api-version=7.1-preview.5&$format=zip"
         )
+        assert artifact.build_id == "9876"
 
     # @pytest.mark.create_delete
     # def test_create_artifact(self) -> None:

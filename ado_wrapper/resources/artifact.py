@@ -20,16 +20,18 @@ class BuildArtifact(StateManagedResource):
     artifact_local_path: str | None
     artifact_size_bytes: int | None
     download_path: str
+    build_id: str
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "BuildArtifact":
         # print(f"{data=}")
         artifact_size: str | None = data["resource"].get("properties", {"artifactsize": None})["artifactsize"]
+        build_id = data["resource"]["url"].split("build/builds/")[1].split("/artifacts?artifactName=")[0]
         return cls(
             str(data["id"]), data["name"], data["source"],
             data["resource"].get("properties", {}).get("localpath"),
             int(artifact_size) if isinstance(artifact_size, str) else None,
-            data["resource"]["downloadUrl"],
+            data["resource"]["downloadUrl"], build_id
         )  # fmt: skip
 
     @classmethod
@@ -46,8 +48,8 @@ class BuildArtifact(StateManagedResource):
         files = binary_data_to_file_dictionary(request.content, None, ado_client.suppress_warnings)
         return files
 
-    # def link(self, ado_client: "AdoClient") -> str:  # TODO: Find this?
-    #     return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build?definitionId={self.build_definition_id}"
+    def link(self, ado_client: "AdoClient") -> str:
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build/results?buildId={self.build_id}&view=artifacts&pathAsName=false&type=publishedArtifacts"  # fmt: skip
 
     # ===================================================================================================
 

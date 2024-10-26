@@ -97,17 +97,11 @@ Add more changelog messages for the older versions
 Tests for build timelines
 Test utils
 
-add .link for most resources, somehow dynamically? Maybe init=False attribute?
-
 Work more on maintain
-
-Give pull request comments their parent repo, and maybe parent pr? -----
-
-Issue with the state being dirtied up with different orgs, cannot delete. -----
 
 # @pytest.mark.xfail(strict=False)
 
-Change `add_resource_to_state` to just take the object, can extract the class name, id and data from it...
+Give commits more data, e.g. branch name, etc
 
 -----  
 

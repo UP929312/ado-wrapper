@@ -1,3 +1,4 @@
+import calendar
 import re
 from dataclasses import fields
 from datetime import datetime, timezone
@@ -88,6 +89,27 @@ def from_iso(dt_string: str | None) -> datetime | None:
     return dt.replace(tzinfo=timezone.utc)
 
 
+def is_bst(dt: datetime) -> bool:
+    """This function is used by PullRequestComment.link() to get the right timestamp.
+    There is two APIs for getting comments, the official one, and the one used by the web UI.
+    The web UI one takes into account timezones, and during BST, is 3600 ahead.
+    We detect if it's BST, and if so, add the 3600.
+    """
+    # Set up the year and determine BST start and end dates for that year
+    year = dt.year
+    last_sunday_march = max(week[-1] for week in calendar.monthcalendar(year, 3))
+    last_sunday_october = max(week[-1] for week in calendar.monthcalendar(year, 10))
+
+    dt_utc = dt.replace(tzinfo=timezone.utc)  # To stop: `TypeError: can't compare offset-naive and offset-aware datetimes`
+    bst_start = datetime(year, 3, last_sunday_march, 1, 0, 0, tzinfo=timezone.utc)
+    bst_end = datetime(year, 10, last_sunday_october, 1, 0, 0, tzinfo=timezone.utc)
+
+    # Check if the date falls within BST
+    return bst_start <= dt_utc < bst_end
+
+# ============================================================================================== #
+
+
 def get_fields_metadata(cls: type["StateManagedResource"]) -> dict[str, dict[str, str]]:
     return {field_obj.name: dict(field_obj.metadata) for field_obj in fields(cls)}
 
@@ -174,6 +196,8 @@ def build_hierarchy_payload(
 
 #     return decorator
 
+# ============================================================================================== #
+
 
 class TemporaryResource(Generic[T]):
     """A context manager which creates and (always) deletes a resource"""
@@ -194,6 +218,15 @@ class TemporaryResource(Generic[T]):
     def __exit__(self, *_: Any) -> None:
         if self.delete_after:
             self.resource.delete(self.ado_client)  # type: ignore[attr-defined]
+
+
+# ============================================================================================== #
+
+
+class Secret:
+    """Used for variable groups to mark them as secret."""
+    def __init__(self, value: str) -> None:
+        self.value = value
 
 
 # ============================================================================================== #

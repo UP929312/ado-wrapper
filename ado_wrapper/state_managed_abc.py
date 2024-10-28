@@ -174,19 +174,21 @@ class StateManagedResource:
         return [cls.from_request_payload(resource) for resource in request.json()["value"]]
 
     @classmethod
-    def _get_all_paginated(cls: Type[T], ado_client: "AdoClient", url: str, limit: int | None = None, page_size: int = 1000) -> list[T]:
+    def _get_all_paginated(cls: Type[T], ado_client: "AdoClient", url: str, limit: int | None = None,
+                           page_size: int = 1000, skip_parameter_name: str = "$skip") -> list[T]:
         """Gets all resources for a url, paginated"""
         fetched_resourced: list[T] = []
-        skip = 0
+        skip_amount = 0
         while True:
-            resources = cls._get_all(ado_client, url + f"&$skip={skip}")
-            if not resources:
+            resources = cls._get_all(ado_client, url + f"&{skip_parameter_name}={skip_amount}")
+            if len(resources) < page_size:  # If we fetch none, or less than the whole page, we're done.
+                fetched_resourced.extend(resources)
                 return fetched_resourced
             for resource in resources:
                 if limit is not None and len(fetched_resourced) >= limit:
                     return fetched_resourced
                 fetched_resourced.append(resource)
-            skip += page_size
+            skip_amount += page_size
 
     @classmethod
     def _get_by_abstract_filter(cls: Type[T], ado_client: "AdoClient", func: Callable[[T], bool]) -> T | None:

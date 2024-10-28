@@ -39,10 +39,10 @@ class TestAgentPool:
         assert agent_pool.target_size is None
         assert agent_pool.auto_size is None
         assert agent_pool.auto_update
+        assert agent_pool.created_on == datetime(2024, 1, 1, 1, 1, 1)
         assert not agent_pool.auto_provision
         assert not agent_pool.is_hosted
         assert agent_pool.scope == "a00000aa-a0a0-00aa-a000-0aa00a0aa00a"
-        assert isinstance(agent_pool.created_on, datetime)
 
         assert agent_pool.to_json() == AgentPool.from_json(agent_pool.to_json()).to_json()
 

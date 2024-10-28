@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Member
 from ado_wrapper.state_managed_abc import StateManagedResource
-from ado_wrapper.utils import from_ado_date_string, requires_initialisation
+from ado_wrapper.utils import from_ado_date_string, requires_initialisation, Secret
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -86,7 +86,7 @@ class VariableGroup(StateManagedResource):
     variable_group_id: str = field(metadata={"is_id_field": True})
     name: str  # Cannot currently change the name of a variable group
     description: str  # = field(metadata={"editable": True})  # Bug in the api means this is not editable (it never returns or sets description)
-    variables: dict[str, str] = field(metadata={"editable": True})
+    variables: dict[str, str | Secret] = field(metadata={"editable": True})
     created_on: datetime
     created_by: Member
     modified_by: Member
@@ -115,7 +115,10 @@ class VariableGroup(StateManagedResource):
     ) -> "VariableGroup":
         payload = {
             "name": name,
-            "variables": variables,
+            "variables": {
+                key: {"value": value.value if isinstance(value, Secret) else value, "isSecret": isinstance(value, Secret)}
+                for key, value in variables.items()
+            },
             "type": "Vsts",
             "variableGroupProjectReferences": [
                 {

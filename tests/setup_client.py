@@ -4,7 +4,8 @@ with open("tests/test_data.txt", encoding="utf-8") as test_data:
     ado_org_name, ado_project_name, secondary_project_name, email, pat_token, existing_user_id, existing_user_descriptor = test_data.read().splitlines()  # fmt: skip
 existing_user_name = email.split("@")[0].replace(".", " ").title().split(".")[0]
 
-ado_client = AdoClient(email, pat_token, ado_org_name, ado_project_name, "tests/test_state.state")
+ado_client = AdoClient(email, pat_token, ado_org_name, ado_project_name, "tests/test_state.state",
+                       latest_log_count=3, log_directory="tests/ado_wrapper_logs")  # fmt: skip
 
 REPO_PREFIX = "ado_wrapper-test-repo-for-"
 

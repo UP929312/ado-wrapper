@@ -1,11 +1,11 @@
 import json
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Member, Reviewer
 from ado_wrapper.state_managed_abc import StateManagedResource, convert_from_json
-from ado_wrapper.utils import from_ado_date_string, build_hierarchy_payload
+from ado_wrapper.utils import from_ado_date_string, build_hierarchy_payload, is_bst
 from ado_wrapper.errors import ConfigurationError, UnknownError
 
 if TYPE_CHECKING:
@@ -20,6 +20,7 @@ MergeStatus = Literal["succeeded", "conflicts", "rejectedByPolicy", "rejectedByU
 DraftState = Literal["Include drafts", "Exclude drafts", "Only include drafts"]
 CommentType = Literal["system", "regular", "codeChange", "unknown"]
 PrCommentStatus = Literal["active", "pending", "fixed", "wontFix", "closed"]
+CONFLICT_MESSAGE = "Submitted conflict resolution for the file(s)."
 
 merge_status_mapping: dict[int | None, MergeStatus] = {
     None: "notSet",
@@ -254,7 +255,11 @@ class PullRequest(StateManagedResource):
     def get_comment_threads(self, ado_client: "AdoClient", ignore_system_messages: bool = True) -> list["PullRequestCommentThread"]:
         comments = PullRequestCommentThread.get_all(ado_client, self.repo.repo_id, self.pull_request_id)
         if ignore_system_messages:
-            comments = [comment for comment in comments if comment.comments[0].comment_type != "system"]
+            comments = [
+                comment for comment in comments
+                if comment.comments[0].comment_type != "system"
+                and comment.comments[0].content is not None and not comment.comments[0].content.startswith(CONFLICT_MESSAGE)
+            ]  # fmt: skip
         return comments
 
     def get_comments(self, ado_client: "AdoClient", ignore_system_messages: bool = True) -> list["PullRequestComment"]:
@@ -320,7 +325,8 @@ class PullRequestCommentThread(StateManagedResource):
 
 @dataclass
 class PullRequestComment:
-    """Comments' content will be None if they've been deleted, or if they're system comments."""
+    """Comments' content will be None if they've been deleted (sometimes), or if they're system comments."""
+    # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-thread-comments/list?view=azure-devops-rest-7.1
 
     comment_id: str
     parent_comment_id: str = field(repr=False)
@@ -347,7 +353,10 @@ class PullRequestComment:
         )  # fmt: skip
 
     def link(self, ado_client: "AdoClient") -> str:
-        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo_id}/pullRequest/{self.parent_pull_request_id}#{self.creation_date.timestamp()}"
+        """The links for comments use timestamps to link to them, but the one sent back in the API is sometimes in BST, sometimes not."""
+        timestamp_datetime = self.creation_date+timedelta(hours=1) if is_bst(self.creation_date) else self.creation_date
+        fixed_timestamp = int(timestamp_datetime.timestamp())
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo_id}/pullRequest/{self.parent_pull_request_id}#{fixed_timestamp}"
 
     to_json = StateManagedResource.to_json
 

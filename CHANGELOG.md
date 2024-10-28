@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.38.0
+
+### Added
+
+- `Commit.get_all_by_repo` is now paginated, going from only 100 results to now unlimited.
+- All session requests made will now be logged per entry. This allows for better debugging and call de-duplication. This can be enabled by setting `latest_log_count` to either a number more than 0, or -1 to store infinite logs.
+- Variable group mappings are now a mapping of string -> (string | Secret), a new type which can mark things as secrets (import from root).
+
+### Changed
+
+- Fixed a small issue with `Commit.get_all_by_repo()`, which had a trailing `&`.
+- Fixed an issue with the paginator always fetching one more page than it needed.
+- Once again fixed the `PullRequest.link()` method, which improperly returned a daylight savings related bug. This is accounted for now.
+- System messages for `PullRequestComment`s now also include resolving merge conflicts.
+- Optimised a call in startup which means one less API call is made on initialisation.
+
+---
+
 ## v1.37.0
 
 ### Added

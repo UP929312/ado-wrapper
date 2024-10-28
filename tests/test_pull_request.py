@@ -61,6 +61,7 @@ class TestPullRequest:
             assert pull_request.pull_request_id == pull_request_created.pull_request_id
             pull_request_created.close(self.ado_client)
 
+    @pytest.mark.wip
     @pytest.mark.get_all
     def test_get_all(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "repo-for-get-pull-requests") as repo:

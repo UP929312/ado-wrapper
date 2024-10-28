@@ -135,14 +135,28 @@ class Commit(StateManagedResource):
         return max(cls.get_all_by_repo(ado_client, repo_id, branch_name), key=lambda commit: commit.date)
 
     @classmethod
-    def get_all_by_repo(cls, ado_client: "AdoClient", repo_id: str, branch_name: str | None = None) -> "list[Commit]":
+    def get_all_by_repo(
+        cls, ado_client: "AdoClient", repo_id: str, limit: str | None = None, branch_name: str | None = None
+    ) -> "list[Commit]":
         """Returns a list of all commits in the given repository."""
         # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/commits/get-commits?view=azure-devops-rest-7.1&tabs=HTTP
-        extra_query = (f"&searchCriteria.itemVersion.version={branch_name}&searchCriteria.itemVersion.versionType={'branch'}&"
+        extra_query = (f"&searchCriteria.itemVersion.version={branch_name}&searchCriteria.itemVersion.versionType=branch"
                        if branch_name is not None else "")  # fmt: skip
-        return super()._get_all(
+        params = {
+            "searchCriteria.queryTimeRangeType": "created",
+            "searchCriteria.includeLinks": False,  # Small optimisation
+            "searchCriteria.includeUserImageUrl": False,  # Small optimisation
+            "searchCriteria.includeWorkItems": False,  # Small optimisation
+            "searchCriteria.$top": limit or 10_000,
+            # "searchCriteria.author": author_name,  # TODO: actually try these.
+            # "searchCriteria.fromDate": start.isoformat() or None,
+            # "searchCriteria.toDate": end.isoformat() or None,
+        }
+        extra_params_string = "".join([f"&{key}={value}" for key, value in params.items()])
+        return super()._get_all_paginated(
             ado_client,
-            f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/commits?api-version=7.1{extra_query}",
+            f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/commits?api-version=7.1{extra_query}" + extra_params_string,
+            skip_parameter_name="searchCriteria.$skip",
         )  # pyright: ignore[reportReturnType]
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

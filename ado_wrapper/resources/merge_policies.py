@@ -68,7 +68,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
                 print(f"[ADO_WRAPPER] No default reviewers found for repo {repo_id}! Most likely it's disabled.")
             return []
         identities = request["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["identities"]
-        # === # Maybe switch ["id"] to ["descriptor"]?
+        # ===
         all_reviewers = [Reviewer(x["displayName"], x["uniqueName"], x["id"]) for x in identities]  # fmt: skip
         for policy_group in request["dataProviders"]["ms.vss-code-web.branch-policies-data-provider"]["policyGroups"].values():
             if policy_group["currentScopePolicies"] is None:

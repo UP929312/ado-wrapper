@@ -74,13 +74,13 @@ class ProjectBuildQueueSettings:
                    "sourcePage": {"routeId": "ms.vss-admin-web.project-admin-hub-route"}}}}  # fmt: skip
         # ============================================================================================================
         private_projects_request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/dataProviders/query?api-version=7.0-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/dataProviders/query?api-version=7.1-preview.1",
             json=PAYLOAD,
         ).json()["data"]["ms.vss-build-web.build-queue-hub-data-provider"]["taskHubLicenseDetails"]
         # ============================================================================================================
         PAYLOAD["context"]["properties"]["FetchPublicResourceUsage"] = True  # type: ignore[index]
         public_projects_request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/dataProviders/query?api-version=7.0-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/dataProviders/query?api-version=7.1-preview.1",
             json=PAYLOAD,
         ).json()["data"]["ms.vss-build-web.build-queue-hub-data-provider"]["resourceUsages"]
         # ============================================================================================================
@@ -152,7 +152,7 @@ class ProjectRetentionPolicySettings:
         """Gets a project's Retention policy settings, including how many days to keep releases, to delete the builds, etc. \n
         https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_settings/release"""
         request = ado_client.session.get(
-            f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/Release/releasesettings?api-version=7.0-preview.1",
+            f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/Release/releasesettings?api-version=7.1-preview.1",
         ).json()["retentionSettings"]
         return {
             "maximum_retention_policy": {
@@ -276,7 +276,7 @@ class ProjectRepositoryPolicySettings:
             }  # fmt: skip
         )
         request: dict[str, dict[str, list[Any]]] = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=5.0-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.1-preview.1",
             json=PAYLOAD,
         ).json()["dataProviders"]["ms.vss-code-web.repository-policies-data-provider"]["policyGroups"]  # fmt: skip
         policies_data = [x["currentScopePolicies"][0] for x in request.values()]
@@ -312,7 +312,7 @@ class ProjectTestRetentionSettings:
         """Gets the results from this page, including how long to keep automated and manual test runs & results:\n
         https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_settings/testmanagement"""
         request = ado_client.session.get(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/test/ResultRetentionSettings?api-version=7.0-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/test/ResultRetentionSettings?api-version=7.1-preview.1",
         ).json()
         return {
             "automated_result_retention_in_days": request["automatedResultsRetentionDuration"],

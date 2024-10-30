@@ -98,7 +98,7 @@ class OrganisatioOverviewSettings:
 #             f"https://azdevopscommerce.dev.azure.com/938ee696-1bef-4188-85a3-9c25ebc84c21/_apis/AzComm/MeterResource",
 #             # f"https://azdevopscommerce.dev.azure.com/{ado_client.ado_org_name}/_apis/AzComm/MeterResource?api-version=7.1-preview.1",
 #             headers={
-#                 "accept": "application/json;api-version=5.1-preview.1;excludeUrls=true;enumsAsNumbers=true;msDateFormat=true;noArrayWrap=true",
+#                 "accept": "application/json;api-version=7.1-preview.1;excludeUrls=true;enumsAsNumbers=true;msDateFormat=true;noArrayWrap=true",
 #                 "authorization": f"Bearer {bearer_token}",
 #             }
 #         )

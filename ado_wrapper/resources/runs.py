@@ -92,7 +92,7 @@ class Run(StateManagedResource):
         try:
             return super()._create(
                 ado_client,
-                f"/{ado_client.ado_project_name}/_apis/pipelines/{definition_id}/runs?api-version=6.1-preview.1",
+                f"/{ado_client.ado_project_name}/_apis/pipelines/{definition_id}/runs?api-version=7.1-preview.1",
                 PAYLOAD,
             )
         except ValueError as e:

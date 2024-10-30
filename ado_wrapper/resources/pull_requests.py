@@ -85,7 +85,7 @@ class PullRequest(StateManagedResource):
     @classmethod
     def create(
         cls, ado_client: "AdoClient", repo_id: str, pull_request_title: str,
-        pull_request_description: str, from_branch_name: str, to_branch_name: str = "main", is_draft: bool = False
+        pull_request_description: str = "", from_branch_name: str = "main", to_branch_name: str = "main", is_draft: bool = False
     ) -> "PullRequest":  # fmt: skip
         """Takes a list of reviewer ids, a branch to pull into main, and an option to start as draft"""
         # https://stackoverflow.com/questions/64655138/add-reviewers-to-azure-devops-pull-request-in-api-call   <- Why we can't allow reviewers from the get go
@@ -326,6 +326,7 @@ class PullRequestCommentThread(StateManagedResource):
 @dataclass
 class PullRequestComment:
     """Comments' content will be None if they've been deleted (sometimes), or if they're system comments."""
+
     # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-thread-comments/list?view=azure-devops-rest-7.1
 
     comment_id: str
@@ -354,7 +355,7 @@ class PullRequestComment:
 
     def link(self, ado_client: "AdoClient") -> str:
         """The links for comments use timestamps to link to them, but the one sent back in the API is sometimes in BST, sometimes not."""
-        timestamp_datetime = self.creation_date+timedelta(hours=1) if is_bst(self.creation_date) else self.creation_date
+        timestamp_datetime = self.creation_date + timedelta(hours=1) if is_bst(self.creation_date) else self.creation_date
         fixed_timestamp = int(timestamp_datetime.timestamp())
         return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo_id}/pullRequest/{self.parent_pull_request_id}#{fixed_timestamp}"
 

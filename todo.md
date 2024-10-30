@@ -11,6 +11,7 @@ MORE WORK ON LIFECYCLE!
 
 This?
 <https://www.reddit.com/r/ado_wrapper/comments/xj56gs/complete_pull_request_with_bypass_policy_via_api/>
+Just generally approving infra stages that require approval, if we can even do that.
 
 <https://stackoverflow.com/questions/77522387/approving-pipeline-stage-azure-devops-via-api>
 Auto approve via token ^
@@ -37,7 +38,8 @@ Can Jobs have logs, not just the tasks? Maybe the stage can have logs?
 
 Docs have functions which raise NotImplemented, inspect and remove if they do?
 
-Pat token stuffs, artifact stuffs
+Pat token stuffs
+Artifact stuffs
 
 Somehow detect expired tokens? simple_ado???
 simple_ado.exceptions.ADOHTTPException: ADO returned a non-200 status code, configuration=<simple_ado.http_client.ADOHTTPClient object at 0x1025de310>, status_code=401, text=Access Denied: The Personal Access Token used has expired.
@@ -46,7 +48,7 @@ But because we can fetch access_tokens, maybe we can instead check if the curren
 I CANT REMEMBER HOW I GOT THAT ERROR, SO ANNOYING SINCE IT EXACTLY TELLS ME ITS EXPIRED
 
 When creating yaml, if you don't provide stages, it creates one called "__default"
-`ado_wrapper.errors.ConfigurationError: Wrong stage name or job name combination (case sensitive), received Jobs/EchoEnvironmentVariables/Echo Modified Keys and ValuesOptions were __default/EchoEnvironmentVariables/Initialize job, __default/EchoEnvironmentVariables/Echo Modified Keys and Values`
+`ado_wrapper.errors.ConfigurationError: Wrong stage name or job name combination (case sensitive), received Jobs/EchoEnvironmentVariables/Echo Modified Keys and ValuesOptions were __default/EchoEnvironmentVariables/Echo Modified Keys and Values`
 
 For each test file, have a zzz_cleanup() function which empties state?
 Maybe each test could inherit from a parent class which has this?
@@ -54,9 +56,6 @@ Maybe each test could inherit from a parent class which has this?
 Retry system, if any of the requests raise ConnectionError, retry somehow?
 Have it call a generic _request(type) func, which has the retry logic?
 We can now made this better, since we have the logging function which overrides the request.
-
-Maybe we can do some clever stuff with the StateManagedResource which trackes which functions takes how long?
-Might help tests, detecting calls, etc
 
 rather than "requires initialisation", maybe make .ado_project_id a property and put it there?
 Perhaps have some system relating to intents? Which pre-loads a bunch of stuff (e.g, pat_author)
@@ -71,7 +70,6 @@ PullRequest.set_my_pull_requests_included_teams?
 Never test get_environment_approvals
 
 Project -> get_build_queue_settings, get_retention_policy_settings
-
 PullRequest -> Variable Groups
 
 Add more changelog messages for the older versions
@@ -84,24 +82,18 @@ Work more on maintain
 Rollback a commit? Tricky...
 I guess I could fetch the repo by a certain commit, and find the difference for all the files, and then make a commit like that?
 
-
 # @pytest.mark.xfail(strict=False)
-
-PullRequestComment.link still doesn't work...
-
-System messages definitely include:
-https://dev.azure.com/VFCloudEngineering/Platform/_git/ef514837-0d89-4da3-b156-57229447b890/pullRequest/18648#1724413175
-This kind of thing ^ Check if it's fixed...
 
 Get all runs, figure out which stage takes the longest, basically profile our runs
 
-We do 3 code-web.branch-policies-data-provider in a row...
-
-Build, Fetch: &maxTime={maxTime}&minTime={minTime}"
-
 AdoUser - Get all, doesn't work with pagination, implement pagination
+This and build's pagination uses continuation tokens, while PRs and stuff uses "skip"
 
-PullRequest.from_link()????
+PullRequest.from_link()??? And other resources? That just fetches.
+
+Artifact creation using pipelines like VariableGroup and SecureFiles?
+
+Rework `_get_by_url()` to have a new param which allows it to return a list comp, so we can remove _get_all(), and also use it for paginated get all
 
 -----  
 

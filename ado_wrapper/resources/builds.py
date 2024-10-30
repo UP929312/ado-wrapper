@@ -86,10 +86,25 @@ class Build(StateManagedResource):
         )
 
     @classmethod
-    def get_all(cls, ado_client: "AdoClient", limit: int = 1000, status: BuildStatus | Literal["all"] = "all") -> "list[Build]":
+    def get_all(
+        cls, ado_client: "AdoClient", limit: int | None = None, status: BuildStatus | Literal["all"] = "all",
+        start_date: datetime | None = None, end_date: datetime | None = None,  # fmt: skip
+    ) -> "list[Build]":
+        if (start_date is not None or end_date is not None) and status != "all":
+            raise ConfigurationError("Cannot pass in both a status and start/end date.")
+        params = {
+            "minTime": start_date.isoformat() if start_date else None,
+            "maxTime": end_date.isoformat() if end_date else None,
+            "queryOrder": "finishTimeDescending",
+            "$top": limit or 5_000,
+            "statusFilter": status,
+        }
+        if start_date is not None or end_date is not None:
+            del params["statusFilter"]
+        extra_params_string = "".join([f"&{key}={value}" for key, value in params.items()])
         return super()._get_all(
             ado_client,
-            f"/{ado_client.ado_project_name}/_apis/build/builds?api-version=7.1&queryOrder=finishTimeDescending&$top={limit}&statusFilter={status}",
+            f"/{ado_client.ado_project_name}/_apis/build/builds?api-version=7.1" + extra_params_string,
         )  # pyright: ignore[reportReturnType]
 
     def link(self, ado_client: "AdoClient") -> str:
@@ -226,7 +241,7 @@ class Build(StateManagedResource):
             ado_client, "build-web.checks-panel-data-provider", "build-web.ci-results-hub-route", additional_properties={"buildId": build_id, "stageIds": ",".join(stage_ids)}
         )  # fmt: skip
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=6.1-preview",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=7.1-preview",
             json=PAYLOAD,
         ).json()
         data: list[dict[str, Any]] = request["dataProviders"]["ms.vss-build-web.checks-panel-data-provider"]
@@ -254,7 +269,7 @@ class Build(StateManagedResource):
             )
         PAYLOAD = [{"approvalId": approval_ids[stage_name], "status": 4, "comment": "", "deferredTo": None}]
         request = ado_client.session.patch(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/approvals?api-version=6.1-preview",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/approvals?api-version=7.1-preview",
             json=PAYLOAD,
         )
         if request.status_code != 200:

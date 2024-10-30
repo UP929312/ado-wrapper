@@ -42,12 +42,12 @@ class Branch(StateManagedResource):
     @classmethod
     def create(cls, ado_client: "AdoClient", repo_id: str, branch_name: str, default_branch_name: str = "main") -> "Branch":
         request = ado_client.session.get(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/refs?includeLinks=false&includeStatuses=false&includeMyBranches=true&api-version=6.0-preview.1"
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/refs?includeLinks=false&includeStatuses=false&includeMyBranches=true&api-version=7.1-preview.1"
         ).json()["value"]
         main_branch = [x for x in request if x["name"] == f"refs/heads/{default_branch_name}"][0]
         commit_id = main_branch["objectId"]
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/refs?api-version=6.0-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/refs?api-version=7.1-preview.1",
             json=[{"name": f"refs/heads/{branch_name}", "newObjectId": commit_id, "oldObjectId": FIRST_COMMIT_ID}],
         ).json()["value"][0]
         # TODO: Maybe make this use super()._create?

@@ -174,21 +174,40 @@ class StateManagedResource:
         return [cls.from_request_payload(resource) for resource in request.json()["value"]]
 
     @classmethod
-    def _get_all_paginated(cls: Type[T], ado_client: "AdoClient", url: str, limit: int | None = None,
-                           page_size: int = 1000, skip_parameter_name: str = "$skip") -> list[T]:
+    def _get_all_paginated(
+        cls: Type[T], ado_client: "AdoClient", url: str, limit: int | None = None,
+        page_size: int = 1000, skip_parameter_name: str = "$skip",  # fmt: skip
+    ) -> list[T]:
         """Gets all resources for a url, paginated"""
-        fetched_resourced: list[T] = []
+        fetched_resources: list[T] = []
         skip_amount = 0
         while True:
             resources = cls._get_all(ado_client, url + f"&{skip_parameter_name}={skip_amount}")
             if len(resources) < page_size:  # If we fetch none, or less than the whole page, we're done.
-                fetched_resourced.extend(resources)
-                return fetched_resourced
+                fetched_resources.extend(resources)
+                return fetched_resources
             for resource in resources:
-                if limit is not None and len(fetched_resourced) >= limit:
-                    return fetched_resourced
-                fetched_resourced.append(resource)
+                if limit is not None and len(fetched_resources) >= limit:
+                    return fetched_resources
+                fetched_resources.append(resource)
             skip_amount += page_size
+
+    @classmethod
+    def _get_all_with_continuation_token(cls: Type[T], ado_client: "AdoClient", url: str) -> list[T]:
+        """Gets all resources for a url, paginated using continuation_tokens"""
+        if not url.startswith("https://"):
+            url = f"https://dev.azure.com/{ado_client.ado_org_name}{url}"
+        fetched_resources: list[T] = []
+        continuation_token = None
+        while True:
+            request = ado_client.session.get(url + (f"&continuationToken={continuation_token}" if continuation_token is not None else ""))
+            if request.status_code >= 300:
+                raise ValueError(f"Error getting all {cls.__name__} paginated: {request.status_code}, error={request.text}")
+            continuation_token = request.headers.get("X-MS-ContinuationToken")
+            resources = [cls.from_request_payload(resource) for resource in request.json()["value"]]
+            fetched_resources.extend(resources)
+            if continuation_token is None:
+                return fetched_resources
 
     @classmethod
     def _get_by_abstract_filter(cls: Type[T], ado_client: "AdoClient", func: Callable[[T], bool]) -> T | None:

@@ -88,7 +88,7 @@ class BuildDefinition(StateManagedResource):
         )  # fmt: skip
         return super()._create(
             ado_client,
-            f"/{ado_client.ado_project_name}/_apis/build/definitions?api-version=7.0",
+            f"/{ado_client.ado_project_name}/_apis/build/definitions?api-version=7.1",
             payload=payload,
         )
 
@@ -171,7 +171,7 @@ class BuildDefinition(StateManagedResource):
             },  # fmt: skip
         )
         default_template_params_request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=7.0-preview",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=7.1-preview",
             json=TEMPLATE_PAYLOAD,
         ).json()
         error_message = (
@@ -199,7 +199,7 @@ class BuildDefinition(StateManagedResource):
         if template_parameters is not None:
             PAYLOAD["dataProviderContext"]["properties"]["templateParameters"] |= template_parameters
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=7.0-preview",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery/project/{ado_client.ado_project_name}?api-version=7.1-preview",
             json=PAYLOAD,
         )
         if request.status_code != 200:
@@ -209,7 +209,7 @@ class BuildDefinition(StateManagedResource):
 
     def allow_variable_group(self, ado_client: "AdoClient", variable_group_id: str) -> None:
         request = ado_client.session.patch(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/pipelinePermissions/variablegroup/{variable_group_id}?api-version=6.0-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/pipelinePermissions/variablegroup/{variable_group_id}?api-version=7.1-preview.1",
             json={"pipelines": [{"id": self.build_definition_id, "authorized": True}]},
         )
         if request.status_code != 200:
@@ -220,7 +220,7 @@ class BuildDefinition(StateManagedResource):
 
     def allow_secure_file(self, ado_client: "AdoClient", secure_file_id: str) -> None:
         request = ado_client.session.patch(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/pipelinePermissions/securefile/{secure_file_id}?api-version=6.0-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/pipelines/pipelinePermissions/securefile/{secure_file_id}?api-version=7.1-preview.1",
             json={"pipelines": [{"id": self.build_definition_id, "authorized": True}]},
         )
         if request.status_code != 200:

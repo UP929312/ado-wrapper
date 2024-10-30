@@ -33,7 +33,7 @@ limit_merge_type_mapping = {
 def _get_type_id(ado_client: "AdoClient", action_type: str) -> str:
     """Used internally to get a specific update request ID"""
     request = ado_client.session.get(
-        f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/policy/types?api-version=6.0"
+        f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/policy/types?api-version=7.1-preview.1"
     )
     return str([x for x in request.json()["value"] if x["displayName"] == action_type][0]["id"])
 
@@ -308,7 +308,7 @@ class MergePolicies(StateManagedResource):
             }  # fmt: skip
         )
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.0-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.1-preview.1",
             json=PAYLOAD,
         ).json()
         return cls.from_request_payload(request)

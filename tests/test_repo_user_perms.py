@@ -8,7 +8,7 @@ from ado_wrapper.resources.groups import Group
 from ado_wrapper.resources.repo import Repo
 from ado_wrapper.utils import TemporaryResource
 
-from tests.setup_client import setup_client, REPO_PREFIX, email, existing_user_name
+from tests.setup_client import setup_client, REPO_PREFIX, email, existing_user_name, existing_user_descriptor, ado_project_name
 
 
 class TestRepoUserPerms:
@@ -111,8 +111,6 @@ class TestRepoUserPerms:
                 perm.programmatic_name: perm.permission_display_string for perm in all_perms[existing_user_name]
             }
             assert perms_formatted == input_perms[email]
-            # {'rename_repository': 'Allow'} != {'rename_repository': 'Deny'}
-            # {'remove_others_locks': 'Allow'} != {'remove_others_locks': 'Deny'}  # TODO Fix this?
 
     def test_remove_perms(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "remove-perms") as repo:
@@ -121,7 +119,6 @@ class TestRepoUserPerms:
             assert isinstance(perms, list)
             assert all(isinstance(x, UserPermission) for x in perms)
             assert [x for x in perms if x.programmatic_name == "contribute"][0].permission_display_string == "Allow"
-
             RepoUserPermissions.remove_perm(self.ado_client, repo.repo_id, email)
             updated_perms = RepoUserPermissions.get_all_by_repo_id(self.ado_client, repo.repo_id)
             assert email not in updated_perms
@@ -138,10 +135,19 @@ class TestRepoUserPerms:
     @pytest.mark.hierarchy
     def test_set_by_user_descriptor(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-repo-user-perms") as repo:
-            group = Group.create(self.ado_client, "ado_wrapper-set-by-user-descriptor")
-            RepoUserPermissions.set_by_group_descriptor(self.ado_client, repo.repo_id, group.group_descriptor, "Allow", "contribute")
+            RepoUserPermissions.set_by_descriptor(self.ado_client, repo.repo_id, existing_user_descriptor, "Allow", "contribute")
+            perms = RepoUserPermissions.get_by_subject_descriptor(self.ado_client, repo.repo_id, existing_user_descriptor)
+            assert isinstance(perms, list)
+            assert all(isinstance(x, UserPermission) for x in perms)
+            accepted = ["Not set", "Allow", "Allow (inherited)"]
+            assert [x for x in perms if x.programmatic_name == "contribute"][0].permission_display_string in accepted
+
+    @pytest.mark.hierarchy
+    def test_set_by_group_descriptor(self) -> None:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-repo-user-perms") as repo:
+            group: Group = Group.get_by_name(self.ado_client, f"{ado_project_name} Team")  # type: ignore
+            RepoUserPermissions.set_by_descriptor(self.ado_client, repo.repo_id, group.group_descriptor, "Allow", "contribute")
             perms = RepoUserPermissions.get_by_subject_descriptor(self.ado_client, repo.repo_id, group.group_descriptor)
-            group.delete(self.ado_client)
             assert isinstance(perms, list)
             assert all(isinstance(x, UserPermission) for x in perms)
             accepted = ["Not set", "Allow", "Allow (inherited)"]
@@ -149,5 +155,5 @@ class TestRepoUserPerms:
 
 
 if __name__ == "__main__":
-    # pytest.main([__file__, "-s", "-vvvv"])
-    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])
+    pytest.main([__file__, "-s", "-vvvv"])
+    # pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

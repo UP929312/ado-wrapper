@@ -61,7 +61,6 @@ class TestPullRequest:
             assert pull_request.pull_request_id == pull_request_created.pull_request_id
             pull_request_created.close(self.ado_client)
 
-    @pytest.mark.wip
     @pytest.mark.get_all
     def test_get_all(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "repo-for-get-pull-requests") as repo:
@@ -128,12 +127,13 @@ class TestPullRequest:
     def test_post_comment(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "repo-for-post-comment") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "Change"}, "add", "Test commit")
-            pull_request = PullRequest.create(self.ado_client, repo.repo_id, "Test PR For Post Comment", "", "new-branch")
-            pull_request.post_comment(self.ado_client, "This is a test comment")
-            pull_request_comments = pull_request.get_comments(self.ado_client, ignore_system_messages=True)
-            assert len(pull_request_comments) == 1
-            assert pull_request_comments[0].content == "This is a test comment"
-            pull_request.close(self.ado_client)
+            with TemporaryResource(
+                self.ado_client, PullRequest, repo_id=repo.repo_id, pull_request_title="Test PR For Post Comment", to_branch_name="new-branch",  # fmt: skip
+            ) as pull_request:
+                pull_request.post_comment(self.ado_client, "This is a test comment")
+                pull_request_comments = pull_request.get_comments(self.ado_client, ignore_system_messages=True)
+                assert len(pull_request_comments) == 1
+                assert pull_request_comments[0].content == "This is a test comment"
 
     def test_comment_thread(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "repo-for-comment-thread") as repo:

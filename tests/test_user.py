@@ -40,11 +40,13 @@ class TestAdoUser:
         assert len(users) > 1
         assert all(isinstance(user, AdoUser) for user in users)
 
+    @pytest.mark.get_all  # Also uses get_all behind the scenes
     def test_get_by_name(self) -> None:
         user = AdoUser.get_by_name(self.ado_client, existing_user_name)
         assert user is not None
         assert user.descriptor_id == existing_user_descriptor
 
+    @pytest.mark.get_all  # Also uses get_all behind the scenes
     def test_get_by_email(self) -> None:
         user = AdoUser.get_by_email(self.ado_client, email)
         assert user is not None

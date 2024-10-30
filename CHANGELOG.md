@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.39.0
+
+### Added
+
+- Large amounts of RepoUserPerms have changed, this was in part to streamline code, but also make batched processes actually batched, rather than multiple requests. It should now be much quicker, and work more reliably.
+- Added `UserRepoPerms.get_by_user_email()`, which gets the users perms by email for a specific repo (does the conversion for you).
+- You can now fetch 5000 (rather than 1000) builds in one go, although pagination isn't currently supported.
+- `Build.get_all()` now takes a start_date and end_date param to (optionally) filter builds.
+- `AdoUser.get_all()` is now paginated, allowing for more than the default 500 users it wanted to fetch.
+
+### Changed
+
+- The `LoggingSession` entries now have the method padded for easier url debugging.
+- The `LoggingSession` entries now include the time the request took in milliseconds, for further debugging.
+- Now use the latest api version for most requests, many were on 6.0 or even 5.0.
+
+---
+
 ## v1.38.0
 
 ### Added

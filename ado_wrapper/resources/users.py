@@ -65,7 +65,7 @@ class AdoUser(StateManagedResource):
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient") -> list["AdoUser"]:
-        return super()._get_all(
+        return super()._get_all_with_continuation_token(
             ado_client,  # Preview required
             f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/graph/users?api-version=7.1-preview.1",
         )  # pyright: ignore[reportReturnType]
@@ -99,7 +99,7 @@ class AdoUser(StateManagedResource):
         PAYLOAD = {"query": query, "identityTypes": ["user", "group"], "operationScopes": ["ims", "source"],
                    "options": {"MinResults": 5, "MaxResults": 25}, "properties": PROPERTIES_FOR_SEARCH}  # fmt: skip
         request = ado_client.session.post(
-            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/IdentityPicker/Identities?api-version=7.0-preview.1",
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/IdentityPicker/Identities?api-version=7.1-preview.1",
             json=PAYLOAD,
         ).json()
         return request["results"][0]["identities"][0]  # type: ignore[no-any-return]
@@ -110,7 +110,7 @@ class AdoUser(StateManagedResource):
         local_to_descriptor = {}
         for local_id in local_ids:
             request = ado_client.session.get(
-                f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/graph/descriptors/{local_id}?api-version=7.0-preview.1"
+                f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/graph/descriptors/{local_id}?api-version=7.1-preview.1"
             ).json()
             local_to_descriptor[local_id] = request["value"]
         # Now get a mapping of local_ids to origin_ids

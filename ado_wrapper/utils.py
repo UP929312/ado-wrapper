@@ -4,7 +4,7 @@ from dataclasses import fields
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Literal, TypeVar, ParamSpec, overload, Any, Type, Generic
 
-from ado_wrapper.errors import ConfigurationError
+from ado_wrapper.errors import ConfigurationError  # , ResourceNotFound, UnknownError
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -107,6 +107,7 @@ def is_bst(dt: datetime) -> bool:
     # Check if the date falls within BST
     return bst_start <= dt_utc < bst_end
 
+
 # ============================================================================================== #
 
 
@@ -178,6 +179,23 @@ def build_hierarchy_payload(
     return data
 
 
+# def make_hierarchy_request(
+#     ado_client: "AdoClient", contribution_id: str, route_id: str | None = None, additional_properties: dict[str, Any] | None = None,
+# ) -> Any:
+#     PAYLOAD = build_hierarchy_payload(ado_client, contribution_id, route_id=route_id, additional_properties=additional_properties)
+#     request = ado_client.session.post(
+#         f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.1-preview.1",
+#         json=PAYLOAD,
+#     ).json()
+#     if not request:
+#         raise ResourceNotFound("Could not find any cases for that hierarchy request!")
+#     if "dataProviders" not in request:
+#         raise UnknownError("Could not find the data providers for this hierarchy request!")
+#     if contribution_id not in request:
+#         raise UnknownError("Could not find that contribution id for this hierarchy reques!")
+#     return request["dataProviders"][contribution_id]
+
+
 # def requires_perms(required_perms: list[str] | str) -> Callable[[Callable[P, T]], Callable[P, T]]:
 #     """This wraps a call (with ado_client as second arg) with a list of required permissions,
 #     will raise an error if the client doesn't have them"""
@@ -225,6 +243,7 @@ class TemporaryResource(Generic[T]):
 
 class Secret:
     """Used for variable groups to mark them as secret."""
+
     def __init__(self, value: str) -> None:
         self.value = value
 

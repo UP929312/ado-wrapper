@@ -63,7 +63,7 @@ class PersonalAccessToken:
         # {"contributionIds":["ms.vss-token-web.personal-access-token-issue-session-token-provider"],"dataProviderContext":{"properties":{"displayName":"aaabbb",   "validTo":"2024-07-30T12:42:17.617Z","scope":"app_token","targetAccounts":["{ado_client.ado_org_id}""],
         # "sourcePage":{"url":"https://dev.azure.com/{ado_client.ado_org_name}/_usersSettings/tokens","routeId":"ms.vss-admin-web.user-admin-hub-route","routeValues":{"adminPivot":"tokens","controller":"ContributedPage","action":"Execute","serviceHost":"{ado_client.ado_org_id} ({ado_client.ado_org_name})"}}}}}
         # headers = {
-        #     "Accept": "application/json;api-version=5.0-preview.1;excludeUrls=true;enumsAsNumbers=true;msDateFormat=true;noArrayWrap=true",
+        #     "Accept": "application/json;api-version=7.1-preview.1;excludeUrls=true;enumsAsNumbers=true;msDateFormat=true;noArrayWrap=true",
         #     "Accept-Encoding": "gzip, deflate, br, zstd",
         #     "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
         #     "Content-Type": "application/json",
@@ -88,7 +88,7 @@ class PersonalAccessToken:
         #     "MSFPC": MSFPC, "UserAuthentication": USER_AUTHENTICATION, "HostAuthentication": HOST_AUTHENTICATION, "AadAuthentication":  AAD_AUTHENTICATION,
         # }
         # request = ado_client.session.post(
-        #     f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery",  # ?api-version=5.0-preview.1
+        #     f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery",  # ?api-version=7.1-preview.1
         #     headers=headers,
         #     json=PAYLOAD,
         #     cookies=cookies,
@@ -111,7 +111,7 @@ class PersonalAccessToken:
         # Sun, 14 Jul 2024 18:14:24 GMT
         page_request_timestamp = f"{DAYS_OF_WEEK[now.weekday()]}, {str(now.day):0>2} {MONTHS[now.month-1]} {now.year} {now.hour}:{now.minute}:{now.second:02} GMT"  # fmt: skip
         request = ado_client.session.get(
-            f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/Token/SessionTokens?displayFilterOption=1&createdByOption=3&sortByOption=2&isSortAscending=true&startRowNumber=1&pageSize=1000&pageRequestTimeStamp={page_request_timestamp}&api-version=5.0-preview.1"
+            f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/Token/SessionTokens?displayFilterOption=1&createdByOption=3&sortByOption=2&isSortAscending=true&startRowNumber=1&pageSize=1000&pageRequestTimeStamp={page_request_timestamp}&api-version=7.1-preview.1"
         ).json()
         if org_id is None:
             org_id = Organisation.get_by_name(ado_client, ado_client.ado_org_name).organisation_id  # type: ignore[union-attr]
@@ -173,7 +173,7 @@ class PersonalAccessToken:
     #         }
     #     }
     #     request = ado_client.session.post(
-    #         f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=5.0-preview.1",
+    #         f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/Contribution/HierarchyQuery?api-version=7.1-preview.1",
     #         json=PAYLOAD,
     #     ).json()
     #     rint(request["dataProviderExceptions"]["ms.vss-token-web.personal-access-token-issue-session-token-provider"]["message"])

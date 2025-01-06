@@ -48,9 +48,10 @@ class Group(StateManagedResource):
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient") -> list["Group"]:
-        return super()._get_all(
+        return super()._get_by_url(
             ado_client,  # Preview required
             f"https://vssps.dev.azure.com/{ado_client.ado_org_name}/_apis/graph/groups?api-version=7.1-preview.1",
+            fetch_multiple=True,
         )  # pyright: ignore[reportReturnType]
 
     def link(self, ado_client: "AdoClient") -> str:

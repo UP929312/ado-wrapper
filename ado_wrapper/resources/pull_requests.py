@@ -3,7 +3,9 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Literal
 
+from ado_wrapper.resources.code_change import ChangedFile
 from ado_wrapper.resources.users import Member, Reviewer
+from ado_wrapper.resources.commits import Commit
 from ado_wrapper.state_managed_abc import StateManagedResource, convert_from_json
 from ado_wrapper.utils import from_ado_date_string, build_hierarchy_payload, is_bst
 from ado_wrapper.errors import ConfigurationError, UnknownError
@@ -51,6 +53,9 @@ class PullRequest(StateManagedResource):
     description: str = field(repr=False, metadata={"editable": True})
     source_branch: str = field(repr=False)
     target_branch: str = field(repr=False)
+    # previous_commit_id: str = field(repr=False)  # The commit before the PR was created, what the PR is based on -> lastMergeTargetCommit
+    created_commit_id: str | None = field(repr=False)  # The commit which was created on merge  -> lastMergeCommit
+    final_commit_id: str | None = field(repr=False)  # The final commit on the PR with all the changes.   -> lastMergeSourceCommit
     author: Member
     creation_date: datetime = field(repr=False)
     repo: "Repo"
@@ -71,9 +76,13 @@ class PullRequest(StateManagedResource):
         merge_status = (
             merge_status_mapping[data["mergeStatus"]] if isinstance(data.get("mergeStatus"), int) else data.get("mergeStatus", "notSet")
         )
-        return cls(str(data["pullRequestId"]), data["title"], data.get("description", ""), data["sourceRefName"],
-                   data["targetRefName"], author, from_ado_date_string(data["creationDate"]), repository,
-                   from_ado_date_string(data.get("closedDate")), data["isDraft"], pr_status, merge_status, reviewers)  # fmt: skip
+        return cls(
+            str(data["pullRequestId"]), data["title"], data.get("description", ""), data["sourceRefName"], data["targetRefName"],
+            data.get("lastMergeCommit", {}).get("commitId"),
+            data.get("lastMergeSourceCommit", {}).get("commitId"),  # data.get("lastMergeTargetCommit", {})["commitId"],
+            author, from_ado_date_string(data["creationDate"]), repository,
+            from_ado_date_string(data.get("closedDate")), data["isDraft"], pr_status, merge_status, reviewers,
+        )  # fmt: skip
 
     @classmethod
     def get_by_id(cls, ado_client: "AdoClient", pull_request_id: str) -> "PullRequest":
@@ -273,6 +282,34 @@ class PullRequest(StateManagedResource):
         ).json()
         return PullRequestComment.from_request_payload(request["comments"][0], self.repo.repo_id, self.pull_request_id)
 
+    def get_commits(self, ado_client: "AdoClient") -> list["Commit"]:
+        return Commit.get_all_by_pull_request(ado_client, self.repo.repo_id, self.pull_request_id)
+
+    def _get_code_changes(self, ado_client: "AdoClient") -> list[dict[str, Any]]:
+        """This is not intended to be used externally, although can be"""
+        previous_commit_id = Commit.get_parent_commit(ado_client, self.repo.repo_id, self.created_commit_id).commit_id  # type: ignore[union-attr]   # TODO: Non-completed commits, what to put here?
+        request = ado_client.session.get(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{self.repo.repo_id}/diffs/commits?baseVersion={previous_commit_id}&targetVersion={self.final_commit_id}&baseVersionType=commit&targetVersionType=commit&api-version=7.1-preview.1",
+        ).json()["changes"]
+        return [x for x in request if x["item"]["gitObjectType"] == "blob"]
+
+    def get_code_changes(self, ado_client: "AdoClient") -> dict[str, ChangedFile]:
+        previous_commit_id = ado_client.session.get(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo.repo_id}/pullrequest/{self.pull_request_id}?_a=files"
+        ).text.replace(" ", "").split("commonRefCommit\":{\"commitId\":\"")[1].split("\"")[0]
+        # =====
+        # print(previous_commit_id)
+        # for data in self._get_code_changes(ado_client):
+        #     if data["changeType"] != "delete, sourceRename":
+        #         print(data)
+        #         print({data["item"]["path"]: ChangedFile.get_changed_file(ado_client, self.repo.repo_id, data.get("sourceServerItem") or data["item"]["path"], data["item"]["path"], data["changeType"], self.created_commit_id, previous_commit_id)})
+        return {
+            data["item"]["path"]: ChangedFile.get_changed_file(ado_client, self.repo.repo_id, data.get("sourceServerItem") or data["item"]["path"], data["item"]["path"], data["changeType"], self.final_commit_id, previous_commit_id)  # type: ignore[union-attr]   # TODO: Non-completed commits, what to put here?
+            for data in self._get_code_changes(ado_client)
+            if data["changeType"] != "delete, sourceRename"
+        }
+        # return ChangedFile.get_changed_content(ado_client, self.repo.repo_id, self.created_commit_id, self.target_branch)
+
 
 @dataclass
 class PullRequestCommentThread(StateManagedResource):
@@ -363,4 +400,4 @@ class PullRequestComment:
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "PullRequestComment":
-        return PullRequestComment(**convert_from_json(data))
+        return cls(**convert_from_json(data))

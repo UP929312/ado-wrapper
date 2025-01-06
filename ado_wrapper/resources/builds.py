@@ -102,7 +102,7 @@ class Build(StateManagedResource):
         if start_date is not None or end_date is not None:
             del params["statusFilter"]
         extra_params_string = "".join([f"&{key}={value}" for key, value in params.items()])
-        return super()._get_all(
+        return super()._get_all_with_continuation_token(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/builds?api-version=7.1" + extra_params_string,
         )  # pyright: ignore[reportReturnType]
@@ -149,9 +149,10 @@ class Build(StateManagedResource):
 
     @classmethod
     def get_all_by_definition(cls, ado_client: "AdoClient", definition_id: str) -> "list[Build]":
-        return super()._get_all(
+        return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/builds?definitions={definition_id}&api-version=7.1",
+            fetch_multiple=True,
         )  # pyright: ignore[reportReturnType]
 
     @classmethod

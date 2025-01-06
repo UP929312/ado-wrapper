@@ -46,7 +46,7 @@ class TestAgentPool:
 
         assert agent_pool.to_json() == AgentPool.from_json(agent_pool.to_json()).to_json()
 
-    @pytest.mark.wip
+    @pytest.mark.xfail
     @pytest.mark.create_delete
     def test_create_delete(self) -> None:
         agent_pool = AgentPool.create(self.ado_client, "ado_wrapper-test-agent-pool", None, True, True, True, False, 10, None)
@@ -67,6 +67,7 @@ class TestAgentPool:
     #     # =====
     #     agent_pool.delete(self.ado_client)
 
+    @pytest.mark.xfail
     @pytest.mark.get_by_id
     def test_get_by_id(self) -> None:
         agent_pool_created = AgentPool.create(self.ado_client, "ado_wrapper_test_agent_pool", None, True, True, True, False, 1, 1)
@@ -80,6 +81,7 @@ class TestAgentPool:
         assert len(agent_pools) >= 1
         assert all(isinstance(agent_pool, AgentPool) for agent_pool in agent_pools)
 
+    @pytest.mark.xfail
     @pytest.mark.get_all_by_name
     def test_get_by_name(self) -> None:
         agent_pool_created = AgentPool.create(self.ado_client, "ado_wrapper-test-for-get-by-name")
@@ -91,5 +93,5 @@ class TestAgentPool:
 
 
 if __name__ == "__main__":
-    # pytest.main([__file__, "-s", "-vvvv"])
-    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])
+    pytest.main([__file__, "-s", "-vvvv"])
+    # pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

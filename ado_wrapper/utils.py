@@ -4,7 +4,7 @@ from dataclasses import fields
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Literal, TypeVar, ParamSpec, overload, Any, Type, Generic
 
-from ado_wrapper.errors import ConfigurationError  # , ResourceNotFound, UnknownError
+from ado_wrapper.errors import ConfigurationError
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -54,23 +54,6 @@ def from_ado_date_string(date_string: str | None) -> datetime | None:
         return datetime.fromtimestamp(int(date_string[6:-2]) / 1000, tz=timezone.utc)
     no_milliseconds = date_string.split(".")[0].removesuffix("Z")
     return datetime.strptime(no_milliseconds, "%Y-%m-%dT%H:%M:%S")
-
-
-@overload
-def to_iso(dt: datetime) -> str:
-    ...
-
-
-@overload
-def to_iso(dt: None) -> None:
-    ...
-
-
-def to_iso(dt: datetime | None) -> str | None:
-    if dt is None:
-        return None
-    return datetime.isoformat(dt)
-
 
 @overload
 def from_iso(dt_string: str) -> datetime:
@@ -155,6 +138,7 @@ def requires_initialisation(ado_client: "AdoClient") -> None:
 
 
 def recursively_find_or_none(data: dict[str, Any], indexes: list[str]) -> Any:
+    # TODO: Deprecate this in runs.py
     current = data
     for index in indexes:
         if index not in current:

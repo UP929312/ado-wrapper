@@ -16,7 +16,7 @@ class Team(StateManagedResource):
     team_id: str = field(metadata={"is_id_field": True})  # None are editable
     name: str
     description: str
-    team_members: list[TeamMember] = field(default_factory=list)
+    team_members: list[TeamMember] = field(default_factory=list, repr=False)
 
     def __str__(self) -> str:
         return f"{self.name} ({self.team_id}" + (", ".join([str(member) for member in self.team_members])) + ")"
@@ -52,9 +52,10 @@ class Team(StateManagedResource):
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient") -> list["Team"]:
-        return super()._get_all(
+        return super()._get_by_url(
             ado_client,
             "/_apis/teams?api-version=7.1-preview.2",
+            fetch_multiple=True,
         )  # pyright: ignore[reportReturnType]
 
     def link(self, ado_client: "AdoClient") -> str:
@@ -67,6 +68,14 @@ class Team(StateManagedResource):
     @classmethod
     def get_by_name(cls, ado_client: "AdoClient", team_name: str) -> "Team | None":
         return cls._get_by_abstract_filter(ado_client, lambda team: team.name == team_name)
+
+    @classmethod
+    def get_my_teams(cls, ado_client: "AdoClient") -> list["Team"]:
+        return super()._get_by_url(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org_name}/_apis/teams?%24mine=true&%24top=10000",
+            fetch_multiple=True,
+        )  # pyright: ignore[reportReturnType]
 
     def get_members(self, ado_client: "AdoClient") -> list[TeamMember]:
         request = ado_client.session.get(

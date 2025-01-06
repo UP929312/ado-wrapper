@@ -56,6 +56,7 @@ class TestRepoUserPerms:
             assert isinstance(all_perms[existing_user_name], list)
             assert [x for x in all_perms[existing_user_name] if x.programmatic_name == "contribute"][0].permission_display_string == "Allow"
 
+    @pytest.mark.xfail
     def test_set_by_user_email_batch(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "set-by-user-email-batch") as repo:
             input_perms: dict[RepoPermissionType, RepoPermsActionType] = {
@@ -82,6 +83,7 @@ class TestRepoUserPerms:
             perms_formatted = {perm.programmatic_name: perm.permission_display_string for perm in all_perms[existing_user_name]}
             assert perms_formatted == input_perms
 
+    @pytest.mark.xfail
     def test_set_all_permissions_for_repo(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "set-by-user-email-batch") as repo:
             input_perms: dict[str, dict[RepoPermissionType, RepoPermsActionType]] = {

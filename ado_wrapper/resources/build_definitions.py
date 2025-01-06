@@ -124,9 +124,10 @@ class BuildDefinition(StateManagedResource):
     @classmethod
     def get_all(cls, ado_client: "AdoClient") -> "list[BuildDefinition]":
         """WARNING: This returns a list of references, which don't have variable groups and more data included."""
-        return super()._get_all(
+        return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/build/definitions?api-version=7.1",
+            fetch_multiple=True,
         )  # pyright: ignore[reportReturnType]
 
     def link(self, ado_client: "AdoClient") -> str:
@@ -149,9 +150,10 @@ class BuildDefinition(StateManagedResource):
 
     @classmethod
     def get_all_by_repo_id(cls, ado_client: "AdoClient", repo_id: str) -> "list[BuildDefinition]":
-        return super()._get_all(
+        return super()._get_by_url(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/build/definitions?repositoryId={repo_id}&repositoryType={'TfsGit'}&api-version=7.1",
+            fetch_multiple=True,
         )  # pyright: ignore[reportReturnType]
 
     @staticmethod

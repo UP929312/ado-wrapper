@@ -63,8 +63,8 @@ class Run(StateManagedResource):
 
     @classmethod
     def create(
-        cls, ado_client: "AdoClient", definition_id: str, template_parameters: dict[str, Any] | None = None,
-        run_variables: dict[str, Any] | None = None, branch_name: str = "main", stages_to_run: list[str] | None = None  # fmt: skip
+        cls, ado_client: "AdoClient", definition_id: str, template_parameters: dict[str, str] | None = None,
+        run_variables: dict[str, str] | None = None, branch_name: str = "main", stages_to_run: list[str] | None = None  # fmt: skip
     ) -> "Run":
         """Creates a `Run` in ADO and returns the object. If stages_to_run isn't set (or is set to None), all stages will be run."""
         if run_variables is not None:
@@ -96,15 +96,6 @@ class Run(StateManagedResource):
                 PAYLOAD,
             )
         except ValueError as e:
-            # {"$id":"1","innerException":null,"message":"See https://aka.ms/AzPipelines/SettingVariablesAtQueueTime - You can't set the following variables (my_var). If you want to be able to set these variables, then edit the pipeline and select Settable at queue time on the variables tab of the pipeline editor.","typeName":"Microsoft.Azure.Pipelines.WebApi.PipelineValidationException, Microsoft.Azure.Pipelines.WebApi","typeKey":"PipelineValidationException","errorCode":0,"eventId":3000}
-            # raise ValueError(str(e))
-            # try:
-            #     data = json.loads(str(e))
-            #     raise ValueError(
-            #         e
-            #     )
-            # except:
-            #     print(e)
             # TODO: Properly parse this message with json
             raise ValueError(
                 f"A template parameter inputted is not allowed! {str(e).split('message')[1][3:].removesuffix(':').split('.')[0]}"  # fmt: skip
@@ -120,9 +111,10 @@ class Run(StateManagedResource):
 
     @classmethod
     def get_all_by_definition(cls, ado_client: "AdoClient", pipeline_id: str) -> "list[Run]":
-        return super()._get_all(
+        return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/pipelines/{pipeline_id}/runs?api-version=7.1-preview.1",
+            fetch_multiple=True,
         )  # pyright: ignore[reportReturnType]
 
     def link(self, ado_client: "AdoClient") -> str:

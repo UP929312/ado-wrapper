@@ -62,7 +62,7 @@ class Branch(StateManagedResource):
             {
                 "name": f"refs/heads/{branch_name}",
                 "oldObjectId": cls.get_by_name(ado_client, repo_id, branch_name).branch_id,  # type: ignore[union-attr]
-                "newObjectId": "0000000000000000000000000000000000000000",
+                "newObjectId": FIRST_COMMIT_ID,
             }
         ]
         request = ado_client.session.post(
@@ -84,9 +84,10 @@ class Branch(StateManagedResource):
 
     @classmethod
     def get_all_by_repo(cls, ado_client: "AdoClient", repo_name_or_id: str) -> list["Branch"]:
-        return super()._get_all(
+        return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_name_or_id}/refs?filter=heads&api-version=7.1",
+            fetch_multiple=True,
         )  # pyright: ignore[reportReturnType]
 
     @classmethod

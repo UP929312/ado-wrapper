@@ -72,9 +72,10 @@ class AgentPool(StateManagedResource):
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient") -> list["AgentPool"]:
-        return super()._get_all(
+        return super()._get_by_url(
             ado_client,
             "/_apis/distributedtask/pools?api-version=7.1-preview.1",
+            fetch_multiple=True,
         )  # pyright: ignore[reportReturnType]
 
     def link(self, ado_client: "AdoClient") -> str:

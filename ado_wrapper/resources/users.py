@@ -27,19 +27,16 @@ VoteOptions = Literal[10, 5, 0, -5, -10]
 class AdoUser(StateManagedResource):
     """https://learn.microsoft.com/en-us/rest/api/azure/devops/graph/users?view=azure-devops-rest-7.1"""
 
-    descriptor_id: str = field(metadata={"is_id_field": True})
+    descriptor_id: str = field(metadata={"is_id_field": True}, repr=False)
     display_name: str
     email: str
-    origin: str
-    origin_id: str  # NORMALLY DON'T USE THIS, USE `descriptor_id` INSTEAD
-    domain_container_id: str  # Ignore this
+    origin: str = field(repr=False)
+    origin_id: str = field(repr=False)  # NORMALLY DON'T USE THIS, USE `descriptor_id` INSTEAD
+    domain_container_id: str = field(repr=False)  # Ignore this
     # "subjectKind": "user",
     # "metaType": "member",
     # "directoryAlias": "surnameF",
     # "url": "https://vssps.dev.azure.com/{ado_client.}/_apis/Graph/Users/aad.M2Q5NDlkZTgtZDI2Yi03MGQ3LWEyYjItMDAwYTQzYTdlNzFi",
-
-    def __str__(self) -> str:
-        return f"{self.display_name} ({self.email})"
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "AdoUser":
@@ -162,18 +159,6 @@ class Member(StateManagedResource):
             data.get("id") or data["originId"],
         )  # fmt: skip
 
-    @classmethod
-    def get_by_id(cls, ado_client: "AdoClient", member_id: str) -> "Member":
-        raise NotImplementedError("Getting a member by ID is not supported")
-
-    @classmethod
-    def create(cls, ado_client: "AdoClient", member_name: str, member_email: str) -> "Member":
-        raise NotImplementedError("Creating a new member is not supported")
-
-    @classmethod
-    def delete_by_id(cls, ado_client: "AdoClient", member_id: str) -> None:
-        raise NotImplementedError("Deleting a member is not supported")
-
 
 # ======================================================================================================= #
 # ------------------------------------------------------------------------------------------------------- #
@@ -198,9 +183,7 @@ class TeamMember(Member):
         return cls(data["name"], data["email"], data["id"], data["is_team_admin"])
 
     def to_json(self) -> dict[str, Any]:
-        return {
-            "name": self.name, "email": self.email, "id": self.member_id, "is_team_admin": self.is_team_admin,  # fmt: skip
-        }
+        return {"name": self.name, "email": self.email, "id": self.member_id, "is_team_admin": self.is_team_admin}  # fmt: skip
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "TeamMember":

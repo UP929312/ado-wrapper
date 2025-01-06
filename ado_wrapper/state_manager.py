@@ -162,5 +162,6 @@ class StateManager:
         for resource_type in [value for key, value in locals().items() if key not in ("self", "prefix")]:
             for resource in resource_type.get_all(self.ado_client):
                 if resource.name.startswith(prefix):
-                    print(f"Loading in {resource=}")
+                    if not self.ado_client.suppress_warnings:
+                        print(f"Loading in {resource=}")
                     self.ado_client.state_manager.import_into_state(resource_type.__name__, extract_id(resource))

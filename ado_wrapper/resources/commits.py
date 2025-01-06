@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.resources.users import Member
+from ado_wrapper.resources.code_change import ChangedFile
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.errors import ConfigurationError, InvalidPermissionsError  # , UnknownError
 from ado_wrapper.utils import from_ado_date_string
@@ -12,7 +13,7 @@ from ado_wrapper.utils import from_ado_date_string
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 
-CommitChangeType = Literal["edit", "add", "delete"]
+CommitChangeType = Literal["add", "edit", "delete"]
 FIRST_COMMIT_ID = "0000000000000000000000000000000000000000"  # This is the initial id
 
 GitIgnoreTemplateType = Literal[
@@ -132,7 +133,7 @@ class Commit(StateManagedResource):
 
     @classmethod
     def get_latest_by_repo(cls, ado_client: "AdoClient", repo_id: str, branch_name: str | None = None) -> "Commit":
-        return max(cls.get_all_by_repo(ado_client, repo_id, branch_name), key=lambda commit: commit.date)
+        return max(cls.get_all_by_repo(ado_client, repo_id, branch_name=branch_name), key=lambda commit: commit.date)
 
     @classmethod
     def get_all_by_repo(
@@ -205,6 +206,23 @@ class Commit(StateManagedResource):
             json=default_commit_body,
         ).json()
         return cls.from_request_payload(request["commits"][0])
+
+    get_changed_content = ChangedFile.get_changed_content  # pyright: ignore
+
+    @classmethod
+    def get_parent_commit(cls, ado_client: "AdoClient", repo_id: str, commit_id: str) -> "Commit":
+        return super()._get_by_url(
+            ado_client,
+            f"/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/commits?searchCriteria.toCommitId={commit_id}&$top=1&api-version=7.1-preview.1",
+        )
+
+    @classmethod
+    def get_all_by_pull_request(cls, ado_client: "AdoClient", repo_id: str, pull_request_id: str) -> list["Commit"]:
+        return super()._get_by_url(
+            ado_client,
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/pullRequests/{pull_request_id}/commits?api-version=7.1-preview.1",
+            fetch_multiple=True,
+        )  # pyright: ignore[reportReturnType]
 
     # @classmethod
     # def roll_back_latest_commit(cls, ado_client: "AdoClient", repo_id: str, branch_name: str) -> None:

@@ -90,9 +90,10 @@ class ServiceEndpoint(StateManagedResource):
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient") -> list["ServiceEndpoint"]:
-        return super()._get_all(
+        return super()._get_by_url(
             ado_client,
             f"/{ado_client.ado_project_name}/_apis/serviceendpoint/endpoints?api-version=7.1",
+            fetch_multiple=True,
         )  # pyright: ignore[reportReturnType]
 
     def link(self, ado_client: "AdoClient") -> str:

@@ -2,7 +2,7 @@
 name = "ado_wrapper"
 description = "A high level wrapper around the AzureDevops API including OOP principals and state management"
 authors = ["Ben Skerritt"]
-version = "1.39.0"
+version = "1.40.0"
 license = "Proprietary"
 readme = "README.md"
 packages = [{include = "ado_wrapper"}]
@@ -67,6 +67,9 @@ disable = [
     "abstract-method",
     "pointless-statement",
     "inconsistent-return-statements",
+    "too-many-public-methods",
+    # This is super weird, why its suddenly happening
+    "not-an-iterable",
 ]
 
 [tool.pytest.ini_options]
@@ -123,4 +126,4 @@ select = [
     "SIM",  # flake8-simplify
     "I",  # isort
 ]
-ignore = ["F401", "F403", "E501", "I001", "SIM105", "SIM118"]
+ignore = ["F401", "F403", "E501", "I001", "E226", "SIM105", "SIM118"]

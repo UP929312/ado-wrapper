@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Literal
 
 from ado_wrapper.errors import ConfigurationError, InvalidPermissionsError
-from ado_wrapper.utils import from_ado_date_string, to_iso
+from ado_wrapper.utils import from_ado_date_string
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -69,9 +69,10 @@ class AuditLog:
         combined_entries = []
         has_more = True
         continuation_token = None
+        # TODO: This is paginated too, can we make a function? Is it worth?
         while has_more:
             data = ado_client.session.get(
-                f"https://auditservice.dev.azure.com/{ado_client.ado_org_name}/_apis/audit/auditlog?batchSize=100000&startTime={to_iso(start_time)}&endTime={to_iso(end_time)}{f'&continuationToken={continuation_token}' if continuation_token else ''}&api-version=7.1-preview.1",
+                f"https://auditservice.dev.azure.com/{ado_client.ado_org_name}/_apis/audit/auditlog?batchSize=100000&startTime={start_time.isoformat()}&endTime={end_time.isoformat()}{f'&continuationToken={continuation_token}' if continuation_token else ''}&api-version=7.1-preview.1",
             )
             if data.status_code == 403:
                 raise InvalidPermissionsError("You have insufficient perms to use this function, it requires 'View audit log'")

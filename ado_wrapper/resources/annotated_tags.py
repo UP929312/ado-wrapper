@@ -11,6 +11,8 @@ from ado_wrapper.utils import from_ado_date_string
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
 
+FIRST_COMMIT_ID = "0000000000000000000000000000000000000000"  # This is the initial id
+
 
 @dataclass
 class AnnotatedTag(StateManagedResource):
@@ -57,7 +59,7 @@ class AnnotatedTag(StateManagedResource):
         PAYLOAD = {
             "name": f"refs/tags/{tag_name}",
             "oldObjectId": object_id,
-            "newObjectId": "0000000000000000000000000000000000000000",
+            "newObjectId": FIRST_COMMIT_ID,
         }  # fmt: skip
         ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{repo_id}/refs?api-version=7.1-preview.1",

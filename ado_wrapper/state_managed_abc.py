@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass, fields
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable, Literal, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Literal, Type, TypeVar, overload
 
 from ado_wrapper.errors import (
     DeletionFailed, ResourceAlreadyExists, ResourceNotFound, UnknownError, UpdateFailed, InvalidPermissionsError
@@ -75,26 +75,38 @@ class StateManagedResource:
         combined = zip(attribute_names, attribute_values)
         return dict(recursively_convert_to_json(attribute_name, attribute_value) for attribute_name, attribute_value in combined)
 
-    @classmethod
-    def _get_by_id(cls: Type[T], ado_client: "AdoClient", resource_id: str) -> T:
-        raise NotImplementedError
+    # ==============================================================================================================================
 
     @classmethod
+    @overload
     def _get_by_url(cls: Type[T], ado_client: "AdoClient", url: str) -> T:
+        ...
+
+    @classmethod
+    @overload
+    def _get_by_url(cls: Type[T], ado_client: "AdoClient", url: str, fetch_multiple: bool) -> list[T]:
+        ...
+
+    @classmethod
+    def _get_by_url(cls: Type[T], ado_client: "AdoClient", url: str, fetch_multiple: bool = False) -> T | list[T]:
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org_name}{url}"
         request = ado_client.session.get(url)
         if request.status_code == 401:
             raise InvalidPermissionsError(f"You do not have permission to fetch {cls.__name__}(s)!")
         if request.status_code == 404:
-            raise ResourceNotFound(f"No {cls.__name__} found with that identifier!")
+            raise ResourceNotFound(f"No {cls.__name__}(s) found with that identifier!")
         if request.status_code >= 300:
-            raise ValueError(f"Error getting {cls.__name__} by id: {request.text}")
+            raise ValueError(f"Error getting {cls.__name__}(s) by id: {request.text}")
         if request.text == "":
             raise UnknownError(f"Error fetching {cls.__name__}, unknown error.")
+        if fetch_multiple:
+            return [cls.from_request_payload(resource) for resource in request.json()["value"]]
         if "value" in request.json():
             return cls.from_request_payload(request.json()["value"][0])
         return cls.from_request_payload(request.json())
+
+    # ==============================================================================================================================
 
     @classmethod
     def _create(cls: Type[T], ado_client: "AdoClient", url: str, payload: dict[str, Any] | None = None, refetch: bool = False) -> T:
@@ -162,16 +174,7 @@ class StateManagedResource:
     def delete(self, ado_client: "AdoClient") -> None:
         return self.delete_by_id(ado_client, extract_id(self))  # type: ignore[attr-defined, no-any-return]  # pylint: disable=no-value-for-parameter, no-member
 
-    @classmethod
-    def _get_all(cls: Type[T], ado_client: "AdoClient", url: str) -> list[T]:
-        if not url.startswith("https://"):
-            url = f"https://dev.azure.com/{ado_client.ado_org_name}{url}"
-        request = ado_client.session.get(url)
-        if request.status_code == 401:
-            raise InvalidPermissionsError(f"You do not have permission to get all {cls.__name__}(s)!")
-        if request.status_code >= 300:
-            raise ValueError(f"Error getting all {cls.__name__}: {request.status_code}, error={request.text}")
-        return [cls.from_request_payload(resource) for resource in request.json()["value"]]
+    # ==============================================================================================================================
 
     @classmethod
     def _get_all_paginated(
@@ -182,7 +185,7 @@ class StateManagedResource:
         fetched_resources: list[T] = []
         skip_amount = 0
         while True:
-            resources = cls._get_all(ado_client, url + f"&{skip_parameter_name}={skip_amount}")
+            resources = cls._get_by_url(ado_client, url + f"&{skip_parameter_name}={skip_amount}", fetch_multiple=True)
             if len(resources) < page_size:  # If we fetch none, or less than the whole page, we're done.
                 fetched_resources.extend(resources)
                 return fetched_resources
@@ -217,6 +220,8 @@ class StateManagedResource:
             if func(resource):
                 return resource  # type: ignore[no-any-return]
         return None
+
+    # ==============================================================================================================================
 
     # @classmethod
     # def maintain(cls: Type[T], ado_client: "AdoClient", *args: Any, **kwargs: Any) -> T:  # url: str, payload: dict[str, Any]
@@ -258,6 +263,8 @@ class StateManagedResource:
     #         good_resource = cls.create(ado_client)
     #     print("4. Returning")
     #     return good_resource
+
+    # ==============================================================================================================================
 
     # def set_lifecycle_policy(self, ado_client: "AdoClient", policy: Literal["prevent_destroy", "ignore_changes"]) -> None:
     #     self.life_cycle_policy = policy  # TODO

@@ -53,9 +53,9 @@ class BuildArtifact(StateManagedResource):
 
     # ===================================================================================================
 
-    @classmethod
-    def create(cls, ado_client: "AdoClient", build_id: str, artifact_name: str) -> "BuildArtifact":
-        raise NotImplementedError
+    # @classmethod
+    # def create(cls, ado_client: "AdoClient", build_id: str, artifact_name: str) -> "BuildArtifact":
+    #     raise NotImplementedError
 
     #     """https://learn.microsoft.com/en-us/rest/api/azure/devops/build/artifacts/create"""
     #     """https://stackoverflow.com/questions/74193228/artifacts-create-azure-devops-rest-api"""
@@ -99,9 +99,10 @@ class BuildArtifact(StateManagedResource):
     @classmethod
     def get_all_by_build_id(cls, ado_client: "AdoClient", build_id: str) -> list["BuildArtifact"]:
         """https://learn.microsoft.com/en-us/rest/api/azure/devops/build/artifacts/list"""
-        return super()._get_all(
+        return super()._get_by_url(
             ado_client,
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/build/builds/{build_id}/artifacts?api-version=7.1-preview.5",
+            fetch_multiple=True,
         )  # pyright: ignore[reportReturnType]
 
 

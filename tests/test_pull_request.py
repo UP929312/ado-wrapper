@@ -32,6 +32,9 @@ class TestPullRequest:
                 "closedDate": "2021-08-01T00:00:00Z",
                 "isDraft": False,
                 "mergeStatus": "notSet",
+                'lastMergeSourceCommit': {'commitId': '<source_commit_id', 'url': '...'},  # The most recent commit on the pr branch, which contains all the changes proposed in the pull request
+                'lastMergeTargetCommit': {'commitId': '<target_commit_id>', 'url': '...'},  # The commit immediately before the PR merge on the target branch (the base of the commit)
+                'lastMergeCommit': {'commitId': '<tar_commit_id>', 'author': {'name': '<first last>', 'email': '<email', 'date': 'iso8601'}, 'committer': {'name': '<first last>', 'email': '<email', 'date': 'iso8601'}},  # the actual merge commit (created on merge)
             }
         )
         assert pull_request.pull_request_id == "123"

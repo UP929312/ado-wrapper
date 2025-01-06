@@ -4,8 +4,6 @@ Releases need vigerous testing - kinda wip, ReleaseDef - Update
 
 Maybe add the alternative way? I.E. if it's changed in real resources
 
-Teams.get_members(recursive=True)  Not sure that Teams are the right thing, maybe Groups? Idk
-
 We can maybe use run id to delete all by run id? "prevent_destroy", "ignore_changes"
 MORE WORK ON LIFECYCLE!
 
@@ -36,10 +34,10 @@ Add all the required perms with @required_perms - On hold, perms seem to be user
 
 Can Jobs have logs, not just the tasks? Maybe the stage can have logs?
 
-Docs have functions which raise NotImplemented, inspect and remove if they do?
+Docs have functions which raise NotImplemented, inspect and remove if they do? AST?
 
 Pat token stuffs
-Artifact stuffs
+Artifact stuffs - # Is is because I can only create an artifact to an inProgress build?
 
 Somehow detect expired tokens? simple_ado???
 simple_ado.exceptions.ADOHTTPException: ADO returned a non-200 status code, configuration=<simple_ado.http_client.ADOHTTPClient object at 0x1025de310>, status_code=401, text=Access Denied: The Personal Access Token used has expired.
@@ -72,28 +70,25 @@ Never test get_environment_approvals
 Project -> get_build_queue_settings, get_retention_policy_settings
 PullRequest -> Variable Groups
 
-Add more changelog messages for the older versions
-
 Tests for build timelines
 Test utils
 
-Work more on maintain
+Work more on maintain - No resources are *that* editable tbh.
 
 Rollback a commit? Tricky...
 I guess I could fetch the repo by a certain commit, and find the difference for all the files, and then make a commit like that?
 
-# @pytest.mark.xfail(strict=False)
-
 Get all runs, figure out which stage takes the longest, basically profile our runs
-
-AdoUser - Get all, doesn't work with pagination, implement pagination
-This and build's pagination uses continuation tokens, while PRs and stuff uses "skip"
 
 PullRequest.from_link()??? And other resources? That just fetches.
 
-Artifact creation using pipelines like VariableGroup and SecureFiles?
+Artifact creation using pipelines like VariableGroup and SecureFiles? We could also create a temp repo which hosts the files
+So we can "download them" onto the agent. What is the point? So we can make a temporary artifact? So we can make a permanent one?
 
-Rework `_get_by_url()` to have a new param which allows it to return a list comp, so we can remove _get_all(), and also use it for paginated get all
+Rework get_all_by_continuation_token to use _get_by_url(fetch_multiple=True)
+Problem is, we only return resources, we never capture the headers and return them too, not sure how we can do that...
+
+Teams.get_members(recursive=True)  Not sure that Teams are the right thing, maybe Groups? Idk
 
 -----  
 
@@ -112,5 +107,5 @@ python3.11 -m pip install ado_wrapper --upgrade
 python3.11 -m pytest tests/ -vvvv -s  
 black . --line-length 140  
 
-mypy . --strict && flake8 --ignore=E501,E126,E121,W503,W504,PBP --exclude=script.py && ruff check && pylint .
+mypy . --strict && flake8 --ignore=E501,E126,E121,W503,W504,PBP,E226 --exclude=script.py && ruff check && pylint .
 bandit -c pyproject.toml -r .  

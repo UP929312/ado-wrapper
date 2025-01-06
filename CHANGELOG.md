@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.40.0
+
+### Added
+
+- `Build.get_all()` is now paginated, allowing the return of more than 5000 results.
+- `Commit`s now have a method, `get_changed_content` which returns the files changes by a commit (expensive!)
+- `PullRequest`s have a similar method, which returns the changes, which can be ChangeFile.to_string(changed_files) to view as logs.
+- `Team.get_my_teams()`, returning all the teams the authenticated token's owner is in.
+
+### Changed
+
+- Tests for `Environment`s, which require about 1 second to exist through the API, giving them the delay allowed the tests to pass properly.
+- Remove the internal `_get_all` & `_get_by_id` methods, `_get_all` will be replaced with `_get_by_url` with `fetch_multiple=True`.
+- Removed the utils `to_iso()` which handled some edge cases, no longer being used.
+- Fixed commit.get_all_by_repo improperly passing in branch name as limit.
+
+---
+
 ## v1.39.0
 
 ### Added
@@ -563,11 +581,9 @@
 
 ### Added
 
--
-
-### Changed
-
--
+- Added `RepoUserPermission`s, which allow you to control a group or users ability to see and modify a repo, including merge bypass and such.
+- Can set, get by descriptor, or email,
+- Can also remove by those factors.
 
 ---
 
@@ -575,11 +591,11 @@
 
 ### Added
 
--
+- A new parameter to `AdoClient`, `suppress_warnings`, which will not `print` out various warnings, keeping console cleaner (errors will still show)
 
 ### Changed
 
--
+- `Commit`s by a bot user now don't error, instead returning the email as "BOT USER"
 
 ---
 
@@ -587,11 +603,7 @@
 
 ### Added
 
--
-
-### Changed
-
--
+- Auto generated examples, which scrapes the code and gets functions, formatting in copy-able ways.
 
 ---
 
@@ -599,11 +611,12 @@
 
 ### Added
 
--
+- Added `Search`, which lets you use AzureDevops-like search using code, returns a list of `Hit`s
 
 ### Changed
 
--
+- `MergePolicy.get_branch_policy()` now defaults the branch to "main", although can be overriden.
+- Trying to get merge policies for disabled repos will now error with a useful message, rather than an IndexError.
 
 ---
 
@@ -611,11 +624,8 @@
 
 ### Added
 
--
-
-### Changed
-
--
+- `AnnotatedTag`s now have the repo_id included.
+- The ability to delete tags is also implemented, although this is a slightly "less than ideal" route.
 
 ---
 
@@ -623,11 +633,17 @@
 
 ### Added
 
--
+- Added `PipelineAuthorisation`, a way to authorise, well, pipelines.
+- `Build.get_all_by_name()`, which filters all builds based on the builds names.
+- `Build.allow_on_environment()`, which allows an `Environment` for a `BuildDefinition`
+- `requires_initialisation()`, a new internal function which raises an error if bypass_initialisation was set to True for some functions.
 
 ### Changed
 
--
+- Trying to delete an `Environment` will now silently ignore type errors.
+- Ruff'd the whole repo.
+- Less functions use the `ado_project_id` and now use the name.
+- Fixed an issue with `Build.get_latest` where some builds were running so raised an error.
 
 ---
 

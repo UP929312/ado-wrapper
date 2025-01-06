@@ -131,9 +131,10 @@ class Release(StateManagedResource):
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient", definition_id: str) -> "list[Release]":
-        return super()._get_all(
+        return super()._get_by_url(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/releases?api-version=7.1&definitionId={definition_id}",
+            fetch_multiple=True,
         )  # pyright: ignore[reportReturnType]
 
     def link(self, ado_client: "AdoClient") -> str:
@@ -228,9 +229,10 @@ class ReleaseDefinition(StateManagedResource):
 
     @classmethod
     def get_all(cls, ado_client: "AdoClient") -> "list[ReleaseDefinition]":
-        return super()._get_all(
+        return super()._get_by_url(
             ado_client,
             f"https://vsrm.dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/release/definitions?api-version=7.1",
+            fetch_multiple=True
         )  # pyright: ignore[reportReturnType]
 
     def link(self, ado_client: "AdoClient") -> str:

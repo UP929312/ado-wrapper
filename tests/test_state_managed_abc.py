@@ -60,6 +60,8 @@ class TestStateManagedABCs:
             "Test Description",
             "source-branch",
             "target-branch",
+            "000000000",
+            "111111111",
             Member("name", "email", "123"),
             datetime.now(),
             Repo("123", "name", default_branch="target-branch"),

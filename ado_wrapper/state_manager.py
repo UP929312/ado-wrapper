@@ -155,13 +155,13 @@ class StateManager:
                     all_states["resources"][resource_type][resource_id]["data"] = instance.to_json()
         return all_states
 
-    def load_all_resources_with_prefix_into_state(self, prefix: str) -> None:
+    def load_all_resources_with_prefix_into_state(self, prefix: str, print_resource_finds: bool = True) -> None:
         from ado_wrapper.resources import (  # pylint: disable=possibly-unused-variable  # noqa: F401
             AgentPool, BuildDefinition, Environment, Project, ReleaseDefinition, Repo, SecureFile, ServiceEndpoint, VariableGroup
         )  # fmt: skip
-        for resource_type in [value for key, value in locals().items() if key not in ("self", "prefix")]:
+        for resource_type in [value for key, value in locals().items() if key not in ("self", "prefix", "print_resource_finds")]:
             for resource in resource_type.get_all(self.ado_client):
                 if resource.name.startswith(prefix):
-                    if not self.ado_client.suppress_warnings:
+                    if not self.ado_client.suppress_warnings and print_resource_finds:
                         print(f"Loading in {resource=}")
                     self.ado_client.state_manager.import_into_state(resource_type.__name__, extract_id(resource))

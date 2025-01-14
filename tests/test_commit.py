@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import pytest
 
 if __name__ == "__main__":
@@ -45,6 +46,12 @@ class TestCommit:
             assert commit.author.member_id == lastest_commit.author.member_id
             assert commit.message == lastest_commit.message
 
+    def test_get_all_by_repo_with_date_range(self) -> None:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "get-latest-commit-with-date-range") as repo:
+            Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
+            commits = Commit.get_all_by_repo(self.ado_client, repo.repo_id, end=datetime.now()-timedelta(days=1), branch_name="test-branch")
+            assert not commits
+
     def test_get_all(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "get-all-commits") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")
@@ -55,7 +62,6 @@ class TestCommit:
             assert len(all_commits) == 2 + 1  # 1 For the initial README commit
             assert all(isinstance(commit, Commit) for commit in all_commits)
 
-    @pytest.mark.wip
     def test_get_all_with_branch(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "get-all-commits-with-branch") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "new-branch", {"test.txt": "This is one thing"}, "add", "Test commit 1")  # fmt: skip

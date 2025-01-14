@@ -185,9 +185,12 @@ class PullRequest(StateManagedResource):
         return [Member.from_request_payload(reviewer) for reviewer in request["value"]]
 
     @classmethod
-    def get_all_by_repo_id(cls, ado_client: "AdoClient", repo_id: str, status: PullRequestStatus = "all") -> list["PullRequest"]:
+    def get_all_by_repo_id(
+        cls, ado_client: "AdoClient", repo_id: str, start: datetime | None = None,
+        end: datetime | None = None, status: PullRequestStatus = "all"
+    ) -> list["PullRequest"]:
         try:
-            return cls.get_all(ado_client, status, start=None, end=None, limit=None, repo_id=repo_id)
+            return cls.get_all(ado_client, status, start=start, end=end, limit=None, repo_id=repo_id)
         except KeyError:
             if not ado_client.suppress_warnings:
                 print(f"[ADO_WRAPPER] Repo with id `{repo_id}` was disabled, or you had no access.")
@@ -294,17 +297,33 @@ class PullRequest(StateManagedResource):
         return [x for x in request if x["item"]["gitObjectType"] == "blob"]
 
     def get_code_changes(self, ado_client: "AdoClient") -> dict[str, ChangedFile]:
-        previous_commit_id = ado_client.session.get(
+        """Returns a dictionary of file_name -> ChangedFile for a given pull request"""
+        base_commit_id = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo.repo_id}/pullrequest/{self.pull_request_id}?_a=files"
         ).text.replace(" ", "").split("commonRefCommit\":{\"commitId\":\"")[1].split("\"")[0]
+        last_commit_id = self.final_commit_id
+        # ============================================================================================================
+        text = ado_client.session.get(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_git/{self.repo.repo_id}/pullrequest/{self.pull_request_id}?_a=files"
+        ).text
+        # commonRefCommit = The commit it was based on
+        # targetRefCommit = The merge into main commit
+        # sourceRefCommit = The last commit before it was merged
+        json_raw = text.split("<script id=\"dataProviders\" type=\"application/json\">")[1].split("</script>")[0]
+        json_data = json.loads(json_raw)
+        last_iteration = json_data["data"]["ms.vss-code-web.pr-detail-data-provider"]["iterations"][-1]
+        # NOT RUNNING THIS FILEEEEE
+        base_commit_id_2, last_commit_id_2 = last_iteration["sourceRefCommit"]["commitId"], last_iteration["targetRefCommit"]["commitId"]
+        # assert base_commit_id == base_commit_id, f"{base_commit_id} != {base_commit_id_2}"
+        # assert last_commit_id == last_commit_id_2, f"{last_commit_id} != {last_commit_id_2}"
+        # last_commit_id = last_commit_id_2
         # =====
-        # print(previous_commit_id)
         # for data in self._get_code_changes(ado_client):
         #     if data["changeType"] != "delete, sourceRename":
-        #         print(data)
-        #         print({data["item"]["path"]: ChangedFile.get_changed_file(ado_client, self.repo.repo_id, data.get("sourceServerItem") or data["item"]["path"], data["item"]["path"], data["changeType"], self.created_commit_id, previous_commit_id)})
+        #         # print(data)
+        #         print(ChangedFile.get_changed_file(ado_client, self.repo.repo_id, data.get("sourceServerItem") or data["item"]["path"], data["item"]["path"], data["changeType"], last_commit_id, base_commit_id))
         return {
-            data["item"]["path"]: ChangedFile.get_changed_file(ado_client, self.repo.repo_id, data.get("sourceServerItem") or data["item"]["path"], data["item"]["path"], data["changeType"], self.final_commit_id, previous_commit_id)  # type: ignore[union-attr]   # TODO: Non-completed commits, what to put here?
+            data["item"]["path"]: ChangedFile.get_changed_file(ado_client, self.repo.repo_id, data.get("sourceServerItem") or data["item"]["path"], data["item"]["path"], data["changeType"], last_commit_id, base_commit_id)  # type: ignore[union-attr]
             for data in self._get_code_changes(ado_client)
             if data["changeType"] != "delete, sourceRename"
         }

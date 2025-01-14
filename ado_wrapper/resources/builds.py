@@ -141,11 +141,11 @@ class Build(StateManagedResource):
             return
         leases = leases_request.json()["value"]
         for lease in leases:
-            lease_response = ado_client.session.delete(  # TODO: Rename "lease_response" to something better.
+            delete_lease_request = ado_client.session.delete(
                 f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/build/retention/leases?ids={lease['leaseId']}&api-version=6.1",
             )
-            if lease_response.status_code >= 300:  # 204?
-                print(f"[ADO_WRAPPER] Could not delete lease {lease['leaseId']}! {lease_response.status_code}, {lease_response.text}")
+            if delete_lease_request.status_code >= 300:  # 204?
+                print(f"[ADO_WRAPPER] Could not delete lease {lease['leaseId']}! {delete_lease_request.status_code}, {delete_lease_request.text}")
 
     @classmethod
     def get_all_by_definition(cls, ado_client: "AdoClient", definition_id: str) -> "list[Build]":

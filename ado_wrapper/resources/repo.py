@@ -80,7 +80,7 @@ class Repo(StateManagedResource):
 
     @classmethod
     def delete_by_id(cls, ado_client: "AdoClient", repo_id: str) -> None:
-        for pull_request in Repo.get_all_pull_requests(ado_client, repo_id, "all"):
+        for pull_request in Repo.get_all_pull_requests(ado_client, repo_id, status="all"):
             ado_client.state_manager.remove_resource_from_state("PullRequest", pull_request.pull_request_id)
         # for branch in Branch.get_all_by_repo(ado_client, repo_id):
         #     ado_client.state_manager.remove_resource_from_state("Branch", branch.name)

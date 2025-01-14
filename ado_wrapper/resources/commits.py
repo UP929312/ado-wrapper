@@ -137,7 +137,8 @@ class Commit(StateManagedResource):
 
     @classmethod
     def get_all_by_repo(
-        cls, ado_client: "AdoClient", repo_id: str, limit: str | None = None, branch_name: str | None = None
+        cls, ado_client: "AdoClient", repo_id: str, limit: str | None = None, 
+        start: datetime | None = None, end: datetime | None = None, branch_name: str | None = None,
     ) -> "list[Commit]":
         """Returns a list of all commits in the given repository."""
         # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/commits/get-commits?view=azure-devops-rest-7.1&tabs=HTTP
@@ -149,10 +150,12 @@ class Commit(StateManagedResource):
             "searchCriteria.includeUserImageUrl": False,  # Small optimisation
             "searchCriteria.includeWorkItems": False,  # Small optimisation
             "searchCriteria.$top": limit or 10_000,
-            # "searchCriteria.author": author_name,  # TODO: actually try these.
-            # "searchCriteria.fromDate": start.isoformat() or None,
-            # "searchCriteria.toDate": end.isoformat() or None,
+            # "searchCriteria.author": author_name,  # TODO: actually try this
         }
+        if start is not None:
+            params["searchCriteria.fromDate"] = start.strftime("%-m/%-d/%Y %H:%M:%S")  # 1/9/2025 14:18:07
+        if end is not None:
+            params["searchCriteria.toDate"] = end.strftime("%-m/%-d/%Y %H:%M:%S")
         extra_params_string = "".join([f"&{key}={value}" for key, value in params.items()])
         return super()._get_all_paginated(
             ado_client,

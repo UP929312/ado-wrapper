@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.41.0
+
+### Added
+
+- `Commit.get_all_by_repo()` now takes a start and end datetime, to only get commits in a certain range.
+- `PullRequest.get_all_by_repo_id()` also takes a range of datetimes to filter by (API side)
+
+### Changed
+
+- `StateManager`'s `load_all_resources_with_prefix_into_state` now has a arg to print it's finds (or not), defaults to True.
+- `Build.delete_all_leases()`'s response renamed from `leases_response` to `delete_lease_request`
+
+---
+
 ## v1.40.0
 
 ### Added

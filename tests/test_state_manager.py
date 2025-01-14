@@ -22,7 +22,7 @@ class TestStateManager:
             # variable_group = VariableGroup.create(self.ado_client, "ado_wrapper-test_load_all_resources_with_prefix", "test", {"a": "123"})
             # service_endpoint = ServiceEndpoint.create(self.ado_client, "ado_wrapper-test_load_all_resources_with_prefix",
             #                                           "github", "https://github.com", "username", "password")  # fmt: skip
-            state_manager.load_all_resources_with_prefix_into_state("ado_wrapper-")
+            state_manager.load_all_resources_with_prefix_into_state("ado_wrapper-", print_resource_finds=False)
             all_states = state_manager.load_state()["resources"]
             assert all_states["Repo"][repo.repo_id]["data"] == repo.to_json()
             # assert all_states["VariableGroup"][variable_group.variable_group_id]["data"] == variable_group.to_json()

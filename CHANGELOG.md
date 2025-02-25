@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.42.0
+
+### Added
+
+- `WorkItem`, and it's corrosponding methods have been implemented (roughly)
+
+### Changed
+
+- Pull requests now have their previous_commit_id added back.
+- When fetching variable contents, the commit message has been improved
+
+---
+
 ## v1.41.0
 
 ### Added

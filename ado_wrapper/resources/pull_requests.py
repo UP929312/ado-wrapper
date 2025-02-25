@@ -53,9 +53,9 @@ class PullRequest(StateManagedResource):
     description: str = field(repr=False, metadata={"editable": True})
     source_branch: str = field(repr=False)
     target_branch: str = field(repr=False)
-    # previous_commit_id: str = field(repr=False)  # The commit before the PR was created, what the PR is based on -> lastMergeTargetCommit
+    previous_commit_id: str = field(repr=False)  # The commit before the PR was created, what the PR is based on -> lastMergeTargetCommit
     created_commit_id: str | None = field(repr=False)  # The commit which was created on merge  -> lastMergeCommit
-    final_commit_id: str | None = field(repr=False)  # The final commit on the PR with all the changes.   -> lastMergeSourceCommit
+    final_commit_id: str | None = field(repr=False)  # The final commit on the PR with all the changes.  -> lastMergeSourceCommit
     author: Member
     creation_date: datetime = field(repr=False)
     repo: "Repo"
@@ -78,8 +78,9 @@ class PullRequest(StateManagedResource):
         )
         return cls(
             str(data["pullRequestId"]), data["title"], data.get("description", ""), data["sourceRefName"], data["targetRefName"],
+            data.get("lastMergeTargetCommit", {})["commitId"],
             data.get("lastMergeCommit", {}).get("commitId"),
-            data.get("lastMergeSourceCommit", {}).get("commitId"),  # data.get("lastMergeTargetCommit", {})["commitId"],
+            data.get("lastMergeSourceCommit", {}).get("commitId"),  
             author, from_ado_date_string(data["creationDate"]), repository,
             from_ado_date_string(data.get("closedDate")), data["isDraft"], pr_status, merge_status, reviewers,
         )  # fmt: skip

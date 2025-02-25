@@ -25,11 +25,12 @@ from ado_wrapper.resources.service_endpoint import ServiceEndpoint
 from ado_wrapper.resources.teams import Team
 from ado_wrapper.resources.users import AdoUser, Member, Reviewer, TeamMember
 from ado_wrapper.resources.variable_groups import VariableGroup
+from ado_wrapper.resources.work_item import WorkItem
 
 __all__ = [
     "AgentPool", "AnnotatedTag", "Artifact", "AuditLog", "Branch", "BuildTimeline", "Build", "BuildDefinition", "HierarchyCreatedBuildDefinition",
     "Commit", "Environment", "PipelineAuthorisation", "Group", "MergeBranchPolicy", "MergePolicies", "MergePolicyDefaultReviewer",
     "MergeTypeRestrictionPolicy", "Organisation", "Permission", "PersonalAccessToken", "Project",
     "PullRequest", "PullRequestCommentThread", "PullRequestComment", "Release", "ReleaseDefinition", "RepoUserPermissions", "UserPermission", "BuildRepository", "Repo", "Run",
-    "CodeSearch", "SecureFile", "ServiceEndpoint", "Team", "AdoUser", "Member", "Reviewer", "TeamMember", "VariableGroup"  # fmt: skip
+    "CodeSearch", "SecureFile", "ServiceEndpoint", "Team", "AdoUser", "Member", "Reviewer", "TeamMember", "VariableGroup", "WorkItem",  # fmt: skip
 ]

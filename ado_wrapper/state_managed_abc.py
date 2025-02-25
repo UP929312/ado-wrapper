@@ -141,7 +141,7 @@ class StateManagedResource:
         if not url.startswith("https://"):
             url = f"https://dev.azure.com/{ado_client.ado_org_name}{url}"
         request = ado_client.session.delete(url)
-        if request.status_code != 204:
+        if request.status_code not in [200, 204]:
             if request.status_code == 404:
                 if not ado_client.suppress_warnings:
                     print("[ADO_WRAPPER] Resource not found, probably already deleted, removing from state")

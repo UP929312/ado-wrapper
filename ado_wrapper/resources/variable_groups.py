@@ -189,7 +189,7 @@ class VariableGroup(StateManagedResource):
         repo = Repo.create(
             ado_client, "ado_wrapper_variable_group_printing_" + ado_client.state_manager.run_id[:16], include_readme=True
         )  # Need readme
-        Commit.create(ado_client, repo.repo_id, "main", "with-workflow", {"workflow.yaml": build_def_yaml}, "add", "Testing")
+        Commit.create(ado_client, repo.repo_id, "main", "with-workflow", {"workflow.yaml": build_def_yaml}, "add", "Downloading variable group contents")
         build_definition = BuildDefinition.create(ado_client, repo.name, repo.repo_id, "workflow.yaml", branch_name="with-workflow")
         build_definition.allow_variable_group(ado_client, variable_group.variable_group_id)
         run = Run.run_and_wait_until_completion(ado_client, build_definition.build_definition_id, branch_name="with-workflow")

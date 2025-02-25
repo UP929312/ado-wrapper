@@ -1,5 +1,7 @@
 # To do
 
+For VG get contents, raise if not found.
+
 Releases need vigerous testing - kinda wip, ReleaseDef - Update
 
 Maybe add the alternative way? I.E. if it's changed in real resources
@@ -89,6 +91,9 @@ Rework get_all_by_continuation_token to use _get_by_url(fetch_multiple=True)
 Problem is, we only return resources, we never capture the headers and return them too, not sure how we can do that...
 
 Teams.get_members(recursive=True)  Not sure that Teams are the right thing, maybe Groups? Idk
+
+
+Commit.branch?
 
 -----  
 

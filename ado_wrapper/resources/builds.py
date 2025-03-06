@@ -34,6 +34,7 @@ class Build(StateManagedResource):
     requested_by: Member = field(repr=False)
     build_repo: BuildRepository = field(repr=False)
     parameters: dict[str, str] = field(repr=False)
+    branch_name: str
     definition: "BuildDefinition | None" = field(repr=False)
     pool_id: str | None
     start_time: datetime | None = field(repr=False)
@@ -50,6 +51,7 @@ class Build(StateManagedResource):
         build_repo = BuildRepository.from_request_payload(data["repository"])
         build_definition = BuildDefinition.from_request_payload(data["definition"]) if "definition" in data else None
         return cls(str(data["id"]), str(data["buildNumber"]), data["status"], requested_by, build_repo, data.get("templateParameters", {}),
+                   data["sourceBranch"].removeprefix("refs/heads/"),
                    build_definition, data.get("queue", {}).get("pool", {}).get("id"), from_ado_date_string(data.get("startTime")),
                    from_ado_date_string(data.get("finishTime")), from_ado_date_string(data.get("queueTime")), data["reason"],
                    data["priority"])  # fmt: skip

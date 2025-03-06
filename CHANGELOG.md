@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.43.0
+
+### Added
+
+- Added `Artifact.get_all_consume_by_build()`, which rather than getting the produced artifacts, gets the ones consumed.
+- Added branch name to `Build`s
+
+### Changed
+
+- Fixed a bug with newer python versions not working because of `WorkItem`s .link()
+
+---
+
 ## v1.42.0
 
 ### Added

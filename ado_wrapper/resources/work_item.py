@@ -38,7 +38,8 @@ class WorkItem(StateManagedResource):
         )
 
     def link(self, ado_client: "AdoClient") -> str:
-        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_boards/board/t/{self.area.removeprefix(ado_client.ado_project_name+'\\')}/Stories/?workitem={self.work_item_id}"
+        board_name = self.area.removeprefix(ado_client.ado_project_name+'\\')
+        return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_boards/board/t/{board_name}/Stories/?workitem={self.work_item_id}"
 
     @classmethod
     def create(

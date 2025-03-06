@@ -27,6 +27,7 @@ class TestBuild:
                 "requestedBy": {"displayName": "test", "uniqueName": "test", "id": "123"},
                 "repository": {"id": "123", "name": "test-repo"},
                 "templateParameters": "test",
+                "sourceBranch": "refs/heads/main",
                 "startTime": "2021-10-01T00:00:00Z",
                 "finishTime": "2021-10-01T00:00:00Z",
                 "queueTime": "2021-10-01T00:00:00Z",

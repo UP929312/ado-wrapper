@@ -52,7 +52,7 @@ class LoggingSession(requests.Session):
         """Deletes old logs, if latest_log_counter is -1, keep all logs, if it's None, delete all logs."""
         if self.latest_log_counter == -1:  # -1 means infinite
             return
-        logs = os.listdir(self.log_directory)
+        logs = os.listdir(self.log_directory) if self.latest_log_counter is not None else []
         if self.latest_log_counter is not None and len(logs) < self.latest_log_counter - 1:
             return
         starting_index = self.latest_log_counter - 1 if self.latest_log_counter is not None else 0  # Remove 0 onward

@@ -17,15 +17,17 @@ class LoggingSession(requests.Session):
         self.log_directory = log_directory
         self.log_name = datetime.now().isoformat()
 
-        if not os.path.isdir(self.log_directory):
+        if latest_log_counter is not None and not os.path.isdir(self.log_directory):
             os.makedirs(self.log_directory)
 
         self.cleanup_old_logs()
 
-        with open(f"{self.log_directory}/{self.log_name}.log", "w", encoding="utf-8") as file:
-            file.write("")
+        if latest_log_counter is not None:
+            with open(f"{self.log_directory}/{self.log_name}.log", "w", encoding="utf-8") as file:
+                file.write("")
 
     def log_request(self, method: str, url: str, kwargs: dict[str, Any], duration_in_milliseconds: int) -> None:
+        """Logs a request, but removes pre-defined kwargs to reduce spam."""
         if self.latest_log_counter is None:
             return
         with open(f"{self.log_directory}/{self.log_name}.log", "a", encoding="utf-8") as file:
@@ -47,7 +49,8 @@ class LoggingSession(requests.Session):
         return response
 
     def cleanup_old_logs(self) -> None:
-        if self.latest_log_counter == -1:
+        """Deletes old logs, if latest_log_counter is -1, keep all logs, if it's None, delete all logs."""
+        if self.latest_log_counter == -1:  # -1 means infinite
             return
         logs = os.listdir(self.log_directory)
         if self.latest_log_counter is not None and len(logs) < self.latest_log_counter - 1:

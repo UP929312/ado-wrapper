@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.44.0
+
+### Changed
+
+- Setting log count to None now doesn't create files.
+
 ## v1.43.0
 
 ### Added

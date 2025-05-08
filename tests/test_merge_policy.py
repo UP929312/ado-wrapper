@@ -45,6 +45,7 @@ class TestMergePolicy:
 
     @pytest.mark.hierarchy
     @pytest.mark.create_delete
+    @pytest.mark.wip
     def test_create_default_reviewer(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-default-reviewer") as repo:
             MergePolicies.add_default_reviewer(self.ado_client, repo.repo_id, existing_user_id, False)
@@ -76,7 +77,6 @@ class TestMergePolicy:
             assert allowed_merge_types.allow_rebase_and_fast_forward
             assert not allowed_merge_types.allow_rebase_with_merge_commit
 
-    @pytest.mark.wip
     def test_get_all_repo_policies(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "get-all-repo-policies") as repo:
             policies = MergePolicies.get_all_repo_policies(self.ado_client, repo.repo_id)

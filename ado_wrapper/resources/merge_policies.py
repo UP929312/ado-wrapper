@@ -52,6 +52,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
 
     @classmethod
     def get_default_reviewers(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> list[Reviewer]:
+        """Gets the default reviewers for a repo, but converts their local_ids to origin_ids """
         PAYLOAD = build_hierarchy_payload(
             ado_client, "code-web.branch-policies-data-provider", additional_properties={
                 "repositoryId": repo_id, "refName": f"refs/heads/{branch_name}"
@@ -79,12 +80,23 @@ class MergePolicyDefaultReviewer(StateManagedResource):
                 for reviewer_id in reviewers:
                     [x for x in all_reviewers if x.member_id == reviewer_id][0].is_required = True
         # =====================================================================================
-        # Fix local_ids (convert them to origin_ids)
-        local_ids_to_origin_ids = AdoUser._convert_local_ids_to_origin_ids(  # pylint: disable=protected-access
-            ado_client, [x.member_id for x in all_reviewers]
-        )  # pylint: disable=protected-access
+        # Fix local_ids (convert them to origin_ids), for users (not groups)
+        # We used to convert all .member_ids to origin_ids, and then set the reviewer.member_id to the origin_id
+        # However this isn't very what we want to do for groups, so we try to ignore it.
+        fixed_ids = {}
+        for reviewer in all_reviewers:
+            is_user = True
+            try:
+                is_user = AdoUser.is_user_or_group(ado_client, reviewer.member_id) != "group"
+            except ValueError:  # If it's a local_id, we just fail, which means it's probably a user
+                pass
+            if is_user:
+                origin_id = AdoUser._convert_local_ids_to_origin_ids(ado_client, [reviewer.member_id])[reviewer.member_id]  # pylint: disable=protected-access
+                fixed_ids[reviewer.member_id] = origin_id
+            else:
+                fixed_ids[reviewer.member_id] = reviewer.member_id
         for reviewer in [x for x in all_reviewers if x.member_id is not None]:
-            reviewer.member_id = local_ids_to_origin_ids[reviewer.member_id]
+            reviewer.member_id = fixed_ids[reviewer.member_id]
         # =====================================================================================
         return all_reviewers
 
@@ -94,9 +106,10 @@ class MergePolicyDefaultReviewer(StateManagedResource):
     ) -> None:
         if reviewer_origin_id in [x.member_id for x in cls.get_default_reviewers(ado_client, repo_id, branch_name)]:
             raise ValueError("Reviewer already exists! To update, please remove the reviewer first.")
-        local_id = AdoUser._convert_origin_ids_to_local_ids(ado_client, [reviewer_origin_id])[  # pylint: disable=protected-access
-            reviewer_origin_id
-        ]
+        if AdoUser.is_user_or_group(ado_client, reviewer_origin_id) == "user":
+            local_id = AdoUser._convert_origin_ids_to_local_ids(ado_client, [reviewer_origin_id])[reviewer_origin_id]  # pylint: disable=protected-access
+        else:
+            local_id = reviewer_origin_id
         payload = {
             "type": {"id": _get_type_id(ado_client, "Required reviewers")},
             "isBlocking": is_required,
@@ -116,9 +129,12 @@ class MergePolicyDefaultReviewer(StateManagedResource):
         assert request.status_code == 200, f"Error setting branch policy: {request.text}"
 
     @staticmethod
-    def remove_default_reviewer(ado_client: "AdoClient", repo_id: str, reviewer_id: str, branch_name: str = "main") -> None:
+    def remove_default_reviewer(ado_client: "AdoClient", repo_id: str, reviewer_origin_id: str, branch_name: str = "main") -> None:
         # We can't use get_default_reviewers since we need to delete the policy, not the reviewer
-        local_id = AdoUser._convert_origin_ids_to_local_ids(ado_client, [reviewer_id])[reviewer_id]  # pylint: disable=protected-access
+        if AdoUser.is_user_or_group(ado_client, reviewer_origin_id) == "user":
+            local_id = AdoUser._convert_origin_ids_to_local_ids(ado_client, [reviewer_origin_id])[reviewer_origin_id]  # pylint: disable=protected-access
+        else:
+            local_id = reviewer_origin_id
         policies = MergePolicies.get_all_by_repo_id(ado_client, repo_id, branch_name)
         default_reviewer_policy = (
             [x for x in policies if isinstance(x, MergePolicyDefaultReviewer)]  # pylint: disable=not-an-iterable

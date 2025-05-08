@@ -65,6 +65,10 @@ class Group(StateManagedResource):
     def get_by_name(cls, ado_client: "AdoClient", group_name: str) -> "Group | None":
         return cls._get_by_abstract_filter(ado_client, lambda group: group.name == group_name)
 
+    @classmethod
+    def get_by_origin_id(cls, ado_client: "AdoClient", origin_id: str) -> "Group | None":
+        return cls._get_by_abstract_filter(ado_client, lambda group: group.origin_id == origin_id)
+
     # @classmethod
     # def get_all_by_member(cls, ado_client: "AdoClient", member_descriptor_id: str) -> list["Group"]:
     #     raise NotImplementedError

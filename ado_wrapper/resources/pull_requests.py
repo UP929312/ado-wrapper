@@ -80,7 +80,7 @@ class PullRequest(StateManagedResource):
             str(data["pullRequestId"]), data["title"], data.get("description", ""), data["sourceRefName"], data["targetRefName"],
             data.get("lastMergeTargetCommit", {})["commitId"],
             data.get("lastMergeCommit", {}).get("commitId"),
-            data.get("lastMergeSourceCommit", {}).get("commitId"),  
+            data.get("lastMergeSourceCommit", {}).get("commitId"),
             author, from_ado_date_string(data["creationDate"]), repository,
             from_ado_date_string(data.get("closedDate")), data["isDraft"], pr_status, merge_status, reviewers,
         )  # fmt: skip
@@ -291,7 +291,7 @@ class PullRequest(StateManagedResource):
 
     def _get_code_changes(self, ado_client: "AdoClient") -> list[dict[str, Any]]:
         """This is not intended to be used externally, although can be"""
-        previous_commit_id = Commit.get_parent_commit(ado_client, self.repo.repo_id, self.created_commit_id).commit_id  # type: ignore[union-attr]   # TODO: Non-completed commits, what to put here?
+        previous_commit_id = Commit.get_parent_commit(ado_client, self.repo.repo_id, self.created_commit_id).commit_id  # type: ignore[arg-type]   # TODO: Non-completed commits, what to put here?
         request = ado_client.session.get(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/git/repositories/{self.repo.repo_id}/diffs/commits?baseVersion={previous_commit_id}&targetVersion={self.final_commit_id}&baseVersionType=commit&targetVersionType=commit&api-version=7.1-preview.1",
         ).json()["changes"]
@@ -315,6 +315,7 @@ class PullRequest(StateManagedResource):
         last_iteration = json_data["data"]["ms.vss-code-web.pr-detail-data-provider"]["iterations"][-1]
         # NOT RUNNING THIS FILEEEEE
         base_commit_id_2, last_commit_id_2 = last_iteration["sourceRefCommit"]["commitId"], last_iteration["targetRefCommit"]["commitId"]
+        print(base_commit_id_2, last_commit_id_2)
         # assert base_commit_id == base_commit_id, f"{base_commit_id} != {base_commit_id_2}"
         # assert last_commit_id == last_commit_id_2, f"{last_commit_id} != {last_commit_id_2}"
         # last_commit_id = last_commit_id_2
@@ -324,7 +325,7 @@ class PullRequest(StateManagedResource):
         #         # print(data)
         #         print(ChangedFile.get_changed_file(ado_client, self.repo.repo_id, data.get("sourceServerItem") or data["item"]["path"], data["item"]["path"], data["changeType"], last_commit_id, base_commit_id))
         return {
-            data["item"]["path"]: ChangedFile.get_changed_file(ado_client, self.repo.repo_id, data.get("sourceServerItem") or data["item"]["path"], data["item"]["path"], data["changeType"], last_commit_id, base_commit_id)  # type: ignore[union-attr]
+            data["item"]["path"]: ChangedFile.get_changed_file(ado_client, self.repo.repo_id, data.get("sourceServerItem") or data["item"]["path"], data["item"]["path"], data["changeType"], last_commit_id, base_commit_id)  # type: ignore[arg-type]
             for data in self._get_code_changes(ado_client)
             if data["changeType"] != "delete, sourceRename"
         }

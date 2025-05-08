@@ -123,6 +123,16 @@ class AdoUser(StateManagedResource):
         return {identity.origin_id: AdoUser.search_by_query(ado_client, identity.email)["localId"]
                 for identity in user_objects}  # fmt: skip
 
+    @staticmethod
+    def is_user_or_group(ado_client: "AdoClient", origin_id: str) -> Literal["user"] | Literal["group"]:
+        """Checks if a descriptor_id is a member or group"""
+        from ado_wrapper.resources.groups import Group
+        if AdoUser.get_by_origin_id(ado_client, origin_id) is not None:
+            return "user"
+        if Group.get_by_origin_id(ado_client, origin_id) is not None:
+            return "group"
+        raise ValueError(f"Origin ID {origin_id} is neither a user nor a group")
+
     # @staticmethod
     # def _convert_descriptor_ids_to_local_ids(ado_client: "AdoClient", descriptor_ids: list[str]) -> dict[str, str]:
     #     """Converts a mapping of descriptor_ids to local_ids"""

@@ -1,3 +1,17 @@
+## v1.45.0
+
+### Added
+
+- `AdoUser.is_user_or_group()`, which defines if an origin_id belongs to a `AdoUser` or `Group`
+
+### Changed
+
+- `MergePolicy.get_default_reviewers`, `MergePolicy.set_default_reviewers`, `MergePolicy.remove_default_reviewers` should all work properly now for groups and user.
+- `Artifact.get_all_consume_by_build` has been renamed to `Artifact.get_all_consumed_by_build`
+- Fixed test regarding `PullRequest`s new attribute.
+
+---
+
 # Changelog
 
 ## v1.44.0

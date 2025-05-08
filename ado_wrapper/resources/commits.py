@@ -137,7 +137,7 @@ class Commit(StateManagedResource):
 
     @classmethod
     def get_all_by_repo(
-        cls, ado_client: "AdoClient", repo_id: str, limit: str | None = None, 
+        cls, ado_client: "AdoClient", repo_id: str, limit: str | None = None,
         start: datetime | None = None, end: datetime | None = None, branch_name: str | None = None,
     ) -> "list[Commit]":
         """Returns a list of all commits in the given repository."""

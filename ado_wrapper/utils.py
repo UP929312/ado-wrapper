@@ -55,6 +55,7 @@ def from_ado_date_string(date_string: str | None) -> datetime | None:
     no_milliseconds = date_string.split(".")[0].removesuffix("Z")
     return datetime.strptime(no_milliseconds, "%Y-%m-%dT%H:%M:%S")
 
+
 @overload
 def from_iso(dt_string: str) -> datetime:
     ...

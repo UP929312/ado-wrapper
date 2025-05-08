@@ -55,7 +55,7 @@ class BuildArtifact(StateManagedResource):
     # ===================================================================================================
 
     @classmethod
-    def get_all_consume_by_build(cls, ado_client: "AdoClient", build_id: str) -> list["BuildArtifact"]:
+    def get_all_consumed_by_build(cls, ado_client: "AdoClient", build_id: str) -> list["BuildArtifact"]:
         request = ado_client.session.get(
                 f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_build/results?buildId={build_id}&view=artifacts&pathAsName=false&type=consumedArtifacts"
         ).text
@@ -63,13 +63,12 @@ class BuildArtifact(StateManagedResource):
         json_data = json.loads(json_raw)
         consumed_artifacts_data = json_data["data"]["ms.vss-build-web.run-consumed-artifacts-data-provider"]["consumedSources"]
         pipeline_artifacts_data = [x for x in consumed_artifacts_data if x["artifactType"] == "Pipeline"]  # versionId is the build_id
-        build_id_to_artifact_names = {data["versionId"]: [x["artifactName"] for x in  data["consumedArtifacts"]] for data in pipeline_artifacts_data}
+        build_id_to_artifact_names = {data["versionId"]: [x["artifactName"] for x in data["consumedArtifacts"]] for data in pipeline_artifacts_data}
         artifacts = []
-        for build_id, artifact_names in build_id_to_artifact_names.items():
-            build_artifacts = [Artifact.get_by_name(ado_client, build_id, artifact_name) for artifact_name in artifact_names]
+        for artifacts_build_id, artifact_names in build_id_to_artifact_names.items():
+            build_artifacts = [Artifact.get_by_name(ado_client, artifacts_build_id, artifact_name) for artifact_name in artifact_names]
             artifacts.extend(build_artifacts)
         return artifacts
-
 
     # @classmethod
     # def create(cls, ado_client: "AdoClient", build_id: str, artifact_name: str) -> "BuildArtifact":

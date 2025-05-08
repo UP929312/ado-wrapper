@@ -90,7 +90,7 @@ class TestProjectSettings:
     #     assert project.name == project_created.name
     #     project_created.delete(self.ado_client)
 
-    # @pytest.mark.skip("This requires initialisation, which can take 10 minutes.")
+    # @pytest.mark.skip("This requires initialisation, which can take 5 minutes.")
     # @pytest.mark.get_all_by_name
     # def test_project_settings(self) -> None:
     #     # TODO: Maybe try setting them as well?

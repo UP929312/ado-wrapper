@@ -181,6 +181,14 @@ def build_hierarchy_payload(
 #     return request["dataProviders"][contribution_id]
 
 
+def extract_json_from_html(ado_client: "AdoClient", url: str, action: Literal["post", "get"] = "get") -> dict[str, Any]:
+    import json
+    request = ado_client.session.get(url) if action == "get" else ado_client.session.post(url)
+    json_text = request.text.split('<script id="dataProviders" type="application/json">')[1].split("</script>")[0]
+    json_data = json.loads(json_text)
+    return json_data
+
+
 # def requires_perms(required_perms: list[str] | str) -> Callable[[Callable[P, T]], Callable[P, T]]:
 #     """This wraps a call (with ado_client as second arg) with a list of required permissions,
 #     will raise an error if the client doesn't have them"""
@@ -198,6 +206,27 @@ def build_hierarchy_payload(
 #         return wrapper  # type: ignore[return-value]
 
 #     return decorator
+
+
+def find_key_path(d: dict[str, Any], target_key: str, path: str | None | list = None):
+    """Used during dev to find paths"""
+    if path is None:
+        path = []
+    if isinstance(d, dict):
+        for k, v in d.items():
+            new_path = path + [k]  # type: ignore[assignment]
+            if k == target_key:
+                return new_path
+            found = find_key_path(v, target_key, new_path)
+            if found:
+                return found
+    elif isinstance(d, list):
+        for i, item in enumerate(d):
+            new_path = path + [i]
+            found = find_key_path(item, target_key, new_path)
+            if found:
+                return found
+    return None
 
 # ============================================================================================== #
 

@@ -10,5 +10,5 @@ __all__ = [
     "MergePolicyDefaultReviewer", "MergeTypeRestrictionPolicy", "Organisation", "Permission", "PersonalAccessToken", "Project",
     "PullRequest", "PullRequestCommentThread", "PullRequestComment", "Release", "ReleaseDefinition", "RepoUserPermissions", "UserPermission",
     "BuildRepository", "Repo", "Run", "CodeSearch", "SecureFile", "ServiceEndpoint", "Team", "AdoUser", "Member", "Reviewer", "TeamMember",
-    "VariableGroup", "WorkItem",
+    "VariableGroup", "Wiki", "WikiPage", "WorkItem", "RelatedWorkItem", "WorkItemComment",
 ]  # fmt: skip

@@ -61,7 +61,7 @@ AUDIT_LOG_DUMP = {
     'category': 'modify',
     'categoryDisplayName': 'Modify',
     'actorDisplayName': 'First Last',
-    'actorImageUrl': 'https://dev.azure.com/vfuk-digital/_apis/GraphProfile/MemberAvatars/<User Descriptor>'
+    'actorImageUrl': 'https://dev.azure.com/{ado_client.org_name}/_apis/GraphProfile/MemberAvatars/<User Descriptor>'
 }
 
 
@@ -370,5 +370,84 @@ VARIABLE_GROUP_DUMP = {
 }
 
 URL_FOR_YAML_VALIDATOR = "https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apps/hub/ms.vss-build-web.ci-designer-hub?pipelineId={definition_id}"
+
+WORKITEM_DUMP = {
+    "id": 18118,
+    "rev": 1,
+    "fields": {
+        "System.AreaPath": "{ado_client.project_name}",
+        "System.TeamProject": "{ado_client.project_name}",
+        "System.IterationPath": "{ado_client.project_name}",
+        "System.WorkItemType": "Task",
+        "System.State": "New",
+        "System.Reason": "New",
+        "System.CreatedDate": "2025-02-06T14:48:51.723Z",
+        "System.CreatedBy": {
+            "displayName": "Ben Skerritt",
+            "url": "https://spsprodweu5.vssps.visualstudio.com/A6b7eafe0-46f5-4363-b3be-9c99ddedc97b/_apis/Identities/09615253-ea52-637f-b8e4-63cab674eac7",
+            "_links": {
+                "avatar": {
+                    "href": "https://dev.azure.com/ado_client.ado_org_name/_apis/GraphProfile/MemberAvatars/aad.MDk2MTUyNTMtZWE1Mi03MzdmLWI4ZTQtNjNjYWI2NzRlYWM3"
+                }
+            },
+            "id": "09615253-ea52-637f-b8e4-63cab674eac7",
+            "uniqueName": "ben.skerritt@vodafone.com",
+            "imageUrl": "https://dev.azure.com/{ado_client.org_name}/_apis/GraphProfile/MemberAvatars/aad.MDk2MTUyNTMtZWE1Mi03MzdmLWI4ZTQtNjNjYWI2NzRlYWM3",
+            "descriptor": "aad.MDk2MTUyNTMtZWE1Mi03MzdmLWI4ZTQtNjNjYWI2NzRlYWM3"
+        },
+        "System.ChangedDate": "2025-02-06T14:48:51.723Z",
+        "System.ChangedBy": {
+            "displayName": "Ben Skerritt",
+            "url": "https://spsprodweu5.vssps.visualstudio.com/A6b7eafe0-46f5-4363-b3be-9c99ddedc97b/_apis/Identities/09615253-ea52-637f-b8e4-63cab674eac7",
+            "_links": {
+                "avatar": {
+                    "href": "https://dev.azure.com/ado_client.ado_org_name/_apis/GraphProfile/MemberAvatars/aad.MDk2MTUyNTMtZWE1Mi03MzdmLWI4ZTQtNjNjYWI2NzRlYWM3"
+                }
+            },
+            "id": "09615253-ea52-637f-b8e4-63cab674eac7",
+            "uniqueName": "ben.skerritt@vodafone.com",
+            "imageUrl": "https://dev.azure.com/ado_client.ado_org_name/_apis/GraphProfile/MemberAvatars/aad.MDk2MTUyNTMtZWE1Mi03MzdmLWI4ZTQtNjNjYWI2NzRlYWM3",
+            "descriptor": "aad.MDk2MTUyNTMtZWE1Mi03MzdmLWI4ZTQtNjNjYWI2NzRlYWM3"
+        },
+        "System.CommentCount": 0,
+        "System.Title": "Testing",
+        "Microsoft.VSTS.Common.StateChangeDate": "2025-02-06T14:48:51.723Z",
+        "Microsoft.VSTS.Common.Priority": 2,
+        "System.Description": "This is also a \nTest situation",
+    },
+    "_links": {
+        "self": {
+            "href": "https://dev.azure.com/ado_client.ado_org_name/1d88f59f-723d-44eb-b97a-57e48d410848/_apis/wit/workItems/18118"
+        },
+        "workItemUpdates": {
+            "href": "https://dev.azure.com/ado_client.ado_org_name/1d88f59f-723d-44eb-b97a-57e48d410848/_apis/wit/workItems/18118/updates"
+        },
+        "workItemRevisions": {
+            "href": "https://dev.azure.com/ado_client.ado_org_name/1d88f59f-723d-44eb-b97a-57e48d410848/_apis/wit/workItems/18118/revisions"
+        },
+        "workItemComments": {
+            "href": "https://dev.azure.com/ado_client.ado_org_name/1d88f59f-723d-44eb-b97a-57e48d410848/_apis/wit/workItems/18118/comments"
+        },
+        "html": {
+            "href": "https://dev.azure.com/ado_client.ado_org_name/1d88f59f-723d-44eb-b97a-57e48d410848/_workitems/edit/18118"
+        },
+        "workItemType": {
+            "href": "https://dev.azure.com/ado_client.ado_org_name/1d88f59f-723d-44eb-b97a-57e48d410848/_apis/wit/workItemTypes/Task"
+        },
+        "fields": {
+            "href": "https://dev.azure.com/ado_client.ado_org_name/1d88f59f-723d-44eb-b97a-57e48d410848/_apis/wit/fields"
+        }
+    },
+    "url": "https://dev.azure.com/ado_client.ado_org_name/1d88f59f-723d-44eb-b97a-57e48d410848/_apis/wit/workItems/18118"
+}
+
+WIKI_PAGES_DUMP = {
+    'path': '/path/to/file-name',
+    'order': 0,
+    'gitItemPath': '/path/to/file-name.md',
+    'subPages': [],
+    'url': 'https://dev.azure.com/{ado_client.org_name}/{ado_client.project_id}/_apis/wiki/wikis/{wiki_id}/pages/{path_to_page}',
+    'remoteUrl': 'https://dev.azure.com/{ado_client.org_name}/{ado_client.project_id}/_wiki/wikis/{wiki_id}?pagePath={path_to_page}'
+}
 
 # fmt: on

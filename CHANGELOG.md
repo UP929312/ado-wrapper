@@ -1,3 +1,15 @@
+## v1.46.0
+
+### Added
+
+- `Wiki` & `WikiPage`, which allows you to fetch all wiki pages, or just by a path
+
+### Changed
+
+- `WorkItem` now has get all per board.
+- `WorkItem` now has get related.
+
+
 ## v1.45.0
 
 ### Added

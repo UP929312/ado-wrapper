@@ -87,20 +87,45 @@ class WikiPage(StateManagedResource):
         return request.text
 
     @classmethod
+    def get_page_metadata(cls, ado_client: "AdoClient", wiki_id: str, wiki_page_path: str) -> dict[str, Any]:
+        """Fetches metadata for a specific wiki page."""
+        request = ado_client.session.get(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/wiki/wikis/{wiki_id}/pages?path={wiki_page_path}&recursionLevel=1&versionDescriptor.version=wikiMaster"
+        )
+        return request.json()
+
+    @classmethod
     def get_all_pages_contents(cls, ado_client: "AdoClient", wiki_id: str, path: str = "/", precached_list_of_paths: list[str] | None = None) -> dict[str, str]:
         return {
             page_path: cls.download_page_contents(ado_client, wiki_id, page_path)
-            for page_path in precached_list_of_paths or cls.get_all_ids(ado_client, wiki_id, path)
+            for page_path in precached_list_of_paths or cls.get_all_paths(ado_client, wiki_id, path)
         }
 
     @classmethod
     def get_all_pages_contents_generator(cls, ado_client: "AdoClient", wiki_id: str, path: str = "/", precached_list_of_paths: list[str] | None = None) -> Generator[tuple[str, str]]:
-        list_of_paths = precached_list_of_paths if precached_list_of_paths else cls.get_all_ids(ado_client, wiki_id, path)
+        list_of_paths = precached_list_of_paths if precached_list_of_paths else cls.get_all_paths(ado_client, wiki_id, path)
         for page_path in list_of_paths:
             yield (page_path, cls.download_page_contents(ado_client, wiki_id, page_path))
 
     @classmethod
-    def get_all_ids(cls, ado_client: "AdoClient", wiki_id: str, path: str = "/") -> list["str"]:
+    def get_all_paths_with_metadata(
+        cls, ado_client: "AdoClient", wiki_id: str, path: str = "/"
+    ) -> dict[str, dict[str, Any]]:
+        """Fetches all pages in a given wiki, handling API pagination and returning metadata."""
+        # TODO: Test and develop this.
+        all_pages = {}
+        request = ado_client.session.get(
+            f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/wiki/wikis/{wiki_id}/pages?path={path}&recursionLevel=1&versionDescriptor.version=wikiMaster"
+        )
+        data = request.json()
+        for page in data.get("subPages", []):
+            if page.get("isParentPage"):
+                 all_pages |= cls.get_all_paths_with_metadata(ado_client, wiki_id, page["path"])
+            all_pages[page["path"]] = cls.get_page_metadata(ado_client, wiki_id, page["path"])
+        return all_pages
+
+    @classmethod
+    def get_all_paths(cls, ado_client: "AdoClient", wiki_id: str, path: str = "/") -> list["str"]:
         """Fetches all pages in a given wiki, handling API pagination."""
         all_page_paths: list[str] = []
         request = ado_client.session.get(
@@ -108,9 +133,8 @@ class WikiPage(StateManagedResource):
         )
         data = request.json()
         for page in data.get("subPages", []):
-            # print(page)
             if page.get("isParentPage"):
-                all_page_paths.extend(cls.get_all_ids(ado_client, wiki_id, page["path"]))
+                all_page_paths.extend(cls.get_all_paths(ado_client, wiki_id, page["path"]))
             all_page_paths.append(page["path"])
 
         return all_page_paths

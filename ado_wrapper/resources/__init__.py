@@ -33,6 +33,6 @@ __all__ = [
     "Commit", "Environment", "PipelineAuthorisation", "Group", "MergeBranchPolicy", "MergePolicies", "MergePolicyDefaultReviewer",
     "MergeTypeRestrictionPolicy", "Organisation", "Permission", "PersonalAccessToken", "Project",
     "PullRequest", "PullRequestCommentThread", "PullRequestComment", "Release", "ReleaseDefinition", "RepoUserPermissions", "UserPermission", "BuildRepository", "Repo", "Run",
-    "CodeSearch", "SecureFile", "ServiceEndpoint", "Team", "AdoUser", "Member", "Reviewer", "TeamMember", "VariableGroup", "Wiki", "WikiPage", "WorkItem",  "RelatedWorkItem", "WorkItemComment",
+    "CodeSearch", "SecureFile", "ServiceEndpoint", "Team", "AdoUser", "Member", "Reviewer", "TeamMember", "VariableGroup", "Wiki", "WikiPage", "WorkItem", "RelatedWorkItem", "WorkItemComment",
     # fmt: skip
 ]

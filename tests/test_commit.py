@@ -49,7 +49,7 @@ class TestCommit:
     def test_get_all_by_repo_with_date_range(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "get-latest-commit-with-date-range") as repo:
             Commit.create(self.ado_client, repo.repo_id, "main", "test-branch", {"test.txt": "Delete me!"}, "add", "Test commit")
-            commits = Commit.get_all_by_repo(self.ado_client, repo.repo_id, end=datetime.now()-timedelta(days=1), branch_name="test-branch")
+            commits = Commit.get_all_by_repo(self.ado_client, repo.repo_id, end=datetime.now() - timedelta(days=1), branch_name="test-branch")
             assert not commits
 
     def test_get_all(self) -> None:

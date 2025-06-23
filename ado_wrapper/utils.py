@@ -186,7 +186,7 @@ def extract_json_from_html(ado_client: "AdoClient", url: str, action: Literal["p
     request = ado_client.session.get(url) if action == "get" else ado_client.session.post(url)
     json_text = request.text.split('<script id="dataProviders" type="application/json">')[1].split("</script>")[0]
     json_data = json.loads(json_text)
-    return json_data
+    return json_data  # type: ignore[no-any-return]
 
 
 # def requires_perms(required_perms: list[str] | str) -> Callable[[Callable[P, T]], Callable[P, T]]:
@@ -208,15 +208,15 @@ def extract_json_from_html(ado_client: "AdoClient", url: str, action: Literal["p
 #     return decorator
 
 
-def find_key_path(d: dict[str, Any], target_key: str, path: str | None | list = None):
+def find_key_path(d: dict[str, Any], target_key: str, path: str | None | list[str] = None) -> list[str] | None:
     """Used during dev to find paths"""
     if path is None:
         path = []
     if isinstance(d, dict):
         for k, v in d.items():
-            new_path = path + [k]  # type: ignore[assignment]
+            new_path = path + [k]  # type: ignore[operator]
             if k == target_key:
-                return new_path
+                return new_path  # type: ignore[return-value]
             found = find_key_path(v, target_key, new_path)
             if found:
                 return found

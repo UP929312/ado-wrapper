@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from ado_wrapper.errors import UnknownError
 from ado_wrapper.state_managed_abc import StateManagedResource
 from ado_wrapper.resources.users import Member
-from ado_wrapper.utils import build_hierarchy_payload, extract_json_from_html, find_key_path
+from ado_wrapper.utils import build_hierarchy_payload, extract_json_from_html
 
 if TYPE_CHECKING:
     from ado_wrapper.client import AdoClient
@@ -16,7 +16,7 @@ WorkItemType = Literal["Bug", "Task", "User Story", "Feature", "Epic"]
 DEFAULT_REQUESTED_FIELDS = [
     "System.Id", "System.Title", "System.Description", "System.AreaPath", "System.IterationPath", "System.State", "System.Reason",
     "System.AssignedTo", "System.CreatedBy", "System.CreatedDate", "System.ChangedBy", "System.ChangedDate", "System.BoardColumn",
-    "System.Tags", # "Microsoft.VSTS.Common.Priority", "System.WorkItemType","Microsoft.VSTS.Scheduling.StoryPoints",
+    "System.Tags",  # "Microsoft.VSTS.Common.Priority", "System.WorkItemType","Microsoft.VSTS.Scheduling.StoryPoints",
     # "Microsoft.VSTS.Common.ClosedDate", "Microsoft.VSTS.Common.StackRank", # "Microsoft.VSTS.Common.AcceptanceCriteria",
 ]
 
@@ -63,7 +63,7 @@ class WorkItem(StateManagedResource):
         )
 
     def link(self, ado_client: "AdoClient") -> str:
-        board_name = self.area.removeprefix(ado_client.ado_project_name+'\\')
+        board_name = self.area.removeprefix(ado_client.ado_project_name + '\\')
         return f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_boards/board/t/{board_name}/Stories/?workitem={self.work_item_id}"
 
     @classmethod
@@ -114,7 +114,7 @@ class WorkItem(StateManagedResource):
         if "ms.vss-work-web.kanban-board-content-data-provider" not in json_data["data"]:
             raise UnknownError("This board probably doesn't exist, or it's not a task board")
         payload = json_data['data']['ms.vss-work-web.kanban-board-content-data-provider']['boardModel']['itemSource']['payload']
-        return payload
+        return payload  # type: ignore[no-any-return]
 
     @classmethod
     def get_all_work_item_ids(cls, ado_client: "AdoClient", board_name: str) -> list[str]:
@@ -122,13 +122,13 @@ class WorkItem(StateManagedResource):
         payload = cls._get_payload(ado_client, board_name)
         original = [x[0] for x in payload["rows"]]  # Original IDs (visible)
         incoming_ids, outgoing_ids = payload['orderedIncomingIds'], payload['orderedOutgoingIds']  # Ones retrieved when "show more" is clicked
-        return original+incoming_ids+outgoing_ids
+        return original + incoming_ids + outgoing_ids  # type: ignore[no-any-return]
 
     @classmethod
     def get_all_by_board(cls, ado_client: "AdoClient", board_name: str) -> list["WorkItem"]:
         all_work_items = []
         all_ids = cls.get_all_work_item_ids(ado_client, board_name)
-        ids_chunked = [all_ids[i:i+50] for i in range(0, len(all_ids), 50)]
+        ids_chunked = [all_ids[i:i + 50] for i in range(0, len(all_ids), 50)]
         for chunk in ids_chunked:
             request = ado_client.session.post(
                 f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/wit/workitemsbatch?api-version=7.1",
@@ -157,7 +157,7 @@ class WorkItem(StateManagedResource):
             additional_properties={"id": int(work_item_id)},
         )
         request = ado_client.session.post(
-            f"https://dev.azure.com/VFCloudEngineering/_apis/Contribution/HierarchyQuery?api-version=7.1-preview.1",
+            "https://dev.azure.com/VFCloudEngineering/_apis/Contribution/HierarchyQuery?api-version=7.1-preview.1",
             json=PAYLOAD
         )
         # if request.json()["dataProviders"]["ms.vss-work-web.work-item-data-provider"] is None:
@@ -190,6 +190,7 @@ class WorkItem(StateManagedResource):
 
 # ============================================================================
 
+
 RelationshipType = Literal["Parent", "Child", "Related", "Successor", "Predecessor"]
 RELATION_VALUE_TO_TYPE: dict[int, RelationshipType] = {
     -3: "Predecessor",
@@ -199,6 +200,7 @@ RELATION_VALUE_TO_TYPE: dict[int, RelationshipType] = {
     1: "Related",
     2: "Child",
 }
+
 
 @dataclass
 class RelatedWorkItem:

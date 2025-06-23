@@ -11,6 +11,20 @@ To delete all resources created by this, run the main module with the "--delete-
 
 If you're reading this readme not from the code, here's a link to the [github repo](https://github.com/UP929312/ado-wrapper)
 
+
+# Setup
+
+To test/add to this locally, you'll need to create a few files:
+For tests, add tests/test_data.txt, which contains:
+ADO Organisation name
+ADO Project name (e.g. MyProject)
+ADO Secondary project name (e.g. can be empty for your testing, so just an empty line unless you're testing the client)
+Email: e.g. first.last@company.com
+Pat token (with good perms), https://dev.azure.com/<ORG>/_usersSettings/tokens
+Existing User ID, print(AdoUser.get_by_email(ado_client, "first.last@company.com").origin_id)
+Existing user descriptor, print(AdoUser.get_by_email(ado_client, "first.last@company.com").descriptor_id)
+
+
 ## Commands Used To Ensure Quality
 
 pylint .  

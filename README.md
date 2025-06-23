@@ -12,18 +12,34 @@ To delete all resources created by this, run the main module with the "--delete-
 If you're reading this readme not from the code, here's a link to the [github repo](https://github.com/UP929312/ado-wrapper)
 
 
-# Setup
+## Setup
 
-To test/add to this locally, you'll need to create a few files:
-For tests, add tests/test_data.txt, which contains:
-ADO Organisation name
-ADO Project name (e.g. MyProject)
-ADO Secondary project name (e.g. can be empty for your testing, so just an empty line unless you're testing the client)
-Email: e.g. first.last@company.com
-Pat token (with good perms), https://dev.azure.com/<ORG>/_usersSettings/tokens
-Existing User ID, print(AdoUser.get_by_email(ado_client, "first.last@company.com").origin_id)
-Existing user descriptor, print(AdoUser.get_by_email(ado_client, "first.last@company.com").descriptor_id)
+It's recommended you create your own ADO organisation and project for testing/development, this is easy and means that  
+you won't delete anything or cause problems, but may mean you're missing features such as certain teams or repos.
 
+To test/add to this locally, you'll need to create a few files:  
+---  
+For tests, add tests/test_data.txt, which contains:  
+ADO Organisation name  
+ADO Project name (e.g. MyProject)  
+ADO Secondary project name (e.g. can be empty for your testing, so just an empty line unless you're testing the client)  
+Email: e.g. first.last@company.com  
+Pat token (with good perms), https://dev.azure.com/<ORG>/_usersSettings/tokens  
+Existing User ID, print(AdoUser.get_by_email(ado_client, "first.last@company.com").origin_id)  
+Existing user descriptor, print(AdoUser.get_by_email(ado_client, "first.last@company.com").descriptor_id)  
+---  
+For development, I recommend adding a script.py with this boiler plate:  
+
+```py
+with open("credentials.txt", "r") as file:
+    email, ado_access_token, ado_org_name, ado_project = file.read().split("\n")
+
+from ado_wrapper import AdoClient, Secret
+from ado_wrapper.resources import *
+from ado_wrapper.errors import *
+ado_client = AdoClient(email, ado_access_token, ado_org_name, ado_project)
+```
+And then fill credentials.txt with email, PAT, org, project on different lines.
 
 ## Commands Used To Ensure Quality
 

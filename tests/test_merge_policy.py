@@ -45,10 +45,9 @@ class TestMergePolicy:
 
     @pytest.mark.hierarchy
     @pytest.mark.create_delete
-    @pytest.mark.wip
     def test_create_default_reviewer(self) -> None:
         with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-default-reviewer") as repo:
-            MergePolicies.add_default_reviewer(self.ado_client, repo.repo_id, existing_user_id, False)
+            MergePolicies.add_default_reviewer(self.ado_client, repo_id=repo.repo_id, reviewer_origin_id=existing_user_id, is_required=False)
             default_reviewers = MergePolicies.get_default_reviewers(self.ado_client, repo.repo_id)
             assert default_reviewers is not None
             assert len(default_reviewers) == 1
@@ -56,13 +55,17 @@ class TestMergePolicy:
             assert not default_reviewers[0].is_required
 
             with pytest.raises(ValueError):  # Can't add them twice
-                MergePolicies.add_default_reviewer(self.ado_client, repo.repo_id, existing_user_id, True)
+                MergePolicies.add_default_reviewer(self.ado_client, repo_id=repo.repo_id, reviewer_origin_id=existing_user_id, is_required=True)
 
             MergePolicies.remove_default_reviewer(self.ado_client, repo.repo_id, existing_user_id)
             default_reviewers = MergePolicies.get_default_reviewers(self.ado_client, repo.repo_id)
             assert not default_reviewers
-            # We also need to do way more work with the "inheritedPolicies" field, currently, "currentScopePolicies" is None for many, this
-            # Might not actually be a problem though, idk
+
+    @pytest.mark.hierarchy
+    @pytest.mark.create_delete
+    def test_create_default_reviewer_with_path(self) -> None:
+        with TemporaryResource(self.ado_client, Repo, name=REPO_PREFIX + "create-default-reviewer-with-path") as repo:
+            MergePolicies.add_default_reviewer(self.ado_client, repo_id=repo.repo_id, reviewer_origin_id=existing_user_id, file_name_patterns=["/test/", "abc/"])
 
     @pytest.mark.create_delete
     def test_create_merge_type_restriction_policy(self) -> None:
@@ -88,5 +91,5 @@ class TestMergePolicy:
 
 
 if __name__ == "__main__":
-    # pytest.main([__file__, "-s", "-vvvv"])
-    pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])
+    pytest.main([__file__, "-s", "-vvvv"])
+    # pytest.main([__file__, "-s", "-vvvv", "-m", "wip"])

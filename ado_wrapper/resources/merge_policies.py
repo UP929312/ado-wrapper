@@ -45,10 +45,13 @@ class MergePolicyDefaultReviewer(StateManagedResource):
     policy_id: str = field(metadata={"is_id_field": True})
     required_reviewer_id: str
     is_required: bool
+    file_name_patterns: list[str] = field(default=list, repr=False)  # type: ignore[arg-type]
 
     @classmethod
     def from_request_payload(cls, data: dict[str, Any]) -> "MergePolicyDefaultReviewer":
-        return cls(data["id"], data["settings"]["requiredReviewerIds"][0], data["isBlocking"])
+        return cls(
+            data["id"], data["settings"]["requiredReviewerIds"][0], data["isBlocking"], data["settings"].get("filenamePatterns", []),
+        )
 
     @classmethod
     def get_default_reviewers(cls, ado_client: "AdoClient", repo_id: str, branch_name: str = "main") -> list[Reviewer]:
@@ -102,7 +105,7 @@ class MergePolicyDefaultReviewer(StateManagedResource):
 
     @classmethod
     def add_default_reviewer(
-        cls, ado_client: "AdoClient", repo_id: str, reviewer_origin_id: str, is_required: bool = True, branch_name: str = "main"  # fmt: skip
+        cls, ado_client: "AdoClient", repo_id: str, reviewer_origin_id: str, is_required: bool = True, *, file_name_patterns: list[str] | None = None, branch_name: str = "main"  # fmt: skip
     ) -> None:
         if reviewer_origin_id in [x.member_id for x in cls.get_default_reviewers(ado_client, repo_id, branch_name)]:
             raise ValueError("Reviewer already exists! To update, please remove the reviewer first.")
@@ -120,6 +123,8 @@ class MergePolicyDefaultReviewer(StateManagedResource):
                 "scope": [{"repositoryId": repo_id, "refName": f"refs/heads/{branch_name}", "matchKind": "Exact"}],
             },
         }
+        if file_name_patterns is not None:
+            payload["settings"]["filenamePatterns"] = file_name_patterns  # type: ignore[index]
         request = ado_client.session.post(
             f"https://dev.azure.com/{ado_client.ado_org_name}/{ado_client.ado_project_name}/_apis/policy/configurations?api-version=7.1",
             json=payload,

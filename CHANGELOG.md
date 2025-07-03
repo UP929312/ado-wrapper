@@ -1,3 +1,11 @@
+## v1.47.0
+
+### Added
+
+- `MergePolicy`s default reviewer now supports `file_name_patterns`, a list of string of which the perms apply to.
+
+---
+
 ## v1.46.0
 
 ### Added
@@ -9,6 +17,7 @@
 - `WorkItem` now has get all per board.
 - `WorkItem` now has get related.
 
+---
 
 ## v1.45.0
 

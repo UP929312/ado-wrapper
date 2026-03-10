@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "ado_wrapper"
 description = "A high level wrapper around the AzureDevops API including OOP principals and state management"
-authors = ["Ben Skerritt"]
+authors = ["Skezza"]
 version = "1.47.0"
 license = "Proprietary"
 readme = "README.md"
